@@ -13,10 +13,10 @@ fun DailyPrayResponseDTO.toDailyPrayResponse() : DailyPrayResponse =
 fun PrayDataDTO.toPrayData() : PrayData = PrayData(prayTimes = this.timings.toPrayTimes() )
 
 fun PrayTimesDTO.toPrayTimes() : PrayTimes = PrayTimes(
-    morning = this.Asr,
-    sunrise = this.Sunrise,
-    noon = this.Dhuhr,
-    afternoon = this.Asr,
-    evening = this.Maghrib,
-    night = this.Isha
+    morning = Pair("Morning",this.Fajr) ,
+    sunrise = Pair("Sunrise",this.Sunrise),
+    noon = Pair("Noon",this.Dhuhr),
+    afternoon = Pair("Sabah",this.Asr),
+    evening = Pair("Sabah",this.Maghrib),
+    night = Pair("Sabah",this.Isha)
 )
