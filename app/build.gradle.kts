@@ -88,4 +88,9 @@ dependencies {
 
     implementation(libs.kotlinx.serialization.json) // Or latest version
     implementation(libs.animated.navigation.bar)
+    implementation(libs.androidx.animation.graphics)
+
+    //Play-services-location
+    implementation(libs.play.services.location)
+
 }
