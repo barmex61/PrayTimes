@@ -22,3 +22,4 @@ val MyGreen = Color(0xFF4CAF50)
 
 val IconColor = Color(0xFFA3B82D)
 val IconBackGroundColor = Color(0xFFEBEBEB)
+val BackGround = Color(0xF9F9F9FF)

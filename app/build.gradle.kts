@@ -87,4 +87,5 @@ dependencies {
     implementation (libs.converter.gson)
 
     implementation(libs.kotlinx.serialization.json) // Or latest version
+    implementation(libs.animated.navigation.bar)
 }
