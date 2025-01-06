@@ -19,6 +19,8 @@ class MainScreenViewModel @Inject constructor(private val getDailyPrayTimesUseCa
     val dailyPrayTimes: StateFlow<Resource<DailyPrayResponse>> = _dailyPrayTimes
     private val _currentPosition = MutableStateFlow<LatLong?>(null)
 
+
+
     fun getDailyPrayTimes(date: String, latitude: Double, longitude: Double) = viewModelScope.launch {
         _dailyPrayTimes.emit(Resource.loading())
         _dailyPrayTimes.emit(getDailyPrayTimesUseCase(date, latitude, longitude))
