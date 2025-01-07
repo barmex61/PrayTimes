@@ -2,9 +2,13 @@ package com.fatih.namazvakitleri.presentation.main_activity.view
 
 import android.annotation.SuppressLint
 import android.content.Intent
+import android.location.Address
+import android.location.Geocoder
 import android.location.Location
 import android.net.Uri
+import com.google.android.gms.location.LocationRequest
 import android.os.Bundle
+import android.os.Looper
 import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
@@ -12,7 +16,6 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.activity.viewModels
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,13 +31,14 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemColors
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Snackbar
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -42,13 +46,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.fatih.namazvakitleri.presentation.main_activity.viewmodel.MainActivityViewModel
 import com.fatih.namazvakitleri.presentation.main_screen.view.DailyPrayCompose
 import com.fatih.namazvakitleri.presentation.main_screen.view.MainScreen
@@ -59,13 +60,16 @@ import com.fatih.namazvakitleri.presentation.ui.theme.BackGround
 import com.fatih.namazvakitleri.presentation.ui.theme.IconColor
 import com.fatih.namazvakitleri.presentation.ui.theme.NamazVakitleriTheme
 import com.fatih.namazvakitleri.util.Constants.bottomNavItems
+import com.google.android.gms.location.LocationCallback
+import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
 import dagger.hilt.android.AndroidEntryPoint
+import java.util.Locale.*
 
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-    val viewModel : MainActivityViewModel by viewModels()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge(
@@ -80,20 +84,18 @@ class MainActivity : ComponentActivity() {
         )
         setContent {
             NamazVakitleriTheme(dynamicColor = false, darkTheme = false) {
-                val permissionGranted by viewModel.permissionGranted.collectAsState()
+                val viewModel : MainActivityViewModel = hiltViewModel()
+                val context = LocalContext.current
+                val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions -> viewModel.onPermissionsResult(permissions,this) }
+                val resultLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { viewModel.checkPermissions(context) }
                 val showGoToSettings by viewModel.showGoToSettings.collectAsState()
                 val showPermissionRequest by viewModel.showPermissionRequest.collectAsState()
-                val context = LocalContext.current
-                val permissionLauncher = rememberLauncherForActivityResult(
-                    ActivityResultContracts.RequestMultiplePermissions()
-                ) { permissions ->
-                    println("onresult")
-                    viewModel.onPermissionsResult(permissions,this)
-                }
-                val resultLauncher = rememberLauncherForActivityResult(
-                    ActivityResultContracts.StartActivityForResult()
-                ) {
-                    viewModel.checkPermissions(context)
+                val permissionGranted by viewModel.permissionGranted.collectAsState()
+
+                if (showPermissionRequest) {
+                    LaunchedEffect (Unit){
+                        permissionLauncher.launch(viewModel.locationPermissions)
+                    }
                 }
 
                 Scaffold(
@@ -144,8 +146,6 @@ class MainActivity : ComponentActivity() {
                                         ),
                                     onClick = {
                                         selectedItemIndex = index
-                                        // Burada navigasyon işlemlerini gerçekleştirebilirsiniz.
-                                        println("Navigating to ${item.route}")
                                     }
                                 )
                             }
@@ -153,76 +153,24 @@ class MainActivity : ComponentActivity() {
                     }
                 ) { innerPadding ->
                     Box(
-                        modifier = Modifier.background(BackGround).padding(15.dp, innerPadding.calculateTopPadding() + 10.dp, 15.dp, innerPadding.calculateBottomPadding()),
+                        modifier = Modifier
+                            .background(BackGround)
+                            .padding(
+                                15.dp,
+                                innerPadding.calculateTopPadding() + 10.dp,
+                                15.dp,
+                                innerPadding.calculateBottomPadding()
+                            ),
                         )
                     {
-                        viewModel.checkPermissions(LocalContext.current)
-                        if (showPermissionRequest){
-                            permissionLauncher.launch(viewModel.locationPermissions)
-                        }
                         MainScreen()
+                        if (permissionGranted){
+                            GetLocationInformation()
+                        }
                     }
                 }
             }
         }
-    }
-
-
-}
-
-
-@Composable
-fun PermissionControl(hostState: SnackbarHostState,goToSettingsLambda : (Boolean) -> Unit) {
-    val context = LocalContext.current
-    var permissionGranted by remember { mutableStateOf(false) }
-    var showRationaleDialog by remember { mutableStateOf(false) }
-    var goToSettings by remember { mutableStateOf(false) }
-    val locationPermissions = arrayOf(
-        android.Manifest.permission.ACCESS_COARSE_LOCATION,
-        android.Manifest.permission.ACCESS_FINE_LOCATION,
-    )
-    val permissionLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestMultiplePermissions()
-    ) { permissions ->
-        if (permissions.all { it.value }) {
-            permissionGranted = true
-        }else{
-            val shouldShowRationale = locationPermissions.any {
-                androidx.core.app.ActivityCompat.shouldShowRequestPermissionRationale(
-                    context as ComponentActivity,
-                    it
-                )
-            }
-            goToSettings = !shouldShowRationale
-            showRationaleDialog = true
-
-        }
-    }
-    if (!permissionGranted){
-        LaunchedEffect(Unit) {
-            permissionLauncher.launch(locationPermissions)
-            val isAllPermissionsGranted = locationPermissions.all {
-                context.checkSelfPermission(it) == android.content.pm.PackageManager.PERMISSION_GRANTED
-            }
-            if (isAllPermissionsGranted){
-                permissionGranted = true
-                showRationaleDialog = false
-            }
-        }
-    }
-    if (showRationaleDialog){
-        goToSettingsLambda(goToSettings)
-        LaunchedEffect(Unit) {
-            hostState.showSnackbar(
-                message = "You need to give permission for using the app",
-                actionLabel = "Give"
-            )
-        }
-
-    }
-    if (permissionGranted){
-        GetLocationInformation()
-        showRationaleDialog = false
     }
 }
 
@@ -231,13 +179,57 @@ fun PermissionControl(hostState: SnackbarHostState,goToSettingsLambda : (Boolean
 fun GetLocationInformation(){
     val context = LocalContext.current
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
-    var location by remember { mutableStateOf<Location?>(null) }
-    LaunchedEffect(Unit) {
-        fusedLocationClient.lastLocation.addOnSuccessListener { location = it }
+    val geocoder by remember { mutableStateOf(lazy { Geocoder(context,getDefault()) }) }
+    var currentLocation by remember { mutableStateOf<Location?>(null) }
+    var currentAddress by remember { mutableStateOf<Address?>(null) }
+    val country = currentAddress?.countryName
+    val city = currentAddress?.adminArea
+    val district  = currentAddress?.subAdminArea
+    val street = currentAddress?.subLocality
+    val fullAddress = currentAddress?.getAddressLine(0)
+    val locationRequest = remember {
+        LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 1000).apply {
+            setWaitForAccurateLocation(true)
+            setMinUpdateDistanceMeters(100f)
+        }.build()
     }
-    if (location != null) {
-        Text(text = "Location: ${location?.latitude}, ${location?.longitude}")
-    }else{
+    val locationCallback = remember {
+        object : LocationCallback(){
+            override fun onLocationResult(result: LocationResult) {
+                val location = result.locations.last()?:return
+                currentLocation = location
+            }
+        }
+    }
+
+    LaunchedEffect(key1 = currentLocation) {
+        if (currentLocation != null){
+            try {
+                val addresses = geocoder.value.getFromLocation(currentLocation!!.latitude, currentLocation!!.longitude, 1)
+                currentAddress = addresses?.getOrNull(0)
+            } catch (e: Exception) {
+                currentAddress = null
+            }
+        }
+    }
+
+    DisposableEffect(fusedLocationClient)  {
+        fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper())
+        onDispose {
+            fusedLocationClient.removeLocationUpdates(locationCallback)
+        }
+    }
+
+    if (currentLocation != null) {
+        Column {
+            Text(text = "Location: ${currentLocation?.latitude}, ${currentLocation?.longitude}")
+            Text(text = "Country: $country")
+            Text(text = "City: $city")
+            Text(text = "District: $district")
+            Text(text = "Street: $street")
+            Text(text = "Full Address: $fullAddress")
+        }
+    } else {
         Text(text = "Location not available")
     }
 }

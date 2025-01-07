@@ -21,7 +21,7 @@ class MainActivityViewModel @Inject constructor() : ViewModel() {
     val permissionGranted: StateFlow<Boolean> = _permissionGranted
     private val _showGoToSettings = MutableStateFlow<Boolean>(false)
     val showGoToSettings: StateFlow<Boolean> = _showGoToSettings
-    private val _showPermissionRequest = MutableStateFlow<Boolean>(false)
+    private val _showPermissionRequest = MutableStateFlow<Boolean>(true)
     val showPermissionRequest: StateFlow<Boolean> = _showPermissionRequest
 
     val locationPermissions = arrayOf(
