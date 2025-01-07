@@ -11,7 +11,7 @@ import java.io.IOException
 import java.lang.Exception
 import javax.inject.Inject
 
-class PrayRepositoryInterface @Inject constructor(private val prayApi : PrayApi) : PrayRepository {
+class PrayRepositoryImp @Inject constructor(private val prayApi : PrayApi) : PrayRepository {
 
     override suspend fun getPrayTimes(date : String,latitude : Double, longitude : Double): Resource<DailyPrayResponseDTO> =
         withContext(Dispatchers.IO)  {

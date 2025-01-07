@@ -60,12 +60,8 @@ import com.fatih.namazvakitleri.presentation.ui.theme.BackGround
 import com.fatih.namazvakitleri.presentation.ui.theme.IconColor
 import com.fatih.namazvakitleri.presentation.ui.theme.NamazVakitleriTheme
 import com.fatih.namazvakitleri.util.Constants.bottomNavItems
-import com.google.android.gms.location.LocationCallback
-import com.google.android.gms.location.LocationResult
-import com.google.android.gms.location.LocationServices
-import com.google.android.gms.location.Priority
+import com.fatih.namazvakitleri.util.Status
 import dagger.hilt.android.AndroidEntryPoint
-import java.util.Locale.*
 
 
 @AndroidEntryPoint
@@ -86,11 +82,12 @@ class MainActivity : ComponentActivity() {
             NamazVakitleriTheme(dynamicColor = false, darkTheme = false) {
                 val viewModel : MainActivityViewModel = hiltViewModel()
                 val context = LocalContext.current
+
                 val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions -> viewModel.onPermissionsResult(permissions,this) }
                 val resultLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { viewModel.checkPermissions(context) }
+
                 val showGoToSettings by viewModel.showGoToSettings.collectAsState()
                 val showPermissionRequest by viewModel.showPermissionRequest.collectAsState()
-                val permissionGranted by viewModel.permissionGranted.collectAsState()
 
                 if (showPermissionRequest) {
                     LaunchedEffect (Unit){
@@ -164,9 +161,7 @@ class MainActivity : ComponentActivity() {
                         )
                     {
                         MainScreen()
-                        if (permissionGranted){
-                            GetLocationInformation()
-                        }
+                        GetLocationInformation(viewModel)
                     }
                 }
             }
@@ -176,53 +171,23 @@ class MainActivity : ComponentActivity() {
 
 @SuppressLint("MissingPermission")
 @Composable
-fun GetLocationInformation(){
-    val context = LocalContext.current
-    val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
-    val geocoder by remember { mutableStateOf(lazy { Geocoder(context,getDefault()) }) }
-    var currentLocation by remember { mutableStateOf<Location?>(null) }
-    var currentAddress by remember { mutableStateOf<Address?>(null) }
-    val country = currentAddress?.countryName
-    val city = currentAddress?.adminArea
-    val district  = currentAddress?.subAdminArea
-    val street = currentAddress?.subLocality
-    val fullAddress = currentAddress?.getAddressLine(0)
-    val locationRequest = remember {
-        LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 1000).apply {
-            setWaitForAccurateLocation(true)
-            setMinUpdateDistanceMeters(100f)
-        }.build()
-    }
-    val locationCallback = remember {
-        object : LocationCallback(){
-            override fun onLocationResult(result: LocationResult) {
-                val location = result.locations.last()?:return
-                currentLocation = location
-            }
+fun GetLocationInformation(viewModel: MainActivityViewModel){
+    val permissionGranted by viewModel.permissionGranted.collectAsState()
+    LaunchedEffect (key1 = permissionGranted) {
+        (1..5).forEach {
+            viewModel.getLocationAndAddress()
         }
     }
-
-    LaunchedEffect(key1 = currentLocation) {
-        if (currentLocation != null){
-            try {
-                val addresses = geocoder.value.getFromLocation(currentLocation!!.latitude, currentLocation!!.longitude, 1)
-                currentAddress = addresses?.getOrNull(0)
-            } catch (e: Exception) {
-                currentAddress = null
-            }
-        }
-    }
-
-    DisposableEffect(fusedLocationClient)  {
-        fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper())
-        onDispose {
-            fusedLocationClient.removeLocationUpdates(locationCallback)
-        }
-    }
-
-    if (currentLocation != null) {
+    val currentAddress by viewModel.locationAndAddress.collectAsState()
+    val country = currentAddress.data?.country
+    val city = currentAddress.data?.city
+    val district  = currentAddress.data?.street
+    val street = currentAddress.data?.district
+    val fullAddress = currentAddress.data?.fullAddress
+    println("heyos")
+    if (currentAddress.status == Status.SUCCESS){
         Column {
-            Text(text = "Location: ${currentLocation?.latitude}, ${currentLocation?.longitude}")
+            Text(text = "Location: ${currentAddress.data?.latitude}, ${currentAddress.data?.longitude}")
             Text(text = "Country: $country")
             Text(text = "City: $city")
             Text(text = "District: $district")
