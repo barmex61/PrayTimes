@@ -7,9 +7,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.fatih.namazvakitleri.R
+import com.fatih.namazvakitleri.data.local.AddressEntity
 import com.fatih.namazvakitleri.data.remote.dto.DailyPrayResponseDTO
 import com.fatih.namazvakitleri.data.remote.dto.PrayDataDTO
 import com.fatih.namazvakitleri.data.remote.dto.PrayTimesDTO
+import com.fatih.namazvakitleri.domain.model.Address
 import com.fatih.namazvakitleri.domain.model.DailyPrayResponse
 import com.fatih.namazvakitleri.domain.model.PrayData
 import com.fatih.namazvakitleri.domain.model.PrayTimes
@@ -42,3 +44,13 @@ fun PrayTimes.toPrayList() : List<Triple<String,String,ImageVector>> =
     listOf(morning, /*sunrise,*/ noon, afternoon, evening, night).map { (prayerName, prayerTime) ->
         Triple(prayerName, prayerTime, prayIcons[prayerName]!!)
     }
+
+fun AddressEntity.toAddress() : Address = Address(
+    latitude = this.latitude,
+    longitude = this.longitude,
+    country = this.country,
+    city = this.city,
+    district = this.district,
+    fullAddress = this.fullAddress,
+    street = this.street
+)

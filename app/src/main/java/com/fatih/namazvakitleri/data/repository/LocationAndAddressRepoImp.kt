@@ -4,24 +4,21 @@ import android.annotation.SuppressLint
 import android.location.Geocoder
 import android.location.Location
 import android.os.Looper
-import android.util.Log
+import com.fatih.namazvakitleri.data.local.dao.AddressDao
 import com.fatih.namazvakitleri.domain.model.Address
 import com.fatih.namazvakitleri.domain.repository.LocationAndAddressRepository
 import com.fatih.namazvakitleri.util.Resource
+import com.fatih.namazvakitleri.util.toAddress
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
-import com.google.android.gms.location.LocationListener
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
-import com.google.android.gms.location.Priority
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
 import java.io.IOException
@@ -31,13 +28,14 @@ import javax.inject.Inject
 class LocationAndAddressRepoImp @Inject constructor(
     private val fusedLocationProviderClient: FusedLocationProviderClient,
     private val locationRequest: LocationRequest,
-    private val geocoder: Geocoder
+    private val geocoder: Geocoder,
+    private val addressDao : AddressDao,
 ) : LocationAndAddressRepository {
 
     private var locationCallback : LocationCallback? = null
     private var isAlreadyCallbackAvailable : Boolean = false
 
-    private suspend fun getAddressWithRetry(location: Location, maxRetries: Int = 3, retryDelay: Long = 10000): Resource<Address> {
+    private suspend fun getAddressWithRetry(location: Location, maxRetries: Int = 10, retryDelay: Long = 10000): Resource<Address> {
         repeat(maxRetries) { attempt ->
             try {
                 val addresses = geocoder.getFromLocation(location.latitude, location.longitude, 3)
@@ -102,4 +100,12 @@ class LocationAndAddressRepoImp @Inject constructor(
         }
     }.flowOn(Dispatchers.IO) // IO thread'inde çalıştır
 
+    override suspend fun getCurrentAddress(): Address? {
+        return try {
+            addressDao.getCurrentAddress().toAddress()
+        }catch (e:Exception){
+            println(e)
+            null
+        }
+    }
 }

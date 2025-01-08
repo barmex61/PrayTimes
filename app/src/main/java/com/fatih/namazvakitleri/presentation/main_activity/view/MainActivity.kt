@@ -31,6 +31,7 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemColors
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -51,17 +52,19 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.fatih.namazvakitleri.presentation.main_activity.viewmodel.MainActivityViewModel
+import com.fatih.namazvakitleri.presentation.main_activity.viewmodel.PermissionViewModel
 import com.fatih.namazvakitleri.presentation.main_screen.view.DailyPrayCompose
 import com.fatih.namazvakitleri.presentation.main_screen.view.MainScreen
 import com.fatih.namazvakitleri.presentation.main_screen.view.PrayNotificationCompose
 import com.fatih.namazvakitleri.presentation.main_screen.view.PrayScheduleCompose
 import com.fatih.namazvakitleri.presentation.main_screen.view.TopBarCompose
+import com.fatih.namazvakitleri.presentation.main_screen.viewmodel.MainScreenViewModel
 import com.fatih.namazvakitleri.presentation.ui.theme.BackGround
 import com.fatih.namazvakitleri.presentation.ui.theme.IconColor
 import com.fatih.namazvakitleri.presentation.ui.theme.NamazVakitleriTheme
 import com.fatih.namazvakitleri.util.Constants.bottomNavItems
-import com.fatih.namazvakitleri.util.Status
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.delay
 
 
 @AndroidEntryPoint
@@ -80,21 +83,18 @@ class MainActivity : ComponentActivity() {
         )
         setContent {
             NamazVakitleriTheme(dynamicColor = false, darkTheme = false) {
-                val viewModel : MainActivityViewModel = hiltViewModel()
                 val context = LocalContext.current
-
-                val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions -> viewModel.onPermissionsResult(permissions,this) }
-                val resultLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { viewModel.checkPermissions(context) }
-
-                val showGoToSettings by viewModel.showGoToSettings.collectAsState()
-                val showPermissionRequest by viewModel.showPermissionRequest.collectAsState()
-
+                val permissionViewModel : PermissionViewModel = hiltViewModel()
+                val showGoToSettings by  permissionViewModel.showGoToSettings.collectAsState()
+                val showPermissionRequest by permissionViewModel.showPermissionRequest.collectAsState()
+                val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions -> permissionViewModel.onPermissionsResult(permissions,context as ComponentActivity) }
+                val resultLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { permissionViewModel.checkPermissions(context) }
                 if (showPermissionRequest) {
                     LaunchedEffect (Unit){
-                        permissionLauncher.launch(viewModel.locationPermissions)
+                        permissionViewModel.checkPermissions(context)
+                        permissionLauncher.launch(permissionViewModel.locationPermissions)
                     }
                 }
-
                 Scaffold(
                     snackbarHost = {
                         if (showPermissionRequest) {
@@ -108,7 +108,7 @@ class MainActivity : ComponentActivity() {
                                             resultLauncher.launch(intent)
 
                                         }else{
-                                            permissionLauncher.launch(viewModel.locationPermissions)
+                                            permissionLauncher.launch(permissionViewModel.locationPermissions)
                                         }
                                     }) {
                                         Text("Give")
@@ -160,45 +160,14 @@ class MainActivity : ComponentActivity() {
                             ),
                         )
                     {
-                        MainScreen()
-                        GetLocationInformation(viewModel)
+
+                        MainScreen(permissionViewModel)
                     }
                 }
             }
         }
     }
 }
-
-@SuppressLint("MissingPermission")
-@Composable
-fun GetLocationInformation(viewModel: MainActivityViewModel){
-    val permissionGranted by viewModel.permissionGranted.collectAsState()
-    LaunchedEffect (key1 = permissionGranted) {
-        (1..5).forEach {
-            viewModel.getLocationAndAddress()
-        }
-    }
-    val currentAddress by viewModel.locationAndAddress.collectAsState()
-    val country = currentAddress.data?.country
-    val city = currentAddress.data?.city
-    val district  = currentAddress.data?.street
-    val street = currentAddress.data?.district
-    val fullAddress = currentAddress.data?.fullAddress
-    println("heyos")
-    if (currentAddress.status == Status.SUCCESS){
-        Column {
-            Text(text = "Location: ${currentAddress.data?.latitude}, ${currentAddress.data?.longitude}")
-            Text(text = "Country: $country")
-            Text(text = "City: $city")
-            Text(text = "District: $district")
-            Text(text = "Street: $street")
-            Text(text = "Full Address: $fullAddress")
-        }
-    } else {
-        Text(text = "Location not available")
-    }
-}
-
 
 @Preview(showBackground = true)
 @Composable

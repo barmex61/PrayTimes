@@ -13,6 +13,6 @@ interface AddressDao {
     suspend fun insertAddress(address: AddressEntity)
 
     @Query("SELECT * FROM Address WHERE id = :id")
-    suspend fun getAllAddresses(id : Int = 0): AddressEntity
+    suspend fun getCurrentAddress(id : Int = 0): AddressEntity
 
 }

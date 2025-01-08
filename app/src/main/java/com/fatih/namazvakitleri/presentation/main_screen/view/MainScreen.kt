@@ -1,21 +1,13 @@
 package com.fatih.namazvakitleri.presentation.main_screen.view
 
 import android.annotation.SuppressLint
-import android.graphics.drawable.AnimatedVectorDrawable
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.graphics.ExperimentalAnimationGraphicsApi
-import androidx.compose.animation.graphics.res.animatedVectorResource
-import androidx.compose.animation.graphics.res.rememberAnimatedVectorPainter
-import androidx.compose.animation.graphics.vector.AnimatedImageVector
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -55,7 +47,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -66,6 +57,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.exyte.animatednavbar.utils.noRippleClickable
 import com.fatih.namazvakitleri.R
 import com.fatih.namazvakitleri.domain.model.PrayTimes
+import com.fatih.namazvakitleri.presentation.main_activity.viewmodel.PermissionViewModel
 import com.fatih.namazvakitleri.presentation.main_screen.viewmodel.MainScreenViewModel
 import com.fatih.namazvakitleri.presentation.ui.theme.IconBackGroundColor
 import com.fatih.namazvakitleri.presentation.ui.theme.IconColor
@@ -73,16 +65,55 @@ import com.fatih.namazvakitleri.util.Status
 import com.fatih.namazvakitleri.util.toPrayList
 
 @Composable
-fun MainScreen() {
-    GetLocationInformation(viewModel)
+fun MainScreen(permissionViewModel: PermissionViewModel) {
+    val mainScreenViewModel : MainScreenViewModel = hiltViewModel()
+    GetLocationInformation(mainScreenViewModel,permissionViewModel)
     val scrollState = rememberScrollState()
+    println("MainScreen")
     Column(modifier = Modifier.verticalScroll(scrollState, enabled = true) ){
+        println("column")
         TopBarCompose()
         PrayScheduleCompose()
         PrayNotificationCompose()
         DailyPrayCompose()
     }
 }
+
+@Composable
+fun GetLocationInformation(mainScreenViewModel: MainScreenViewModel,permissionViewModel: PermissionViewModel){
+    val permissionGranted by permissionViewModel.permissionGranted.collectAsState()
+
+    if (permissionGranted){
+        LaunchedEffect (Unit) {
+            mainScreenViewModel.getLiveAddress()
+        }
+    }
+    val liveAddress by mainScreenViewModel.liveAddress.collectAsState()
+    val currentAddress by mainScreenViewModel.currentAddress.collectAsState()
+    val country = currentAddress?.country
+    val city = currentAddress?.city
+    val district  = currentAddress?.street
+    val street = currentAddress?.district
+    val fullAddress = currentAddress?.fullAddress
+    if (currentAddress != null){
+        Column {
+            Text(text = "Location: ${currentAddress?.latitude}, ${currentAddress?.longitude}")
+            Text(text = "Country: $country")
+            Text(text = "City: $city")
+            Text(text = "District: $district")
+            Text(text = "Street: $street")
+            Text(text = "Full Address: $fullAddress")
+        }
+    } else {
+        Text(text = "Location not available")
+    }
+    LaunchedEffect (key1 = liveAddress){
+        if (liveAddress.data != null){
+            mainScreenViewModel.setCurrentAddress(liveAddress.data!!)
+        }
+    }
+}
+
 
 @Composable
 fun DailyPrayCompose() {
@@ -455,32 +486,4 @@ fun RowWithIcons(
         )
     }
 }
-
-@SuppressLint("MissingPermission")
-@Composable
-fun GetLocationInformation(viewModel: MainScreenViewModel){
-    val permissionGranted by viewModel.permissionGranted.collectAsState()
-    LaunchedEffect (key1 = permissionGranted) {
-        viewModel.getLocationAndAddress()
-    }
-    val currentAddress by viewModel.locationAndAddress.collectAsState()
-    val country = currentAddress.data?.country
-    val city = currentAddress.data?.city
-    val district  = currentAddress.data?.street
-    val street = currentAddress.data?.district
-    val fullAddress = currentAddress.data?.fullAddress
-    if (currentAddress.status == Status.SUCCESS){
-        Column {
-            Text(text = "Location: ${currentAddress.data?.latitude}, ${currentAddress.data?.longitude}")
-            Text(text = "Country: $country")
-            Text(text = "City: $city")
-            Text(text = "District: $district")
-            Text(text = "Street: $street")
-            Text(text = "Full Address: $fullAddress")
-        }
-    } else {
-        Text(text = "Location not available")
-    }
-}
-
 
