@@ -2,6 +2,8 @@ package com.fatih.namazvakitleri.data.dependency_injection
 
 import android.content.Context
 import android.location.Geocoder
+import androidx.room.Room
+import com.fatih.namazvakitleri.data.local.database.AddressDatabase
 import com.fatih.namazvakitleri.data.remote.PrayApi
 import com.fatih.namazvakitleri.data.repository.LocationAndAddressRepoImp
 import com.fatih.namazvakitleri.data.repository.PrayRepositoryImp
@@ -52,6 +54,14 @@ object Module {
         setWaitForAccurateLocation(true)
         setMinUpdateDistanceMeters(100f)
     }.build()
+
+    @Provides
+    @Singleton
+    fun provideAddressDatabase(@ApplicationContext context : Context) = Room.databaseBuilder(context, AddressDatabase::class.java, "address_database").build()
+
+    @Provides
+    @Singleton
+    fun provideAddressDao(addressDatabase: AddressDatabase) = addressDatabase.addressDao()
 
     @Provides
     @Singleton

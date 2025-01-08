@@ -1,5 +1,6 @@
 package com.fatih.namazvakitleri.domain.model
 
+//address'i güncelle city district gibi şeylere gerek yok screenden alırsın
 data class Address(
     val latitude: Double?,
     val longitude: Double?,
@@ -7,5 +8,7 @@ data class Address(
     val city: String?,
     val district: String?,
     val street: String?,
-    val fullAddress: String?
+    val fullAddress: String?,
+    val id : Int = 0 ,
 )
+

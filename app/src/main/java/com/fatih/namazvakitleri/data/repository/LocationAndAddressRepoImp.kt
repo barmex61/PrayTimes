@@ -37,22 +37,30 @@ class LocationAndAddressRepoImp @Inject constructor(
     private var locationCallback : LocationCallback? = null
     private var isAlreadyCallbackAvailable : Boolean = false
 
-    private suspend fun getAddressWithRetry(location: Location, maxRetries: Int = 3, retryDelay: Long = 10000): android.location.Address? {
+    private suspend fun getAddressWithRetry(location: Location, maxRetries: Int = 3, retryDelay: Long = 10000): Resource<Address> {
         repeat(maxRetries) { attempt ->
             try {
-                println("yess")
                 val addresses = geocoder.getFromLocation(location.latitude, location.longitude, 3)
-                return addresses?.getOrNull(0)
+                val address = addresses?.getOrNull(0)
+                val addressModel = Address(
+                    location.latitude,
+                    location.longitude,
+                    address?.countryName,
+                    address?.adminArea,
+                    address?.subAdminArea,
+                    address?.subLocality,
+                    address?.getAddressLine(0)
+                )
+                return Resource.success(addressModel)
             } catch (e: IOException) {
-                println(e)
                 if (attempt < maxRetries - 1) {
                     delay(retryDelay)
                 } else {
-                    println("Geocoder failed after $maxRetries retries $e")
+                    return Resource.error("Geocoder failed after $maxRetries retries $e")
                 }
             }
         }
-        return null
+        return Resource.error("Nothing happened")
     }
 
     @SuppressLint("MissingPermission")
@@ -64,19 +72,8 @@ class LocationAndAddressRepoImp @Inject constructor(
                         CoroutineScope(Dispatchers.IO).launch {
                             try {
                                 val address = getAddressWithRetry(location)
-                                val addressModel = Address(
-                                    location.latitude,
-                                    location.longitude,
-                                    address?.countryName,
-                                    address?.adminArea,
-                                    address?.subAdminArea,
-                                    address?.subLocality,
-                                    address?.getAddressLine(0)
-                                )
-                                println(addressModel)
-                                trySend(Resource.success(addressModel))
+                                trySend(address)
                             } catch (e: IOException) {
-                                println(e.message)
                                 trySend(Resource.error(e.message))
                             }
                         }

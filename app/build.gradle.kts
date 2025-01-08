@@ -2,9 +2,9 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-    alias(libs.plugins.kotlin.kapt)
     alias(libs.plugins.hilt.android)
     kotlin("plugin.serialization") version "1.9.10"
+    alias(libs.plugins.ksp)
 }
 
 android {
@@ -75,8 +75,8 @@ dependencies {
 
     //Dagger - Hilt
     implementation (libs.hilt.android)
-    kapt (libs.hilt.android.compiler)
-    kapt (libs.androidx.hilt.compiler)
+    ksp(libs.hilt.android.compiler)
+    ksp(libs.androidx.hilt.compiler)
     implementation (libs.androidx.hilt.navigation.compose)
     implementation (libs.androidx.hilt.work)
     implementation (libs.androidx.work.runtime.ktx)
@@ -92,5 +92,11 @@ dependencies {
 
     //Play-services-location
     implementation(libs.play.services.location)
+
+    //Room
+    implementation(libs.androidx.room.runtime)
+    ksp(libs.androidx.room.compiler)
+    implementation(libs.androidx.room.ktx)
+    implementation (libs.androidx.lifecycle.livedata.ktx)
 
 }

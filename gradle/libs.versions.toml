@@ -1,5 +1,4 @@
 [versions]
-accompanistFlowlayout = "0.17.0"
 agp = "8.7.3"
 animatedNavigationBar = "1.0.0"
 animationGraphics = "1.7.6"
@@ -21,7 +20,12 @@ composeBom = "2024.12.01"
 navigationCompose = "2.8.5"
 playServicesLocation = "21.3.0"
 retrofit = "2.9.0"
+roomLivedata = "2.6.1)"
+roomLivedataVersion = "2.6.1"
+roomRuntime = "2.6.1"
 workRuntimeKtx = "2.10.0"
+ksp = "2.1.0-1.0.29"
+lifecycleLivedataKtx = "2.8.7"
 
 [libraries]
 androidx-animation-graphics = { module = "androidx.compose.animation:animation-graphics", version.ref = "animationGraphics" }
@@ -32,6 +36,10 @@ androidx-hilt-work = { module = "androidx.hilt:hilt-work", version.ref = "hiltWo
 androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycleRuntimeKtx" }
 androidx-lifecycle-viewmodel-ktx = { module = "androidx.lifecycle:lifecycle-viewmodel-ktx", version.ref = "lifecycleRuntimeKtx" }
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
+androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "roomRuntime" }
+androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "roomRuntime" }
+androidx-lifecycle-livedata-ktx = { module = "androidx.lifecycle:lifecycle-livedata-ktx", version.ref = "lifecycleLivedataKtx" }
+androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "roomRuntime" }
 androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "workRuntimeKtx" }
 animated-navigation-bar = { module = "com.exyte:animated-navigation-bar", version.ref = "animatedNavigationBar" }
 converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "converterGson" }
@@ -61,4 +69,4 @@ android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 hilt-android = { id = "com.google.dagger.hilt.android", version.ref = "hilt-android"}
-kotlin-kapt = {id = "kotlin-kapt"}
+ksp = { id = "com.google.devtools.ksp",version.ref = "ksp"}

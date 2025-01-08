@@ -2,6 +2,9 @@ package com.fatih.namazvakitleri.presentation.main_screen.view
 
 import android.annotation.SuppressLint
 import android.graphics.drawable.AnimatedVectorDrawable
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.graphics.ExperimentalAnimationGraphicsApi
@@ -40,6 +43,8 @@ import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -50,21 +55,26 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.exyte.animatednavbar.utils.noRippleClickable
 import com.fatih.namazvakitleri.R
 import com.fatih.namazvakitleri.domain.model.PrayTimes
+import com.fatih.namazvakitleri.presentation.main_screen.viewmodel.MainScreenViewModel
 import com.fatih.namazvakitleri.presentation.ui.theme.IconBackGroundColor
 import com.fatih.namazvakitleri.presentation.ui.theme.IconColor
+import com.fatih.namazvakitleri.util.Status
 import com.fatih.namazvakitleri.util.toPrayList
 
 @Composable
 fun MainScreen() {
+    GetLocationInformation(viewModel)
     val scrollState = rememberScrollState()
     Column(modifier = Modifier.verticalScroll(scrollState, enabled = true) ){
         TopBarCompose()
@@ -445,3 +455,32 @@ fun RowWithIcons(
         )
     }
 }
+
+@SuppressLint("MissingPermission")
+@Composable
+fun GetLocationInformation(viewModel: MainScreenViewModel){
+    val permissionGranted by viewModel.permissionGranted.collectAsState()
+    LaunchedEffect (key1 = permissionGranted) {
+        viewModel.getLocationAndAddress()
+    }
+    val currentAddress by viewModel.locationAndAddress.collectAsState()
+    val country = currentAddress.data?.country
+    val city = currentAddress.data?.city
+    val district  = currentAddress.data?.street
+    val street = currentAddress.data?.district
+    val fullAddress = currentAddress.data?.fullAddress
+    if (currentAddress.status == Status.SUCCESS){
+        Column {
+            Text(text = "Location: ${currentAddress.data?.latitude}, ${currentAddress.data?.longitude}")
+            Text(text = "Country: $country")
+            Text(text = "City: $city")
+            Text(text = "District: $district")
+            Text(text = "Street: $street")
+            Text(text = "Full Address: $fullAddress")
+        }
+    } else {
+        Text(text = "Location not available")
+    }
+}
+
+
