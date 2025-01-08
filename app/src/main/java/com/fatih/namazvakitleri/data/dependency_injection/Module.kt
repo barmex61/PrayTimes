@@ -3,6 +3,7 @@ package com.fatih.namazvakitleri.data.dependency_injection
 import android.content.Context
 import android.location.Geocoder
 import androidx.room.Room
+import com.fatih.namazvakitleri.data.local.dao.AddressDao
 import com.fatih.namazvakitleri.data.local.database.AddressDatabase
 import com.fatih.namazvakitleri.data.remote.PrayApi
 import com.fatih.namazvakitleri.data.repository.LocationAndAddressRepoImp
@@ -50,7 +51,7 @@ object Module {
 
     @Provides
     @Singleton
-    fun provideLocationRequest() : LocationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 10000).apply {
+    fun provideLocationRequest() : LocationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 500).apply {
         setWaitForAccurateLocation(true)
         setMinUpdateDistanceMeters(100f)
     }.build()
@@ -68,5 +69,7 @@ object Module {
     fun provideLocationAndAddressRepository(
         fusedLocationProviderClient: FusedLocationProviderClient,
         locationRequest: LocationRequest,
-        geocoder: Geocoder) : LocationAndAddressRepository = LocationAndAddressRepoImp(fusedLocationProviderClient,locationRequest,geocoder)
+        geocoder: Geocoder,
+        addressDao: AddressDao
+    ) : LocationAndAddressRepository = LocationAndAddressRepoImp(fusedLocationProviderClient,locationRequest,geocoder,addressDao)
 }

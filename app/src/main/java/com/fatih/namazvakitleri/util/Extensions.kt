@@ -54,3 +54,13 @@ fun AddressEntity.toAddress() : Address = Address(
     fullAddress = this.fullAddress,
     street = this.street
 )
+
+fun Address.toAddressEntity() : AddressEntity = AddressEntity(
+    latitude = this.latitude,
+    longitude = this.longitude,
+    country = this.country,
+    city = this.city,
+    district = this.district,
+    street = this.street,
+    fullAddress = this.fullAddress
+)

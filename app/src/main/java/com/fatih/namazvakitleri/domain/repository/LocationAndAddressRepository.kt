@@ -8,4 +8,5 @@ interface LocationAndAddressRepository {
 
     suspend fun getLocationAndAddressInformation() : Flow<Resource<Address>>
     suspend fun getCurrentAddress() : Address?
+    suspend fun saveAddressToDatabase(address: Address)
 }

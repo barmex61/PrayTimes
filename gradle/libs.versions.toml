@@ -2,6 +2,7 @@
 agp = "8.7.3"
 animatedNavigationBar = "1.0.0"
 animationGraphics = "1.7.6"
+geoip2 = "3.1.0"
 hilt-android = "2.54"
 converterGson = "2.9.0"
 hiltAndroidCompiler = "2.54"
@@ -14,6 +15,7 @@ espressoCore = "3.6.1"
 kotlinxCoroutinesAndroid = "1.7.3"
 kotlinxCoroutinesCore = "1.6.4"
 kotlinxSerializationJson = "1.6.0"
+libGeoip = "2.0.0"
 lifecycleRuntimeKtx = "2.8.7"
 activityCompose = "1.9.3"
 composeBom = "2024.12.01"
@@ -43,6 +45,7 @@ androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "
 androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "workRuntimeKtx" }
 animated-navigation-bar = { module = "com.exyte:animated-navigation-bar", version.ref = "animatedNavigationBar" }
 converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "converterGson" }
+geoip2 = { module = "com.maxmind.geoip2:geoip2", version.ref = "geoip2" }
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hiltAndroidCompiler" }
 hilt-android-compiler = { module = "com.google.dagger:hilt-android-compiler", version.ref = "hiltAndroidCompiler" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -61,6 +64,7 @@ androidx-material3 = { group = "androidx.compose.material3", name = "material3" 
 kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "kotlinxCoroutinesAndroid" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinxCoroutinesCore" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
+lib-geoip = { module = "com.enonic.lib:lib-geoip", version.ref = "libGeoip" }
 play-services-location = { module = "com.google.android.gms:play-services-location", version.ref = "playServicesLocation" }
 retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
 

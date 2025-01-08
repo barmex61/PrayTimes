@@ -9,6 +9,7 @@ import com.fatih.namazvakitleri.domain.model.Address
 import com.fatih.namazvakitleri.domain.repository.LocationAndAddressRepository
 import com.fatih.namazvakitleri.util.Resource
 import com.fatih.namazvakitleri.util.toAddress
+import com.fatih.namazvakitleri.util.toAddressEntity
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
@@ -69,6 +70,7 @@ class LocationAndAddressRepoImp @Inject constructor(
                     locationResult.locations.lastOrNull()?.let { location ->
                         CoroutineScope(Dispatchers.IO).launch {
                             try {
+                                trySend(Resource.loading())
                                 val address = getAddressWithRetry(location)
                                 trySend(address)
                             } catch (e: IOException) {
@@ -86,7 +88,6 @@ class LocationAndAddressRepoImp @Inject constructor(
                 locationCallback!!,
                 Looper.getMainLooper()
             ).addOnFailureListener { exception ->
-                println(exception)
                 close(exception) // Hata durumunda Flow'u kapat
                 isAlreadyCallbackAvailable = false
                 locationCallback = null
@@ -104,8 +105,11 @@ class LocationAndAddressRepoImp @Inject constructor(
         return try {
             addressDao.getCurrentAddress().toAddress()
         }catch (e:Exception){
-            println(e)
             null
         }
+    }
+
+    override suspend fun saveAddressToDatabase(address: Address) {
+        addressDao.insertAddress(address.toAddressEntity())
     }
 }
