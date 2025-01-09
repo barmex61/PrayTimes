@@ -1,6 +1,5 @@
 package com.fatih.prayertime.util
 
-import com.fatih.prayertime.data.local.AddressEntity
 import com.fatih.prayertime.data.remote.dto.DailyPrayResponseDTO
 import com.fatih.prayertime.data.remote.dto.PrayDataDTO
 import com.fatih.prayertime.data.remote.dto.PrayTimesDTO
@@ -9,26 +8,34 @@ import com.fatih.prayertime.domain.model.DailyPrayResponse
 import com.fatih.prayertime.domain.model.PrayData
 import com.fatih.prayertime.domain.model.PrayTimes
 
-fun DailyPrayResponseDTO.toPrayTimes() : PrayTimes {
-    val dailyPrayResponse = this.toDailyPrayResponse()
+fun DailyPrayResponseDTO.toPrayTimes(address: Address) : PrayTimes {
+    val dailyPrayResponse = this.toDailyPrayResponse(address)
     return dailyPrayResponse.data.prayTimes
 }
 
-fun DailyPrayResponseDTO.toDailyPrayResponse() : DailyPrayResponse =
-    DailyPrayResponse(data = this.data.toPrayData())
+fun DailyPrayResponseDTO.toDailyPrayResponse(address: Address) : DailyPrayResponse =
+    DailyPrayResponse(data = this.data.toPrayData(address))
 
-fun PrayDataDTO.toPrayData() : PrayData = PrayData(
-    prayTimes = this.timings.toPrayTimes(this.date.gregorian.date)
+fun PrayDataDTO.toPrayData(address: Address) : PrayData = PrayData(
+    prayTimes = this.timings.toPrayTimes(this.date.gregorian.date,address)
 )
 
-fun PrayTimesDTO.toPrayTimes(date : String) : PrayTimes = PrayTimes(
+fun PrayTimesDTO.toPrayTimes(date : String,address: Address) : PrayTimes = PrayTimes(
     morning = Pair("Morning",this.Fajr) ,
     //sunrise = Pair("Sunrise",this.Sunrise),
     noon = Pair("Noon",this.Dhuhr),
     afternoon = Pair("Afternoon",this.Asr),
     evening = Pair("Evening",this.Maghrib),
     night = Pair("Night",this.Isha),
-    date = date
+    date = date,
+    latitude = address.latitude,
+    longitude = address.longitude,
+    country = address.country,
+    city = address.city,
+    district = address.district,
+    street = address.street,
+    fullAddress = address.fullAddress,
+    time = System.currentTimeMillis()
 )
 
 fun PrayTimes.toList() : List<Pair<String,String>> = listOf(
@@ -40,17 +47,7 @@ fun PrayTimes.toList() : List<Pair<String,String>> = listOf(
     this.night
 )
 
-fun AddressEntity.toAddress() : Address = Address(
-    latitude = this.latitude,
-    longitude = this.longitude,
-    country = this.country,
-    city = this.city,
-    district = this.district,
-    fullAddress = this.fullAddress,
-    street = this.street
-)
-
-fun Address.toAddressEntity() : AddressEntity = AddressEntity(
+fun PrayTimes.toAddress() : Address = Address(
     latitude = this.latitude,
     longitude = this.longitude,
     country = this.country,
@@ -59,3 +56,23 @@ fun Address.toAddressEntity() : AddressEntity = AddressEntity(
     street = this.street,
     fullAddress = this.fullAddress
 )
+
+fun String?.convertTimeToSeconds(): Int {
+    this?.let { timeString ->
+        val timeParts = timeString.split(":")
+        if (timeParts.size in 2..3) { // Saat ve dakika olmalı, saniye isteğe bağlı
+            try {
+                val hours = timeParts[0].toInt()
+                val minutes = timeParts[1].toInt()
+                val seconds = if (timeParts.size == 3) timeParts[2].toInt() else 0
+
+                return hours * 3600 + minutes * 60 + seconds
+            } catch (e: NumberFormatException) {
+                return 0
+            }
+        } else {
+            return 0
+        }
+    }
+    return 0
+}

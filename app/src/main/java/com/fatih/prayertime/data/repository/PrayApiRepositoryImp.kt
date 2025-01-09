@@ -2,7 +2,7 @@ package com.fatih.prayertime.data.repository
 
 import com.fatih.prayertime.data.remote.PrayApi
 import com.fatih.prayertime.data.remote.dto.DailyPrayResponseDTO
-import com.fatih.prayertime.domain.repository.PrayRepository
+import com.fatih.prayertime.domain.repository.PrayApiRepository
 import com.fatih.prayertime.util.Resource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -11,7 +11,7 @@ import java.io.IOException
 import java.lang.Exception
 import javax.inject.Inject
 
-class PrayRepositoryImp @Inject constructor(private val prayApi : PrayApi) : PrayRepository {
+class PrayApiRepositoryImp @Inject constructor(private val prayApi : PrayApi) : PrayApiRepository {
 
     override suspend fun getPrayTimes(date : String,latitude : Double, longitude : Double): Resource<DailyPrayResponseDTO> =
         withContext(Dispatchers.IO)  {

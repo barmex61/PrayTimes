@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -66,6 +67,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -82,6 +84,8 @@ import com.fatih.prayertime.presentation.ui.theme.IconColor
 import com.fatih.prayertime.presentation.ui.theme.LightGreen
 import com.fatih.prayertime.util.NetworkState
 import com.fatih.prayertime.util.Status
+import com.fatih.prayertime.util.convertTimeToSeconds
+import com.fatih.prayertime.util.toAddress
 import com.fatih.prayertime.util.toList
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
@@ -97,7 +101,7 @@ fun MainScreen(appViewModel: AppViewModel) {
     GetLocationInformation(mainScreenViewModel,appViewModel)
     Column(modifier = Modifier.verticalScroll(scrollState, enabled = true) ){
         TopBarCompose()
-        PrayScheduleCompose(appViewModel)
+        PrayScheduleCompose()
         PrayNotificationCompose()
         DailyPrayCompose()
     }
@@ -106,17 +110,30 @@ fun MainScreen(appViewModel: AppViewModel) {
 @Composable
 fun GetLocationInformation(mainScreenViewModel: MainScreenViewModel, appViewModel: AppViewModel){
     val permissionGranted by appViewModel.permissionGranted.collectAsState()
-    var isApiCalled by rememberSaveable { mutableStateOf(false) }
+    var isLocationTracking by rememberSaveable { mutableStateOf(false) }
     val networkState by appViewModel.networkState.collectAsState()
     LaunchedEffect (key1 = Unit, key2 = permissionGranted) {
-        if (permissionGranted && !isApiCalled){
-            isApiCalled = true
-            mainScreenViewModel.getCurrentAddressFromLive()
-            println("Current address initialization from API")
-        }else if (!permissionGranted) {
-            mainScreenViewModel.getCurrentAddressFromDatabase()
-            println("Current address initialization from DATABASE")
-        }
+        snapshotFlow { networkState }
+            .collectLatest { networkState ->
+                when(networkState){
+                    NetworkState.Connected -> {
+                       if (permissionGranted && !isLocationTracking){
+                           mainScreenViewModel.trackLocationAndUpdatePrayTimesDatabase()
+                           isLocationTracking = true
+                       }
+                        if (!permissionGranted) {
+                            mainScreenViewModel.getDailyPrayTimesFromDb()
+                        }
+                        if (permissionGranted){
+                            mainScreenViewModel.getDailyPrayTimesFromAPI(null)
+                        }
+                    }
+                    NetworkState.Disconnected -> {
+                       mainScreenViewModel.getDailyPrayTimesFromDb()
+                    }
+                }
+            }
+
     }
 }
 
@@ -311,7 +328,7 @@ fun PrayNotificationCompose() {
 
 @SuppressLint("NewApi")
 @Composable
-fun PrayScheduleCompose(appViewModel: AppViewModel) {
+fun PrayScheduleCompose() {
     val mainScreenViewModel : MainScreenViewModel = hiltViewModel()
     Card(
         modifier = Modifier.padding(top = 20.dp),
@@ -325,12 +342,12 @@ fun PrayScheduleCompose(appViewModel: AppViewModel) {
                 horizontalArrangement = Arrangement.SpaceAround,
                 verticalAlignment = Alignment.CenterVertically
             ){
+                val formattedTime by mainScreenViewModel.formattedTime.collectAsState()
                 Column(
                     modifier = Modifier.padding(start = 10.dp, bottom = 10.dp, end = 10.dp),
                     verticalArrangement = Arrangement.Center
                 ) {
                     val formattedDate by mainScreenViewModel.formattedDate.collectAsState()
-                    val formattedTime by mainScreenViewModel.formattedTime.collectAsState()
                     var previousTime by remember { mutableStateOf("") }
                     var currentDate by remember { mutableStateOf(LocalDate.now()) }
                     LaunchedEffect(Unit){
@@ -365,37 +382,12 @@ fun PrayScheduleCompose(appViewModel: AppViewModel) {
                     )
                 }
 
-                TimeCounter(Modifier.weight(1f).size(75.dp),60)
+                val currentTime = remember { formattedTime }
+                TimeCounter(Modifier.weight(1f).size(100.dp), currentTime)
             }
             HorizontalDivider(Modifier.padding(15.dp))
             val dailyPrayTime by mainScreenViewModel.dailyPrayTimes.collectAsState()
-            val currentAddress by mainScreenViewModel.currentAddress.collectAsState()
-            val network by appViewModel.networkState.collectAsState()
-            val formattedDate by mainScreenViewModel.formattedDate.collectAsState()
 
-            LaunchedEffect(key1 = Unit, key2 = currentAddress) {
-                if (currentAddress.data != null ){
-                    println("Address is not null inside dailyPrayCompose")
-                    snapshotFlow { network }
-                        .collectLatest { networkState ->
-                            when(networkState){
-                                NetworkState.Connected -> {
-                                    println("Network State $networkState")
-                                    mainScreenViewModel.getDailyPrayTimesFromApi(
-                                        mainScreenViewModel.formattedDate.value,
-                                        currentAddress.data!!.latitude!!,
-                                        currentAddress.data!!.longitude!!
-                                    )
-                                }
-                                NetworkState.Disconnected -> {
-                                    println("Network State $networkState")
-                                    mainScreenViewModel.getDailyPrayTimesFromDb(formattedDate)
-                                }
-                            }
-                        }
-
-                }
-            }
             when(dailyPrayTime.status){
                 Status.SUCCESS->{
                     Row(
@@ -495,6 +487,7 @@ fun TopBarCompose() {
 @Composable
 fun AddressBar() {
     val mainScreenViewModel : MainScreenViewModel = hiltViewModel()
+
     Box (modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterStart) {
         var isExpanded by remember { mutableStateOf(false) }
         Card (
@@ -515,15 +508,20 @@ fun AddressBar() {
                     contentDescription = "Location Icon",
                     tint = IconColor
                 )
-                val currentAddress by mainScreenViewModel.currentAddress.collectAsState()
+                val prayTimes by mainScreenViewModel.dailyPrayTimes.collectAsState()
+                val currentAddress by remember {
+                    derivedStateOf {
+                        prayTimes.data?.toAddress()
+                    }
+                }
                 val text by remember {
                     derivedStateOf {
-                        when(currentAddress.data){
+                        when(currentAddress){
                             null -> "Location"
                             else -> if (!isExpanded) {
-                                currentAddress.data!!.city + ", " + currentAddress.data!!.country
+                                currentAddress?.city + ", " + currentAddress?.country
                             }else{
-                                currentAddress.data!!.fullAddress?:""
+                                currentAddress?.fullAddress?:""
                             }
                         }
                     }
@@ -609,9 +607,11 @@ fun PrayerBar() {
     }
 }
 
+@SuppressLint("DefaultLocale")
 @Composable
-fun TimeCounter(modifier: Modifier = Modifier,counter: Int) {
-    var isClicked by remember { mutableStateOf(false)  }
+fun TimeCounter(modifier: Modifier = Modifier,currentTime: String) {
+
+    var isClicked by remember { mutableStateOf(false) }
     val rotationY = animateFloatAsState(
         targetValue = if (isClicked) 180f else 0f,
         animationSpec = tween(1000, easing = EaseInOutQuad),
@@ -630,52 +630,90 @@ fun TimeCounter(modifier: Modifier = Modifier,counter: Int) {
         label = ""
     )
 
+    val prayTimeList = listOf("06:06", "12:32", "14:55", "17:30", "18:00")
+
+    val currentSeconds = currentTime.convertTimeToSeconds()
+
+    var nextTimeIndex = prayTimeList.indexOfFirst { it.convertTimeToSeconds() > currentSeconds }
+    if (nextTimeIndex == -1) {
+        nextTimeIndex = 0
+    }
+    val nextTime = prayTimeList[nextTimeIndex]
+    val previousTime = if (nextTimeIndex == 0) prayTimeList.last() else prayTimeList[nextTimeIndex - 1]
+
+    var totalSeconds = nextTime.convertTimeToSeconds() - previousTime.convertTimeToSeconds()
+    if (totalSeconds < 0) {
+        totalSeconds += 24 * 3600
+    }
+
+    var elapsedSeconds by remember { mutableIntStateOf(currentSeconds - previousTime.convertTimeToSeconds()) }
+    if(elapsedSeconds < 0) elapsedSeconds += 24 * 3600
+
+    var remainingSeconds by remember { mutableIntStateOf(totalSeconds - elapsedSeconds) }
+
+    val sweepAngle by remember {
+        derivedStateOf {
+            (remainingSeconds.toFloat() / totalSeconds.toFloat()) * 360f
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(1000)
+            elapsedSeconds++
+            remainingSeconds--
+            if (elapsedSeconds >= totalSeconds) {
+                elapsedSeconds -= totalSeconds
+            }
+            if(remainingSeconds < 0) remainingSeconds += totalSeconds
+        }
+    }
+
+    val formattedTime = String.format("%02d:%02d:%02d", remainingSeconds / 3600, (remainingSeconds / 60) % 60, remainingSeconds % 60)
+
     Box(modifier = modifier.noRippleClickable {
         isClicked = !isClicked
     }.graphicsLayer {
         this.rotationY = rotationY.value
         this.scaleY = scale.value
         this.scaleX = scale.value
-    }, contentAlignment = Alignment.Center){
-        var progress by remember { mutableIntStateOf(counter) }
-        LaunchedEffect(Unit) {
-            while (true) {
-                delay(1000)
-                progress--
-                if (progress < 0) progress = 60
-            }
-        }
+    }, contentAlignment = Alignment.Center) {
+
         Text(modifier = Modifier.graphicsLayer {
             this.rotationY = rotationY.value
-        }, text = progress.toString(), fontSize = 22.sp)
-        Canvas(modifier = modifier) {
+        }, text = formattedTime, fontSize = 18.sp)
+        Canvas(modifier = Modifier.fillMaxSize()) {
             val center = Offset(size.width / 2f, size.height / 2f)
-            val radius = size.width / 2f
+            val radius = size.minDimension / 2f - 20f
             val strokeWidth = 15f
             val circleRadius = 17f
 
             drawCircle(
                 color = IconBackGroundColor,
+                center = center,
+                radius = radius,
                 style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
             )
 
-            val sweepAngle = -(progress * 360f) / 60f
             drawArc(
                 brush = Brush.linearGradient(
                     colors = listOf(IconColor, LightGreen),
                     tileMode = TileMode.Repeated
                 ),
                 startAngle = -90f,
-                sweepAngle = -sweepAngle,
+                sweepAngle = sweepAngle,
                 useCenter = false,
-                style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
+                style = Stroke(width = strokeWidth, cap = StrokeCap.Round),
+                topLeft = Offset(center.x - radius, center.y - radius),
+                size = androidx.compose.ui.geometry.Size(radius * 2, radius * 2)
             )
-            val angleRadians = (-90f - sweepAngle) * (PI / 180f).toFloat()
+
+            val angleRadians = (-90f + sweepAngle) * (PI / 180f).toFloat()
             val circleCenterX = center.x + radius * cos(angleRadians)
             val circleCenterY = center.y + radius * sin(angleRadians)
 
             drawCircle(
-                brush =  Brush.linearGradient(
+                brush = Brush.linearGradient(
                     colors = listOf(IconColor, LightGreen),
                     tileMode = TileMode.Repeated
                 ),
@@ -684,7 +722,4 @@ fun TimeCounter(modifier: Modifier = Modifier,counter: Int) {
             )
         }
     }
-
-
-
 }

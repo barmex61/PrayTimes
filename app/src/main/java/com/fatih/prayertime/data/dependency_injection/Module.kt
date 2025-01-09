@@ -3,17 +3,18 @@ package com.fatih.prayertime.data.dependency_injection
 import android.content.Context
 import android.location.Geocoder
 import androidx.room.Room
-import com.fatih.prayertime.data.local.dao.AddressDao
-import com.fatih.prayertime.data.local.database.AddressDatabase
+import com.fatih.prayertime.data.local.dao.PrayDao
 import com.fatih.prayertime.data.local.database.PrayDatabase
 import com.fatih.prayertime.data.network.NetworkConnectivityManager
 import com.fatih.prayertime.data.remote.PrayApi
 import com.fatih.prayertime.data.repository.ConnectivityRepositoryImp
 import com.fatih.prayertime.data.repository.LocationAndAddressRepoImp
-import com.fatih.prayertime.data.repository.PrayRepositoryImp
+import com.fatih.prayertime.data.repository.PrayApiRepositoryImp
+import com.fatih.prayertime.data.repository.PrayDatabaseRepositoryImp
 import com.fatih.prayertime.domain.repository.ConnectivityRepository
 import com.fatih.prayertime.domain.repository.LocationAndAddressRepository
-import com.fatih.prayertime.domain.repository.PrayRepository
+import com.fatih.prayertime.domain.repository.PrayApiRepository
+import com.fatih.prayertime.domain.repository.PrayDatabaseRepository
 import com.fatih.prayertime.util.Constants.BASE_URL
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationRequest
@@ -35,7 +36,7 @@ object Module {
 
     @Provides
     @Singleton
-    fun providePrayRepository(prayApi : PrayApi) : PrayRepository = PrayRepositoryImp(prayApi)
+    fun providePrayRepository(prayApi : PrayApi) : PrayApiRepository = PrayApiRepositoryImp(prayApi)
 
     @Provides
     @Singleton
@@ -55,27 +56,17 @@ object Module {
 
     @Provides
     @Singleton
-    fun provideLocationRequest() : LocationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 60000).apply {
-        setWaitForAccurateLocation(true)
-        setMinUpdateDistanceMeters(100f)
+    fun provideLocationRequest() : LocationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 1000).apply {
+        setMinUpdateDistanceMeters(2000f)
     }.build()
-
-    @Provides
-    @Singleton
-    fun provideAddressDatabase(@ApplicationContext context : Context) = Room.databaseBuilder(context, AddressDatabase::class.java, "address_database").build()
-
-    @Provides
-    @Singleton
-    fun provideAddressDao(addressDatabase: AddressDatabase) = addressDatabase.addressDao()
 
     @Provides
     @Singleton
     fun provideLocationAndAddressRepository(
         fusedLocationProviderClient: FusedLocationProviderClient,
         locationRequest: LocationRequest,
-        geocoder: Geocoder,
-        addressDao: AddressDao
-    ) : LocationAndAddressRepository = LocationAndAddressRepoImp(fusedLocationProviderClient,locationRequest,geocoder,addressDao)
+        geocoder: Geocoder
+    ) : LocationAndAddressRepository = LocationAndAddressRepoImp(fusedLocationProviderClient,locationRequest,geocoder)
 
     @Provides
     @Singleton
@@ -92,5 +83,9 @@ object Module {
     @Provides
     @Singleton
     fun providePrayDao(prayDatabase: PrayDatabase) = prayDatabase.prayDao()
+
+    @Provides
+    @Singleton
+    fun providePrayDatabaseRepository(prayDao: PrayDao) : PrayDatabaseRepository = PrayDatabaseRepositoryImp(prayDao)
 
 }

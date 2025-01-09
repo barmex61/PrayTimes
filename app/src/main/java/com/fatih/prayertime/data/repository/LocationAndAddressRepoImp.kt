@@ -4,12 +4,9 @@ import android.annotation.SuppressLint
 import android.location.Geocoder
 import android.location.Location
 import android.os.Looper
-import com.fatih.prayertime.data.local.dao.AddressDao
 import com.fatih.prayertime.domain.model.Address
 import com.fatih.prayertime.domain.repository.LocationAndAddressRepository
 import com.fatih.prayertime.util.Resource
-import com.fatih.prayertime.util.toAddress
-import com.fatih.prayertime.util.toAddressEntity
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
@@ -23,14 +20,12 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
 import java.io.IOException
-import java.lang.Exception
 import javax.inject.Inject
 
 class LocationAndAddressRepoImp @Inject constructor(
     private val fusedLocationProviderClient: FusedLocationProviderClient,
     private val locationRequest: LocationRequest,
     private val geocoder: Geocoder,
-    private val addressDao : AddressDao,
 ) : LocationAndAddressRepository {
 
     private var locationCallback : LocationCallback? = null
@@ -101,15 +96,4 @@ class LocationAndAddressRepoImp @Inject constructor(
         }
     }.flowOn(Dispatchers.IO) // IO thread'inde çalıştır
 
-    override suspend fun getCurrentAddress(): Address? {
-        return try {
-            addressDao.getCurrentAddress().toAddress()
-        }catch (e:Exception){
-            null
-        }
-    }
-
-    override suspend fun saveAddressToDatabase(address: Address) {
-        addressDao.insertAddress(address.toAddressEntity())
-    }
 }
