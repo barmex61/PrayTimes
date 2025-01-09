@@ -36,7 +36,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.fatih.prayertime.presentation.main_activity.viewmodel.PermissionViewModel
+import com.fatih.prayertime.presentation.main_activity.viewmodel.AppViewModel
 import com.fatih.prayertime.presentation.main_screen.view.MainScreen
 import com.fatih.prayertime.presentation.ui.theme.BackGround
 import com.fatih.prayertime.presentation.ui.theme.IconColor
@@ -62,15 +62,15 @@ class MainActivity : ComponentActivity() {
         setContent {
             PrayerTimeTheme(dynamicColor = false, darkTheme = false) {
                 val context = LocalContext.current
-                val permissionViewModel : PermissionViewModel = hiltViewModel()
-                val showGoToSettings by  permissionViewModel.showGoToSettings.collectAsState()
-                val showPermissionRequest by permissionViewModel.showPermissionRequest.collectAsState()
-                val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions -> permissionViewModel.onPermissionsResult(permissions,context as ComponentActivity) }
-                val resultLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { permissionViewModel.checkPermissions(context) }
+                val appViewModel : AppViewModel = hiltViewModel()
+                val showGoToSettings by  appViewModel.showGoToSettings.collectAsState()
+                val showPermissionRequest by appViewModel.showPermissionRequest.collectAsState()
+                val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions -> appViewModel.onPermissionsResult(permissions,context as ComponentActivity) }
+                val resultLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { appViewModel.checkPermissions(context) }
                 if (showPermissionRequest) {
                     LaunchedEffect (Unit){
-                        permissionViewModel.checkPermissions(context)
-                        permissionLauncher.launch(permissionViewModel.locationPermissions)
+                        appViewModel.checkPermissions(context)
+                        permissionLauncher.launch(appViewModel.locationPermissions)
                     }
                 }
                 Scaffold(
@@ -86,7 +86,7 @@ class MainActivity : ComponentActivity() {
                                             resultLauncher.launch(intent)
 
                                         }else{
-                                            permissionLauncher.launch(permissionViewModel.locationPermissions)
+                                            permissionLauncher.launch(appViewModel.locationPermissions)
                                         }
                                     }) {
                                         Text("Give")
@@ -139,7 +139,7 @@ class MainActivity : ComponentActivity() {
                         )
                     {
 
-                        MainScreen(permissionViewModel)
+                        MainScreen(appViewModel)
                     }
                 }
             }

@@ -6,16 +6,17 @@ import android.content.pm.PackageManager
 import androidx.activity.ComponentActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
+import com.fatih.prayertime.util.NetworkState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import javax.inject.Inject
 
-class PermissionViewModel @Inject constructor() : ViewModel() {
+class AppViewModel @Inject constructor() : ViewModel() {
 
-    val permissionEffectKey = MutableStateFlow(true)
-    fun setPermissionKey(key : Boolean){
-        permissionEffectKey.value = key
-    }
+    //Network-State
+
+    private val _isNetworkAvailable = MutableStateFlow<NetworkState>(NetworkState.Disconnected)
+    val isNetworkAvailable: StateFlow<NetworkState> = _isNetworkAvailable
 
     //Permissions
 

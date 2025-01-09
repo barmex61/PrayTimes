@@ -51,6 +51,7 @@ class MainScreenViewModel @Inject constructor(
         getLocationAndAddressUseCase().collect { address ->
             when(address.status){
                 Status.SUCCESS -> {
+                    println("success")
                     _currentAddress.emit(Resource.success(address.data))
                     saveAddressToDatabase(currentAddress.value.data!!)
                 }

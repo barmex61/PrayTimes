@@ -5,9 +5,12 @@ import android.location.Geocoder
 import androidx.room.Room
 import com.fatih.prayertime.data.local.dao.AddressDao
 import com.fatih.prayertime.data.local.database.AddressDatabase
+import com.fatih.prayertime.data.network.NetworkConnectivityManager
 import com.fatih.prayertime.data.remote.PrayApi
+import com.fatih.prayertime.data.repository.ConnectivityRepositoryImp
 import com.fatih.prayertime.data.repository.LocationAndAddressRepoImp
 import com.fatih.prayertime.data.repository.PrayRepositoryImp
+import com.fatih.prayertime.domain.repository.ConnectivityRepository
 import com.fatih.prayertime.domain.repository.LocationAndAddressRepository
 import com.fatih.prayertime.domain.repository.PrayRepository
 import com.fatih.prayertime.util.Constants.BASE_URL
@@ -72,4 +75,12 @@ object Module {
         geocoder: Geocoder,
         addressDao: AddressDao
     ) : LocationAndAddressRepository = LocationAndAddressRepoImp(fusedLocationProviderClient,locationRequest,geocoder,addressDao)
+
+    @Provides
+    @Singleton
+    fun provideNetworkConnectivityManager(@ApplicationContext context : Context) = NetworkConnectivityManager(context)
+
+    @Provides
+    @Singleton
+    fun provideConnectivityRepository(networkConnectivityManager: NetworkConnectivityManager) : ConnectivityRepository = ConnectivityRepositoryImp(networkConnectivityManager )
 }

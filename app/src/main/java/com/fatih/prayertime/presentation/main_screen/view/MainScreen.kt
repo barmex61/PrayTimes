@@ -74,7 +74,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.exyte.animatednavbar.utils.noRippleClickable
 import com.fatih.prayertime.R
 import com.fatih.prayertime.domain.model.PrayTimes
-import com.fatih.prayertime.presentation.main_activity.viewmodel.PermissionViewModel
+import com.fatih.prayertime.presentation.main_activity.viewmodel.AppViewModel
 import com.fatih.prayertime.presentation.main_screen.viewmodel.MainScreenViewModel
 import com.fatih.prayertime.presentation.ui.theme.IconBackGroundColor
 import com.fatih.prayertime.presentation.ui.theme.IconColor
@@ -88,10 +88,10 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 @Composable
-fun MainScreen(permissionViewModel: PermissionViewModel) {
+fun MainScreen(appViewModel: AppViewModel) {
     val mainScreenViewModel : MainScreenViewModel = hiltViewModel()
     val scrollState = rememberScrollState()
-    GetLocationInformation(mainScreenViewModel,permissionViewModel)
+    GetLocationInformation(mainScreenViewModel,appViewModel)
     Column(modifier = Modifier.verticalScroll(scrollState, enabled = true) ){
         TopBarCompose()
         PrayScheduleCompose()
@@ -101,9 +101,11 @@ fun MainScreen(permissionViewModel: PermissionViewModel) {
 }
 
 @Composable
-fun GetLocationInformation(mainScreenViewModel: MainScreenViewModel,permissionViewModel: PermissionViewModel){
-    val permissionGranted by permissionViewModel.permissionGranted.collectAsState()
+fun GetLocationInformation(mainScreenViewModel: MainScreenViewModel, appViewModel: AppViewModel){
+    val permissionGranted by appViewModel.permissionGranted.collectAsState()
     var isApiCalled by rememberSaveable { mutableStateOf(false) }
+    println("permissionGranted $permissionGranted")
+    println("isApicalled $isApiCalled")
     LaunchedEffect (key1 = Unit, key2 = permissionGranted) {
         if (permissionGranted && !isApiCalled){
             isApiCalled = true
@@ -366,16 +368,13 @@ fun PrayScheduleCompose() {
             HorizontalDivider(Modifier.padding(15.dp))
             val dailyPrayTime by mainScreenViewModel.dailyPrayTimes.collectAsState()
             val currentAddress by mainScreenViewModel.currentAddress.collectAsState()
-            var isDailyPrayTimesFetched by rememberSaveable { mutableStateOf(false) }
             LaunchedEffect(key1 = currentAddress) {
-                if (currentAddress.data != null && !isDailyPrayTimesFetched){
-                    println("sss")
+                if (currentAddress.data != null ){
                     mainScreenViewModel.getDailyPrayTimes(
                         mainScreenViewModel.formattedDate.value,
                         currentAddress.data!!.latitude!!,
                         currentAddress.data!!.longitude!!
                     )
-                    isDailyPrayTimesFetched = true
                 }
             }
             when(dailyPrayTime.status){
