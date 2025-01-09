@@ -19,5 +19,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "NamazVakitleri"
+rootProject.name = "PrayerTime"
 include(":app")

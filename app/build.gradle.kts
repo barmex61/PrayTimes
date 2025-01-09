@@ -8,11 +8,11 @@ plugins {
 }
 
 android {
-    namespace = "com.fatih.namazvakitleri"
+    namespace = "com.fatih.prayertime"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.fatih.namazvakitleri"
+        applicationId = "com.fatih.prayertime"
         minSdk = 24
         //noinspection EditedTargetSdkVersion
         targetSdk = 35
