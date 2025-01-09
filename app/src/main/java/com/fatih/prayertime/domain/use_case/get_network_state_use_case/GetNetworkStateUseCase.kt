@@ -4,4 +4,6 @@ import com.fatih.prayertime.domain.repository.ConnectivityRepository
 import javax.inject.Inject
 
 class GetNetworkStateUseCase @Inject constructor(private val connectivityRepository: ConnectivityRepository) {
+
+    suspend operator fun invoke() = connectivityRepository.getConnectivityStatus()
 }

@@ -17,15 +17,18 @@ fun DailyPrayResponseDTO.toPrayTimes() : PrayTimes {
 fun DailyPrayResponseDTO.toDailyPrayResponse() : DailyPrayResponse =
     DailyPrayResponse(data = this.data.toPrayData())
 
-fun PrayDataDTO.toPrayData() : PrayData = PrayData(prayTimes = this.timings.toPrayTimes() )
+fun PrayDataDTO.toPrayData() : PrayData = PrayData(
+    prayTimes = this.timings.toPrayTimes(this.date.gregorian.date)
+)
 
-fun PrayTimesDTO.toPrayTimes() : PrayTimes = PrayTimes(
+fun PrayTimesDTO.toPrayTimes(date : String) : PrayTimes = PrayTimes(
     morning = Pair("Morning",this.Fajr) ,
     //sunrise = Pair("Sunrise",this.Sunrise),
     noon = Pair("Noon",this.Dhuhr),
     afternoon = Pair("Afternoon",this.Asr),
     evening = Pair("Evening",this.Maghrib),
-    night = Pair("Night",this.Isha)
+    night = Pair("Night",this.Isha),
+    date = date
 )
 
 fun PrayTimes.toList() : List<Pair<String,String>> = listOf(

@@ -6,17 +6,33 @@ import android.content.pm.PackageManager
 import androidx.activity.ComponentActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.fatih.prayertime.domain.use_case.get_network_state_use_case.GetNetworkStateUseCase
 import com.fatih.prayertime.util.NetworkState
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-class AppViewModel @Inject constructor() : ViewModel() {
+@HiltViewModel
+class AppViewModel @Inject constructor(
+    private val getNetworkStateUseCase: GetNetworkStateUseCase
+) : ViewModel() {
 
     //Network-State
 
-    private val _isNetworkAvailable = MutableStateFlow<NetworkState>(NetworkState.Disconnected)
-    val isNetworkAvailable: StateFlow<NetworkState> = _isNetworkAvailable
+    private val _networkState = MutableStateFlow<NetworkState>(NetworkState.Disconnected)
+    val networkState: StateFlow<NetworkState> = _networkState
+
+    init {
+        viewModelScope.launch(Dispatchers.IO){
+            getNetworkStateUseCase().collect{
+                _networkState.emit(it)
+            }
+        }
+    }
 
     //Permissions
 

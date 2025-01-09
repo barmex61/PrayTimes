@@ -5,5 +5,5 @@ import kotlinx.coroutines.flow.Flow
 
 interface ConnectivityRepository {
 
-    fun getConnectivityStatus() : Flow<NetworkState>
+    suspend fun getConnectivityStatus() : Flow<NetworkState>
 }

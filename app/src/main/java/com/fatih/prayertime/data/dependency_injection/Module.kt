@@ -5,6 +5,7 @@ import android.location.Geocoder
 import androidx.room.Room
 import com.fatih.prayertime.data.local.dao.AddressDao
 import com.fatih.prayertime.data.local.database.AddressDatabase
+import com.fatih.prayertime.data.local.database.PrayDatabase
 import com.fatih.prayertime.data.network.NetworkConnectivityManager
 import com.fatih.prayertime.data.remote.PrayApi
 import com.fatih.prayertime.data.repository.ConnectivityRepositoryImp
@@ -83,4 +84,13 @@ object Module {
     @Provides
     @Singleton
     fun provideConnectivityRepository(networkConnectivityManager: NetworkConnectivityManager) : ConnectivityRepository = ConnectivityRepositoryImp(networkConnectivityManager )
+
+    @Provides
+    @Singleton
+    fun providePrayDatabase(@ApplicationContext context: Context) = Room.databaseBuilder(context, PrayDatabase::class.java, "pray_database").build()
+
+    @Provides
+    @Singleton
+    fun providePrayDao(prayDatabase: PrayDatabase) = prayDatabase.prayDao()
+
 }

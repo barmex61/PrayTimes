@@ -55,6 +55,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -79,9 +80,11 @@ import com.fatih.prayertime.presentation.main_screen.viewmodel.MainScreenViewMod
 import com.fatih.prayertime.presentation.ui.theme.IconBackGroundColor
 import com.fatih.prayertime.presentation.ui.theme.IconColor
 import com.fatih.prayertime.presentation.ui.theme.LightGreen
+import com.fatih.prayertime.util.NetworkState
 import com.fatih.prayertime.util.Status
 import com.fatih.prayertime.util.toList
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
 import java.time.LocalDate
 import kotlin.math.PI
 import kotlin.math.cos
@@ -94,7 +97,7 @@ fun MainScreen(appViewModel: AppViewModel) {
     GetLocationInformation(mainScreenViewModel,appViewModel)
     Column(modifier = Modifier.verticalScroll(scrollState, enabled = true) ){
         TopBarCompose()
-        PrayScheduleCompose()
+        PrayScheduleCompose(appViewModel)
         PrayNotificationCompose()
         DailyPrayCompose()
     }
@@ -104,16 +107,15 @@ fun MainScreen(appViewModel: AppViewModel) {
 fun GetLocationInformation(mainScreenViewModel: MainScreenViewModel, appViewModel: AppViewModel){
     val permissionGranted by appViewModel.permissionGranted.collectAsState()
     var isApiCalled by rememberSaveable { mutableStateOf(false) }
-    println("permissionGranted $permissionGranted")
-    println("isApicalled $isApiCalled")
+    val networkState by appViewModel.networkState.collectAsState()
     LaunchedEffect (key1 = Unit, key2 = permissionGranted) {
         if (permissionGranted && !isApiCalled){
             isApiCalled = true
             mainScreenViewModel.getCurrentAddressFromLive()
-            println("api")
+            println("Current address initialization from API")
         }else if (!permissionGranted) {
             mainScreenViewModel.getCurrentAddressFromDatabase()
-            println("db")
+            println("Current address initialization from DATABASE")
         }
     }
 }
@@ -309,7 +311,7 @@ fun PrayNotificationCompose() {
 
 @SuppressLint("NewApi")
 @Composable
-fun PrayScheduleCompose() {
+fun PrayScheduleCompose(appViewModel: AppViewModel) {
     val mainScreenViewModel : MainScreenViewModel = hiltViewModel()
     Card(
         modifier = Modifier.padding(top = 20.dp),
@@ -368,13 +370,30 @@ fun PrayScheduleCompose() {
             HorizontalDivider(Modifier.padding(15.dp))
             val dailyPrayTime by mainScreenViewModel.dailyPrayTimes.collectAsState()
             val currentAddress by mainScreenViewModel.currentAddress.collectAsState()
-            LaunchedEffect(key1 = currentAddress) {
+            val network by appViewModel.networkState.collectAsState()
+            val formattedDate by mainScreenViewModel.formattedDate.collectAsState()
+
+            LaunchedEffect(key1 = Unit, key2 = currentAddress) {
                 if (currentAddress.data != null ){
-                    mainScreenViewModel.getDailyPrayTimes(
-                        mainScreenViewModel.formattedDate.value,
-                        currentAddress.data!!.latitude!!,
-                        currentAddress.data!!.longitude!!
-                    )
+                    println("Address is not null inside dailyPrayCompose")
+                    snapshotFlow { network }
+                        .collectLatest { networkState ->
+                            when(networkState){
+                                NetworkState.Connected -> {
+                                    println("Network State $networkState")
+                                    mainScreenViewModel.getDailyPrayTimesFromApi(
+                                        mainScreenViewModel.formattedDate.value,
+                                        currentAddress.data!!.latitude!!,
+                                        currentAddress.data!!.longitude!!
+                                    )
+                                }
+                                NetworkState.Disconnected -> {
+                                    println("Network State $networkState")
+                                    mainScreenViewModel.getDailyPrayTimesFromDb(formattedDate)
+                                }
+                            }
+                        }
+
                 }
             }
             when(dailyPrayTime.status){

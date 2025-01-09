@@ -2,8 +2,9 @@ package com.fatih.prayertime.presentation.main_screen.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.room.Dao
+import com.fatih.prayertime.data.local.dao.PrayDao
 import com.fatih.prayertime.domain.model.Address
-import com.fatih.prayertime.domain.model.DailyPrayResponse
 import com.fatih.prayertime.domain.model.PrayTimes
 import com.fatih.prayertime.domain.use_case.formatted_date_use_case.FormattedDateUseCase
 import com.fatih.prayertime.domain.use_case.formatted_time_use_case.FormattedTimeUseCase
@@ -28,7 +29,8 @@ class MainScreenViewModel @Inject constructor(
     private val getAddressFromDatabaseUseCase: GetAddressFromDatabaseUseCase,
     private val saveAddressToDatabaseUseCase: SaveAddressToDatabaseUseCase,
     private val formattedDateUseCase: FormattedDateUseCase,
-    private val formattedTimeUseCase: FormattedTimeUseCase
+    private val formattedTimeUseCase: FormattedTimeUseCase,
+    private val prayDao: PrayDao
 ) : ViewModel() {
 
 
@@ -37,8 +39,25 @@ class MainScreenViewModel @Inject constructor(
     private val _dailyPrayTimes = MutableStateFlow<Resource<PrayTimes>>(Resource.loading())
     val dailyPrayTimes: StateFlow<Resource<PrayTimes>> = _dailyPrayTimes
 
-    fun getDailyPrayTimes(date: String, latitude: Double, longitude: Double) = viewModelScope.launch {
+    fun getDailyPrayTimesFromApi(date: String, latitude: Double, longitude: Double) = viewModelScope.launch {
+        println("Get daily pray times called FROM API")
+        val response = getDailyPrayTimesUseCase(date, latitude, longitude)
+        when(response.status){
+            Status.SUCCESS -> {
+                prayDao.insertPrayTime(response.data!!)
+            }
+            else -> Unit
+        }
         _dailyPrayTimes.emit(getDailyPrayTimesUseCase(date, latitude, longitude))
+    }
+
+    fun getDailyPrayTimesFromDb(date: String) = viewModelScope.launch(Dispatchers.Default){
+        println("Get daily pray times called FROM DATABASE")
+        _dailyPrayTimes.emit(Resource.loading())
+        val prayResponse = prayDao.getPrayTime(date)
+        prayResponse?.let {
+            _dailyPrayTimes.emit(Resource.success(it))
+        }?:_dailyPrayTimes.emit(Resource.error("Pray times not found in database"))
     }
 
     //Location - Room
@@ -51,7 +70,7 @@ class MainScreenViewModel @Inject constructor(
         getLocationAndAddressUseCase().collect { address ->
             when(address.status){
                 Status.SUCCESS -> {
-                    println("success")
+                    println("Current address taking from API SUCCESS and SAVE TO DATABASE")
                     _currentAddress.emit(Resource.success(address.data))
                     saveAddressToDatabase(currentAddress.value.data!!)
                 }

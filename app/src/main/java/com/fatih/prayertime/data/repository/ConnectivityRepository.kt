@@ -12,7 +12,7 @@ import javax.inject.Inject
 
 class ConnectivityRepositoryImp @Inject constructor(private val networkConnectivityManager: NetworkConnectivityManager) : ConnectivityRepository {
 
-    override fun getConnectivityStatus(): Flow<NetworkState>  = callbackFlow{
+    override suspend fun getConnectivityStatus(): Flow<NetworkState>  = callbackFlow{
         networkConnectivityManager.observe({
             trySend(NetworkState.Connected)
         }){
@@ -21,6 +21,6 @@ class ConnectivityRepositoryImp @Inject constructor(private val networkConnectiv
         awaitClose {
             networkConnectivityManager.unObserve()
         }
-    }.flowOn(Dispatchers.Default)
+    }.flowOn(Dispatchers.IO)
 
 }
