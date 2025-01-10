@@ -9,9 +9,15 @@ import androidx.compose.animation.core.EaseInOutQuad
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.keyframes
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandIn
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.shrinkOut
+import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.with
 import androidx.compose.foundation.Canvas
@@ -99,12 +105,50 @@ fun MainScreen(appViewModel: AppViewModel) {
     val mainScreenViewModel : MainScreenViewModel = hiltViewModel()
     val scrollState = rememberScrollState()
     GetLocationInformation(mainScreenViewModel,appViewModel)
-    Column(modifier = Modifier.verticalScroll(scrollState, enabled = true) ){
-        TopBarCompose()
-        PrayScheduleCompose()
-        PrayNotificationCompose()
-        DailyPrayCompose()
+    var isVisible by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit){
+        isVisible = true
     }
+    Column(modifier = Modifier.verticalScroll(scrollState, enabled = true) ){
+        AnimatedVisibility(
+            visible = isVisible,
+            enter = slideInVertically(animationSpec = tween(1000)) + fadeIn(),
+            exit = slideOutVertically(animationSpec = tween(1000)) + fadeOut()
+        ){
+            AddressBar()
+        }
+        AnimatedVisibility(
+            visible = isVisible,
+            enter = slideInVertically(animationSpec = tween(1000)) + fadeIn(),
+            exit = slideOutVertically(animationSpec = tween(1000)) + fadeOut()
+        ){
+            PrayerBar()
+        }
+        AnimatedVisibility(
+            visible = isVisible,
+            enter = slideInHorizontally(tween(1000)) + fadeIn(),
+            exit = slideOutHorizontally(tween(1000)) + fadeOut()
+        ){
+            PrayScheduleCompose()
+        }
+        AnimatedVisibility(
+            visible = isVisible,
+            enter = slideInHorizontally(tween(1000)) + fadeIn(),
+            exit = slideOutHorizontally(tween(1000)) + fadeOut()
+        ){
+            PrayNotificationCompose()
+        }
+        AnimatedVisibility(
+            visible = isVisible,
+            enter = expandIn(expandFrom = Alignment.BottomCenter) + fadeIn(tween(1000)),
+            exit = shrinkOut(shrinkTowards = Alignment.TopCenter) + fadeOut(tween(1000))
+        ){
+            DailyPrayCompose()
+        }
+
+    }
+
 }
 
 @Composable
@@ -198,8 +242,8 @@ fun DailyPrayCompose() {
                             )
                             Text(
                                 modifier = Modifier
-                                    .basicMarquee()
-                                    .padding(vertical = 7.dp, horizontal = 7.dp),
+                                    .padding(vertical = 7.dp, horizontal = 7.dp)
+                                    .basicMarquee(),
                                 text = list[if (i == 1) j-1 else j+2],
                                 style = MaterialTheme.typography.bodySmall,
                                 maxLines = 1,
@@ -218,9 +262,24 @@ fun DailyPrayCompose() {
 
 @Composable
 fun PrayNotificationCompose() {
+    var rotate by remember { mutableStateOf(false) }
+    val rotateX = animateFloatAsState(
+        targetValue = if (rotate) 180f else 360f,
+        animationSpec = tween(1000),
+        label = ""
+    )
+    val alarmRotate = animateFloatAsState(
+        targetValue = if (rotate) 360f * 6f else 0f,
+        animationSpec = tween(1000)
+    )
+
     Card(
-        modifier = Modifier.padding(top = 20.dp),
-        onClick = {},
+        modifier = Modifier.padding(top = 20.dp).graphicsLayer {
+            rotationX = rotateX.value
+        },
+        onClick = {
+            rotate = !rotate
+        },
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(10.dp),
         shape = RoundedCornerShape(10.dp)
@@ -231,10 +290,15 @@ fun PrayNotificationCompose() {
             Row(
                 modifier = Modifier
                     .padding(10.dp)
-                    .fillMaxWidth(1f),
+                    .fillMaxWidth(1f).graphicsLayer {
+                        rotationX = rotateX.value
+                    },
                 verticalAlignment = Alignment.CenterVertically)
             {
                 Icon(
+                    modifier = Modifier.graphicsLayer {
+                        rotationY = alarmRotate.value
+                    },
                     painter = painterResource(R.drawable.alarm_icon),
                     contentDescription = "Alarm Icon"
                 )
@@ -258,7 +322,10 @@ fun PrayNotificationCompose() {
             Card (
                 modifier = Modifier
                     .padding(horizontal = 10.dp)
-                    .fillMaxWidth(1f),
+                    .fillMaxWidth(1f)
+                    .graphicsLayer {
+                        rotationX = rotateX.value
+                    },
                 onClick = {},
                 colors = CardDefaults.cardColors(containerColor = IconBackGroundColor),
                 elevation = CardDefaults.cardElevation(5.dp),
@@ -304,6 +371,9 @@ fun PrayNotificationCompose() {
                     .background(Color.Transparent)
                     .fillMaxWidth(1f)
                     .padding(start = 10.dp, end = 10.dp, bottom = 15.dp)
+                    .graphicsLayer {
+                        rotationX = rotateX.value
+                    }
                     ,
                 onClick = {},
                 colors = CardDefaults.cardColors(containerColor = Color.White),
@@ -372,7 +442,7 @@ fun PrayScheduleCompose() {
                     )
                     AnimatedTimer(formattedTime, previousTime)
                     Text(
-                        text = "Maghrib is less than 05:25",
+                        text = "Remaining time to next prayer ->",
                         modifier = Modifier.padding(start = 3.dp, top = 1.dp),
                         style = MaterialTheme.typography.labelLarge,
                         color = LocalContentColor.current.copy(alpha = 0.6f),
@@ -383,7 +453,10 @@ fun PrayScheduleCompose() {
                 }
 
                 val currentTime = remember { formattedTime }
-                TimeCounter(Modifier.weight(1f).size(100.dp), currentTime)
+                val prayTimes by mainScreenViewModel.dailyPrayTimes.collectAsState()
+                prayTimes.data?.let {
+                    TimeCounter(Modifier.weight(1f).size(100.dp), currentTime,it)
+                }
             }
             HorizontalDivider(Modifier.padding(15.dp))
             val dailyPrayTime by mainScreenViewModel.dailyPrayTimes.collectAsState()
@@ -478,11 +551,6 @@ fun RowScope.PrayTimesRow(prayTime : PrayTimes) {
 
 }
 
-@Composable
-fun TopBarCompose() {
-    AddressBar()
-    PrayerBar()
-}
 
 @Composable
 fun AddressBar() {
@@ -609,7 +677,7 @@ fun PrayerBar() {
 
 @SuppressLint("DefaultLocale")
 @Composable
-fun TimeCounter(modifier: Modifier = Modifier,currentTime: String) {
+fun TimeCounter(modifier: Modifier = Modifier,currentTime: String,prayTime: PrayTimes) {
 
     var isClicked by remember { mutableStateOf(false) }
     val rotationY = animateFloatAsState(
@@ -629,9 +697,7 @@ fun TimeCounter(modifier: Modifier = Modifier,currentTime: String) {
         },
         label = ""
     )
-
-    val prayTimeList = listOf("06:06", "12:32", "14:55", "17:30", "18:00")
-
+    val prayTimeList = prayTime.toList().map { it.second }
     val currentSeconds = currentTime.convertTimeToSeconds()
 
     var nextTimeIndex = prayTimeList.indexOfFirst { it.convertTimeToSeconds() > currentSeconds }
