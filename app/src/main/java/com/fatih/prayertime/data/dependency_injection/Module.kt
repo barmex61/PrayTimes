@@ -3,14 +3,18 @@ package com.fatih.prayertime.data.dependency_injection
 import android.content.Context
 import android.location.Geocoder
 import androidx.room.Room
+import com.fatih.prayertime.data.local.dao.AlarmDao
 import com.fatih.prayertime.data.local.dao.PrayDao
+import com.fatih.prayertime.data.local.database.AlarmDatabase
 import com.fatih.prayertime.data.local.database.PrayDatabase
 import com.fatih.prayertime.data.network.NetworkConnectivityManager
 import com.fatih.prayertime.data.remote.PrayApi
+import com.fatih.prayertime.data.repository.AlarmDatabaseRepositoryImp
 import com.fatih.prayertime.data.repository.ConnectivityRepositoryImp
 import com.fatih.prayertime.data.repository.LocationAndAddressRepoImp
 import com.fatih.prayertime.data.repository.PrayApiRepositoryImp
 import com.fatih.prayertime.data.repository.PrayDatabaseRepositoryImp
+import com.fatih.prayertime.domain.repository.AlarmDatabaseRepository
 import com.fatih.prayertime.domain.repository.ConnectivityRepository
 import com.fatih.prayertime.domain.repository.LocationAndAddressRepository
 import com.fatih.prayertime.domain.repository.PrayApiRepository
@@ -88,4 +92,15 @@ object Module {
     @Singleton
     fun providePrayDatabaseRepository(prayDao: PrayDao) : PrayDatabaseRepository = PrayDatabaseRepositoryImp(prayDao)
 
+    @Provides
+    @Singleton
+    fun provideAlarmDatabase(@ApplicationContext context: Context) = Room.databaseBuilder(context,AlarmDatabase::class.java, "alarm_database").build()
+
+    @Provides
+    @Singleton
+    fun provideAlarmDao(alarmDatabase: AlarmDatabase) = alarmDatabase.alarmDao()
+
+    @Provides
+    @Singleton
+    fun provideAlarmDatabaseRepo(alarmDao: AlarmDao) : AlarmDatabaseRepository = AlarmDatabaseRepositoryImp(alarmDao)
 }

@@ -1,5 +1,6 @@
 package com.fatih.prayertime.util
 
+import com.fatih.prayertime.data.local.entity.AlarmTimes
 import com.fatih.prayertime.data.remote.dto.DailyPrayResponseDTO
 import com.fatih.prayertime.data.remote.dto.PrayDataDTO
 import com.fatih.prayertime.data.remote.dto.PrayTimesDTO
@@ -76,3 +77,11 @@ fun String?.convertTimeToSeconds(): Int {
     }
     return 0
 }
+
+fun AlarmTimes.toHashMap() : HashMap<String,Pair<Boolean,Long?>> = hashMapOf(
+    "Morning" to this.morning,
+    "Noon" to this.noon,
+    "Afternoon" to this.afternoon,
+    "Evening" to this.evening,
+    "Night" to this.night
+)

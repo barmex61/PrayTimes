@@ -10,8 +10,13 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.keyframes
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandIn
+import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.graphics.ExperimentalAnimationGraphicsApi
+import androidx.compose.animation.graphics.res.animatedVectorResource
+import androidx.compose.animation.graphics.res.rememberAnimatedVectorPainter
+import androidx.compose.animation.graphics.vector.AnimatedImageVector
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.shrinkOut
@@ -46,7 +51,6 @@ import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
@@ -73,7 +77,6 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -137,7 +140,7 @@ fun MainScreen(appViewModel: AppViewModel) {
             enter = slideInHorizontally(tween(1000)) + fadeIn(),
             exit = slideOutHorizontally(tween(1000)) + fadeOut()
         ){
-            PrayNotificationCompose()
+            PrayNotificationCompose(mainScreenViewModel)
         }
         AnimatedVisibility(
             visible = isVisible,
@@ -260,8 +263,9 @@ fun DailyPrayCompose() {
     }
 }
 
+@OptIn(ExperimentalAnimationApi::class)
 @Composable
-fun PrayNotificationCompose() {
+fun PrayNotificationCompose(mainScreenViewModel: MainScreenViewModel) {
     var rotate by remember { mutableStateOf(false) }
     val rotateX = animateFloatAsState(
         targetValue = if (rotate) 180f else 360f,
@@ -334,32 +338,54 @@ fun PrayNotificationCompose() {
                 Row(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    val prayTimes = listOf("Morning","Noon","Afternoon","Evening","Night")
-                    prayTimes.forEach { prayTime ->
-                        Column (
-                            modifier = Modifier
-                                .weight(1f)
-                                .padding(vertical = 10.dp)
-                                .clip(RoundedCornerShape(10.dp))
-                                .clickable {  },
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ){
-                            Icon(
-                                modifier = Modifier.padding(top = 3.dp),
-                                painter = painterResource(R.drawable.check_circle),
-                                contentDescription = "Check Circle",
-                                tint = IconColor
-                            )
-                            Text(
-                                text = prayTime,
-                                style = MaterialTheme.typography.titleSmall,
-                                color = LocalContentColor.current.copy(alpha = 0.87f),
-                                maxLines = 1,
-                                softWrap = false,
-                                textAlign = TextAlign.Center,
-                                fontWeight = FontWeight.W600
-                            )
-                        }
+                    val alarmTimes by mainScreenViewModel.alarmTimes.collectAsState()
+                    println(alarmTimes)
+                    if (alarmTimes != null){
+                        val (morning,noon,afternoon,evening,night) = alarmTimes!!
+                        val alarmList = listOf(morning,noon,afternoon,evening,night)
+                        alarmList.forEach { alarmTime ->
+                            Column (
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(vertical = 10.dp)
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .clickable {  },
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ){
+                                var isChecked by rememberSaveable { mutableStateOf(false) }
+                                val iconDrawable = if (isChecked) painterResource(R.drawable.check_circle) else painterResource(R.drawable.cross_icon)
+
+                                AnimatedContent(
+                                    targetState = iconDrawable,
+                                    transitionSpec ={
+                                        scaleIn(tween(1000)) + fadeIn(tween(500)) with
+                                                scaleOut(tween(1000))+ fadeOut(tween(500))
+                                    },
+                                    label = ""
+
+                                ) {
+                                    Icon(
+                                        modifier = Modifier.padding(top = 3.dp).clickable {
+                                            isChecked = !isChecked
+                                        },
+                                        tint = IconColor,
+                                        painter = it,
+                                        contentDescription = "Check Circle",
+                                    )
+                                }
+
+                                Text(
+                                    text = prayTime,
+                                    style = MaterialTheme.typography.titleSmall,
+                                    color = LocalContentColor.current.copy(alpha = 0.87f),
+                                    maxLines = 1,
+                                    softWrap = false,
+                                    textAlign = TextAlign.Center,
+                                    fontWeight = FontWeight.W600
+                                )
+                            }
+                    }
+
                     }
                 }
             }
@@ -475,7 +501,7 @@ fun PrayScheduleCompose() {
                     Text(text = dailyPrayTime.message.toString())
                 }
                 Status.LOADING -> {
-                    CircularProgressIndicator()
+                   // CircularProgressIndicator()
                 }
             }
         }
