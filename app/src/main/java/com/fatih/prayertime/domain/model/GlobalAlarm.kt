@@ -1,4 +1,4 @@
-package com.fatih.prayertime.data.local.entity
+package com.fatih.prayertime.domain.model
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
@@ -7,7 +7,7 @@ import androidx.room.PrimaryKey
 data class GlobalAlarm(
     @PrimaryKey(autoGenerate = false)
     val alarmType: String,
-    val alarmTime: String,
+    val alarmTime: Long,
     val isEnabled: Boolean,
     val alarmOffset: Int
 )

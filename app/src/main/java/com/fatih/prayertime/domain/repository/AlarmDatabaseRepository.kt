@@ -1,6 +1,6 @@
 package com.fatih.prayertime.domain.repository
 
-import com.fatih.prayertime.data.local.entity.GlobalAlarm
+import com.fatih.prayertime.domain.model.GlobalAlarm
 import kotlinx.coroutines.flow.Flow
 
 interface AlarmDatabaseRepository {

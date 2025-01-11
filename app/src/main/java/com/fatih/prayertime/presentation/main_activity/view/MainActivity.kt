@@ -67,12 +67,14 @@ class MainActivity : ComponentActivity() {
                 val showPermissionRequest by appViewModel.showPermissionRequest.collectAsState()
                 val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions -> appViewModel.onPermissionsResult(permissions,context as ComponentActivity) }
                 val resultLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { appViewModel.checkPermissions(context) }
-                if (showPermissionRequest) {
-                    LaunchedEffect (Unit){
-                        appViewModel.checkPermissions(context)
+
+                LaunchedEffect (key1 = Unit,key2 = showPermissionRequest){
+                    appViewModel.checkPermissions(context)
+                    if (showPermissionRequest) {
                         permissionLauncher.launch(appViewModel.locationPermissions)
                     }
                 }
+
                 Scaffold(
                     snackbarHost = {
                         if (showPermissionRequest) {

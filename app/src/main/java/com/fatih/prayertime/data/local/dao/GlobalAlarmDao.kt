@@ -1,12 +1,11 @@
 package com.fatih.prayertime.data.local.dao
 
-import androidx.lifecycle.LiveData
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
-import com.fatih.prayertime.data.local.entity.GlobalAlarm
+import com.fatih.prayertime.domain.model.GlobalAlarm
 import kotlinx.coroutines.flow.Flow
 
 @Dao

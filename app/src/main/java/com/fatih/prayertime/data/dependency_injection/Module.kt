@@ -19,6 +19,8 @@ import com.fatih.prayertime.domain.repository.ConnectivityRepository
 import com.fatih.prayertime.domain.repository.LocationAndAddressRepository
 import com.fatih.prayertime.domain.repository.PrayApiRepository
 import com.fatih.prayertime.domain.repository.PrayDatabaseRepository
+import com.fatih.prayertime.data.alarm.AlarmScheduler
+import com.fatih.prayertime.domain.use_case.permission_use_case.PermissionUseCase
 import com.fatih.prayertime.util.Constants.BASE_URL
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationRequest
@@ -102,5 +104,14 @@ object Module {
 
     @Provides
     @Singleton
-    fun provideAlarmDatabaseRepo(globalAlarmDao: GlobalAlarmDao) : AlarmDatabaseRepository = AlarmDatabaseRepositoryImp(globalAlarmDao)
+    fun provideAlarmScheduler(@ApplicationContext context: Context) = AlarmScheduler(context)
+
+    @Provides
+    @Singleton
+    fun provideAlarmDatabaseRepo(globalAlarmDao: GlobalAlarmDao,alarmScheduler: AlarmScheduler) : AlarmDatabaseRepository = AlarmDatabaseRepositoryImp(globalAlarmDao,alarmScheduler)
+
+    @Provides
+    @Singleton
+    fun provideRequestNotificationPermissionUseCase(@ApplicationContext context: Context) = PermissionUseCase(context)
+
 }

@@ -1,6 +1,15 @@
 package com.fatih.prayertime.presentation.main_screen.view
 
+import android.Manifest
 import android.annotation.SuppressLint
+import android.content.Intent
+import android.net.Uri
+import android.os.Build
+import android.provider.Settings
+import android.widget.Toast
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
@@ -36,7 +45,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -48,6 +56,7 @@ import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
@@ -58,7 +67,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -75,15 +83,19 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.exyte.animatednavbar.utils.noRippleClickable
 import com.fatih.prayertime.R
+import com.fatih.prayertime.domain.model.GlobalAlarm
 import com.fatih.prayertime.domain.model.PrayTimes
+import com.fatih.prayertime.presentation.main_activity.view.MainActivity
 import com.fatih.prayertime.presentation.main_activity.viewmodel.AppViewModel
 import com.fatih.prayertime.presentation.main_screen.viewmodel.MainScreenViewModel
 import com.fatih.prayertime.presentation.ui.theme.IconBackGroundColor
@@ -96,7 +108,8 @@ import com.fatih.prayertime.util.toAddress
 import com.fatih.prayertime.util.toList
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
-import java.time.LocalDate
+import org.threeten.bp.LocalDate
+
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
@@ -138,7 +151,7 @@ fun MainScreen(appViewModel: AppViewModel) {
             enter = slideInHorizontally(tween(1000)) + fadeIn(),
             exit = slideOutHorizontally(tween(1000)) + fadeOut()
         ){
-            PrayNotificationCompose(mainScreenViewModel)
+            PrayNotificationCompose(mainScreenViewModel,appViewModel)
         }
         AnimatedVisibility(
             visible = isVisible,
@@ -261,9 +274,9 @@ fun DailyPrayCompose() {
     }
 }
 
-@OptIn(ExperimentalAnimationApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PrayNotificationCompose(mainScreenViewModel: MainScreenViewModel) {
+fun PrayNotificationCompose(mainScreenViewModel: MainScreenViewModel,appViewModel: AppViewModel) {
     var rotate by remember { mutableStateOf(false) }
     val rotateX = animateFloatAsState(
         targetValue = if (rotate) 180f else 360f,
@@ -276,9 +289,11 @@ fun PrayNotificationCompose(mainScreenViewModel: MainScreenViewModel) {
     )
 
     Card(
-        modifier = Modifier.padding(top = 20.dp).graphicsLayer {
-            rotationX = rotateX.value
-        },
+        modifier = Modifier
+            .padding(top = 20.dp)
+            .graphicsLayer {
+                rotationX = rotateX.value
+            },
         onClick = {
             rotate = !rotate
         },
@@ -288,14 +303,19 @@ fun PrayNotificationCompose(mainScreenViewModel: MainScreenViewModel) {
     ) {
         Column(
             verticalArrangement = Arrangement.Top,
-            horizontalAlignment = Alignment.Start) {
+            horizontalAlignment = Alignment.Start
+        ) {
+            val notificationPermissionState by appViewModel.notificationPermissionState.collectAsState()
+            val alarmPermissionState by appViewModel.alarmPermissionState.collectAsState()
             Row(
                 modifier = Modifier
                     .padding(10.dp)
-                    .fillMaxWidth(1f).graphicsLayer {
+                    .fillMaxWidth(1f)
+                    .graphicsLayer {
                         rotationX = rotateX.value
                     },
-                verticalAlignment = Alignment.CenterVertically)
+                verticalAlignment = Alignment.CenterVertically
+            )
             {
                 Icon(
                     modifier = Modifier.graphicsLayer {
@@ -315,13 +335,38 @@ fun PrayNotificationCompose(mainScreenViewModel: MainScreenViewModel) {
                 )
                 Spacer(modifier = Modifier.weight(1f))
 
+
+                val activity = LocalLifecycleOwner.current as ComponentActivity
+                val launcher = rememberLauncherForActivityResult(
+                    ActivityResultContracts.RequestMultiplePermissions()
+                ) { permissions ->
+                    println("permission $permissions")
+                    val notificationGranted = permissions[Manifest.permission.POST_NOTIFICATIONS] ?: false
+                    val alarmGranted = permissions[Manifest.permission.SCHEDULE_EXACT_ALARM] ?: false
+                    appViewModel.onNotificationPermissionResult(notificationGranted)
+                    appViewModel.onAlarmPermissionResult(alarmGranted)
+                }
+                LaunchedEffect(key1 = Unit) {
+                    appViewModel.checkNotificationPermission(activity)
+                    appViewModel.checkAlarmPermission(activity)
+                }
                 Icon(
+                    modifier = Modifier.clickable {
+                        println("heyo")
+                        if (!notificationPermissionState.isGranted ){
+                            launcher.launch(arrayOf(Manifest.permission.POST_NOTIFICATIONS))
+                        }
+                        if (!alarmPermissionState.isGranted){
+                            launcher.launch(arrayOf(Manifest.permission.SCHEDULE_EXACT_ALARM))
+
+                        }
+                    },
                     painter = painterResource(R.drawable.save_icon),
                     contentDescription = "Save Icon"
                 )
             }
             Spacer(modifier = Modifier.height(5.dp))
-            Card (
+            Card(
                 modifier = Modifier
                     .padding(horizontal = 10.dp)
                     .fillMaxWidth(1f)
@@ -332,58 +377,37 @@ fun PrayNotificationCompose(mainScreenViewModel: MainScreenViewModel) {
                 colors = CardDefaults.cardColors(containerColor = IconBackGroundColor),
                 elevation = CardDefaults.cardElevation(5.dp),
                 shape = RoundedCornerShape(10.dp)
-            ){
+            ) {
                 Row(
+                    modifier = Modifier.fillMaxWidth(1f),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+
                     val globalAlarmList by mainScreenViewModel.globalAlarmList.collectAsState()
                     if (globalAlarmList != null) {
                         globalAlarmList!!.forEach { globalAlarm ->
                             LazyColumn(
-
-                                modifier = Modifier.size(70.dp)
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .size(70.dp)
                                     .padding(vertical = 10.dp)
                                     .clip(RoundedCornerShape(10.dp))
-                                    .clickable { },
+                                    .clickable {
+                                       if (notificationPermissionState.isGranted && alarmPermissionState.isGranted){
+                                           println("granted all")
+                                           mainScreenViewModel.updateGlobalAlarm(
+                                               globalAlarm.alarmType,
+                                               System.currentTimeMillis() + 120000L,
+                                               !globalAlarm.isEnabled,
+                                               15
+                                           )
+                                       }
+                                    },
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
                                 item(key = globalAlarm.alarmType) {
-                                    val isChecked = globalAlarm.isEnabled
-                                    val iconDrawable = if (isChecked) painterResource(R.drawable.check_circle) else painterResource(R.drawable.cross_icon)
-
-                                    AnimatedContent(
-                                        targetState = iconDrawable,
-                                        transitionSpec ={
-                                            scaleIn(tween(1000)) + fadeIn(tween(500)) with
-                                                    scaleOut(tween(1000))+ fadeOut(tween(500))
-                                        },
-                                        label = ""
-
-                                    ) {
-                                        Icon(
-                                            modifier = Modifier.padding(top = 3.dp).clickable {
-                                                mainScreenViewModel.updateGlobalAlarm(
-                                                    globalAlarm.alarmType,"12:00",!globalAlarm.isEnabled,15
-                                                )
-                                            },
-                                            tint = IconColor,
-                                            painter = it,
-                                            contentDescription = "Check Circle",
-                                        )
-                                    }
-
-                                    Text(
-                                        text = globalAlarm.alarmType,
-                                        style = MaterialTheme.typography.titleSmall,
-                                        color = LocalContentColor.current.copy(alpha = 0.87f),
-                                        maxLines = 1,
-                                        softWrap = false,
-                                        textAlign = TextAlign.Center,
-                                        fontWeight = FontWeight.W600
-                                    )
+                                    AlarmComposable(globalAlarm)
                                 }
-                        }
-
                             }
                         }
                     }
@@ -399,18 +423,19 @@ fun PrayNotificationCompose(mainScreenViewModel: MainScreenViewModel) {
                     .padding(start = 10.dp, end = 10.dp, bottom = 15.dp)
                     .graphicsLayer {
                         rotationX = rotateX.value
-                    }
-                    ,
+                    },
                 onClick = {},
                 colors = CardDefaults.cardColors(containerColor = Color.White),
                 elevation = CardDefaults.cardElevation(5.dp),
                 shape = RoundedCornerShape(10.dp)
             ) {
                 Text(
-                    modifier = Modifier.padding(5.dp).fillMaxWidth(1f),
+                    modifier = Modifier
+                        .padding(5.dp)
+                        .fillMaxWidth(1f),
                     text = "Prayer Together",
                     style = MaterialTheme.typography.titleLarge,
-                    fontSize = 18.sp ,
+                    fontSize = 18.sp,
                     color = IconColor,
                     maxLines = 1,
                     softWrap = false,
@@ -418,7 +443,45 @@ fun PrayNotificationCompose(mainScreenViewModel: MainScreenViewModel) {
                     fontWeight = FontWeight.W500
                 )
             }
+        }
     }
+}
+
+
+@OptIn(ExperimentalAnimationApi::class)
+@Composable
+fun AlarmComposable(globalAlarm: GlobalAlarm) {
+    val isChecked = rememberSaveable(globalAlarm.isEnabled) { globalAlarm.isEnabled }
+    val iconDrawable = if (isChecked) painterResource(R.drawable.check_circle) else painterResource(R.drawable.cross_icon)
+
+    AnimatedContent(
+        targetState = iconDrawable,
+        transitionSpec ={
+            scaleIn(tween(1000)) + fadeIn(tween(500)) with
+                    scaleOut(tween(1000))+ fadeOut(tween(500))
+        },
+        label = ""
+
+    ) {
+        Icon(
+            modifier = Modifier
+                .padding(top = 3.dp)
+               ,
+            tint = IconColor,
+            painter = it,
+            contentDescription = "Check Circle",
+        )
+    }
+
+    Text(
+        text = globalAlarm.alarmType,
+        style = MaterialTheme.typography.titleSmall,
+        color = LocalContentColor.current.copy(alpha = 0.87f),
+        maxLines = 1,
+        softWrap = false,
+        textAlign = TextAlign.Center,
+        fontWeight = FontWeight.W600
+    )
 }
 
 @SuppressLint("NewApi")
@@ -478,9 +541,14 @@ fun PrayScheduleCompose() {
                 }
 
                 val currentTime = remember { formattedTime }
+
                 val prayTimes by mainScreenViewModel.dailyPrayTimes.collectAsState()
                 prayTimes.data?.let {
-                    TimeCounter(Modifier.weight(1f).size(100.dp), currentTime,it)
+                    TimeCounter(
+                        Modifier
+                            .weight(1f)
+                            .size(100.dp), currentTime,it
+                    )
                 }
             }
             HorizontalDivider(Modifier.padding(15.dp))
@@ -561,7 +629,10 @@ fun RowScope.PrayTimesRow(prayTime : PrayTimes) {
                 textAlign = TextAlign.Center,
                 fontWeight = FontWeight.W600,
             )
-            Icon(modifier = Modifier.padding(top = 5.dp), painter = icon,contentDescription = prayPair.first)
+            Icon(
+                modifier = Modifier
+                    .padding(top = 5.dp)
+                    .size(35.dp), painter = icon,contentDescription = prayPair.first)
             Text(
                 modifier = Modifier.padding(top = 5.dp, bottom = 8.dp),
                 text = prayPair.second,
@@ -762,13 +833,15 @@ fun TimeCounter(modifier: Modifier = Modifier,currentTime: String,prayTime: Pray
 
     val formattedTime = String.format("%02d:%02d:%02d", remainingSeconds / 3600, (remainingSeconds / 60) % 60, remainingSeconds % 60)
 
-    Box(modifier = modifier.noRippleClickable {
-        isClicked = !isClicked
-    }.graphicsLayer {
-        this.rotationY = rotationY.value
-        this.scaleY = scale.value
-        this.scaleX = scale.value
-    }, contentAlignment = Alignment.Center) {
+    Box(modifier = modifier
+        .noRippleClickable {
+            isClicked = !isClicked
+        }
+        .graphicsLayer {
+            this.rotationY = rotationY.value
+            this.scaleY = scale.value
+            this.scaleX = scale.value
+        }, contentAlignment = Alignment.Center) {
 
         Text(modifier = Modifier.graphicsLayer {
             this.rotationY = rotationY.value

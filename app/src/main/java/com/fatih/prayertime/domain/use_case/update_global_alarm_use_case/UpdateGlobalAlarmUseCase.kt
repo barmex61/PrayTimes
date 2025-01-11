@@ -1,6 +1,6 @@
 package com.fatih.prayertime.domain.use_case.update_global_alarm_use_case
 
-import com.fatih.prayertime.data.local.entity.GlobalAlarm
+import com.fatih.prayertime.domain.model.GlobalAlarm
 import com.fatih.prayertime.domain.repository.AlarmDatabaseRepository
 import javax.inject.Inject
 

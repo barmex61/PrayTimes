@@ -2,7 +2,7 @@ package com.fatih.prayertime.presentation.main_screen.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.fatih.prayertime.data.local.entity.GlobalAlarm
+import com.fatih.prayertime.domain.model.GlobalAlarm
 import com.fatih.prayertime.domain.model.Address
 import com.fatih.prayertime.domain.model.PrayTimes
 import com.fatih.prayertime.domain.use_case.formatted_date_use_case.FormattedDateUseCase
@@ -70,16 +70,20 @@ class MainScreenViewModel @Inject constructor(
     }
 
     fun getDailyPrayTimesFromAPI(address: Address?) = viewModelScope.launch(Dispatchers.Default) {
+        println("apii")
         val searchAddress = address?:lastKnowAddress.value?:return@launch
         val getPrayTimesAtAddressFromDatabase = getDailyPrayTimesAtAddressFromDatabaseUseCase(searchAddress,formattedDate.value)
         getPrayTimesAtAddressFromDatabase?.let {
             if (it.isNotEmpty()){
+                println("not empty")
                 _dailyPrayTimes.emit(Resource.success(it[0]))
                 return@launch
             }
         }
         val response = getDailyPrayTimesFromApiUseCase(formattedDate.value,searchAddress)
+        println(response)
         if (response.status == Status.SUCCESS){
+            println(response)
             _dailyPrayTimes.emit(response)
             insertPrayTimeIntoDbUseCase(response.data!!)
         }
@@ -93,6 +97,7 @@ class MainScreenViewModel @Inject constructor(
         val response = getDailyPrayTimesAtAddressFromDatabaseUseCase(lastAddress, formattedDate.value )
         response?.let {
             if (it.isNotEmpty()){
+                println("yeyo")
                 _dailyPrayTimes.emit(Resource.success(it[0]))
             }
         }
@@ -124,7 +129,7 @@ class MainScreenViewModel @Inject constructor(
 
     fun updateGlobalAlarm(
         alarmType : String,
-        alarmTime: String,
+        alarmTime: Long,
         isEnabled: Boolean,
         alarmOffset: Int
     ) = viewModelScope.launch(Dispatchers.Default){
@@ -157,7 +162,7 @@ class MainScreenViewModel @Inject constructor(
                             println(it)
                             GlobalAlarm(
                                 alarmType = it.name,
-                                alarmTime = "12:00",
+                                alarmTime = 0L,
                                 isEnabled = false,
                                 alarmOffset = 0
                             )
@@ -176,4 +181,6 @@ class MainScreenViewModel @Inject constructor(
             }
         }
     }
+
+
 }
