@@ -1,4 +1,4 @@
-package com.fatih.prayertime.domain.use_case.update_global_alarm_use_case
+package com.fatih.prayertime.domain.use_case.alarm_use_cases.update_global_alarm_use_case
 
 import com.fatih.prayertime.domain.model.GlobalAlarm
 import com.fatih.prayertime.domain.repository.AlarmDatabaseRepository

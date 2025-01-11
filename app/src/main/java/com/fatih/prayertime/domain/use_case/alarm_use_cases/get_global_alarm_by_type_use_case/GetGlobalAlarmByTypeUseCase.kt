@@ -1,4 +1,4 @@
-package com.fatih.prayertime.domain.use_case.get_global_alarm_by_type_use_case
+package com.fatih.prayertime.domain.use_case.alarm_use_cases.get_global_alarm_by_type_use_case
 
 import com.fatih.prayertime.domain.repository.AlarmDatabaseRepository
 import javax.inject.Inject

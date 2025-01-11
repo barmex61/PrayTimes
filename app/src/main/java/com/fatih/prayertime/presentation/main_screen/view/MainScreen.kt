@@ -3,6 +3,8 @@ package com.fatih.prayertime.presentation.main_screen.view
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.TimePickerDialog
+import android.content.DialogInterface
+import android.content.DialogInterface.OnDismissListener
 import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
@@ -85,6 +87,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -386,19 +389,27 @@ fun PrayNotificationCompose(mainScreenViewModel: MainScreenViewModel,appViewMode
                     val globalAlarmList by mainScreenViewModel.globalAlarmList.collectAsState()
                     if (globalAlarmList != null) {
                         var showDialog by rememberSaveable { mutableStateOf(false) }
-                        var selectedGlobalAlarm by rememberSaveable { mutableStateOf<GlobalAlarm?>(null) }
-                        ClassicTimePicker(onTimeSelect = { alarmTime ->
+                        val selectedGlobalAlarm by mainScreenViewModel.selectedGlobalAlarm.collectAsState()
+                        var initialHour by rememberSaveable { mutableIntStateOf(0) }
+                        var initialMinutes by rememberSaveable { mutableIntStateOf(0) }
+                        ClassicTimePicker(
+                            initialHour = initialHour,
+                            initialMinutes = initialMinutes,
+                            onTimeSelect = { alarmTime ->
                             if (selectedGlobalAlarm == null) return@ClassicTimePicker
                             mainScreenViewModel.updateGlobalAlarm(
                                 selectedGlobalAlarm!!.alarmType,
                                 System.currentTimeMillis() + 60000L,
-                                selectedGlobalAlarm!!.isEnabled,
+                                !selectedGlobalAlarm!!.isEnabled,
                                 15
                             )
+                        }, onDismissListener = {
+                            showDialog = false
                         },showDialog)
 
-                        globalAlarmList!!.forEach { globalAlarm ->
-                            LazyColumn(
+                        globalAlarmList!!.forEachIndexed { index, globalAlarm ->
+
+                            Column (
                                 modifier = Modifier
                                     .weight(1f)
                                     .size(70.dp)
@@ -406,17 +417,26 @@ fun PrayNotificationCompose(mainScreenViewModel: MainScreenViewModel,appViewMode
                                     .clip(RoundedCornerShape(10.dp))
                                     .clickable {
                                         if (isNotificationPermissionGranted) {
+                                            if (globalAlarm.isEnabled){
+                                                mainScreenViewModel.updateGlobalAlarm(
+                                                    globalAlarm.alarmType,
+                                                    System.currentTimeMillis() + 60000L,
+                                                    false,
+                                                    0)
+                                                return@clickable
+                                            }
+                                            val initialTimeValues = mainScreenViewModel.getHourAndMinuteFromIndex(index)
                                             showDialog = true
-                                            selectedGlobalAlarm = globalAlarm
+                                            mainScreenViewModel.setSelectedGlobalAlarm(globalAlarm)
+                                            initialHour = initialTimeValues.first
+                                            initialMinutes = initialTimeValues.second
                                         } else {
                                             permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
                                         }
                                     },
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
-                                item(key = globalAlarm.alarmType) {
-                                    AlarmComposable(globalAlarm)
-                                }
+                                AlarmComposable(globalAlarm)
                             }
                         }
                     }
@@ -457,11 +477,17 @@ fun PrayNotificationCompose(mainScreenViewModel: MainScreenViewModel,appViewMode
 }
 
 @Composable
-fun ClassicTimePicker(onTimeSelect : (Long) -> Unit,showDialog : Boolean = false) {
+fun ClassicTimePicker(
+    initialHour : Int,
+    initialMinutes : Int,
+    onTimeSelect : (Long) -> Unit,
+    onDismissListener: OnDismissListener,
+    showDialog : Boolean = false) {
     val context = LocalContext.current
     val calendar = remember { Calendar.getInstance() }
     var selectedTimeInMillis by remember { mutableLongStateOf(0L) }
-
+    calendar.set(Calendar.HOUR_OF_DAY,initialHour)
+    calendar.set(Calendar.MINUTE,initialMinutes)
     val timePickerDialog = TimePickerDialog(
         context,
         { _, hourOfDay, minute ->
@@ -473,14 +499,16 @@ fun ClassicTimePicker(onTimeSelect : (Long) -> Unit,showDialog : Boolean = false
         calendar[Calendar.HOUR_OF_DAY],
         calendar[Calendar.MINUTE],
         true
-    )
+    ).apply {
+        setOnDismissListener(onDismissListener)
+    }
+
     LaunchedEffect(showDialog) {
         if (showDialog) {
             timePickerDialog.show()
-        }else{
-            timePickerDialog.dismiss()
         }
     }
+
 }
 
 

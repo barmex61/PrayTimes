@@ -1,4 +1,4 @@
-package com.fatih.prayertime.domain.use_case.get_daily_pray_times_use_case
+package com.fatih.prayertime.domain.use_case.pray_times_use_cases.get_daily_pray_times_use_case
 
 import com.fatih.prayertime.domain.model.Address
 import com.fatih.prayertime.domain.model.PrayTimes

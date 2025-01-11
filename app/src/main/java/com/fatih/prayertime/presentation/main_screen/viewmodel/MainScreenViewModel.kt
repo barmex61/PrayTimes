@@ -5,17 +5,18 @@ import androidx.lifecycle.viewModelScope
 import com.fatih.prayertime.domain.model.GlobalAlarm
 import com.fatih.prayertime.domain.model.Address
 import com.fatih.prayertime.domain.model.PrayTimes
-import com.fatih.prayertime.domain.use_case.formatted_date_use_case.FormattedDateUseCase
-import com.fatih.prayertime.domain.use_case.formatted_time_use_case.FormattedTimeUseCase
-import com.fatih.prayertime.domain.use_case.get_all_global_alarms_use_case.GetAllGlobalAlarmsUseCase
-import com.fatih.prayertime.domain.use_case.get_daily_pray_times_use_case.GetDailyPrayTimesFromApiUseCase
-import com.fatih.prayertime.domain.use_case.get_global_alarm_by_type_use_case.GetGlobalAlarmByTypeUseCase
-import com.fatih.prayertime.domain.use_case.get_last_known_address_from_database_use_case.GetLastKnowAddressFromDatabaseUseCase
-import com.fatih.prayertime.domain.use_case.get_location_and_adress_use_case.GetLocationAndAddressUseCase
-import com.fatih.prayertime.domain.use_case.get_pray_times_at_address_from_database_use_case.GetDailyPrayTimesAtAddressFromDatabaseUseCase
-import com.fatih.prayertime.domain.use_case.insert_global_alarm_use_case.InsertGlobalAlarmUseCase
-import com.fatih.prayertime.domain.use_case.insert_pray_time_into_db_use_case.InsertPrayTimeIntoDbUseCase
-import com.fatih.prayertime.domain.use_case.update_global_alarm_use_case.UpdateGlobalAlarmUseCase
+import com.fatih.prayertime.domain.use_case.formatted_use_cases.formatted_date_use_case.FormattedDateUseCase
+import com.fatih.prayertime.domain.use_case.formatted_use_cases.formatted_time_use_case.FormattedTimeUseCase
+import com.fatih.prayertime.domain.use_case.alarm_use_cases.get_all_global_alarms_use_case.GetAllGlobalAlarmsUseCase
+import com.fatih.prayertime.domain.use_case.pray_times_use_cases.get_daily_pray_times_use_case.GetDailyPrayTimesFromApiUseCase
+import com.fatih.prayertime.domain.use_case.alarm_use_cases.get_global_alarm_by_type_use_case.GetGlobalAlarmByTypeUseCase
+import com.fatih.prayertime.domain.use_case.formatted_use_cases.get_hour_and_minute_from_long.GetHourAndMinuteFromLongUseCase
+import com.fatih.prayertime.domain.use_case.location_use_cases.get_last_known_address_from_database_use_case.GetLastKnowAddressFromDatabaseUseCase
+import com.fatih.prayertime.domain.use_case.location_use_cases.get_location_and_adress_use_case.GetLocationAndAddressUseCase
+import com.fatih.prayertime.domain.use_case.pray_times_use_cases.get_pray_times_at_address_from_database_use_case.GetDailyPrayTimesAtAddressFromDatabaseUseCase
+import com.fatih.prayertime.domain.use_case.alarm_use_cases.insert_global_alarm_use_case.InsertGlobalAlarmUseCase
+import com.fatih.prayertime.domain.use_case.pray_times_use_cases.insert_pray_time_into_db_use_case.InsertPrayTimeIntoDbUseCase
+import com.fatih.prayertime.domain.use_case.alarm_use_cases.update_global_alarm_use_case.UpdateGlobalAlarmUseCase
 import com.fatih.prayertime.util.PrayTimesString
 import com.fatih.prayertime.util.Resource
 import com.fatih.prayertime.util.Status
@@ -39,7 +40,8 @@ class MainScreenViewModel @Inject constructor(
     private val getAllGlobalAlarmsUseCase: GetAllGlobalAlarmsUseCase,
     private val getGlobalAlarmByTypeUseCase: GetGlobalAlarmByTypeUseCase,
     private val insertGlobalAlarmUseCase : InsertGlobalAlarmUseCase,
-    private val updateGlobalAlarmUseCase: UpdateGlobalAlarmUseCase
+    private val updateGlobalAlarmUseCase: UpdateGlobalAlarmUseCase,
+    private val getHourAndMinuteFromLongUseCase: GetHourAndMinuteFromLongUseCase
 ) : ViewModel() {
 
 
@@ -118,6 +120,13 @@ class MainScreenViewModel @Inject constructor(
 
     private val _globalAlarm = MutableStateFlow<GlobalAlarm?>(null)
 
+    private val _selectedGlobalAlarm = MutableStateFlow<GlobalAlarm?>(null)
+    val selectedGlobalAlarm : StateFlow<GlobalAlarm?> = _selectedGlobalAlarm
+
+    fun setSelectedGlobalAlarm(globalAlarm: GlobalAlarm) {
+        _selectedGlobalAlarm.value = globalAlarm
+    }
+
     fun updateGlobalAlarm(
         alarmType : String,
         alarmTime: Long,
@@ -140,6 +149,28 @@ class MainScreenViewModel @Inject constructor(
             println(e.message)
         }
     }
+
+    fun getHourAndMinuteFromIndex(index: Int) : Pair<Int,Int> {
+        _dailyPrayTimes.value.data?:return Pair(0,0)
+        val prayTimes = _dailyPrayTimes.value.data!!
+        val timeString = when(index){
+            0 -> prayTimes.morning
+            1 -> prayTimes.noon
+            2 -> prayTimes.afternoon
+            3 -> prayTimes.evening
+            else -> prayTimes.night
+        }
+        try {
+            val splitList = timeString.split(":")
+            val hour = splitList.first().toInt()
+            val minutes = splitList[1].toInt()
+            return Pair(hour, minutes)
+        }catch (e:Exception){
+            println(e.message)
+            return Pair(0,0)
+        }
+    }
+
 
     init {
         updateFormattedDate()
