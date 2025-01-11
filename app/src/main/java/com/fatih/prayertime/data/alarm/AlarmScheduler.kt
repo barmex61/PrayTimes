@@ -28,7 +28,6 @@ class AlarmScheduler @Inject constructor(private val context: Context) {
         )
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             if (alarmManager.canScheduleExactAlarms()) {
-                println("alarm setting ${alarm.alarmTime}")
                 AlarmManagerCompat.setExactAndAllowWhileIdle(
                     alarmManager,
                     AlarmManager.RTC_WAKEUP,

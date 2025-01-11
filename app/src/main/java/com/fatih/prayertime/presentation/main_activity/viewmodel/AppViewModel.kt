@@ -1,7 +1,6 @@
 package com.fatih.prayertime.presentation.main_activity.viewmodel
 
 import android.Manifest
-import android.app.Activity
 import android.content.Context
 import android.content.pm.PackageManager
 import androidx.activity.ComponentActivity
@@ -9,7 +8,8 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fatih.prayertime.domain.use_case.get_network_state_use_case.GetNetworkStateUseCase
-import com.fatih.prayertime.domain.use_case.permission_use_case.PermissionUseCase
+import com.fatih.prayertime.domain.use_case.notification_permission_use_case.NotificationPermissionUseCase
+import com.fatih.prayertime.presentation.main_activity.view.MainActivity
 import com.fatih.prayertime.util.NetworkState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -21,7 +21,7 @@ import javax.inject.Inject
 @HiltViewModel
 class AppViewModel @Inject constructor(
     private val getNetworkStateUseCase: GetNetworkStateUseCase,
-    private val permissionUseCase: PermissionUseCase,
+    private val notificationPermissionUseCase: NotificationPermissionUseCase,
 ) : ViewModel() {
 
     //Network-State
@@ -83,34 +83,23 @@ class AppViewModel @Inject constructor(
     private val _notificationPermissionState = MutableStateFlow(PermissionState())
     val notificationPermissionState: StateFlow<PermissionState> = _notificationPermissionState
 
-    private val _alarmPermissionState = MutableStateFlow(PermissionState())
-    val alarmPermissionState: StateFlow<PermissionState> = _alarmPermissionState
-
     data class PermissionState(
         val isGranted: Boolean = false,
         val showRationale: Boolean = false
     )
 
-    fun checkNotificationPermission(activity: ComponentActivity) {
+    fun checkNotificationPermission(activity: MainActivity) {
         _notificationPermissionState.value = _notificationPermissionState.value.copy(
-            isGranted = permissionUseCase.checkPermission(Manifest.permission.POST_NOTIFICATIONS),
-            showRationale = permissionUseCase.showRationale(activity, Manifest.permission.POST_NOTIFICATIONS)
+            isGranted = notificationPermissionUseCase.checkPermission(Manifest.permission.POST_NOTIFICATIONS),
+            showRationale = notificationPermissionUseCase.showRationale(activity, Manifest.permission.POST_NOTIFICATIONS)
         )
+        println(notificationPermissionState.value)
     }
 
-    fun checkAlarmPermission(activity: ComponentActivity) {
-        _alarmPermissionState.value = _alarmPermissionState.value.copy(
-            isGranted = permissionUseCase.checkPermission(Manifest.permission.SCHEDULE_EXACT_ALARM),
-            showRationale = permissionUseCase.showRationale(activity, Manifest.permission.SCHEDULE_EXACT_ALARM)
+    fun onNotificationPermissionResult( ) {
+        _notificationPermissionState.value = _notificationPermissionState.value.copy(
+            isGranted = notificationPermissionUseCase.checkPermission(Manifest.permission.POST_NOTIFICATIONS)
         )
-    }
-
-    fun onNotificationPermissionResult(isGranted: Boolean) {
-        _notificationPermissionState.value = _notificationPermissionState.value.copy(isGranted = isGranted)
-    }
-
-    fun onAlarmPermissionResult(isGranted: Boolean) {
-        _alarmPermissionState.value = _alarmPermissionState.value.copy(isGranted = isGranted)
     }
 
 }

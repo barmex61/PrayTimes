@@ -305,8 +305,6 @@ fun PrayNotificationCompose(mainScreenViewModel: MainScreenViewModel,appViewMode
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.Start
         ) {
-            val notificationPermissionState by appViewModel.notificationPermissionState.collectAsState()
-            val alarmPermissionState by appViewModel.alarmPermissionState.collectAsState()
             Row(
                 modifier = Modifier
                     .padding(10.dp)
@@ -335,30 +333,34 @@ fun PrayNotificationCompose(mainScreenViewModel: MainScreenViewModel,appViewMode
                 )
                 Spacer(modifier = Modifier.weight(1f))
 
+                val activity = LocalContext.current as ComponentActivity
+                val notificationPermissionState by appViewModel.notificationPermissionState.collectAsState()
 
-                val activity = LocalLifecycleOwner.current as ComponentActivity
-                val launcher = rememberLauncherForActivityResult(
-                    ActivityResultContracts.RequestMultiplePermissions()
-                ) { permissions ->
-                    println("permission $permissions")
-                    val notificationGranted = permissions[Manifest.permission.POST_NOTIFICATIONS] ?: false
-                    val alarmGranted = permissions[Manifest.permission.SCHEDULE_EXACT_ALARM] ?: false
-                    appViewModel.onNotificationPermissionResult(notificationGranted)
-                    appViewModel.onAlarmPermissionResult(alarmGranted)
+                val permissionLauncher = rememberLauncherForActivityResult(
+                    ActivityResultContracts.RequestPermission()
+                ) { isGranted ->
+                    println(activity.shouldShowRequestPermissionRationale(android.Manifest.permission.POST_NOTIFICATIONS))
+                    appViewModel.onNotificationPermissionResult()
                 }
-                LaunchedEffect(key1 = Unit) {
-                    appViewModel.checkNotificationPermission(activity)
-                    appViewModel.checkAlarmPermission(activity)
+                val settingsLauncher = rememberLauncherForActivityResult(
+                    ActivityResultContracts.StartActivityForResult()
+                ) {
+
                 }
                 Icon(
                     modifier = Modifier.clickable {
-                        println("heyo")
-                        if (!notificationPermissionState.isGranted ){
-                            launcher.launch(arrayOf(Manifest.permission.POST_NOTIFICATIONS))
-                        }
-                        if (!alarmPermissionState.isGranted){
-                            launcher.launch(arrayOf(Manifest.permission.SCHEDULE_EXACT_ALARM))
-
+                        when {
+                            notificationPermissionState.isGranted -> Unit
+                            notificationPermissionState.showRationale -> {
+                                println("rationale")
+                                val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                                    data = Uri.fromParts("package", activity.packageName, null)
+                                }
+                                settingsLauncher.launch(intent)
+                            }
+                            else -> {
+                                permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                            }
                         }
                     },
                     painter = painterResource(R.drawable.save_icon),
@@ -393,15 +395,14 @@ fun PrayNotificationCompose(mainScreenViewModel: MainScreenViewModel,appViewMode
                                     .padding(vertical = 10.dp)
                                     .clip(RoundedCornerShape(10.dp))
                                     .clickable {
-                                       if (notificationPermissionState.isGranted && alarmPermissionState.isGranted){
-                                           println("granted all")
-                                           mainScreenViewModel.updateGlobalAlarm(
-                                               globalAlarm.alarmType,
-                                               System.currentTimeMillis() + 120000L,
-                                               !globalAlarm.isEnabled,
-                                               15
-                                           )
-                                       }
+                                        println("granted all")
+                                        mainScreenViewModel.updateGlobalAlarm(
+                                            globalAlarm.alarmType,
+                                            System.currentTimeMillis() + 120000L,
+                                            !globalAlarm.isEnabled,
+                                            15
+                                        )
+
                                     },
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
