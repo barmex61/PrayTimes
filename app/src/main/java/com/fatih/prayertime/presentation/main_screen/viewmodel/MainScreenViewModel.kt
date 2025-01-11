@@ -54,15 +54,12 @@ class MainScreenViewModel @Inject constructor(
         getLocationAndAddressUseCase().collect { address ->
             when(address.status){
                 Status.SUCCESS -> {
-                    println("Current address taking from API SUCCESS and SAVE TO DATABASE")
                     getDailyPrayTimesFromAPI(address.data!!)
                 }
                 Status.LOADING -> {
-                    println("loading")
                     //_currentAddress.emit(Resource.loading())
                 }
                 Status.ERROR -> {
-                    println("error")
                     getDailyPrayTimesFromDb()
                 }
             }
@@ -70,34 +67,28 @@ class MainScreenViewModel @Inject constructor(
     }
 
     fun getDailyPrayTimesFromAPI(address: Address?) = viewModelScope.launch(Dispatchers.Default) {
-        println("apii")
         val searchAddress = address?:lastKnowAddress.value?:return@launch
         val getPrayTimesAtAddressFromDatabase = getDailyPrayTimesAtAddressFromDatabaseUseCase(searchAddress,formattedDate.value)
         getPrayTimesAtAddressFromDatabase?.let {
             if (it.isNotEmpty()){
-                println("not empty")
                 _dailyPrayTimes.emit(Resource.success(it[0]))
                 return@launch
             }
         }
         val response = getDailyPrayTimesFromApiUseCase(formattedDate.value,searchAddress)
-        println(response)
         if (response.status == Status.SUCCESS){
-            println(response)
             _dailyPrayTimes.emit(response)
             insertPrayTimeIntoDbUseCase(response.data!!)
         }
     }
 
     fun getDailyPrayTimesFromDb() = viewModelScope.launch(Dispatchers.Default){
-        println("fromdb")
         val lastAddress = lastKnowAddress.value ?: async {
             getLastKnownAddressFromDatabaseUseCase()
         }.await()?:return@launch
         val response = getDailyPrayTimesAtAddressFromDatabaseUseCase(lastAddress, formattedDate.value )
         response?.let {
             if (it.isNotEmpty()){
-                println("yeyo")
                 _dailyPrayTimes.emit(Resource.success(it[0]))
             }
         }
@@ -159,7 +150,6 @@ class MainScreenViewModel @Inject constructor(
                 getAllGlobalAlarmsUseCase().collect { globalAlarmList ->
                     if (globalAlarmList.isEmpty()) {
                         val initialAlarms = PrayTimesString.entries.map {
-                            println(it)
                             GlobalAlarm(
                                 alarmType = it.name,
                                 alarmTime = 0L,
@@ -169,7 +159,6 @@ class MainScreenViewModel @Inject constructor(
                         }
 
                         initialAlarms.forEach { globalAlarms ->
-                            println(globalAlarms)
                             insertGlobalAlarmUseCase(globalAlarms)
                         }
                     } else {

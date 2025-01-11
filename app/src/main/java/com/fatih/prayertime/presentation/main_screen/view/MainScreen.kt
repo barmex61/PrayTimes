@@ -2,12 +2,11 @@ package com.fatih.prayertime.presentation.main_screen.view
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.TimePickerDialog
 import android.content.Intent
 import android.net.Uri
-import android.os.Build
 import android.provider.Settings
 import android.widget.Toast
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
@@ -54,6 +53,7 @@ import androidx.compose.material.icons.outlined.Face
 import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -63,11 +63,13 @@ import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -90,12 +92,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.exyte.animatednavbar.utils.noRippleClickable
 import com.fatih.prayertime.R
 import com.fatih.prayertime.domain.model.GlobalAlarm
 import com.fatih.prayertime.domain.model.PrayTimes
-import com.fatih.prayertime.presentation.main_activity.view.MainActivity
 import com.fatih.prayertime.presentation.main_activity.viewmodel.AppViewModel
 import com.fatih.prayertime.presentation.main_screen.viewmodel.MainScreenViewModel
 import com.fatih.prayertime.presentation.ui.theme.IconBackGroundColor
@@ -109,6 +109,9 @@ import com.fatih.prayertime.util.toList
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import org.threeten.bp.LocalDate
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
 
 import kotlin.math.PI
 import kotlin.math.cos
@@ -274,7 +277,6 @@ fun DailyPrayCompose() {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PrayNotificationCompose(mainScreenViewModel: MainScreenViewModel,appViewModel: AppViewModel) {
     var rotate by remember { mutableStateOf(false) }
@@ -305,6 +307,21 @@ fun PrayNotificationCompose(mainScreenViewModel: MainScreenViewModel,appViewMode
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.Start
         ) {
+            val isNotificationPermissionGranted by appViewModel.isNotificationPermissionGranted
+            val context = LocalContext.current
+            val permissionLauncher = rememberLauncherForActivityResult(
+                contract = ActivityResultContracts.RequestPermission()
+            ) { isGranted ->
+                if (!isGranted) {
+                    Toast.makeText(context, "Bildirim izni reddedildi.Ayarlardan bildirim izinlerini açın", Toast.LENGTH_LONG).show()
+                    val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                        data = Uri.fromParts("package", context.packageName, null)
+                    }
+                    context.startActivity(intent)
+                }else{
+                    appViewModel.checkNotificationPermission()
+                }
+            }
             Row(
                 modifier = Modifier
                     .padding(10.dp)
@@ -315,6 +332,7 @@ fun PrayNotificationCompose(mainScreenViewModel: MainScreenViewModel,appViewMode
                 verticalAlignment = Alignment.CenterVertically
             )
             {
+
                 Icon(
                     modifier = Modifier.graphicsLayer {
                         rotationY = alarmRotate.value
@@ -333,34 +351,14 @@ fun PrayNotificationCompose(mainScreenViewModel: MainScreenViewModel,appViewMode
                 )
                 Spacer(modifier = Modifier.weight(1f))
 
-                val activity = LocalContext.current as ComponentActivity
-                val notificationPermissionState by appViewModel.notificationPermissionState.collectAsState()
 
-                val permissionLauncher = rememberLauncherForActivityResult(
-                    ActivityResultContracts.RequestPermission()
-                ) { isGranted ->
-                    println(activity.shouldShowRequestPermissionRationale(android.Manifest.permission.POST_NOTIFICATIONS))
-                    appViewModel.onNotificationPermissionResult()
-                }
-                val settingsLauncher = rememberLauncherForActivityResult(
-                    ActivityResultContracts.StartActivityForResult()
-                ) {
-
+                LaunchedEffect(Unit) {
+                    appViewModel.checkNotificationPermission()
                 }
                 Icon(
                     modifier = Modifier.clickable {
-                        when {
-                            notificationPermissionState.isGranted -> Unit
-                            notificationPermissionState.showRationale -> {
-                                println("rationale")
-                                val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-                                    data = Uri.fromParts("package", activity.packageName, null)
-                                }
-                                settingsLauncher.launch(intent)
-                            }
-                            else -> {
-                                permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                            }
+                        if (!isNotificationPermissionGranted){
+                            permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
                         }
                     },
                     painter = painterResource(R.drawable.save_icon),
@@ -387,6 +385,18 @@ fun PrayNotificationCompose(mainScreenViewModel: MainScreenViewModel,appViewMode
 
                     val globalAlarmList by mainScreenViewModel.globalAlarmList.collectAsState()
                     if (globalAlarmList != null) {
+                        var showDialog by rememberSaveable { mutableStateOf(false) }
+                        var selectedGlobalAlarm by rememberSaveable { mutableStateOf<GlobalAlarm?>(null) }
+                        ClassicTimePicker(onTimeSelect = { alarmTime ->
+                            if (selectedGlobalAlarm == null) return@ClassicTimePicker
+                            mainScreenViewModel.updateGlobalAlarm(
+                                selectedGlobalAlarm!!.alarmType,
+                                System.currentTimeMillis() + 60000L,
+                                selectedGlobalAlarm!!.isEnabled,
+                                15
+                            )
+                        },showDialog)
+
                         globalAlarmList!!.forEach { globalAlarm ->
                             LazyColumn(
                                 modifier = Modifier
@@ -395,14 +405,12 @@ fun PrayNotificationCompose(mainScreenViewModel: MainScreenViewModel,appViewMode
                                     .padding(vertical = 10.dp)
                                     .clip(RoundedCornerShape(10.dp))
                                     .clickable {
-                                        println("granted all")
-                                        mainScreenViewModel.updateGlobalAlarm(
-                                            globalAlarm.alarmType,
-                                            System.currentTimeMillis() + 120000L,
-                                            !globalAlarm.isEnabled,
-                                            15
-                                        )
-
+                                        if (isNotificationPermissionGranted) {
+                                            showDialog = true
+                                            selectedGlobalAlarm = globalAlarm
+                                        } else {
+                                            permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                                        }
                                     },
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
@@ -444,6 +452,33 @@ fun PrayNotificationCompose(mainScreenViewModel: MainScreenViewModel,appViewMode
                     fontWeight = FontWeight.W500
                 )
             }
+        }
+    }
+}
+
+@Composable
+fun ClassicTimePicker(onTimeSelect : (Long) -> Unit,showDialog : Boolean = false) {
+    val context = LocalContext.current
+    val calendar = remember { Calendar.getInstance() }
+    var selectedTimeInMillis by remember { mutableLongStateOf(0L) }
+
+    val timePickerDialog = TimePickerDialog(
+        context,
+        { _, hourOfDay, minute ->
+            calendar.set(Calendar.HOUR_OF_DAY, hourOfDay)
+            calendar.set(Calendar.MINUTE, minute)
+            selectedTimeInMillis = calendar.timeInMillis
+            onTimeSelect(selectedTimeInMillis)
+        },
+        calendar[Calendar.HOUR_OF_DAY],
+        calendar[Calendar.MINUTE],
+        true
+    )
+    LaunchedEffect(showDialog) {
+        if (showDialog) {
+            timePickerDialog.show()
+        }else{
+            timePickerDialog.dismiss()
         }
     }
 }

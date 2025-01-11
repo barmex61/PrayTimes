@@ -4,12 +4,12 @@ import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
 import androidx.activity.ComponentActivity
+import androidx.compose.runtime.mutableStateOf
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fatih.prayertime.domain.use_case.get_network_state_use_case.GetNetworkStateUseCase
 import com.fatih.prayertime.domain.use_case.notification_permission_use_case.NotificationPermissionUseCase
-import com.fatih.prayertime.presentation.main_activity.view.MainActivity
 import com.fatih.prayertime.util.NetworkState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -80,26 +80,14 @@ class AppViewModel @Inject constructor(
 
     // Notification Permission
 
-    private val _notificationPermissionState = MutableStateFlow(PermissionState())
-    val notificationPermissionState: StateFlow<PermissionState> = _notificationPermissionState
+    val isNotificationPermissionGranted = mutableStateOf(false)
 
-    data class PermissionState(
-        val isGranted: Boolean = false,
-        val showRationale: Boolean = false
-    )
-
-    fun checkNotificationPermission(activity: MainActivity) {
-        _notificationPermissionState.value = _notificationPermissionState.value.copy(
-            isGranted = notificationPermissionUseCase.checkPermission(Manifest.permission.POST_NOTIFICATIONS),
-            showRationale = notificationPermissionUseCase.showRationale(activity, Manifest.permission.POST_NOTIFICATIONS)
-        )
-        println(notificationPermissionState.value)
+    fun checkNotificationPermission() {
+        isNotificationPermissionGranted.value = notificationPermissionUseCase.checkPermission()
     }
 
-    fun onNotificationPermissionResult( ) {
-        _notificationPermissionState.value = _notificationPermissionState.value.copy(
-            isGranted = notificationPermissionUseCase.checkPermission(Manifest.permission.POST_NOTIFICATIONS)
-        )
+    init {
+        checkNotificationPermission()
     }
 
 }

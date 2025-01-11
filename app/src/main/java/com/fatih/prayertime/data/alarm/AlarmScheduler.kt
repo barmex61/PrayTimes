@@ -14,7 +14,6 @@ class AlarmScheduler @Inject constructor(private val context: Context) {
     private val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
     private fun schedule(alarm: GlobalAlarm) {
-        println("schedule")
         val intent = Intent(context, AlarmReceiver::class.java).apply {
             putExtra("ALARM_TYPE", alarm.alarmType)
             putExtra("ALARM_MESSAGE", alarm.alarmType)
@@ -36,7 +35,6 @@ class AlarmScheduler @Inject constructor(private val context: Context) {
                 )
             }
         } else {
-            println(alarm.alarmTime)
             AlarmManagerCompat.setExactAndAllowWhileIdle(
                 alarmManager,
                 AlarmManager.RTC_WAKEUP,

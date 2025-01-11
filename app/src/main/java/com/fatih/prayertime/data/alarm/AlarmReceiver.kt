@@ -47,7 +47,6 @@ class AlarmReceiver : BroadcastReceiver() {
             .setDefaults(NotificationCompat.DEFAULT_ALL)
             .setAutoCancel(true)
             .setContentIntent(pendingIntent)
-        println("heyo alarm")
         notificationManager.notify(alarmType.hashCode(),builder.build())
     }
 
