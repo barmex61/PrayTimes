@@ -15,9 +15,9 @@ interface PrayDao {
     @Query("SELECT * FROM PrayTimes WHERE date = :date")
     suspend fun getPrayTime(date: String): PrayTimes?
 
-    @Query("SELECT * FROM PrayTimes WHERE country = :country AND district = :district AND city = :city AND date = :date ORDER BY time DESC")
+    @Query("SELECT * FROM PrayTimes WHERE country = :country AND district = :district AND city = :city AND date = :date ORDER BY createdAt DESC")
     suspend fun getPrayTimesAtAddress(country: String, district: String, city: String, date: String): List<PrayTimes>?
 
-    @Query("SELECT * FROM PrayTimes ORDER BY time DESC LIMIT 1")
+    @Query("SELECT * FROM PrayTimes ORDER BY createdAt DESC LIMIT 1")
     suspend fun getPrayTimes() : PrayTimes?
 }

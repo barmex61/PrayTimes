@@ -2,18 +2,21 @@ package com.fatih.prayertime.presentation.main_screen.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.fatih.prayertime.data.local.entity.AlarmTimes
+import com.fatih.prayertime.data.local.entity.GlobalAlarm
 import com.fatih.prayertime.domain.model.Address
 import com.fatih.prayertime.domain.model.PrayTimes
 import com.fatih.prayertime.domain.use_case.formatted_date_use_case.FormattedDateUseCase
 import com.fatih.prayertime.domain.use_case.formatted_time_use_case.FormattedTimeUseCase
-import com.fatih.prayertime.domain.use_case.get_alarm_times_use_case.GetAlarmTimesUseCase
+import com.fatih.prayertime.domain.use_case.get_all_global_alarms_use_case.GetAllGlobalAlarmsUseCase
 import com.fatih.prayertime.domain.use_case.get_daily_pray_times_use_case.GetDailyPrayTimesFromApiUseCase
+import com.fatih.prayertime.domain.use_case.get_global_alarm_by_type_use_case.GetGlobalAlarmByTypeUseCase
 import com.fatih.prayertime.domain.use_case.get_last_known_address_from_database_use_case.GetLastKnowAddressFromDatabaseUseCase
 import com.fatih.prayertime.domain.use_case.get_location_and_adress_use_case.GetLocationAndAddressUseCase
 import com.fatih.prayertime.domain.use_case.get_pray_times_at_address_from_database_use_case.GetDailyPrayTimesAtAddressFromDatabaseUseCase
-import com.fatih.prayertime.domain.use_case.insert_alarm_times_use_case.InsertAlarmTimesUseCase
+import com.fatih.prayertime.domain.use_case.insert_global_alarm_use_case.InsertGlobalAlarmUseCase
 import com.fatih.prayertime.domain.use_case.insert_pray_time_into_db_use_case.InsertPrayTimeIntoDbUseCase
+import com.fatih.prayertime.domain.use_case.update_global_alarm_use_case.UpdateGlobalAlarmUseCase
+import com.fatih.prayertime.util.PrayTimesString
 import com.fatih.prayertime.util.Resource
 import com.fatih.prayertime.util.Status
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -21,8 +24,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -35,8 +36,10 @@ class MainScreenViewModel @Inject constructor(
     private val getDailyPrayTimesAtAddressFromDatabaseUseCase: GetDailyPrayTimesAtAddressFromDatabaseUseCase,
     private val insertPrayTimeIntoDbUseCase : InsertPrayTimeIntoDbUseCase,
     private val getLastKnownAddressFromDatabaseUseCase: GetLastKnowAddressFromDatabaseUseCase,
-    private val getAlarmTimesUseCase: GetAlarmTimesUseCase,
-    private val insertAlarmTimesUseCase: InsertAlarmTimesUseCase
+    private val getAllGlobalAlarmsUseCase: GetAllGlobalAlarmsUseCase,
+    private val getGlobalAlarmByTypeUseCase: GetGlobalAlarmByTypeUseCase,
+    private val insertGlobalAlarmUseCase : InsertGlobalAlarmUseCase,
+    private val updateGlobalAlarmUseCase: UpdateGlobalAlarmUseCase
 ) : ViewModel() {
 
 
@@ -114,12 +117,29 @@ class MainScreenViewModel @Inject constructor(
 
    // Alarm--
 
-    private val _alarmTimes : MutableStateFlow<AlarmTimes?> = MutableStateFlow(null)
-    val alarmTimes : StateFlow<AlarmTimes?> = _alarmTimes
+    private val _globalAlarmList : MutableStateFlow<List<GlobalAlarm>?> = MutableStateFlow(null)
+    val globalAlarmList : StateFlow<List<GlobalAlarm>?> = _globalAlarmList
 
-    fun insertAlarmTimes(alarmTimes: AlarmTimes) = viewModelScope.launch(Dispatchers.Default){
+    private val _globalAlarm = MutableStateFlow<GlobalAlarm?>(null)
+
+    fun updateGlobalAlarm(
+        alarmType : String,
+        alarmTime: String,
+        isEnabled: Boolean,
+        alarmOffset: Int
+    ) = viewModelScope.launch(Dispatchers.Default){
+
         try {
-            insertAlarmTimesUseCase(alarmTimes)
+            val globalAlarm = GlobalAlarm(alarmType,alarmTime,isEnabled,alarmOffset)
+            updateGlobalAlarmUseCase(globalAlarm)
+        }catch (e:Exception){
+            println(e.message)
+        }
+    }
+
+    fun getGlobalAlarm(alarmType: String) = viewModelScope.launch(Dispatchers.Default){
+        try {
+            _globalAlarm.emit(getGlobalAlarmByTypeUseCase(alarmType))
         }catch (e:Exception){
             println(e.message)
         }
@@ -129,27 +149,31 @@ class MainScreenViewModel @Inject constructor(
         updateFormattedDate()
         updateFormattedTime()
         viewModelScope.launch(Dispatchers.Default) {
-            lastKnowAddress.emit(getLastKnownAddressFromDatabaseUseCase())
-        }
-
-        viewModelScope.launch(Dispatchers.Default){
             try {
-                _alarmTimes.emit(getAlarmTimesUseCase())
-                if (_alarmTimes.value == null){
-                    insertAlarmTimes(
-                        AlarmTimes(
-                            Pair(false,null),
-                            Pair(false,null),
-                            Pair(false,null),
-                            Pair(false,null),
-                            Pair(false,null),
-                        )
-                    )
+                lastKnowAddress.emit(getLastKnownAddressFromDatabaseUseCase())
+                getAllGlobalAlarmsUseCase().collect { globalAlarmList ->
+                    if (globalAlarmList.isEmpty()) {
+                        val initialAlarms = PrayTimesString.entries.map {
+                            println(it)
+                            GlobalAlarm(
+                                alarmType = it.name,
+                                alarmTime = "12:00",
+                                isEnabled = false,
+                                alarmOffset = 0
+                            )
+                        }
+
+                        initialAlarms.forEach { globalAlarms ->
+                            println(globalAlarms)
+                            insertGlobalAlarmUseCase(globalAlarms)
+                        }
+                    } else {
+                        _globalAlarmList.emit(globalAlarmList)
+                    }
                 }
             }catch (e:Exception){
                 println(e.message)
             }
         }
-
     }
 }

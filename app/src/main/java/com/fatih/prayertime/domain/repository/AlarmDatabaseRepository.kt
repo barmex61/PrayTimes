@@ -1,10 +1,13 @@
 package com.fatih.prayertime.domain.repository
 
-import com.fatih.prayertime.data.local.entity.AlarmTimes
+import com.fatih.prayertime.data.local.entity.GlobalAlarm
+import kotlinx.coroutines.flow.Flow
 
 interface AlarmDatabaseRepository {
 
-    suspend fun insertAlarmTimes(alarmTimes: AlarmTimes)
-    suspend fun getAlarmTimesById(id: Int = 0): AlarmTimes
+    suspend fun insertGlobalAlarm(globalAlarm: GlobalAlarm)
+    suspend fun updateGlobalAlarm(globalAlarm: GlobalAlarm)
+    suspend fun getGlobalAlarmByType(alarmType : String): GlobalAlarm?
+    fun getAllGlobalAlarms() : Flow<List<GlobalAlarm>>
 
 }

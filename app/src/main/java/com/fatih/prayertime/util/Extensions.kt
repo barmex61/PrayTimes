@@ -1,6 +1,5 @@
 package com.fatih.prayertime.util
 
-import com.fatih.prayertime.data.local.entity.AlarmTimes
 import com.fatih.prayertime.data.remote.dto.DailyPrayResponseDTO
 import com.fatih.prayertime.data.remote.dto.PrayDataDTO
 import com.fatih.prayertime.data.remote.dto.PrayTimesDTO
@@ -22,12 +21,12 @@ fun PrayDataDTO.toPrayData(address: Address) : PrayData = PrayData(
 )
 
 fun PrayTimesDTO.toPrayTimes(date : String,address: Address) : PrayTimes = PrayTimes(
-    morning = Pair("Morning",this.Fajr) ,
-    //sunrise = Pair("Sunrise",this.Sunrise),
-    noon = Pair("Noon",this.Dhuhr),
-    afternoon = Pair("Afternoon",this.Asr),
-    evening = Pair("Evening",this.Maghrib),
-    night = Pair("Night",this.Isha),
+    morning = this.Fajr,
+    //sunrise = this.Sunrise,
+    noon = this.Dhuhr,
+    afternoon = this.Asr,
+    evening = this.Maghrib,
+    night = this.Isha,
     date = date,
     latitude = address.latitude,
     longitude = address.longitude,
@@ -36,17 +35,16 @@ fun PrayTimesDTO.toPrayTimes(date : String,address: Address) : PrayTimes = PrayT
     district = address.district,
     street = address.street,
     fullAddress = address.fullAddress,
-    time = System.currentTimeMillis()
 )
 
 fun PrayTimes.toList() : List<Pair<String,String>> = listOf(
-    this.morning,
-    //this.sunrise,
-    this.noon,
-    this.afternoon,
-    this.evening,
-    this.night
+    Pair(PrayTimesString.Morning.name,this.morning),
+    Pair(PrayTimesString.Noon.name,this.noon),
+    Pair(PrayTimesString.Afternoon.name,this.afternoon),
+    Pair(PrayTimesString.Evening.name,this.evening),
+    Pair(PrayTimesString.Night.name,this.night)
 )
+
 
 fun PrayTimes.toAddress() : Address = Address(
     latitude = this.latitude,
@@ -78,10 +76,10 @@ fun String?.convertTimeToSeconds(): Int {
     return 0
 }
 
-fun AlarmTimes.toHashMap() : HashMap<String,Pair<Boolean,Long?>> = hashMapOf(
-    "Morning" to this.morning,
-    "Noon" to this.noon,
-    "Afternoon" to this.afternoon,
-    "Evening" to this.evening,
-    "Night" to this.night
-)
+enum class PrayTimesString {
+    Morning,
+    Noon,
+    Afternoon,
+    Evening,
+    Night;
+}

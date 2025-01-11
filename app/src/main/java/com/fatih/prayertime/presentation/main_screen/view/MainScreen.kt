@@ -10,13 +10,8 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.keyframes
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandIn
-import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.graphics.ExperimentalAnimationGraphicsApi
-import androidx.compose.animation.graphics.res.animatedVectorResource
-import androidx.compose.animation.graphics.res.rememberAnimatedVectorPainter
-import androidx.compose.animation.graphics.vector.AnimatedImageVector
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.shrinkOut
@@ -40,6 +35,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -61,6 +58,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -274,7 +272,7 @@ fun PrayNotificationCompose(mainScreenViewModel: MainScreenViewModel) {
     )
     val alarmRotate = animateFloatAsState(
         targetValue = if (rotate) 360f * 6f else 0f,
-        animationSpec = tween(1000)
+        animationSpec = tween(1000), label = ""
     )
 
     Card(
@@ -338,54 +336,56 @@ fun PrayNotificationCompose(mainScreenViewModel: MainScreenViewModel) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    val alarmTimes by mainScreenViewModel.alarmTimes.collectAsState()
-                    println(alarmTimes)
-                    if (alarmTimes != null){
-                        val (morning,noon,afternoon,evening,night) = alarmTimes!!
-                        val alarmList = listOf(morning,noon,afternoon,evening,night)
-                        alarmList.forEach { alarmTime ->
-                            Column (
-                                modifier = Modifier
-                                    .weight(1f)
+                    val globalAlarmList by mainScreenViewModel.globalAlarmList.collectAsState()
+                    if (globalAlarmList != null) {
+                        globalAlarmList!!.forEach { globalAlarm ->
+                            LazyColumn(
+
+                                modifier = Modifier.size(70.dp)
                                     .padding(vertical = 10.dp)
                                     .clip(RoundedCornerShape(10.dp))
-                                    .clickable {  },
+                                    .clickable { },
                                 horizontalAlignment = Alignment.CenterHorizontally
-                            ){
-                                var isChecked by rememberSaveable { mutableStateOf(false) }
-                                val iconDrawable = if (isChecked) painterResource(R.drawable.check_circle) else painterResource(R.drawable.cross_icon)
+                            ) {
+                                item(key = globalAlarm.alarmType) {
+                                    val isChecked = globalAlarm.isEnabled
+                                    val iconDrawable = if (isChecked) painterResource(R.drawable.check_circle) else painterResource(R.drawable.cross_icon)
 
-                                AnimatedContent(
-                                    targetState = iconDrawable,
-                                    transitionSpec ={
-                                        scaleIn(tween(1000)) + fadeIn(tween(500)) with
-                                                scaleOut(tween(1000))+ fadeOut(tween(500))
-                                    },
-                                    label = ""
-
-                                ) {
-                                    Icon(
-                                        modifier = Modifier.padding(top = 3.dp).clickable {
-                                            isChecked = !isChecked
+                                    AnimatedContent(
+                                        targetState = iconDrawable,
+                                        transitionSpec ={
+                                            scaleIn(tween(1000)) + fadeIn(tween(500)) with
+                                                    scaleOut(tween(1000))+ fadeOut(tween(500))
                                         },
-                                        tint = IconColor,
-                                        painter = it,
-                                        contentDescription = "Check Circle",
+                                        label = ""
+
+                                    ) {
+                                        Icon(
+                                            modifier = Modifier.padding(top = 3.dp).clickable {
+                                                mainScreenViewModel.updateGlobalAlarm(
+                                                    globalAlarm.alarmType,"12:00",!globalAlarm.isEnabled,15
+                                                )
+                                            },
+                                            tint = IconColor,
+                                            painter = it,
+                                            contentDescription = "Check Circle",
+                                        )
+                                    }
+
+                                    Text(
+                                        text = globalAlarm.alarmType,
+                                        style = MaterialTheme.typography.titleSmall,
+                                        color = LocalContentColor.current.copy(alpha = 0.87f),
+                                        maxLines = 1,
+                                        softWrap = false,
+                                        textAlign = TextAlign.Center,
+                                        fontWeight = FontWeight.W600
                                     )
                                 }
+                        }
 
-                                Text(
-                                    text = prayTime,
-                                    style = MaterialTheme.typography.titleSmall,
-                                    color = LocalContentColor.current.copy(alpha = 0.87f),
-                                    maxLines = 1,
-                                    softWrap = false,
-                                    textAlign = TextAlign.Center,
-                                    fontWeight = FontWeight.W600
-                                )
                             }
-                    }
-
+                        }
                     }
                 }
             }
@@ -418,7 +418,6 @@ fun PrayNotificationCompose(mainScreenViewModel: MainScreenViewModel) {
                     fontWeight = FontWeight.W500
                 )
             }
-        }
     }
 }
 
