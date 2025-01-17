@@ -8,7 +8,7 @@ data class Hijri(
     val format: String,
     val holidays: List<Any?>,
     val method: String,
-    val month: MonthX,
-    val weekday: WeekdayX,
+    val month: MonthHijri,
+    val weekday: WeekdayHijri,
     val year: Int
 )

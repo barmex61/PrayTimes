@@ -3,7 +3,6 @@ package com.fatih.prayertime.presentation.main_screen.view
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.TimePickerDialog
-import android.content.DialogInterface
 import android.content.DialogInterface.OnDismissListener
 import android.content.Intent
 import android.net.Uri
@@ -45,7 +44,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -55,28 +53,25 @@ import androidx.compose.material.icons.outlined.Face
 import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.Notifications
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -87,7 +82,6 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -104,17 +98,19 @@ import com.fatih.prayertime.presentation.main_screen.viewmodel.MainScreenViewMod
 import com.fatih.prayertime.presentation.ui.theme.IconBackGroundColor
 import com.fatih.prayertime.presentation.ui.theme.IconColor
 import com.fatih.prayertime.presentation.ui.theme.LightGreen
-import com.fatih.prayertime.util.NetworkState
 import com.fatih.prayertime.util.Status
 import com.fatih.prayertime.util.convertTimeToSeconds
 import com.fatih.prayertime.util.toAddress
 import com.fatih.prayertime.util.toList
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.collectLatest
+import org.threeten.bp.Instant
 import org.threeten.bp.LocalDate
-import java.text.SimpleDateFormat
+import org.threeten.bp.LocalDateTime
+import org.threeten.bp.Year
+import org.threeten.bp.YearMonth
+import org.threeten.bp.ZoneId
+import org.threeten.bp.format.DateTimeFormatter
 import java.util.Calendar
-import java.util.Locale
 
 import kotlin.math.PI
 import kotlin.math.cos
@@ -173,31 +169,22 @@ fun MainScreen(appViewModel: AppViewModel) {
 
 @Composable
 fun GetLocationInformation(mainScreenViewModel: MainScreenViewModel, appViewModel: AppViewModel){
-    val permissionGranted by appViewModel.permissionGranted.collectAsState()
+    val permissionGranted by appViewModel.isLocationPermissionGranted.collectAsState()
     var isLocationTracking by rememberSaveable { mutableStateOf(false) }
     val networkState by appViewModel.networkState.collectAsState()
-    LaunchedEffect (key1 = Unit, key2 = permissionGranted) {
-        snapshotFlow { networkState }
-            .collectLatest { networkState ->
-                when(networkState){
-                    NetworkState.Connected -> {
-                       if (permissionGranted && !isLocationTracking){
-                           mainScreenViewModel.trackLocationAndUpdatePrayTimesDatabase()
-                           isLocationTracking = true
-                       }
-                        if (!permissionGranted) {
-                            mainScreenViewModel.getDailyPrayTimesFromDb()
-                        }
-                        if (permissionGranted){
-                            mainScreenViewModel.getDailyPrayTimesFromAPI(null)
-                        }
-                    }
-                    NetworkState.Disconnected -> {
-                       mainScreenViewModel.getDailyPrayTimesFromDb()
-                    }
-                }
+    LaunchedEffect (key1 = networkState, key2 = permissionGranted) {
+        if (!isLocationTracking){
+            if (permissionGranted){
+                mainScreenViewModel.trackLocationAndUpdatePrayTimes()
+                isLocationTracking = true
             }
-
+        }
+        if (!permissionGranted) {
+            mainScreenViewModel.getDailyPrayTimesFromDb()
+        }
+        if (permissionGranted){
+            mainScreenViewModel.getMonthlyPrayTimesFromAPI(Year.now().value, YearMonth.now().monthValue,null)
+        }
     }
 }
 
@@ -352,21 +339,7 @@ fun PrayNotificationCompose(mainScreenViewModel: MainScreenViewModel,appViewMode
                     softWrap = false,
                     textAlign = TextAlign.Center,
                 )
-                Spacer(modifier = Modifier.weight(1f))
 
-
-                LaunchedEffect(Unit) {
-                    appViewModel.checkNotificationPermission()
-                }
-                Icon(
-                    modifier = Modifier.clickable {
-                        if (!isNotificationPermissionGranted){
-                            permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                        }
-                    },
-                    painter = painterResource(R.drawable.save_icon),
-                    contentDescription = "Save Icon"
-                )
             }
             Spacer(modifier = Modifier.height(5.dp))
             Card(
@@ -377,7 +350,7 @@ fun PrayNotificationCompose(mainScreenViewModel: MainScreenViewModel,appViewMode
                         rotationX = rotateX.value
                     },
                 onClick = {},
-                colors = CardDefaults.cardColors(containerColor = IconBackGroundColor),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
                 elevation = CardDefaults.cardElevation(5.dp),
                 shape = RoundedCornerShape(10.dp)
             ) {
@@ -395,20 +368,19 @@ fun PrayNotificationCompose(mainScreenViewModel: MainScreenViewModel,appViewMode
                         ClassicTimePicker(
                             initialHour = initialHour,
                             initialMinutes = initialMinutes,
-                            onTimeSelect = { alarmTime ->
+                            onTimeSelect = { alarmTimeLong,alarmTimeString,offset ->
                             if (selectedGlobalAlarm == null) return@ClassicTimePicker
                             mainScreenViewModel.updateGlobalAlarm(
                                 selectedGlobalAlarm!!.alarmType,
-                                System.currentTimeMillis() + 60000L,
+                                alarmTimeLong,
+                                alarmTimeString,
                                 !selectedGlobalAlarm!!.isEnabled,
-                                15
+                                offset,
                             )
                         }, onDismissListener = {
                             showDialog = false
                         },showDialog)
-
                         globalAlarmList!!.forEachIndexed { index, globalAlarm ->
-
                             Column (
                                 modifier = Modifier
                                     .weight(1f)
@@ -420,9 +392,10 @@ fun PrayNotificationCompose(mainScreenViewModel: MainScreenViewModel,appViewMode
                                             if (globalAlarm.isEnabled){
                                                 mainScreenViewModel.updateGlobalAlarm(
                                                     globalAlarm.alarmType,
-                                                    System.currentTimeMillis() + 60000L,
+                                                    0L,
+                                                    "16-01-2025 00:00",
                                                     false,
-                                                    0)
+                                                    0L)
                                                 return@clickable
                                             }
                                             val initialTimeValues = mainScreenViewModel.getHourAndMinuteFromIndex(index)
@@ -480,21 +453,24 @@ fun PrayNotificationCompose(mainScreenViewModel: MainScreenViewModel,appViewMode
 fun ClassicTimePicker(
     initialHour : Int,
     initialMinutes : Int,
-    onTimeSelect : (Long) -> Unit,
+    onTimeSelect : (Long,String,Long) -> Unit,
     onDismissListener: OnDismissListener,
     showDialog : Boolean = false) {
     val context = LocalContext.current
     val calendar = remember { Calendar.getInstance() }
-    var selectedTimeInMillis by remember { mutableLongStateOf(0L) }
+    val formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm")
     calendar.set(Calendar.HOUR_OF_DAY,initialHour)
     calendar.set(Calendar.MINUTE,initialMinutes)
+    val initialTimeInMillis = calendar.timeInMillis
     val timePickerDialog = TimePickerDialog(
         context,
         { _, hourOfDay, minute ->
             calendar.set(Calendar.HOUR_OF_DAY, hourOfDay)
             calendar.set(Calendar.MINUTE, minute)
-            selectedTimeInMillis = calendar.timeInMillis
-            onTimeSelect(selectedTimeInMillis)
+            val selectedTimeInMillis = calendar.timeInMillis
+            val selectedTimeString = LocalDateTime.ofInstant(Instant.ofEpochMilli(selectedTimeInMillis), ZoneId.systemDefault()).format(formatter)
+            val offset = selectedTimeInMillis - initialTimeInMillis
+            onTimeSelect(selectedTimeInMillis,selectedTimeString,offset)
         },
         calendar[Calendar.HOUR_OF_DAY],
         calendar[Calendar.MINUTE],
@@ -604,14 +580,14 @@ fun PrayScheduleCompose() {
                     )
                 }
 
-                val currentTime = remember { formattedTime }
+                //val currentTime = remember { formattedTime }
 
                 val prayTimes by mainScreenViewModel.dailyPrayTimes.collectAsState()
                 prayTimes.data?.let {
                     TimeCounter(
                         Modifier
                             .weight(1f)
-                            .size(100.dp), currentTime,it
+                            .size(100.dp), formattedTime,it
                     )
                 }
             }
@@ -838,7 +814,7 @@ fun PrayerBar() {
 @SuppressLint("DefaultLocale")
 @Composable
 fun TimeCounter(modifier: Modifier = Modifier,currentTime: String,prayTime: PrayTimes) {
-
+    println("recomposition")
     var isClicked by remember { mutableStateOf(false) }
     val rotationY = animateFloatAsState(
         targetValue = if (isClicked) 180f else 0f,
@@ -867,7 +843,9 @@ fun TimeCounter(modifier: Modifier = Modifier,currentTime: String,prayTime: Pray
     val nextTime = prayTimeList[nextTimeIndex]
     val previousTime = if (nextTimeIndex == 0) prayTimeList.last() else prayTimeList[nextTimeIndex - 1]
 
-    var totalSeconds = nextTime.convertTimeToSeconds() - previousTime.convertTimeToSeconds()
+    var totalSeconds by remember {
+        mutableIntStateOf(nextTime.convertTimeToSeconds() - previousTime.convertTimeToSeconds())
+    }
     if (totalSeconds < 0) {
         totalSeconds += 24 * 3600
     }
@@ -891,7 +869,9 @@ fun TimeCounter(modifier: Modifier = Modifier,currentTime: String,prayTime: Pray
             if (elapsedSeconds >= totalSeconds) {
                 elapsedSeconds -= totalSeconds
             }
-            if(remainingSeconds < 0) remainingSeconds += totalSeconds
+            if(remainingSeconds < 0) {
+                remainingSeconds += totalSeconds
+            }
         }
     }
 
@@ -951,3 +931,4 @@ fun TimeCounter(modifier: Modifier = Modifier,currentTime: String,prayTime: Pray
         }
     }
 }
+

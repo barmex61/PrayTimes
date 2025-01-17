@@ -1,6 +1,7 @@
 package com.fatih.prayertime.data.remote
 
 import com.fatih.prayertime.data.remote.dto.DailyPrayResponseDTO
+import com.fatih.prayertime.data.remote.dto.MonthlyPrayTimesResponseDTO
 import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.Path
@@ -15,4 +16,13 @@ interface PrayApi {
      @Query("latitude") latitude : Double,
      @Query("longitude") longitude : Double
     ) : Response<DailyPrayResponseDTO>
+
+   // https://api.aladhan.com/v1/calendar/2025/1?latitude=40.9518184&longitude=39.9374072
+    @GET("calendar/{year}/{month}")
+    suspend fun getMonthlyPrayTimes(
+        @Path("year") year : Int,
+        @Path("month") month : Int,
+        @Query("latitude") latitude : Double,
+        @Query("longitude") longitude : Double
+    ) : Response<MonthlyPrayTimesResponseDTO>
 }

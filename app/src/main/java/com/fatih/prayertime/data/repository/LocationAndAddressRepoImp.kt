@@ -3,6 +3,7 @@ package com.fatih.prayertime.data.repository
 import android.annotation.SuppressLint
 import android.location.Geocoder
 import android.location.Location
+import android.os.DeadObjectException
 import android.os.Looper
 import com.fatih.prayertime.domain.model.Address
 import com.fatih.prayertime.domain.repository.LocationAndAddressRepository
@@ -19,6 +20,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.IOException
 import javax.inject.Inject
 
@@ -34,7 +36,7 @@ class LocationAndAddressRepoImp @Inject constructor(
     private suspend fun getAddressWithRetry(location: Location, maxRetries: Int = 10, retryDelay: Long = 10000): Resource<Address> {
         repeat(maxRetries) { attempt ->
             try {
-                val addresses = geocoder.getFromLocation(location.latitude, location.longitude, 3)
+                val addresses = geocoder.getFromLocation(location.latitude, location.longitude,1)
                 val address = addresses?.getOrNull(0)
                 val addressModel = Address(
                     location.latitude,
@@ -57,7 +59,6 @@ class LocationAndAddressRepoImp @Inject constructor(
         return Resource.error("Nothing happened")
     }
 
-    @SuppressLint("MissingPermission")
     override suspend fun getLocationAndAddressInformation(): Flow<Resource<Address>> = callbackFlow<Resource<Address>> {
         if (locationCallback == null){
             locationCallback = object : LocationCallback() {
@@ -70,25 +71,34 @@ class LocationAndAddressRepoImp @Inject constructor(
                                 trySend(address)
                             } catch (e: IOException) {
                                 trySend(Resource.error(e.message))
+                            }catch (e:DeadObjectException){
+                                trySend(Resource.error(e.message))
                             }
                         }
                     }
                 }
             }
         }
-
-        if (!isAlreadyCallbackAvailable){
-            fusedLocationProviderClient.requestLocationUpdates(
-                locationRequest,
-                locationCallback!!,
-                Looper.getMainLooper()
-            ).addOnFailureListener { exception ->
-                close(exception) // Hata durumunda Flow'u kapat
-                isAlreadyCallbackAvailable = false
-                locationCallback = null
+        try {
+            if (!isAlreadyCallbackAvailable ){
+                fusedLocationProviderClient.requestLocationUpdates(
+                    locationRequest,
+                    locationCallback!!,
+                    Looper.getMainLooper()
+                ).addOnFailureListener { exception ->
+                    close(exception) // Hata durumunda Flow'u kapat
+                    isAlreadyCallbackAvailable = false
+                    locationCallback = null
+                }
+                isAlreadyCallbackAvailable = true
             }
-            isAlreadyCallbackAvailable = true
+        }catch (e:SecurityException){
+            close(e)
         }
+        catch (e:Exception){
+            close(e)
+        }
+
         awaitClose {
             isAlreadyCallbackAvailable = false
             fusedLocationProviderClient.removeLocationUpdates(locationCallback!!)

@@ -20,7 +20,7 @@ import com.fatih.prayertime.domain.repository.LocationAndAddressRepository
 import com.fatih.prayertime.domain.repository.PrayApiRepository
 import com.fatih.prayertime.domain.repository.PrayDatabaseRepository
 import com.fatih.prayertime.data.alarm.AlarmScheduler
-import com.fatih.prayertime.domain.use_case.notification_permission_use_case.NotificationPermissionUseCase
+import com.fatih.prayertime.domain.use_case.permission_use_case.PermissionsUseCase
 import com.fatih.prayertime.util.Constants.BASE_URL
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationRequest
@@ -96,7 +96,7 @@ object Module {
 
     @Provides
     @Singleton
-    fun provideAlarmDatabase(@ApplicationContext context: Context) = Room.databaseBuilder(context,GlobalAlarmDatabase::class.java, "alarm_database").build()
+    fun provideAlarmDatabase(@ApplicationContext context: Context) = Room.databaseBuilder(context,GlobalAlarmDatabase::class.java, "global_alarm").build()
 
     @Provides
     @Singleton
@@ -112,6 +112,6 @@ object Module {
 
     @Provides
     @Singleton
-    fun provideRequestNotificationPermissionUseCase(@ApplicationContext context: Context) = NotificationPermissionUseCase(context)
+    fun provideRequestNotificationPermissionUseCase(@ApplicationContext context: Context) = PermissionsUseCase(context)
 
 }

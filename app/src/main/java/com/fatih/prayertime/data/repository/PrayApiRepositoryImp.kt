@@ -2,6 +2,7 @@ package com.fatih.prayertime.data.repository
 
 import com.fatih.prayertime.data.remote.PrayApi
 import com.fatih.prayertime.data.remote.dto.DailyPrayResponseDTO
+import com.fatih.prayertime.data.remote.dto.MonthlyPrayTimesResponseDTO
 import com.fatih.prayertime.domain.repository.PrayApiRepository
 import com.fatih.prayertime.util.Resource
 import kotlinx.coroutines.Dispatchers
@@ -13,10 +14,10 @@ import javax.inject.Inject
 
 class PrayApiRepositoryImp @Inject constructor(private val prayApi : PrayApi) : PrayApiRepository {
 
-    override suspend fun getPrayTimes(date : String,latitude : Double, longitude : Double): Resource<DailyPrayResponseDTO> =
+    override suspend fun getMonthlyPrayTimes(year : Int,month: Int, latitude : Double, longitude : Double): Resource<MonthlyPrayTimesResponseDTO> =
         withContext(Dispatchers.IO)  {
         return@withContext try {
-            val response = prayApi.getDailyPrayTimes(date = date,latitude = latitude, longitude = longitude)
+            val response = prayApi.getMonthlyPrayTimes(year, month, latitude, longitude)
             if (response.isSuccessful) {
                 response.body()?.let {
                     Resource.success(it)

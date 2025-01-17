@@ -8,6 +8,7 @@ data class GlobalAlarm(
     @PrimaryKey(autoGenerate = false)
     val alarmType: String,
     val alarmTime: Long,
+    val alarmTimeString : String,
     val isEnabled: Boolean,
-    val alarmOffset: Int
+    val alarmOffset: Long
 )

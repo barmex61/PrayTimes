@@ -1,27 +1,26 @@
 package com.fatih.prayertime.presentation.main_activity.viewmodel
 
 import android.Manifest
-import android.content.Context
-import android.content.pm.PackageManager
 import androidx.activity.ComponentActivity
 import androidx.compose.runtime.mutableStateOf
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fatih.prayertime.domain.use_case.get_network_state_use_case.GetNetworkStateUseCase
-import com.fatih.prayertime.domain.use_case.notification_permission_use_case.NotificationPermissionUseCase
+import com.fatih.prayertime.domain.use_case.permission_use_case.PermissionsUseCase
 import com.fatih.prayertime.util.NetworkState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class AppViewModel @Inject constructor(
     private val getNetworkStateUseCase: GetNetworkStateUseCase,
-    private val notificationPermissionUseCase: NotificationPermissionUseCase,
+    private val permissionsUseCase: PermissionsUseCase,
 ) : ViewModel() {
 
     //Network-State
@@ -31,50 +30,39 @@ class AppViewModel @Inject constructor(
 
     init {
         viewModelScope.launch(Dispatchers.IO){
-            getNetworkStateUseCase().collect{
-                _networkState.emit(it)
+            getNetworkStateUseCase().filter{
+                it != _networkState.value
+            }.collectLatest {
+                _networkState.value = it
             }
         }
     }
 
     //Permissions
 
-    private val _permissionGranted = MutableStateFlow<Boolean>(false)
-    val permissionGranted: StateFlow<Boolean> = _permissionGranted
-    private val _showGoToSettings = MutableStateFlow<Boolean>(false)
-    val showGoToSettings: StateFlow<Boolean> = _showGoToSettings
-    private val _showPermissionRequest = MutableStateFlow<Boolean>(false)
-    val showPermissionRequest: StateFlow<Boolean> = _showPermissionRequest
-
     val locationPermissions = arrayOf(
-        Manifest.permission.ACCESS_COARSE_LOCATION,
-        Manifest.permission.ACCESS_FINE_LOCATION
+        Manifest.permission.ACCESS_FINE_LOCATION,
+        Manifest.permission.ACCESS_COARSE_LOCATION
     )
 
+    private val _isLocationPermissionGranted = MutableStateFlow(false)
+    val isLocationPermissionGranted: StateFlow<Boolean> = _isLocationPermissionGranted
 
-    fun checkPermissions(context: Context) {
-        val isAllPermissionsGranted = locationPermissions.all {
-            ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED
-        }
-        _permissionGranted.value = isAllPermissionsGranted
-        _showPermissionRequest.value = !isAllPermissionsGranted
-        _showGoToSettings.value = false
+    private val _showLocationPermissionRationale = MutableStateFlow(false)
+    val showLocationPermissionRationale: StateFlow<Boolean> = _showLocationPermissionRationale
+
+
+    fun checkLocationPermission(){
+        _isLocationPermissionGranted.value = permissionsUseCase.checkLocationPermission()
     }
 
-    fun onPermissionsResult(permissions: Map<String, Boolean>,activity : ComponentActivity) {
-        if (permissions.all { it.value }) {
-            _permissionGranted.value = true
-            _showGoToSettings.value = false
-            _showPermissionRequest.value = false
-        } else {
-            val shouldShowRationale = locationPermissions.any {
-                androidx.core.app.ActivityCompat.shouldShowRequestPermissionRationale(
-                    activity,
-                    it
-                )
-            }
-            _showPermissionRequest.value = true
-            _showGoToSettings.value = !shouldShowRationale
+    fun onLocationPermissionResult(permissionResult : Map<String,Boolean>, activity: ComponentActivity){
+        if(permissionResult.values.all { it }){
+            _isLocationPermissionGranted.value = true
+            _showLocationPermissionRationale.value = false
+        }else{
+            _isLocationPermissionGranted.value = false
+            _showLocationPermissionRationale.value = permissionsUseCase.showLocationPermissionRationale(activity)
         }
     }
 
@@ -83,7 +71,7 @@ class AppViewModel @Inject constructor(
     val isNotificationPermissionGranted = mutableStateOf(false)
 
     fun checkNotificationPermission() {
-        isNotificationPermissionGranted.value = notificationPermissionUseCase.checkPermission()
+        isNotificationPermissionGranted.value = permissionsUseCase.checkNotificationPermission()
     }
 
     init {

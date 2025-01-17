@@ -29,6 +29,7 @@ threetenabp = "1.4.0"
 workRuntimeKtx = "2.10.0"
 ksp = "2.1.0-1.0.29"
 lifecycleLivedataKtx = "2.8.7"
+glanceAppwidget = "1.1.1"
 
 [libraries]
 androidx-animation-graphics = { module = "androidx.compose.animation:animation-graphics", version.ref = "animationGraphics" }
@@ -69,6 +70,7 @@ lib-geoip = { module = "com.enonic.lib:lib-geoip", version.ref = "libGeoip" }
 play-services-location = { module = "com.google.android.gms:play-services-location", version.ref = "playServicesLocation" }
 retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
 threetenabp = { module = "com.jakewharton.threetenabp:threetenabp", version.ref = "threetenabp" }
+androidx-glance-appwidget = { group = "androidx.glance", name = "glance-appwidget", version.ref = "glanceAppwidget" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

@@ -7,21 +7,26 @@ import com.fatih.prayertime.domain.repository.PrayDatabaseRepository
 import javax.inject.Inject
 
 class PrayDatabaseRepositoryImp @Inject constructor(private val prayDao: PrayDao): PrayDatabaseRepository {
+
     override suspend fun insertPrayTime(prayTimes: PrayTimes) {
         prayDao.insertPrayTime(prayTimes)
     }
 
-    override suspend fun getDailyPrayTimesAtAddress(
+    override suspend fun insertAllPrayTimes(prayTimes: List<PrayTimes>) {
+        prayDao.insertAllPrayTimes(prayTimes)
+    }
+
+    override suspend fun getDailyPrayTimesWithAddressAndDate(
         country: String,
         district: String,
         city: String,
         date: String
-    ): List<PrayTimes>? {
-        return prayDao.getPrayTimesAtAddress(country, district, city, date)
+    ): PrayTimes? {
+        return prayDao.getPrayTimesWithAddressAndDate(country, district, city, date)
     }
 
     override suspend fun getLastKnownAddress(): Address? {
-        val prayTime = prayDao.getPrayTimes()
+        val prayTime = prayDao.getLastInsertedPrayTime()
         return prayTime?.let {
             Address(
                 country = it.country,

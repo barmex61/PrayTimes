@@ -9,11 +9,13 @@ interface PrayDatabaseRepository {
 
     suspend fun insertPrayTime(prayTimes: PrayTimes)
 
-    suspend fun getDailyPrayTimesAtAddress(
+    suspend fun insertAllPrayTimes(prayTimes: List<PrayTimes>)
+
+    suspend fun getDailyPrayTimesWithAddressAndDate(
         country: String,
         district: String,
         city: String,
         date: String
-    ) : List<PrayTimes>?
+    ) : PrayTimes?
 
 }

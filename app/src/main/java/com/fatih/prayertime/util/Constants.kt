@@ -2,6 +2,8 @@ package com.fatih.prayertime.util
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Face
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 
 object Constants {
     const val BASE_URL = "https://api.aladhan.com/v1/"
@@ -32,4 +34,10 @@ object Constants {
             route = "contact"
         )
     )
+
+    val MIGRATION_2_3 = object : Migration(2, 3) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            database.execSQL("DROP TABLE IF EXISTS `alarmInfo`")
+        }
+    }
 }
