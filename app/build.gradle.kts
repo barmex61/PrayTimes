@@ -62,6 +62,7 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 
+
     // Compose dependencies
     implementation (libs.androidx.lifecycle.viewmodel.compose)
     implementation (libs.androidx.navigation.compose)
@@ -78,6 +79,7 @@ dependencies {
     implementation (libs.hilt.android)
     ksp(libs.hilt.android.compiler)
     ksp(libs.androidx.hilt.compiler)
+    ksp(libs.androidx.hilt.work)
     implementation (libs.androidx.hilt.navigation.compose)
     implementation (libs.androidx.hilt.work)
     implementation (libs.androidx.work.runtime.ktx)

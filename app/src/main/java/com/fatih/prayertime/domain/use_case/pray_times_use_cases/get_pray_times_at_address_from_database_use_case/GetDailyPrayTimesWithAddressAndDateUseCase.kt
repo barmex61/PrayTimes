@@ -4,7 +4,7 @@ import com.fatih.prayertime.domain.model.Address
 import com.fatih.prayertime.domain.repository.PrayDatabaseRepository
 import javax.inject.Inject
 
-class GetDailyPrayTimesWithAddressAndDate @Inject constructor(private val prayDatabaseRepository: PrayDatabaseRepository) {
+class GetDailyPrayTimesWithAddressAndDateUseCase @Inject constructor(private val prayDatabaseRepository: PrayDatabaseRepository) {
     suspend operator fun invoke(address: Address,date : String) = prayDatabaseRepository.getDailyPrayTimesWithAddressAndDate(
         address.country?:"",
         address.district?:"",

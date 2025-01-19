@@ -11,7 +11,7 @@ import com.fatih.prayertime.domain.use_case.pray_times_use_cases.get_monthly_pra
 import com.fatih.prayertime.domain.use_case.alarm_use_cases.get_global_alarm_by_type_use_case.GetGlobalAlarmByTypeUseCase
 import com.fatih.prayertime.domain.use_case.location_use_cases.get_last_known_address_from_database_use_case.GetLastKnowAddressFromDatabaseUseCase
 import com.fatih.prayertime.domain.use_case.location_use_cases.get_location_and_adress_use_case.GetLocationAndAddressUseCase
-import com.fatih.prayertime.domain.use_case.pray_times_use_cases.get_pray_times_at_address_from_database_use_case.GetDailyPrayTimesWithAddressAndDate
+import com.fatih.prayertime.domain.use_case.pray_times_use_cases.get_pray_times_at_address_from_database_use_case.GetDailyPrayTimesWithAddressAndDateUseCase
 import com.fatih.prayertime.domain.use_case.alarm_use_cases.insert_global_alarm_use_case.InsertGlobalAlarmUseCase
 import com.fatih.prayertime.domain.use_case.pray_times_use_cases.insert_pray_time_into_db_use_case.InsertPrayTimeIntoDbUseCase
 import com.fatih.prayertime.domain.use_case.alarm_use_cases.update_global_alarm_use_case.UpdateGlobalAlarmUseCase
@@ -34,7 +34,7 @@ class MainScreenViewModel @Inject constructor(
     private val getMonthlyPrayTimesFromApiUseCase: GetMonthlyPrayTimesFromApiUseCase,
     private val getLocationAndAddressUseCase: GetLocationAndAddressUseCase,
     private val formattedUseCase: FormattedUseCase,
-    private val getDailyPrayTimesWithAddressAndDate: GetDailyPrayTimesWithAddressAndDate,
+    private val getDailyPrayTimesWithAddressAndDateUseCase: GetDailyPrayTimesWithAddressAndDateUseCase,
     private val insertPrayTimeIntoDbUseCase : InsertPrayTimeIntoDbUseCase,
     private val getLastKnownAddressFromDatabaseUseCase: GetLastKnowAddressFromDatabaseUseCase,
     private val getAllGlobalAlarmsUseCase: GetAllGlobalAlarmsUseCase,
@@ -50,7 +50,6 @@ class MainScreenViewModel @Inject constructor(
 
     fun trackLocationAndUpdatePrayTimes() = viewModelScope.launch(Dispatchers.IO) {
         getLocationAndAddressUseCase().collect { resource ->
-            println(resource)
             when(resource.status){
                 Status.SUCCESS -> {
                     getMonthlyPrayTimesFromAPI(Year.now().value, YearMonth.now().monthValue,resource.data!!)
@@ -65,7 +64,7 @@ class MainScreenViewModel @Inject constructor(
 
     fun getMonthlyPrayTimesFromAPI(year: Int,month : Int , address: Address?) = viewModelScope.launch(Dispatchers.Default) {
         val searchAddress = address?:getLastKnownAddressFromDatabaseUseCase()?: return@launch
-        val databaseResponse = getDailyPrayTimesWithAddressAndDate(searchAddress,formattedDate.value)
+        val databaseResponse = getDailyPrayTimesWithAddressAndDateUseCase(searchAddress,formattedDate.value)
         if (databaseResponse != null) {
             _dailyPrayTimes.emit(Resource.success(databaseResponse))
             return@launch
@@ -79,7 +78,7 @@ class MainScreenViewModel @Inject constructor(
 
     fun getDailyPrayTimesFromDb() = viewModelScope.launch(Dispatchers.Default){
         val searchAddress = getLastKnownAddressFromDatabaseUseCase() ?: return@launch
-        val databaseResponse = getDailyPrayTimesWithAddressAndDate(searchAddress, formattedDate.value )
+        val databaseResponse = getDailyPrayTimesWithAddressAndDateUseCase(searchAddress, formattedDate.value )
         if (databaseResponse != null)  _dailyPrayTimes.emit(Resource.success(databaseResponse))
     }
 

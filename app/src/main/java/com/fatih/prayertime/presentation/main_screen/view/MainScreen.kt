@@ -814,7 +814,6 @@ fun PrayerBar() {
 @SuppressLint("DefaultLocale")
 @Composable
 fun TimeCounter(modifier: Modifier = Modifier,currentTime: String,prayTime: PrayTimes) {
-    println("recomposition")
     var isClicked by remember { mutableStateOf(false) }
     val rotationY = animateFloatAsState(
         targetValue = if (isClicked) 180f else 0f,
@@ -843,17 +842,16 @@ fun TimeCounter(modifier: Modifier = Modifier,currentTime: String,prayTime: Pray
     val nextTime = prayTimeList[nextTimeIndex]
     val previousTime = if (nextTimeIndex == 0) prayTimeList.last() else prayTimeList[nextTimeIndex - 1]
 
-    var totalSeconds by remember {
-        mutableIntStateOf(nextTime.convertTimeToSeconds() - previousTime.convertTimeToSeconds())
-    }
+    var totalSeconds = nextTime.convertTimeToSeconds() - previousTime.convertTimeToSeconds()
+
     if (totalSeconds < 0) {
         totalSeconds += 24 * 3600
     }
 
-    var elapsedSeconds by remember { mutableIntStateOf(currentSeconds - previousTime.convertTimeToSeconds()) }
+    var elapsedSeconds = currentSeconds - previousTime.convertTimeToSeconds()
     if(elapsedSeconds < 0) elapsedSeconds += 24 * 3600
 
-    var remainingSeconds by remember { mutableIntStateOf(totalSeconds - elapsedSeconds) }
+    var remainingSeconds =totalSeconds - elapsedSeconds
 
     val sweepAngle by remember {
         derivedStateOf {

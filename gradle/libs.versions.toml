@@ -2,6 +2,7 @@
 agp = "8.7.3"
 animatedNavigationBar = "1.0.0"
 animationGraphics = "1.7.6"
+constraintlayout = "2.2.0"
 geoip2 = "3.1.0"
 hilt-android = "2.54"
 converterGson = "2.9.0"
@@ -17,8 +18,8 @@ kotlinxCoroutinesCore = "1.6.4"
 kotlinxSerializationJson = "1.6.0"
 libGeoip = "2.0.0"
 lifecycleRuntimeKtx = "2.8.7"
-activityCompose = "1.9.3"
-composeBom = "2024.12.01"
+activityCompose = "1.10.0"
+composeBom = "2025.01.00"
 navigationCompose = "2.8.5"
 playServicesLocation = "21.3.0"
 retrofit = "2.9.0"
@@ -33,6 +34,7 @@ glanceAppwidget = "1.1.1"
 
 [libraries]
 androidx-animation-graphics = { module = "androidx.compose.animation:animation-graphics", version.ref = "animationGraphics" }
+androidx-constraintlayout = { module = "androidx.constraintlayout:constraintlayout", version.ref = "constraintlayout" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-hilt-compiler = { module = "androidx.hilt:hilt-compiler", version.ref = "hiltWork" }
 androidx-hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "hiltWork" }

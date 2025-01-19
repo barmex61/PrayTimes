@@ -12,7 +12,10 @@ class FormattedUseCase @Inject constructor() {
 
     private val formatterDDMMYYYY = DateTimeFormatter.ofPattern("dd-MM-yyyy", Locale.getDefault())
     private val formatterDDMM = DateTimeFormatter.ofPattern("dd-MM", Locale.getDefault())
+    private val formatterEEE =  DateTimeFormatter.ofPattern("d MMM, EEE", Locale.getDefault())
+    private val formatterEEEE = DateTimeFormatter.ofPattern("EEEE", Locale.getDefault())
 
+    private val formatterHHMM = DateTimeFormatter.ofPattern("HH:mm", Locale.getDefault())
     private val formatterHHMMSS = DateTimeFormatter.ofPattern("HH:mm:ss", Locale.getDefault())
     private val formatterDDMMYYYYHHMM = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm", Locale.getDefault())
 
@@ -22,6 +25,14 @@ class FormattedUseCase @Inject constructor() {
 
     fun formatOfPatternDDMM(localDate: LocalDate): String{
         return localDate.format(formatterDDMM)
+    }
+
+    fun formatOfPatternEEE(localDate: LocalDate): String{
+        return localDate.format(formatterEEE)
+    }
+
+    fun formatOfPatternEEEE(localDate: LocalDate): String{
+        return localDate.format(formatterEEEE)
     }
 
     fun formatDDMMYYYYHHMMDateToLocalDateTime(date: String): LocalDateTime {
@@ -36,7 +47,9 @@ class FormattedUseCase @Inject constructor() {
         return localDate.dayOfMonth == localDate.lengthOfMonth()
     }
 
-
+    fun formatHHMM(localDateTime: LocalDateTime) : String {
+        return localDateTime.format(formatterHHMM)
+    }
 
     fun formatHHMMSS(localDateTime: LocalDateTime) : String {
         return localDateTime.format(formatterHHMMSS)

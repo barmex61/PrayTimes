@@ -36,6 +36,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.lifecycleScope
+import androidx.work.WorkManager
 import com.fatih.prayertime.domain.use_case.alarm_use_cases.schedule_daily_alarm_update_use_case.ScheduleDailyAlarmUpdateUseCase
 import com.fatih.prayertime.presentation.main_activity.viewmodel.AppViewModel
 import com.fatih.prayertime.presentation.main_screen.view.MainScreen
@@ -44,6 +46,7 @@ import com.fatih.prayertime.presentation.ui.theme.IconColor
 import com.fatih.prayertime.presentation.ui.theme.PrayerTimeTheme
 import com.fatih.prayertime.util.Constants.bottomNavItems
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 
@@ -150,6 +153,23 @@ class MainActivity : ComponentActivity() {
             }
         }
         scheduleDailyAlarmUpdateUseCase.execute(this)
+        val workInfos = WorkManager.getInstance(this).getWorkInfosByTagLiveData("DailyAlarmUpdate")
+
+        workInfos.observe(this){  workInfoList ->
+            workInfoList.forEach { workInfo ->
+                println("WorkInfo ID: ${workInfo.id}")
+                println("State: ${workInfo.state}")
+                println("Output Data: ${workInfo.outputData}")
+                println("Tags: ${workInfo.tags}")
+                println("Run Attempt Count: ${workInfo.runAttemptCount}")
+                println("Constraints: ${workInfo.constraints}")
+                println("Initial Delay: ${workInfo.initialDelayMillis}")
+                println("Periodicity Info: ${workInfo.periodicityInfo}")
+                println("Next Schedule Time: ${workInfo.nextScheduleTimeMillis}")
+                println("Stop Reason: ${workInfo.stopReason}")
+            }
+        }
+
     }
 }
 

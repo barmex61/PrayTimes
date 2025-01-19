@@ -2,7 +2,9 @@ package com.fatih.prayertime.data.dependency_injection
 
 import android.content.Context
 import android.location.Geocoder
+import androidx.hilt.work.HiltWorkerFactory
 import androidx.room.Room
+import androidx.work.WorkerFactory
 import com.fatih.prayertime.data.local.dao.GlobalAlarmDao
 import com.fatih.prayertime.data.local.dao.PrayDao
 import com.fatih.prayertime.data.local.database.GlobalAlarmDatabase

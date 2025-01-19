@@ -1,7 +1,9 @@
 package com.fatih.prayertime.data.alarm
 
 import android.content.Context
+import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
+import androidx.work.Worker
 import androidx.work.WorkerParameters
 import com.fatih.prayertime.domain.model.Address
 import com.fatih.prayertime.domain.model.GlobalAlarm
@@ -11,40 +13,69 @@ import com.fatih.prayertime.domain.use_case.formatted_use_cases.formatted_use_ca
 import com.fatih.prayertime.domain.use_case.location_use_cases.get_last_known_address_from_database_use_case.GetLastKnowAddressFromDatabaseUseCase
 import com.fatih.prayertime.domain.use_case.location_use_cases.get_location_and_adress_use_case.GetLocationAndAddressUseCase
 import com.fatih.prayertime.domain.use_case.pray_times_use_cases.get_monthly_pray_times_use_case.GetMonthlyPrayTimesFromApiUseCase
-import com.fatih.prayertime.domain.use_case.pray_times_use_cases.get_pray_times_at_address_from_database_use_case.GetDailyPrayTimesWithAddressAndDate
+import com.fatih.prayertime.domain.use_case.pray_times_use_cases.get_pray_times_at_address_from_database_use_case.GetDailyPrayTimesWithAddressAndDateUseCase
 import com.fatih.prayertime.domain.use_case.pray_times_use_cases.insert_pray_time_into_db_use_case.InsertPrayTimeIntoDbUseCase
 import com.fatih.prayertime.util.PrayTimesString
 import com.fatih.prayertime.util.Status
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
+import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.threeten.bp.LocalDate
 
-class AlarmWorker(
-    context : Context,
-    workerParams : WorkerParameters,
+@AssistedFactory
+interface AlarmWorkerFactory {
+    fun create(appContext: Context, workerParams: WorkerParameters): AlarmWorker
+}
+
+@HiltWorker
+class AlarmWorker @AssistedInject constructor(
+    @Assisted context : Context,
+    @Assisted workerParams : WorkerParameters,
     private val formattedUseCase: FormattedUseCase,
     private val alarmScheduler: AlarmScheduler,
-    private val getDailyPrayTimesWithAddressAndDate: GetDailyPrayTimesWithAddressAndDate,
+    private val getDailyPrayTimesWithAddressAndDateUseCase: GetDailyPrayTimesWithAddressAndDateUseCase,
     private val getLastKnowAddressFromDatabaseUseCase: GetLastKnowAddressFromDatabaseUseCase,
     private val getAllGlobalAlarmsUseCase: GetAllGlobalAlarmsUseCase,
     private val getMonthlyPrayTimesFromApiUseCase: GetMonthlyPrayTimesFromApiUseCase,
     private val insetPrayTimeIntoDbUseCase: InsertPrayTimeIntoDbUseCase,
     private val getLocationAndAddressUseCase: GetLocationAndAddressUseCase
-    ) : CoroutineWorker(context,workerParams) {
+    ) : Worker(context,workerParams) {
 
-    override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
+    init {
+        println("initialize workmanager")
+    }
+
+    override fun doWork(): Result {
+        CoroutineScope(Dispatchers.IO + SupervisorJob()).launch {
+            println("work")
+        }
+        return Result.success()
+        /*
+    override  fun doWork(): Result  {
+        CoroutineScope(Dispatchers.IO + SupervisorJob()).launch {
+
+        }
         try {
+            println("Started worker")
             // Get current location and address
             val addressResource = getLocationAndAddressUseCase().filter {
                 it.status == Status.SUCCESS
             }.firstOrNull()
             val lastKnownAddressDatabase = getLastKnowAddressFromDatabaseUseCase()
             val lastKnownAddress = if (addressResource == null){
+                println("if içi")
                 lastKnownAddressDatabase ?: return@withContext Result.failure()
             }else{
+                println("else içi")
                 if (lastKnownAddressDatabase == null) addressResource.data!!
                 else addressResource.data!!
             }
@@ -65,16 +96,17 @@ class AlarmWorker(
                 if (alarm.isEnabled){
                     if (currentTimeInMillis > alarm.alarmTime){
                         val nextDayString = formattedUseCase.formatOfPatternDDMMYYYY(LocalDate.now().plusDays(1))
-                        val nextDayPrayTimes = getDailyPrayTimesWithAddressAndDate(lastKnownAddress, nextDayString)
+                        val nextDayPrayTimes = getDailyPrayTimesWithAddressAndDateUseCase(lastKnownAddress, nextDayString)
                         if (nextDayPrayTimes == null){
                             val nextDayLocalDate = formattedUseCase.formatDDMMYYYYDateToLocalDate(nextDayString)
                             val apiResponse = getMonthlyPrayTimesFromApiUseCase(nextDayLocalDate.year, nextDayLocalDate.monthValue, lastKnownAddress)
                             if (apiResponse.status == Status.SUCCESS){
                                 insetPrayTimeIntoDbUseCase.insertPrayTimeList(apiResponse.data!!)
-                                val updatedNextPrayTime = getDailyPrayTimesWithAddressAndDate(lastKnownAddress, nextDayString)
+                                val updatedNextPrayTime = getDailyPrayTimesWithAddressAndDateUseCase(lastKnownAddress, nextDayString)
                                 if (updatedNextPrayTime == null) return@withContext Result.failure()
                                 else setNextGlobalAlarm(alarm,updatedNextPrayTime, nextDayString)
                             }else{
+                                println("apiResponse.status ${apiResponse.status}")
                                 return@withContext Result.failure()
                             }
 
@@ -97,9 +129,10 @@ class AlarmWorker(
                 println("alarm worker working $alarm")
                 alarmScheduler.update(alarm)
             }
-            Result.success()
+            return@withContext Result.success()
         } catch (e: Exception) {
-            Result.failure()
+            println(e.message)
+            return@withContext Result.failure()
         }
     }
 
@@ -135,11 +168,13 @@ class AlarmWorker(
             globalAlarms.forEach { alarm ->
                 if (alarm.isEnabled && System.currentTimeMillis() < alarm.alarmTime) {
                     val formattedDate = formattedUseCase.formatOfPatternDDMMYYYY(localDateNow)
-                    val todayPrayTimes = getDailyPrayTimesWithAddressAndDate(newAddress, formattedDate) ?: return@forEach
+                    val todayPrayTimes = getDailyPrayTimesWithAddressAndDateUseCase(newAddress, formattedDate) ?: return@forEach
                     val updatedAlarm = setNextGlobalAlarm(alarm, todayPrayTimes, formattedDate)
                     alarmScheduler.update(updatedAlarm)
                 }
             }
         }
+    }
+}*/
     }
 }

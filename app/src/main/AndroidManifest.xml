@@ -32,8 +32,10 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <receiver android:name=".presentation.widget.MyAppWidgetReceiver"
-            android:exported="true">
+        <receiver android:name=".presentation.widget.MyWidgetProvider"
+            android:exported="false"
+            android:enabled="true"
+            >
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
@@ -42,6 +44,11 @@
                 android:resource="@xml/my_app_widget_info" />
         </receiver>
         <receiver android:name=".data.alarm.AlarmReceiver" android:exported="false" android:enabled="true" />
+        <provider
+            android:name="androidx.startup.InitializationProvider"
+            android:authorities="${applicationId}.androidx-startup"
+            tools:node="remove">
+        </provider>
     </application>
 
 </manifest>
