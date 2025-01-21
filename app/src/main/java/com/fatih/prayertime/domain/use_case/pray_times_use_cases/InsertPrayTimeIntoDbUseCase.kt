@@ -1,4 +1,4 @@
-package com.fatih.prayertime.domain.use_case.pray_times_use_cases.insert_pray_time_into_db_use_case
+package com.fatih.prayertime.domain.use_case.pray_times_use_cases
 
 import com.fatih.prayertime.domain.model.PrayTimes
 import com.fatih.prayertime.domain.repository.PrayDatabaseRepository

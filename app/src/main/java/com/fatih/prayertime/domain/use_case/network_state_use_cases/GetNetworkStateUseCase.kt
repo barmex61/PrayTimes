@@ -1,4 +1,4 @@
-package com.fatih.prayertime.domain.use_case.get_network_state_use_case
+package com.fatih.prayertime.domain.use_case.network_state_use_cases
 
 import com.fatih.prayertime.domain.repository.ConnectivityRepository
 import javax.inject.Inject

@@ -1,4 +1,4 @@
-package com.fatih.prayertime.domain.use_case.formatted_use_cases.get_hour_and_minute_from_long
+package com.fatih.prayertime.domain.use_case.formatted_use_cases
 
 
 import java.text.SimpleDateFormat

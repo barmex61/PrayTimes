@@ -14,6 +14,8 @@ import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -31,9 +33,9 @@ class LocationAndAddressRepoImp @Inject constructor(
 ) : LocationAndAddressRepository {
 
     private var locationCallback : LocationCallback? = null
-    private var isAlreadyCallbackAvailable : Boolean = false
+    private val geocoderCoroutineScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
-    private suspend fun getAddressWithRetry(location: Location, maxRetries: Int = 10, retryDelay: Long = 10000): Resource<Address> {
+    private suspend fun getAddressWithRetry(location: Location, maxRetries: Int = 6, retryDelay: Long = 10000): Resource<Address> {
         repeat(maxRetries) { attempt ->
             try {
                 val addresses = geocoder.getFromLocation(location.latitude, location.longitude,1)
@@ -61,10 +63,13 @@ class LocationAndAddressRepoImp @Inject constructor(
 
     override suspend fun getLocationAndAddressInformation(): Flow<Resource<Address>> = callbackFlow<Resource<Address>> {
         if (locationCallback == null){
+            println("locationCallbackNull")
             locationCallback = object : LocationCallback() {
                 override fun onLocationResult(locationResult: LocationResult) {
+                    ("locations ${locationResult.locations.first()}")
                     locationResult.locations.lastOrNull()?.let { location ->
-                        CoroutineScope(Dispatchers.IO).launch {
+                        geocoderCoroutineScope.cancel()
+                        geocoderCoroutineScope.launch {
                             try {
                                 trySend(Resource.loading())
                                 val address = getAddressWithRetry(location)
@@ -80,27 +85,28 @@ class LocationAndAddressRepoImp @Inject constructor(
             }
         }
         try {
-            if (!isAlreadyCallbackAvailable ){
-                fusedLocationProviderClient.requestLocationUpdates(
-                    locationRequest,
-                    locationCallback!!,
-                    Looper.getMainLooper()
-                ).addOnFailureListener { exception ->
-                    close(exception) // Hata durumunda Flow'u kapat
-                    isAlreadyCallbackAvailable = false
-                    locationCallback = null
-                }
-                isAlreadyCallbackAvailable = true
+            fusedLocationProviderClient.removeLocationUpdates(locationCallback!!)
+            fusedLocationProviderClient.requestLocationUpdates(
+                locationRequest,
+                locationCallback!!,
+                Looper.getMainLooper()
+            ).addOnFailureListener { exception ->
+                println("exception $exception")
+                close(exception) // Hata durumunda Flow'u kapat
+                locationCallback = null
             }
+
         }catch (e:SecurityException){
+            println("e security exception $e")
             close(e)
         }
         catch (e:Exception){
+            println("e exception $e")
             close(e)
         }
 
         awaitClose {
-            isAlreadyCallbackAvailable = false
+            println("close")
             fusedLocationProviderClient.removeLocationUpdates(locationCallback!!)
             locationCallback = null
         }

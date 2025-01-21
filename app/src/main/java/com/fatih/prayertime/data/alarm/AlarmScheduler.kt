@@ -57,8 +57,8 @@ class AlarmScheduler @Inject constructor(private val context: Context) {
     }
 
     fun update(alarm: GlobalAlarm){
-        if(alarm.isEnabled){
-            schedule(alarm)
+        if(alarm.isEnabled ){
+            if(alarm.alarmTime > System.currentTimeMillis()) schedule(alarm)
         }else{
             cancel(alarm)
         }

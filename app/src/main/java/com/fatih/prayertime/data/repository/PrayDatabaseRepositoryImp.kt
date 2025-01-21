@@ -17,12 +17,16 @@ class PrayDatabaseRepositoryImp @Inject constructor(private val prayDao: PrayDao
     }
 
     override suspend fun getDailyPrayTimesWithAddressAndDate(
-        country: String,
-        district: String,
-        city: String,
+        address: Address,
         date: String
     ): PrayTimes? {
-        return prayDao.getPrayTimesWithAddressAndDate(country, district, city, date)
+        val country = address.country
+        val district = address.district
+        val city = address.city
+        ("country $country city $city district $district date $date")
+        val prayTime = prayDao.getPrayTimesWithAddressAndDate(country, district, city, date)
+        ("REPOSITORY PRAYTIME $prayTime")
+        return prayTime
     }
 
     override suspend fun getLastKnownAddress(): Address? {

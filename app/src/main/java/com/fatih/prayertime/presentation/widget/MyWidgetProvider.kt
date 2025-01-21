@@ -9,9 +9,9 @@ import android.content.Intent
 import android.os.Bundle
 import android.widget.RemoteViews
 import com.fatih.prayertime.R
-import com.fatih.prayertime.domain.use_case.formatted_use_cases.formatted_use_case.FormattedUseCase
-import com.fatih.prayertime.domain.use_case.location_use_cases.get_last_known_address_from_database_use_case.GetLastKnowAddressFromDatabaseUseCase
-import com.fatih.prayertime.domain.use_case.pray_times_use_cases.get_pray_times_at_address_from_database_use_case.GetDailyPrayTimesWithAddressAndDateUseCase
+import com.fatih.prayertime.domain.use_case.formatted_use_cases.FormattedUseCase
+import com.fatih.prayertime.domain.use_case.location_use_cases.GetLastKnowAddressFromDatabaseUseCase
+import com.fatih.prayertime.domain.use_case.pray_times_use_cases.GetDailyPrayTimesWithAddressAndDateUseCase
 import com.fatih.prayertime.util.convertTimeToSeconds
 import com.fatih.prayertime.util.toList
 import dagger.hilt.android.AndroidEntryPoint
@@ -19,12 +19,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.threeten.bp.LocalDateTime
-import org.threeten.bp.format.DateTimeFormatter
-import java.util.Locale
 import javax.inject.Inject
 
 @AndroidEntryPoint

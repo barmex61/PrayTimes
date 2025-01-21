@@ -1,4 +1,4 @@
-package com.fatih.prayertime.domain.use_case.location_use_cases.get_location_and_adress_use_case
+package com.fatih.prayertime.domain.use_case.location_use_cases
 
 import com.fatih.prayertime.domain.model.Address
 import com.fatih.prayertime.domain.repository.LocationAndAddressRepository

@@ -5,7 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.fatih.prayertime.domain.use_case.get_network_state_use_case.GetNetworkStateUseCase
+import com.fatih.prayertime.domain.use_case.network_state_use_cases.GetNetworkStateUseCase
 import com.fatih.prayertime.domain.use_case.permission_use_case.PermissionsUseCase
 import com.fatih.prayertime.util.NetworkState
 import dagger.hilt.android.lifecycle.HiltViewModel

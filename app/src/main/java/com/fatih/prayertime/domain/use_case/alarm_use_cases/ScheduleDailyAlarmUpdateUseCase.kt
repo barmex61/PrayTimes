@@ -1,9 +1,7 @@
-package com.fatih.prayertime.domain.use_case.alarm_use_cases.schedule_daily_alarm_update_use_case
+package com.fatih.prayertime.domain.use_case.alarm_use_cases
 
 import android.content.Context
-import androidx.work.Constraints
 import androidx.work.ExistingPeriodicWorkPolicy
-import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.fatih.prayertime.data.alarm.AlarmWorker
@@ -14,26 +12,22 @@ class ScheduleDailyAlarmUpdateUseCase @Inject constructor() {
 
     fun execute(context: Context) {
 
-        val workRequest = PeriodicWorkRequestBuilder<AlarmWorker>(1,TimeUnit.HOURS)
-            .addTag("DailyAlarmUpdate")
-            .setConstraints(
-                Constraints.Builder()
-                    .setRequiresBatteryNotLow(false)
-                    .setRequiredNetworkType(NetworkType.NOT_REQUIRED)
-                    .build()
-            )
+        val workRequest = PeriodicWorkRequestBuilder<AlarmWorker>(15,TimeUnit.MINUTES)
+            .addTag("AlarmWorker")
             .build()
+
 
         WorkManager.getInstance(context)
             .enqueueUniquePeriodicWork(
-                "DailyAlarmUpdate",
-                ExistingPeriodicWorkPolicy.UPDATE,
+                "AlarmWorker",
+                ExistingPeriodicWorkPolicy.CANCEL_AND_REENQUEUE,
                 workRequest
-            )
+            )/*
             .state.observeForever {
                 println("state: $it")
             }
-        println("executed")
+
+        println("executed") */
     }
     /*
     private fun calculateInitialDelay(): Long {

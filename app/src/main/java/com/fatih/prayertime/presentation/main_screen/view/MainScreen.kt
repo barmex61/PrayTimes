@@ -171,6 +171,8 @@ fun MainScreen(appViewModel: AppViewModel) {
 fun GetLocationInformation(mainScreenViewModel: MainScreenViewModel, appViewModel: AppViewModel){
     val permissionGranted by appViewModel.isLocationPermissionGranted.collectAsState()
     var isLocationTracking by rememberSaveable { mutableStateOf(false) }
+    println("permissionGranted $permissionGranted")
+    println("isLocationTracking $isLocationTracking")
     val networkState by appViewModel.networkState.collectAsState()
     LaunchedEffect (key1 = networkState, key2 = permissionGranted) {
         if (!isLocationTracking){
@@ -583,6 +585,7 @@ fun PrayScheduleCompose() {
                 //val currentTime = remember { formattedTime }
 
                 val prayTimes by mainScreenViewModel.dailyPrayTimes.collectAsState()
+                ("PRAYTIMEEEEEEEEEEEEEEEEEEEES $prayTimes")
                 prayTimes.data?.let {
                     TimeCounter(
                         Modifier

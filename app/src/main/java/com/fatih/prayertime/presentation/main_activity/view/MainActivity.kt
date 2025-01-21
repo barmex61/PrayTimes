@@ -27,18 +27,18 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.lifecycleScope
+import androidx.work.WorkInfo
 import androidx.work.WorkManager
-import com.fatih.prayertime.domain.use_case.alarm_use_cases.schedule_daily_alarm_update_use_case.ScheduleDailyAlarmUpdateUseCase
+import com.fatih.prayertime.domain.use_case.alarm_use_cases.ScheduleDailyAlarmUpdateUseCase
 import com.fatih.prayertime.presentation.main_activity.viewmodel.AppViewModel
 import com.fatih.prayertime.presentation.main_screen.view.MainScreen
 import com.fatih.prayertime.presentation.ui.theme.BackGround
@@ -46,7 +46,6 @@ import com.fatih.prayertime.presentation.ui.theme.IconColor
 import com.fatih.prayertime.presentation.ui.theme.PrayerTimeTheme
 import com.fatih.prayertime.util.Constants.bottomNavItems
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 
@@ -70,32 +69,32 @@ class MainActivity : ComponentActivity() {
             PrayerTimeTheme(dynamicColor = false, darkTheme = false) {
                 val appViewModel : AppViewModel = hiltViewModel()
                 val isLocationPermissionGranted by appViewModel.isLocationPermissionGranted.collectAsState()
+                var isCalculating by remember { mutableStateOf(true) }
                 val showLocationPermissionRationale by appViewModel.showLocationPermissionRationale.collectAsState()
-                val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions -> appViewModel.onLocationPermissionResult(permissions,this) }
+                val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
+                    permissions -> appViewModel.onLocationPermissionResult(permissions,this)
+                    isCalculating = false
+                }
                 val resultLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { appViewModel.checkLocationPermission() }
 
                 LaunchedEffect (key1 = Unit){
                     appViewModel.checkLocationPermission()
                     if (!isLocationPermissionGranted){
                         permissionLauncher.launch(appViewModel.locationPermissions)
+                        isCalculating = true
                     }
                 }
 
                 Scaffold(
                     snackbarHost = {
-                        if (!isLocationPermissionGranted) {
+                        if (!isLocationPermissionGranted && !isCalculating) {
                             Snackbar(
                                 action = {
                                     Button(onClick = {
-                                        if (showLocationPermissionRationale){
-                                            val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-                                                data = Uri.fromParts("package", packageName, null)
-                                            }
-                                            resultLauncher.launch(intent)
-
-                                        }else{
-                                            permissionLauncher.launch(appViewModel.locationPermissions)
+                                        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                                            data = Uri.fromParts("package", packageName, null)
                                         }
+                                        resultLauncher.launch(intent)
                                     }) {
                                         Text("Give")
                                     }
@@ -152,22 +151,18 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
-        scheduleDailyAlarmUpdateUseCase.execute(this)
-        val workInfos = WorkManager.getInstance(this).getWorkInfosByTagLiveData("DailyAlarmUpdate")
+        WorkManager.getInstance(applicationContext).cancelAllWork()
+        val workInfos = WorkManager.getInstance(applicationContext).getWorkInfosByTagLiveData("AlarmWorker")
 
         workInfos.observe(this){  workInfoList ->
-            workInfoList.forEach { workInfo ->
+            if (!workInfoList.any { it.state == WorkInfo.State.ENQUEUED || it.state == WorkInfo.State.RUNNING }) {
+                scheduleDailyAlarmUpdateUseCase.execute(this)
+            }
+            /*workInfoList.forEach { workInfo ->
                 println("WorkInfo ID: ${workInfo.id}")
                 println("State: ${workInfo.state}")
-                println("Output Data: ${workInfo.outputData}")
-                println("Tags: ${workInfo.tags}")
-                println("Run Attempt Count: ${workInfo.runAttemptCount}")
-                println("Constraints: ${workInfo.constraints}")
-                println("Initial Delay: ${workInfo.initialDelayMillis}")
-                println("Periodicity Info: ${workInfo.periodicityInfo}")
                 println("Next Schedule Time: ${workInfo.nextScheduleTimeMillis}")
-                println("Stop Reason: ${workInfo.stopReason}")
-            }
+            } */
         }
 
     }

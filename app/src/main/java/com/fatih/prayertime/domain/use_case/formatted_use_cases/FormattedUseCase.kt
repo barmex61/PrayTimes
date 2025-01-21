@@ -1,4 +1,4 @@
-package com.fatih.prayertime.domain.use_case.formatted_use_cases.formatted_use_case
+package com.fatih.prayertime.domain.use_case.formatted_use_cases
 
 import org.threeten.bp.Instant
 import org.threeten.bp.LocalDate
