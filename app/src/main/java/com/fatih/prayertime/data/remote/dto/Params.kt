@@ -1,6 +1,6 @@
 package com.fatih.prayertime.data.remote.dto
 
 data class Params(
-    val Fajr: Int,
-    val Isha: Int
+    val Fajr: Float?,
+    val Isha: Float?
 )

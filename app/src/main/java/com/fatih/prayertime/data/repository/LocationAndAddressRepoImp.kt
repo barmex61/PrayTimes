@@ -14,11 +14,10 @@ import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
@@ -33,9 +32,8 @@ class LocationAndAddressRepoImp @Inject constructor(
 ) : LocationAndAddressRepository {
 
     private var locationCallback : LocationCallback? = null
-    private val geocoderCoroutineScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
-    private suspend fun getAddressWithRetry(location: Location, maxRetries: Int = 6, retryDelay: Long = 10000): Resource<Address> {
+    private suspend fun getAddressWithRetry(location: Location, maxRetries: Int = 10, retryDelay: Long = 10000): Resource<Address> {
         repeat(maxRetries) { attempt ->
             try {
                 val addresses = geocoder.getFromLocation(location.latitude, location.longitude,1)
@@ -51,9 +49,11 @@ class LocationAndAddressRepoImp @Inject constructor(
                 )
                 return Resource.success(addressModel)
             } catch (e: IOException) {
+                println("IOExceptionGeocode $e")
                 if (attempt < maxRetries - 1) {
                     delay(retryDelay)
                 } else {
+                    println("Geocoder failed after $maxRetries retries $e")
                     return Resource.error("Geocoder failed after $maxRetries retries $e")
                 }
             }
@@ -63,20 +63,21 @@ class LocationAndAddressRepoImp @Inject constructor(
 
     override suspend fun getLocationAndAddressInformation(): Flow<Resource<Address>> = callbackFlow<Resource<Address>> {
         if (locationCallback == null){
-            println("locationCallbackNull")
             locationCallback = object : LocationCallback() {
                 override fun onLocationResult(locationResult: LocationResult) {
-                    ("locations ${locationResult.locations.first()}")
                     locationResult.locations.lastOrNull()?.let { location ->
-                        geocoderCoroutineScope.cancel()
-                        geocoderCoroutineScope.launch {
+                        CoroutineScope(Dispatchers.IO).launch {
                             try {
-                                trySend(Resource.loading())
                                 val address = getAddressWithRetry(location)
                                 trySend(address)
                             } catch (e: IOException) {
+                                println("IOException $e")
                                 trySend(Resource.error(e.message))
                             }catch (e:DeadObjectException){
+                                println("DeadObjectException $e")
+                                trySend(Resource.error(e.message))
+                            }catch (e:Exception){
+                                println(e.message)
                                 trySend(Resource.error(e.message))
                             }
                         }
@@ -85,31 +86,37 @@ class LocationAndAddressRepoImp @Inject constructor(
             }
         }
         try {
+
             fusedLocationProviderClient.removeLocationUpdates(locationCallback!!)
             fusedLocationProviderClient.requestLocationUpdates(
                 locationRequest,
                 locationCallback!!,
                 Looper.getMainLooper()
             ).addOnFailureListener { exception ->
-                println("exception $exception")
+                println("addOnFailureListener $exception")
                 close(exception) // Hata durumunda Flow'u kapat
-                locationCallback = null
             }
 
         }catch (e:SecurityException){
-            println("e security exception $e")
+            println("SecurityException $e")
             close(e)
         }
         catch (e:Exception){
-            println("e exception $e")
+            println("Exception $e")
             close(e)
         }
 
         awaitClose {
             println("close")
-            fusedLocationProviderClient.removeLocationUpdates(locationCallback!!)
-            locationCallback = null
+            //fusedLocationProviderClient.removeLocationUpdates(locationCallback!!)
+            // locationCallback = null
         }
     }.flowOn(Dispatchers.IO) // IO thread'inde çalıştır
 
+    override fun removeCallback(){
+        locationCallback?.let {
+            fusedLocationProviderClient.removeLocationUpdates(it)
+        }
+        locationCallback = null
+    }
 }

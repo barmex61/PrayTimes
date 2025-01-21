@@ -98,6 +98,7 @@ import com.fatih.prayertime.presentation.main_screen.viewmodel.MainScreenViewMod
 import com.fatih.prayertime.presentation.ui.theme.IconBackGroundColor
 import com.fatih.prayertime.presentation.ui.theme.IconColor
 import com.fatih.prayertime.presentation.ui.theme.LightGreen
+import com.fatih.prayertime.util.NetworkState
 import com.fatih.prayertime.util.Status
 import com.fatih.prayertime.util.convertTimeToSeconds
 import com.fatih.prayertime.util.toAddress
@@ -111,6 +112,7 @@ import org.threeten.bp.YearMonth
 import org.threeten.bp.ZoneId
 import org.threeten.bp.format.DateTimeFormatter
 import java.util.Calendar
+import java.util.Locale
 
 import kotlin.math.PI
 import kotlin.math.cos
@@ -171,15 +173,11 @@ fun MainScreen(appViewModel: AppViewModel) {
 fun GetLocationInformation(mainScreenViewModel: MainScreenViewModel, appViewModel: AppViewModel){
     val permissionGranted by appViewModel.isLocationPermissionGranted.collectAsState()
     var isLocationTracking by rememberSaveable { mutableStateOf(false) }
-    println("permissionGranted $permissionGranted")
-    println("isLocationTracking $isLocationTracking")
     val networkState by appViewModel.networkState.collectAsState()
-    LaunchedEffect (key1 = networkState, key2 = permissionGranted) {
-        if (!isLocationTracking){
-            if (permissionGranted){
-                mainScreenViewModel.trackLocationAndUpdatePrayTimes()
-                isLocationTracking = true
-            }
+    LaunchedEffect (key1 = networkState, key2 = permissionGranted){
+        if (!isLocationTracking && permissionGranted && networkState == NetworkState.Connected){
+            mainScreenViewModel.trackLocationAndUpdatePrayTimes()
+            isLocationTracking = true
         }
         if (!permissionGranted) {
             mainScreenViewModel.getDailyPrayTimesFromDb()
@@ -460,7 +458,7 @@ fun ClassicTimePicker(
     showDialog : Boolean = false) {
     val context = LocalContext.current
     val calendar = remember { Calendar.getInstance() }
-    val formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm")
+    val formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm", Locale.getDefault())
     calendar.set(Calendar.HOUR_OF_DAY,initialHour)
     calendar.set(Calendar.MINUTE,initialMinutes)
     val initialTimeInMillis = calendar.timeInMillis
@@ -469,6 +467,8 @@ fun ClassicTimePicker(
         { _, hourOfDay, minute ->
             calendar.set(Calendar.HOUR_OF_DAY, hourOfDay)
             calendar.set(Calendar.MINUTE, minute)
+            calendar.set(Calendar.SECOND, 0)
+            calendar.set(Calendar.MILLISECOND, 0)
             val selectedTimeInMillis = calendar.timeInMillis
             val selectedTimeString = LocalDateTime.ofInstant(Instant.ofEpochMilli(selectedTimeInMillis), ZoneId.systemDefault()).format(formatter)
             val offset = selectedTimeInMillis - initialTimeInMillis

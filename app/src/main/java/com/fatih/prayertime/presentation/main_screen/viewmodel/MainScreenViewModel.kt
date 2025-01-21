@@ -49,9 +49,8 @@ class MainScreenViewModel @Inject constructor(
     val dailyPrayTimes: StateFlow<Resource<PrayTimes>> = _dailyPrayTimes
 
     fun trackLocationAndUpdatePrayTimes() = viewModelScope.launch(Dispatchers.IO) {
-        println("trackLocation")
         getLocationAndAddressUseCase().collect { resource ->
-            ("Adress ${resource.data}")
+          println(resource.data)
             when(resource.status){
                 Status.SUCCESS -> {
                     getMonthlyPrayTimesFromAPI(Year.now().value, YearMonth.now().monthValue,resource.data!!)
@@ -67,12 +66,11 @@ class MainScreenViewModel @Inject constructor(
     fun getMonthlyPrayTimesFromAPI(year: Int,month : Int , address: Address?) = viewModelScope.launch(Dispatchers.Default) {
         val searchAddress = address?:getLastKnownAddressFromDatabaseUseCase()?: return@launch
         val databaseResponse = getDailyPrayTimesWithAddressAndDateUseCase(searchAddress,formattedDate.value)
-
-
         if (databaseResponse != null) {
             _dailyPrayTimes.emit(Resource.success(databaseResponse))
             return@launch
         }
+
         val apiResponse = getMonthlyPrayTimesFromApiUseCase(year ,month,searchAddress)
         if (apiResponse.status == Status.SUCCESS){
             insertPrayTimeIntoDbUseCase.insertPrayTimeList(apiResponse.data!!)
@@ -83,7 +81,6 @@ class MainScreenViewModel @Inject constructor(
     fun getDailyPrayTimesFromDb() = viewModelScope.launch(Dispatchers.Default){
 
         val searchAddress = getLastKnownAddressFromDatabaseUseCase() ?: return@launch
-        ("formattedDate ${formattedDate.value}")
         val databaseResponse = getDailyPrayTimesWithAddressAndDateUseCase(searchAddress, formattedDate.value )
         if (databaseResponse != null) {
             _dailyPrayTimes.emit(Resource.success(databaseResponse))

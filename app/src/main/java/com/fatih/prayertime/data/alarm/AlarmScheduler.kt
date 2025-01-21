@@ -25,23 +25,11 @@ class AlarmScheduler @Inject constructor(private val context: Context) {
             intent,
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            if (alarmManager.canScheduleExactAlarms()) {
-                AlarmManagerCompat.setExactAndAllowWhileIdle(
-                    alarmManager,
-                    AlarmManager.RTC_WAKEUP,
-                    alarm.alarmTime,
-                    pendingIntent
-                )
-            }
-        } else {
-            AlarmManagerCompat.setExactAndAllowWhileIdle(
-                alarmManager,
-                AlarmManager.RTC_WAKEUP,
-                alarm.alarmTime,
-                pendingIntent
-            )
-        }
+        alarmManager.setExact(
+            AlarmManager.RTC_WAKEUP,
+            alarm.alarmTime,
+            pendingIntent
+        )
     }
 
     private fun cancel(alarm: GlobalAlarm) {

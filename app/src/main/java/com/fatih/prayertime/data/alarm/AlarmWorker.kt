@@ -12,6 +12,7 @@ import com.fatih.prayertime.domain.use_case.alarm_use_cases.UpdateGlobalAlarmUse
 import com.fatih.prayertime.domain.use_case.formatted_use_cases.FormattedUseCase
 import com.fatih.prayertime.domain.use_case.location_use_cases.GetLastKnowAddressFromDatabaseUseCase
 import com.fatih.prayertime.domain.use_case.location_use_cases.GetLocationAndAddressUseCase
+import com.fatih.prayertime.domain.use_case.permission_use_case.PermissionsUseCase
 import com.fatih.prayertime.domain.use_case.pray_times_use_cases.GetMonthlyPrayTimesFromApiUseCase
 import com.fatih.prayertime.domain.use_case.pray_times_use_cases.GetDailyPrayTimesWithAddressAndDateUseCase
 import com.fatih.prayertime.domain.use_case.pray_times_use_cases.InsertPrayTimeIntoDbUseCase
@@ -40,32 +41,31 @@ class AlarmWorker @AssistedInject constructor(
     private val getMonthlyPrayTimesFromApiUseCase: GetMonthlyPrayTimesFromApiUseCase,
     private val insetPrayTimeIntoDbUseCase: InsertPrayTimeIntoDbUseCase,
     private val alarmScheduler: AlarmScheduler,
-    private val updateGlobalAlarmUseCase: UpdateGlobalAlarmUseCase
+    private val updateGlobalAlarmUseCase: UpdateGlobalAlarmUseCase,
+    private val permissionUseCase : PermissionsUseCase
 ) : CoroutineWorker(context, workerParams) {
 
     init {
-    //    println("initialize workmanager")
+        println("initialize workmanager")
     }
 
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
         try {
-            //println("Started worker")
-
-            if (!isActive) {
-               // println("Worker was cancelled")
-                return@withContext Result.failure()
-            }
+            println("Started worker")
 
             // Get current location and address
-            val addressResource = getLocationAndAddressUseCase().filter {
-                it.status == Status.SUCCESS
-            }.firstOrNull()
+            val addressResource = if(permissionUseCase.checkLocationPermission()){
+                    getLocationAndAddressUseCase().filter {
+                        it.status == Status.SUCCESS
+                    }.firstOrNull()
+                }else null
+
             val lastKnownAddressDatabase = getLastKnowAddressFromDatabaseUseCase()
             val lastKnownAddress = if (addressResource == null) {
-               // println("if içi")
+               println("if içi")
                 lastKnownAddressDatabase ?: return@withContext Result.failure()
             } else {
-                //println("else içi")
+                println("else içi")
                 if (lastKnownAddressDatabase == null) addressResource.data!!
                 else addressResource.data!!
             }
@@ -84,45 +84,45 @@ class AlarmWorker @AssistedInject constructor(
 
             val newGlobalAlarms = globalAlarms.map { alarm ->
                 if (alarm.isEnabled) {
-                    //println("alarm is enabled $alarm")
+                    println("alarm is enabled $alarm")
                     if (currentTimeInMillis > alarm.alarmTime) {
-                      //  println("currentTimeInmillis > alarmTime ")
+                        println("currentTimeInmillis > alarmTime ")
                         val nextDayString = formattedUseCase.formatOfPatternDDMMYYYY(LocalDate.now().plusDays(1))
                         val nextDayPrayTimes = getDailyPrayTimesWithAddressAndDateUseCase(lastKnownAddress, nextDayString)
                         if (nextDayPrayTimes == null) {
                             val nextDayLocalDate = formattedUseCase.formatDDMMYYYYDateToLocalDate(nextDayString)
                             val apiResponse = getMonthlyPrayTimesFromApiUseCase(nextDayLocalDate.year, nextDayLocalDate.monthValue, lastKnownAddress)
                             if (apiResponse.status == Status.SUCCESS) {
-                           //     println("apiResponse SUCCESS")
+                                println("apiResponse SUCCESS")
                                 insetPrayTimeIntoDbUseCase.insertPrayTimeList(apiResponse.data!!)
                                 val updatedNextPrayTime = getDailyPrayTimesWithAddressAndDateUseCase(lastKnownAddress, nextDayString)
                                 if (updatedNextPrayTime == null) return@withContext Result.failure()
                                 else setNextGlobalAlarm(alarm, updatedNextPrayTime, nextDayString)
                             } else {
-                         //       println("apiResponse.status ${apiResponse.status}")
+                               println("apiResponse.status ${apiResponse.status}")
                                 return@withContext Result.failure()
                             }
                         } else {
-                       //     println("setNextGlobalAlarm")
+                           println("setNextGlobalAlarm")
                             setNextGlobalAlarm(alarm, nextDayPrayTimes, nextDayString)
                         }
                     } else {
-                     //   println("currentAlarmTime < alarmTime $alarm")
+                        println("currentAlarmTime < alarmTime $alarm")
                         alarm
                     }
                 } else {
-                   // println("Alarm is not enabled $alarm")
+                    println("Alarm is not enabled $alarm")
                     alarm
                 }
             }
             newGlobalAlarms.forEach { alarm ->
-                //println("NewGlobalAlarm $alarm")
+                println("NewGlobalAlarm $alarm")
                 updateGlobalAlarmUseCase(alarm)
                 alarmScheduler.update(alarm)
             }
             return@withContext Result.success()
         } catch (e: Exception) {
-           // println("Exception in alarmWorker: ${e.message} ${e.localizedMessage} ${e.stackTrace} ${e.cause?.message}")
+            println("Exception in alarmWorker: ${e.message} ${e.localizedMessage} ${e.stackTrace} ${e.cause?.message}")
             return@withContext Result.failure()
         }
     }
