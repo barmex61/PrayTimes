@@ -152,12 +152,16 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        scheduleDailyAlarmUpdateUseCase.execute(applicationContext)
-        val workInfos = WorkManager.getInstance(applicationContext).getWorkInfosByTagLiveData("AlarmWorkerUpdate")
-        workInfos.observeForever {workInfoList ->
-            println("WorkInfoSize ${workInfoList.size}")
-            workInfoList.forEach {
-                println("WorkInfo ${it.state}")
+        val workInfos = WorkManager.getInstance(applicationContext).getWorkInfosByTagLiveData("AlarmWorker")
+
+        workInfos.observe(this){  workInfoList ->
+            if (!workInfoList.any { it.state == WorkInfo.State.ENQUEUED || it.state == WorkInfo.State.RUNNING }) {
+                scheduleDailyAlarmUpdateUseCase.execute(this)
+            }
+            workInfoList.forEach { workInfo ->
+                println("WorkInfo ID: ${workInfo.id}")
+                println("State: ${workInfo.state}")
+                println("Next Schedule Time: ${workInfo.nextScheduleTimeMillis}")
             }
         }
     }

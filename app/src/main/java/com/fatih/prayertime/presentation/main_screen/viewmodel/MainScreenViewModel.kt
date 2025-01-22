@@ -2,6 +2,7 @@ package com.fatih.prayertime.presentation.main_screen.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.fatih.prayertime.data.remote.dto.Date
 import com.fatih.prayertime.domain.model.GlobalAlarm
 import com.fatih.prayertime.domain.model.Address
 import com.fatih.prayertime.domain.model.PrayTimes
@@ -20,8 +21,11 @@ import com.fatih.prayertime.util.Resource
 import com.fatih.prayertime.util.Status
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import org.threeten.bp.LocalDate
 import org.threeten.bp.LocalDateTime
@@ -45,8 +49,14 @@ class MainScreenViewModel @Inject constructor(
 
     //Pray - Times
 
-    private val _dailyPrayTimes = MutableStateFlow<Resource<PrayTimes>>(Resource.loading())
-    val dailyPrayTimes: StateFlow<Resource<PrayTimes>> = _dailyPrayTimes
+    private val _dailyPrayTimes : MutableStateFlow<Resource<PrayTimes>> = MutableStateFlow(Resource.loading())
+    val dailyPrayTimes : StateFlow<Resource<PrayTimes>> = _dailyPrayTimes
+
+    private val _searchAddress : MutableStateFlow<Address?> = MutableStateFlow(null)
+
+    private fun updateSearchAddress(address: Address){
+        _searchAddress.value = address
+    }
 
     fun trackLocationAndUpdatePrayTimes() = viewModelScope.launch(Dispatchers.IO) {
         getLocationAndAddressUseCase().collect { resource ->
@@ -54,9 +64,6 @@ class MainScreenViewModel @Inject constructor(
             when(resource.status){
                 Status.SUCCESS -> {
                     getMonthlyPrayTimesFromAPI(Year.now().value, YearMonth.now().monthValue,resource.data!!)
-                }
-                Status.ERROR ->{
-                    getDailyPrayTimesFromDb()
                 }
                 else -> Unit
             }
@@ -66,27 +73,18 @@ class MainScreenViewModel @Inject constructor(
     fun getMonthlyPrayTimesFromAPI(year: Int,month : Int , address: Address?) = viewModelScope.launch(Dispatchers.Default) {
         val searchAddress = address?:getLastKnownAddressFromDatabaseUseCase()?: return@launch
         val databaseResponse = getDailyPrayTimesWithAddressAndDateUseCase(searchAddress,formattedDate.value)
-        if (databaseResponse != null) {
-            _dailyPrayTimes.emit(Resource.success(databaseResponse))
-            return@launch
-        }
-
+        if (databaseResponse.first() != null) return@launch
         val apiResponse = getMonthlyPrayTimesFromApiUseCase(year ,month,searchAddress)
         if (apiResponse.status == Status.SUCCESS){
             insertPrayTimeIntoDbUseCase.insertPrayTimeList(apiResponse.data!!)
-            getDailyPrayTimesFromDb()
+            updateSearchAddress(searchAddress)
         }
     }
 
-    fun getDailyPrayTimesFromDb() = viewModelScope.launch(Dispatchers.Default){
-
-        val searchAddress = getLastKnownAddressFromDatabaseUseCase() ?: return@launch
-        val databaseResponse = getDailyPrayTimesWithAddressAndDateUseCase(searchAddress, formattedDate.value )
-        if (databaseResponse != null) {
-            _dailyPrayTimes.emit(Resource.success(databaseResponse))
-        }
+    suspend fun getDailyPrayTimesWithDate(date:String) : PrayTimes?{
+        val searchAddress = _searchAddress.value?: return null
+        return getDailyPrayTimesWithAddressAndDateUseCase(searchAddress,date).first()
     }
-
 
     //Date
 
@@ -168,7 +166,8 @@ class MainScreenViewModel @Inject constructor(
         }
     }
 
-    fun getHourAndMinuteFromIndex(index: Int) : Pair<Int,Int> {
+    fun getHourAndMinuteFromIndex(index: Int) : Pair<Int,Int>  {
+
         _dailyPrayTimes.value.data?:return Pair(0,0)
         val prayTimes = _dailyPrayTimes.value.data!!
         val timeString = when(index){
@@ -194,7 +193,19 @@ class MainScreenViewModel @Inject constructor(
         updateFormattedDate()
         updateFormattedTime()
         initAndSetGlobalAlarmList()
+        viewModelScope.launch(Dispatchers.IO){
+            _searchAddress.emit(getLastKnownAddressFromDatabaseUseCase())
+            _searchAddress.collectLatest {
+                if (it != null){
+                    getDailyPrayTimesWithAddressAndDateUseCase(it,formattedDate.value).collectLatest { prayTimes ->
+                        _dailyPrayTimes.emit(Resource.success(prayTimes))
+                }
+            }
+
+        }
+
     }
+  }
 
 
 }

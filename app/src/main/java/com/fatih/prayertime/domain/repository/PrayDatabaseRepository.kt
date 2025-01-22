@@ -2,6 +2,8 @@ package com.fatih.prayertime.domain.repository
 
 import com.fatih.prayertime.domain.model.Address
 import com.fatih.prayertime.domain.model.PrayTimes
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.StateFlow
 
 interface PrayDatabaseRepository {
 
@@ -14,6 +16,6 @@ interface PrayDatabaseRepository {
     suspend fun getDailyPrayTimesWithAddressAndDate(
         address: Address,
         date: String
-    ) : PrayTimes?
+    ) : Flow<PrayTimes?>
 
 }

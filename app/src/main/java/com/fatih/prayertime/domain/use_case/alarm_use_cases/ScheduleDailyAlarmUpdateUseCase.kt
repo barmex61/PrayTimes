@@ -13,14 +13,14 @@ class ScheduleDailyAlarmUpdateUseCase @Inject constructor() {
     fun execute(context: Context) {
 
         val workRequest = PeriodicWorkRequestBuilder<AlarmWorker>(15,TimeUnit.MINUTES)
-            .addTag("AlarmWorkerUpdate")
+            .addTag("AlarmWorker")
             .build()
 
 
         WorkManager.getInstance(context)
             .enqueueUniquePeriodicWork(
                 "AlarmWorker",
-                ExistingPeriodicWorkPolicy.KEEP,
+                ExistingPeriodicWorkPolicy.CANCEL_AND_REENQUEUE,
                 workRequest
             )/*
             .state.observeForever {

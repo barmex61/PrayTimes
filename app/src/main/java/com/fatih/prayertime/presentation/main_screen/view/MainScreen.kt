@@ -44,6 +44,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -91,6 +93,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.exyte.animatednavbar.utils.noRippleClickable
 import com.fatih.prayertime.R
+import com.fatih.prayertime.domain.model.Address
 import com.fatih.prayertime.domain.model.GlobalAlarm
 import com.fatih.prayertime.domain.model.PrayTimes
 import com.fatih.prayertime.presentation.main_activity.viewmodel.AppViewModel
@@ -179,9 +182,6 @@ fun GetLocationInformation(mainScreenViewModel: MainScreenViewModel, appViewMode
             mainScreenViewModel.trackLocationAndUpdatePrayTimes()
             isLocationTracking = true
         }
-        if (!permissionGranted) {
-            mainScreenViewModel.getDailyPrayTimesFromDb()
-        }
         if (permissionGranted){
             mainScreenViewModel.getMonthlyPrayTimesFromAPI(Year.now().value, YearMonth.now().monthValue,null)
         }
@@ -191,80 +191,91 @@ fun GetLocationInformation(mainScreenViewModel: MainScreenViewModel, appViewMode
 
 @Composable
 fun DailyPrayCompose() {
-    Column(modifier = Modifier.padding(top = 10.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                text = "Daily Prayer",
-                style = MaterialTheme.typography.titleMedium,
-                color = LocalContentColor.current.copy(alpha = 0.87f),
-                maxLines = 1,
-                softWrap = false,
-            )
-            Spacer(Modifier.weight(1f))
-            Card(
-                onClick = {},
-                colors = CardDefaults.cardColors(containerColor = IconColor),
-                elevation = CardDefaults.cardElevation(10.dp),
-                shape = RoundedCornerShape(10.dp)
-            ) {
+    Card(
+        modifier = Modifier.padding(top = 20.dp),
+        onClick = {},
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(10.dp),
+        shape = RoundedCornerShape(10.dp)
+    )  {
+        Column(modifier = Modifier.padding(top = 10.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    modifier = Modifier.padding(4.dp),
-                    text = "See All",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = Color.White,
+                    modifier = Modifier.padding(start = 10.dp),
+                    text = "Daily Prayer",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = LocalContentColor.current.copy(alpha = 0.87f),
                     maxLines = 1,
                     softWrap = false,
-                    textAlign = TextAlign.Center,
-                    fontWeight = FontWeight.W600,
                 )
+                Spacer(Modifier.weight(1f))
+                Card(
+                    modifier = Modifier.padding(end = 10.dp),
+                    onClick = {},
+                    colors = CardDefaults.cardColors(containerColor = IconColor),
+                    elevation = CardDefaults.cardElevation(10.dp),
+                    shape = RoundedCornerShape(10.dp)
+                ) {
+                    Text(
+                        modifier = Modifier.padding(4.dp),
+                        text = "See All",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = Color.White,
+                        maxLines = 1,
+                        softWrap = false,
+                        textAlign = TextAlign.Center,
+                        fontWeight = FontWeight.W600,
+                    )
+                }
             }
-        }
-        (1..2).forEach { i ->
-            Row {
-                (1..3).forEach { j ->
-                    Card (
-                        modifier = Modifier
-                            .padding(7.dp)
-                            .weight(1f),
-                        onClick = {},
-                        colors = CardDefaults.cardColors(containerColor = Color.White),
-                        elevation = CardDefaults.cardElevation(10.dp),
-                        shape = RoundedCornerShape(10.dp)
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(top = 10.dp, bottom = 10.dp)
+            (1..2).forEach { i ->
+                Row {
+                    (1..3).forEach { j ->
+                        Card (
+                            modifier = Modifier
+                                .padding(10.dp)
+                                .weight(1f),
+                            onClick = {},
+                            colors = CardDefaults.cardColors(containerColor = Color.White),
+                            elevation = CardDefaults.cardElevation(10.dp),
+                            shape = RoundedCornerShape(10.dp)
                         ) {
-                            Icon(
-                                modifier = Modifier.padding(start = 7.dp),
-                                imageVector = Icons.Outlined.Face,
-                                contentDescription = "Face Icon",
-                            )
-                            val list = listOf(
-                                "Prayer for eating",
-                                "Study prayer",
-                                "Prayer for sleeping",
-                                "Prayer for exam",
-                                "Prayer for work",
-                                "Prayer for study"
-                            )
-                            Text(
-                                modifier = Modifier
-                                    .padding(vertical = 7.dp, horizontal = 7.dp)
-                                    .basicMarquee(),
-                                text = list[if (i == 1) j-1 else j+2],
-                                style = MaterialTheme.typography.bodySmall,
-                                maxLines = 1,
-                                softWrap = false,
-                                textAlign = TextAlign.Center,
-                                fontWeight = FontWeight.W600
-                            )
+                            Column(
+                                modifier = Modifier.padding(top = 10.dp, bottom = 10.dp)
+                            ) {
+                                Icon(
+                                    modifier = Modifier.padding(start = 7.dp),
+                                    imageVector = Icons.Outlined.Face,
+                                    contentDescription = "Face Icon",
+                                )
+                                val list = listOf(
+                                    "Prayer for eating",
+                                    "Study prayer",
+                                    "Prayer for sleeping",
+                                    "Prayer for exam",
+                                    "Prayer for work",
+                                    "Prayer for study"
+                                )
+                                Text(
+                                    modifier = Modifier
+                                        .padding(vertical = 7.dp, horizontal = 7.dp)
+                                        .basicMarquee(iterations = Int.MAX_VALUE),
+                                    text = list[if (i == 1) j-1 else j+2],
+                                    style = MaterialTheme.typography.bodySmall,
+                                    maxLines = 1,
+                                    softWrap = false,
+                                    textAlign = TextAlign.Center,
+                                    fontWeight = FontWeight.W600
+                                )
+                            }
                         }
                     }
                 }
             }
-        }
 
+        }
     }
+
 }
 
 @Composable
@@ -461,14 +472,14 @@ fun ClassicTimePicker(
     val formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm", Locale.getDefault())
     calendar.set(Calendar.HOUR_OF_DAY,initialHour)
     calendar.set(Calendar.MINUTE,initialMinutes)
+    calendar.set(Calendar.SECOND, 0)
+    calendar.set(Calendar.MILLISECOND, 0)
     val initialTimeInMillis = calendar.timeInMillis
     val timePickerDialog = TimePickerDialog(
         context,
         { _, hourOfDay, minute ->
             calendar.set(Calendar.HOUR_OF_DAY, hourOfDay)
             calendar.set(Calendar.MINUTE, minute)
-            calendar.set(Calendar.SECOND, 0)
-            calendar.set(Calendar.MILLISECOND, 0)
             val selectedTimeInMillis = calendar.timeInMillis
             val selectedTimeString = LocalDateTime.ofInstant(Instant.ofEpochMilli(selectedTimeInMillis), ZoneId.systemDefault()).format(formatter)
             val offset = selectedTimeInMillis - initialTimeInMillis
@@ -582,10 +593,8 @@ fun PrayScheduleCompose() {
                     )
                 }
 
-                //val currentTime = remember { formattedTime }
 
                 val prayTimes by mainScreenViewModel.dailyPrayTimes.collectAsState()
-                ("PRAYTIMEEEEEEEEEEEEEEEEEEEES $prayTimes")
                 prayTimes.data?.let {
                     TimeCounter(
                         Modifier
@@ -596,16 +605,46 @@ fun PrayScheduleCompose() {
             }
             HorizontalDivider(Modifier.padding(15.dp))
             val dailyPrayTime by mainScreenViewModel.dailyPrayTimes.collectAsState()
-
+            var tomorrowsPrayTimes by remember { mutableStateOf<PrayTimes?>(null) }
+            LaunchedEffect(Unit){
+                dailyPrayTime.data?:return@LaunchedEffect
+                val date = LocalDate.now().plusDays(1)
+                val formattedDate = date.format(DateTimeFormatter.ofPattern("dd-MM-yyyy"))
+                tomorrowsPrayTimes =  mainScreenViewModel.getDailyPrayTimesWithDate(formattedDate)
+            }
+            val pagerState = rememberPagerState(1, pageCount = {2})
+            val pagerPrayTime = when(pagerState.currentPage){
+                1 -> dailyPrayTime.data
+                else -> tomorrowsPrayTimes
+            }
             when(dailyPrayTime.status){
                 Status.SUCCESS->{
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth(1f)
-                            .padding(top = 10.dp)
-                    ) {
-                        PrayTimesRow(dailyPrayTime.data!!)
+                    HorizontalPager(
+                        state = pagerState,
+
+                    ) { page ->
+
+                        Card(
+                            modifier = Modifier
+                                .padding(start = 10.dp, end = 10.dp, bottom = 10.dp)
+                            ,
+                            onClick = {},
+                            colors = CardDefaults.cardColors(containerColor = Color.White),
+                            elevation = CardDefaults.cardElevation(10.dp),
+                            shape = RoundedCornerShape(10.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth(1f)
+                                    .padding(top = 10.dp)
+                            ) {
+                                if (pagerPrayTime != null)
+                                PrayTimesRow(pagerPrayTime)
+                            }
+                        }
                     }
+
+
                 }
                 Status.ERROR -> {
                     Text(text = dailyPrayTime.message.toString())
@@ -679,11 +718,11 @@ fun RowScope.PrayTimesRow(prayTime : PrayTimes) {
             Text(
                 modifier = Modifier.padding(top = 5.dp, bottom = 8.dp),
                 text = prayPair.second,
-                style = MaterialTheme.typography.bodySmall,
+                style = MaterialTheme.typography.bodyMedium,
                 maxLines = 1,
                 softWrap = false,
                 textAlign = TextAlign.Center,
-                fontWeight = FontWeight.W600,
+                fontWeight = FontWeight.W500,
             )
         }
     }

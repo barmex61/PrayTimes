@@ -4,6 +4,8 @@ import com.fatih.prayertime.data.local.dao.PrayDao
 import com.fatih.prayertime.domain.model.Address
 import com.fatih.prayertime.domain.model.PrayTimes
 import com.fatih.prayertime.domain.repository.PrayDatabaseRepository
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.StateFlow
 import javax.inject.Inject
 
 class PrayDatabaseRepositoryImp @Inject constructor(private val prayDao: PrayDao): PrayDatabaseRepository {
@@ -19,13 +21,11 @@ class PrayDatabaseRepositoryImp @Inject constructor(private val prayDao: PrayDao
     override suspend fun getDailyPrayTimesWithAddressAndDate(
         address: Address,
         date: String
-    ): PrayTimes? {
+    ): Flow<PrayTimes?> {
         val country = address.country
         val district = address.district
         val city = address.city
-        ("country $country city $city district $district date $date")
         val prayTime = prayDao.getPrayTimesWithAddressAndDate(country, district, city, date)
-        ("REPOSITORY PRAYTIME $prayTime")
         return prayTime
     }
 

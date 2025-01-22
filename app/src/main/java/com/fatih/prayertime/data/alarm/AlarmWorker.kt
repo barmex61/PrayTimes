@@ -59,7 +59,7 @@ class AlarmWorker @AssistedInject constructor(
                         it.status == Status.SUCCESS
                     }.firstOrNull()
                 }else null
-
+            println("adress resource $addressResource")
             val lastKnownAddressDatabase = getLastKnowAddressFromDatabaseUseCase()
             val lastKnownAddress = if (addressResource == null) {
                println("if içi")
@@ -88,14 +88,14 @@ class AlarmWorker @AssistedInject constructor(
                     if (currentTimeInMillis > alarm.alarmTime) {
                         println("currentTimeInmillis > alarmTime ")
                         val nextDayString = formattedUseCase.formatOfPatternDDMMYYYY(LocalDate.now().plusDays(1))
-                        val nextDayPrayTimes = getDailyPrayTimesWithAddressAndDateUseCase(lastKnownAddress, nextDayString)
+                        val nextDayPrayTimes = getDailyPrayTimesWithAddressAndDateUseCase(lastKnownAddress, nextDayString).first()
                         if (nextDayPrayTimes == null) {
                             val nextDayLocalDate = formattedUseCase.formatDDMMYYYYDateToLocalDate(nextDayString)
                             val apiResponse = getMonthlyPrayTimesFromApiUseCase(nextDayLocalDate.year, nextDayLocalDate.monthValue, lastKnownAddress)
                             if (apiResponse.status == Status.SUCCESS) {
                                 println("apiResponse SUCCESS")
                                 insetPrayTimeIntoDbUseCase.insertPrayTimeList(apiResponse.data!!)
-                                val updatedNextPrayTime = getDailyPrayTimesWithAddressAndDateUseCase(lastKnownAddress, nextDayString)
+                                val updatedNextPrayTime = getDailyPrayTimesWithAddressAndDateUseCase(lastKnownAddress, nextDayString).first()
                                 if (updatedNextPrayTime == null) return@withContext Result.failure()
                                 else setNextGlobalAlarm(alarm, updatedNextPrayTime, nextDayString)
                             } else {
@@ -159,7 +159,7 @@ class AlarmWorker @AssistedInject constructor(
             globalAlarms.forEach { alarm ->
                 if (alarm.isEnabled && System.currentTimeMillis() < alarm.alarmTime) {
                     val formattedDate = formattedUseCase.formatOfPatternDDMMYYYY(localDateNow)
-                    val todayPrayTimes = getDailyPrayTimesWithAddressAndDateUseCase(newAddress, formattedDate) ?: return@forEach
+                    val todayPrayTimes = getDailyPrayTimesWithAddressAndDateUseCase(newAddress, formattedDate) .first()?: return@forEach
                     val updatedAlarm = setNextGlobalAlarm(alarm, todayPrayTimes, formattedDate)
                     alarmScheduler.update(updatedAlarm)
                 }

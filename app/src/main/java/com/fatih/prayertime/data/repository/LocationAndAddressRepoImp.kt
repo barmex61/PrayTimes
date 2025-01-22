@@ -109,7 +109,7 @@ class LocationAndAddressRepoImp @Inject constructor(
         awaitClose {
             println("close")
             //fusedLocationProviderClient.removeLocationUpdates(locationCallback!!)
-            // locationCallback = null
+            locationCallback = null
         }
     }.flowOn(Dispatchers.IO) // IO thread'inde çalıştır
 
