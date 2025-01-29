@@ -2,6 +2,7 @@ package com.fatih.prayertime.data.repository
 
 import com.fatih.prayertime.data.local.dao.PrayDao
 import com.fatih.prayertime.domain.model.Address
+import com.fatih.prayertime.domain.model.LocationPair
 import com.fatih.prayertime.domain.model.PrayTimes
 import com.fatih.prayertime.domain.repository.PrayDatabaseRepository
 import kotlinx.coroutines.flow.Flow
@@ -42,5 +43,9 @@ class PrayDatabaseRepositoryImp @Inject constructor(private val prayDao: PrayDao
                 fullAddress = it.fullAddress
             )
         }
+    }
+
+    override suspend fun getCurrentLocationPair(): Flow<LocationPair> {
+        return prayDao.getCurrentLocationPair()
     }
 }

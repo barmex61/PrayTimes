@@ -1,5 +1,6 @@
 package com.fatih.prayertime.data.repository
 
+import android.util.Log
 import com.fatih.prayertime.data.remote.PrayApi
 import com.fatih.prayertime.data.remote.dto.DailyPrayResponseDTO
 import com.fatih.prayertime.data.remote.dto.MonthlyPrayTimesResponseDTO
@@ -21,6 +22,8 @@ class PrayApiRepositoryImp @Inject constructor(private val prayApi : PrayApi) : 
             val response = prayApi.getMonthlyPrayTimes(year, month, latitude, longitude)
             if (response.isSuccessful) {
                 response.body()?.let {
+                    Log.d("PrayApiRepository", "Response body: $it")
+                    println(it.data.first().meta.offset)
                     Resource.success(it)
                 } ?: Resource.error("Response body is null")
             } else Resource.error("Response is not successfully")

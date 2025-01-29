@@ -5,6 +5,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import android.util.Log
 import androidx.core.app.AlarmManagerCompat
 import com.fatih.prayertime.domain.model.GlobalAlarm
 import javax.inject.Inject
@@ -18,18 +19,18 @@ class AlarmScheduler @Inject constructor(private val context: Context) {
             putExtra("ALARM_TYPE", alarm.alarmType)
             putExtra("ALARM_MESSAGE", alarm.alarmType)
         }
-
         val pendingIntent = PendingIntent.getBroadcast(
             context,
             alarm.alarmType.hashCode(),
             intent,
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
-        alarmManager.setExact(
+        alarmManager.setExactAndAllowWhileIdle(
             AlarmManager.RTC_WAKEUP,
             alarm.alarmTime,
             pendingIntent
         )
+        Log.d("AlarmScheduler", "Alarm set for ${alarm.alarmTimeString}")
     }
 
     private fun cancel(alarm: GlobalAlarm) {

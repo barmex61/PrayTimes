@@ -40,7 +40,6 @@ class AlarmWorker @AssistedInject constructor(
     private val getDailyPrayTimesWithAddressAndDateUseCase: GetDailyPrayTimesWithAddressAndDateUseCase,
     private val getMonthlyPrayTimesFromApiUseCase: GetMonthlyPrayTimesFromApiUseCase,
     private val insetPrayTimeIntoDbUseCase: InsertPrayTimeIntoDbUseCase,
-    private val alarmScheduler: AlarmScheduler,
     private val updateGlobalAlarmUseCase: UpdateGlobalAlarmUseCase,
     private val permissionUseCase : PermissionsUseCase
 ) : CoroutineWorker(context, workerParams) {
@@ -52,7 +51,6 @@ class AlarmWorker @AssistedInject constructor(
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
         try {
             println("Started worker")
-
             // Get current location and address
             val addressResource = if(permissionUseCase.checkLocationPermission()){
                     getLocationAndAddressUseCase().filter {
@@ -118,7 +116,6 @@ class AlarmWorker @AssistedInject constructor(
             newGlobalAlarms.forEach { alarm ->
                 println("NewGlobalAlarm $alarm")
                 updateGlobalAlarmUseCase(alarm)
-                alarmScheduler.update(alarm)
             }
             return@withContext Result.success()
         } catch (e: Exception) {
@@ -161,7 +158,7 @@ class AlarmWorker @AssistedInject constructor(
                     val formattedDate = formattedUseCase.formatOfPatternDDMMYYYY(localDateNow)
                     val todayPrayTimes = getDailyPrayTimesWithAddressAndDateUseCase(newAddress, formattedDate) .first()?: return@forEach
                     val updatedAlarm = setNextGlobalAlarm(alarm, todayPrayTimes, formattedDate)
-                    alarmScheduler.update(updatedAlarm)
+                    updateGlobalAlarmUseCase(updatedAlarm)
                 }
             }
         }

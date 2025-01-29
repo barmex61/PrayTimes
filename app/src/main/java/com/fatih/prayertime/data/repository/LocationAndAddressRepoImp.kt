@@ -1,6 +1,5 @@
 package com.fatih.prayertime.data.repository
 
-import android.annotation.SuppressLint
 import android.location.Geocoder
 import android.location.Location
 import android.os.DeadObjectException
@@ -17,11 +16,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.io.IOException
 import javax.inject.Inject
 
@@ -119,4 +116,6 @@ class LocationAndAddressRepoImp @Inject constructor(
         }
         locationCallback = null
     }
+
+
 }

@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import com.fatih.prayertime.domain.model.LocationPair
 import com.fatih.prayertime.domain.model.PrayTimes
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
@@ -28,6 +29,9 @@ interface PrayDao {
 
     @Query("SELECT * FROM PrayTimes ORDER BY createdAt DESC LIMIT 1")
     suspend fun getLastInsertedPrayTime() : PrayTimes?
+
+    @Query("SELECT latitude, longitude FROM PrayTimes ORDER BY createdAt DESC LIMIT 1")
+    fun getCurrentLocationPair() : Flow<LocationPair>
 
     @Query("DELETE FROM PrayTimes WHERE date = :date")
     suspend fun deletePrayTimeWithDate(date: String)

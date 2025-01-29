@@ -3,6 +3,7 @@ package com.fatih.prayertime.domain.use_case.formatted_use_cases
 import org.threeten.bp.Instant
 import org.threeten.bp.LocalDate
 import org.threeten.bp.LocalDateTime
+import org.threeten.bp.LocalTime
 import org.threeten.bp.ZoneId
 import org.threeten.bp.format.DateTimeFormatter
 import java.util.Locale
@@ -17,7 +18,7 @@ class FormattedUseCase @Inject constructor() {
 
     private val formatterHHMM = DateTimeFormatter.ofPattern("HH:mm", Locale.getDefault())
     private val formatterHHMMSS = DateTimeFormatter.ofPattern("HH:mm:ss", Locale.getDefault())
-    private val formatterDDMMYYYYHHMM = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm", Locale.getDefault())
+    private val formatterDDMMYYYYHHMMSS = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss", Locale.getDefault())
 
     fun formatOfPatternDDMMYYYY(localDate: LocalDate): String {
         return localDate.format(formatterDDMMYYYY)
@@ -36,15 +37,15 @@ class FormattedUseCase @Inject constructor() {
     }
 
     fun formatDDMMYYYYHHMMDateToLocalDateTime(date: String): LocalDateTime {
-        return LocalDateTime.parse(date, formatterDDMMYYYYHHMM)
+        return LocalDateTime.parse(date, formatterDDMMYYYYHHMMSS)
     }
 
     fun formatDDMMYYYYDateToLocalDate(date: String): LocalDate {
         return LocalDate.parse(date, formatterDDMMYYYY)
     }
 
-    fun isLastDayOfMonth(localDate: LocalDate): Boolean {
-        return localDate.dayOfMonth == localDate.lengthOfMonth()
+    fun formatHHMMtoLong(time: String): Long {
+        return LocalTime.parse(time, formatterHHMM).atDate(LocalDate.now()).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
     }
 
     fun formatHHMM(localDateTime: LocalDateTime) : String {
@@ -60,7 +61,7 @@ class FormattedUseCase @Inject constructor() {
     }
 
     fun formatLongToLocalDateTime(time: Long) : String {
-        return LocalDateTime.ofInstant(Instant.ofEpochMilli(time), ZoneId.systemDefault()).format(formatterDDMMYYYYHHMM)
+        return LocalDateTime.ofInstant(Instant.ofEpochMilli(time), ZoneId.systemDefault()).format(formatterDDMMYYYYHHMMSS)
     }
 
 }

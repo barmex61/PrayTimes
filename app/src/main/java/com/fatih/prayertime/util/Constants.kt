@@ -1,43 +1,33 @@
 package com.fatih.prayertime.util
 
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Face
-import androidx.room.migration.Migration
-import androidx.sqlite.db.SupportSQLiteDatabase
+
 
 object Constants {
     const val BASE_URL = "https://api.aladhan.com/v1/"
-    val bottomNavItems = listOf(
-        BottomNavigationItem(
-            title = "Home",
-            icon = Icons.Outlined.Face,
-            route = "home"
-        ),
-        BottomNavigationItem(
-            title = "Settings",
-            icon = Icons.Outlined.Face,
-            route = "settings"
-        ),
-        BottomNavigationItem(
-            title = "Profile",
-            icon = Icons.Outlined.Face,
-            route = "profile"
-        ),
-        BottomNavigationItem(
-            title = "About",
-            icon = Icons.Outlined.Face,
-            route = "about"
-        ),
-        BottomNavigationItem(
-            title = "Contact",
-            icon = Icons.Outlined.Face,
-            route = "contact"
-        )
+    const val TUNE = "0,-0,-7,7,6,7,7,0,0"
+    val methods = hashMapOf(
+        "Jafari / Shia Ithna-Ashari" to 0,
+        "University of Islamic Sciences, Karachi" to 1,
+        "Islamic Society of North America" to 2,
+        "Muslim World League" to 3,
+        "Umm Al-Qura University, Makkah" to 4,
+        "Egyptian General Authority of Survey" to 5,
+        "Institute of Geophysics, University of Tehran" to 7,
+        "Gulf Region" to 8,
+        "Kuwait" to 9,
+        "Qatar" to 10,
+        "Majlis Ugama Islam Singapura, Singapore" to 12,
+        "Union Organization islamic de France" to 12,
+        "Diyanet İşleri Başkanlığı, Turkey" to 13,
+        "Spiritual Administration of Muslims of Russia" to 14,
+        "Moonsighting Committee Worldwide (also requires shafaq parameter)" to 15,
+        "Dubai (experimental)" to 16,
+        "Jabatan Kemajuan Islam Malaysia (JAKIM)" to 17,
+        "Tunisia" to 18,
+        "Algeria" to 19,
+        "KEMENAG - Kementerian Agama Republik Indonesia" to 20,
+        "Morocco" to 21,
+        "Comunidade Islamica de Lisboa" to 22,
+        "Ministry of Awqaf, Islamic Affairs and Holy Places, Jordan" to 23
     )
-
-    val MIGRATION_2_3 = object : Migration(2, 3) {
-        override fun migrate(database: SupportSQLiteDatabase) {
-            database.execSQL("DROP TABLE IF EXISTS `alarmInfo`")
-        }
-    }
 }

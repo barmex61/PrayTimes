@@ -2,6 +2,7 @@ package com.fatih.prayertime.presentation.main_screen.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.work.ListenableWorker.Result
 import com.fatih.prayertime.data.remote.dto.Date
 import com.fatih.prayertime.domain.model.GlobalAlarm
 import com.fatih.prayertime.domain.model.Address
@@ -60,7 +61,6 @@ class MainScreenViewModel @Inject constructor(
 
     fun trackLocationAndUpdatePrayTimes() = viewModelScope.launch(Dispatchers.IO) {
         getLocationAndAddressUseCase().collect { resource ->
-          println(resource.data)
             when(resource.status){
                 Status.SUCCESS -> {
                     getMonthlyPrayTimesFromAPI(Year.now().value, YearMonth.now().monthValue,resource.data!!)
@@ -130,6 +130,24 @@ class MainScreenViewModel @Inject constructor(
         }catch (e:Exception){
             println(e.message)
         }
+    }
+
+    fun updateAllGlobalAlarm() = viewModelScope.launch(Dispatchers.IO){
+        globalAlarmList.value?.forEach { globalAlarm ->
+            dailyPrayTimes.value.data?:return@launch
+            val alarmTime = when(globalAlarm.alarmType){
+                PrayTimesString.Morning.name -> dailyPrayTimes.value.data!!.morning
+                PrayTimesString.Noon.name -> dailyPrayTimes.value.data!!.noon
+                PrayTimesString.Afternoon.name -> dailyPrayTimes.value.data!!.afternoon
+                PrayTimesString.Evening.name -> dailyPrayTimes.value.data!!.evening
+                PrayTimesString.Night.name -> dailyPrayTimes.value.data!!.night
+                else -> "00:00:00"
+            }
+            val alarmTimeLong = formattedUseCase.formatHHMMtoLong(alarmTime)
+            val alarmTimeString = formattedUseCase.formatLongToLocalDateTime(alarmTimeLong)
+            updateGlobalAlarmUseCase(globalAlarm.copy(isEnabled = true, alarmTime = alarmTimeLong, alarmTimeString = alarmTimeString))
+        }
+
     }
 
     fun getGlobalAlarm(alarmType: String) = viewModelScope.launch(Dispatchers.Default){

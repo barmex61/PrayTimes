@@ -3,9 +3,14 @@ package com.fatih.prayertime.presentation.main_screen.view
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.TimePickerDialog
+import android.content.Context
 import android.content.DialogInterface.OnDismissListener
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
+import android.os.VibrationEffect
+import android.os.Vibrator
+import android.os.VibratorManager
 import android.provider.Settings
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -13,6 +18,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.EaseInOutQuad
 import androidx.compose.animation.core.animateFloatAsState
@@ -44,8 +50,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -57,6 +61,8 @@ import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
@@ -67,9 +73,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -84,7 +88,10 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.hapticfeedback.HapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -93,7 +100,6 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.exyte.animatednavbar.utils.noRippleClickable
 import com.fatih.prayertime.R
-import com.fatih.prayertime.domain.model.Address
 import com.fatih.prayertime.domain.model.GlobalAlarm
 import com.fatih.prayertime.domain.model.PrayTimes
 import com.fatih.prayertime.presentation.main_activity.viewmodel.AppViewModel
@@ -127,6 +133,7 @@ fun MainScreen(appViewModel: AppViewModel) {
     val scrollState = rememberScrollState()
     GetLocationInformation(mainScreenViewModel,appViewModel)
     var isVisible by remember { mutableStateOf(false) }
+    val haptic = LocalHapticFeedback.current
 
     LaunchedEffect(Unit){
         isVisible = true
@@ -137,35 +144,35 @@ fun MainScreen(appViewModel: AppViewModel) {
             enter = slideInVertically(animationSpec = tween(1000)) + fadeIn(),
             exit = slideOutVertically(animationSpec = tween(1000)) + fadeOut()
         ){
-            AddressBar()
+            AddressBar(haptic)
         }
         AnimatedVisibility(
             visible = isVisible,
             enter = slideInVertically(animationSpec = tween(1000)) + fadeIn(),
             exit = slideOutVertically(animationSpec = tween(1000)) + fadeOut()
         ){
-            PrayerBar()
+            PrayerBar(haptic)
         }
         AnimatedVisibility(
             visible = isVisible,
             enter = slideInHorizontally(tween(1000)) + fadeIn(),
             exit = slideOutHorizontally(tween(1000)) + fadeOut()
         ){
-            PrayScheduleCompose()
+            PrayScheduleCompose(haptic)
         }
         AnimatedVisibility(
             visible = isVisible,
             enter = slideInHorizontally(tween(1000)) + fadeIn(),
             exit = slideOutHorizontally(tween(1000)) + fadeOut()
         ){
-            PrayNotificationCompose(mainScreenViewModel,appViewModel)
+            PrayNotificationCompose(mainScreenViewModel,appViewModel,haptic)
         }
         AnimatedVisibility(
             visible = isVisible,
             enter = expandIn(expandFrom = Alignment.BottomCenter) + fadeIn(tween(1000)),
             exit = shrinkOut(shrinkTowards = Alignment.TopCenter) + fadeOut(tween(1000))
         ){
-            DailyPrayCompose()
+            DailyPrayCompose(haptic)
         }
 
     }
@@ -190,10 +197,12 @@ fun GetLocationInformation(mainScreenViewModel: MainScreenViewModel, appViewMode
 
 
 @Composable
-fun DailyPrayCompose() {
+fun DailyPrayCompose(haptic: HapticFeedback) {
     Card(
         modifier = Modifier.padding(top = 20.dp),
-        onClick = {},
+        onClick = {
+            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+        },
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(10.dp),
         shape = RoundedCornerShape(10.dp)
@@ -279,7 +288,11 @@ fun DailyPrayCompose() {
 }
 
 @Composable
-fun PrayNotificationCompose(mainScreenViewModel: MainScreenViewModel,appViewModel: AppViewModel) {
+fun PrayNotificationCompose(
+    mainScreenViewModel: MainScreenViewModel,
+    appViewModel: AppViewModel,
+    haptic: HapticFeedback
+) {
     var rotate by remember { mutableStateOf(false) }
     val rotateX = animateFloatAsState(
         targetValue = if (rotate) 180f else 360f,
@@ -298,6 +311,7 @@ fun PrayNotificationCompose(mainScreenViewModel: MainScreenViewModel,appViewMode
                 rotationX = rotateX.value
             },
         onClick = {
+            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
             rotate = !rotate
         },
         colors = CardDefaults.cardColors(containerColor = Color.White),
@@ -437,7 +451,14 @@ fun PrayNotificationCompose(mainScreenViewModel: MainScreenViewModel,appViewMode
                     .graphicsLayer {
                         rotationX = rotateX.value
                     },
-                onClick = {},
+                onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    if (isNotificationPermissionGranted) {
+                        mainScreenViewModel.updateAllGlobalAlarm()
+                    } else {
+                        permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                    }
+                },
                 colors = CardDefaults.cardColors(containerColor = Color.White),
                 elevation = CardDefaults.cardElevation(5.dp),
                 shape = RoundedCornerShape(10.dp)
@@ -504,6 +525,10 @@ fun ClassicTimePicker(
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun AlarmComposable(globalAlarm: GlobalAlarm) {
+    val iconColor = animateColorAsState(
+        targetValue = if (globalAlarm.isEnabled) IconColor else Color.Red,
+        animationSpec = tween(1000), label = ""
+    )
     val isChecked = rememberSaveable(globalAlarm.isEnabled) { globalAlarm.isEnabled }
     val iconDrawable = if (isChecked) painterResource(R.drawable.check_circle) else painterResource(R.drawable.cross_icon)
 
@@ -520,7 +545,7 @@ fun AlarmComposable(globalAlarm: GlobalAlarm) {
             modifier = Modifier
                 .padding(top = 3.dp)
                ,
-            tint = IconColor,
+            tint = iconColor.value,
             painter = it,
             contentDescription = "Check Circle",
         )
@@ -539,11 +564,13 @@ fun AlarmComposable(globalAlarm: GlobalAlarm) {
 
 @SuppressLint("NewApi")
 @Composable
-fun PrayScheduleCompose() {
+fun PrayScheduleCompose(haptic: HapticFeedback) {
     val mainScreenViewModel : MainScreenViewModel = hiltViewModel()
     Card(
         modifier = Modifier.padding(top = 20.dp),
-        onClick = {},
+        onClick = {
+            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+        },
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(10.dp),
         shape = RoundedCornerShape(10.dp)
@@ -605,45 +632,26 @@ fun PrayScheduleCompose() {
             }
             HorizontalDivider(Modifier.padding(15.dp))
             val dailyPrayTime by mainScreenViewModel.dailyPrayTimes.collectAsState()
-            var tomorrowsPrayTimes by remember { mutableStateOf<PrayTimes?>(null) }
-            LaunchedEffect(Unit){
-                dailyPrayTime.data?:return@LaunchedEffect
-                val date = LocalDate.now().plusDays(1)
-                val formattedDate = date.format(DateTimeFormatter.ofPattern("dd-MM-yyyy"))
-                tomorrowsPrayTimes =  mainScreenViewModel.getDailyPrayTimesWithDate(formattedDate)
-            }
-            val pagerState = rememberPagerState(1, pageCount = {2})
-            val pagerPrayTime = when(pagerState.currentPage){
-                1 -> dailyPrayTime.data
-                else -> tomorrowsPrayTimes
-            }
             when(dailyPrayTime.status){
                 Status.SUCCESS->{
-                    HorizontalPager(
-                        state = pagerState,
-
-                    ) { page ->
-
-                        Card(
+                    Card(
+                        modifier = Modifier
+                            .padding(start = 10.dp, end = 10.dp, bottom = 10.dp)
+                        ,
+                        onClick = {},
+                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                        elevation = CardDefaults.cardElevation(10.dp),
+                        shape = RoundedCornerShape(10.dp)
+                    ) {
+                        Row(
                             modifier = Modifier
-                                .padding(start = 10.dp, end = 10.dp, bottom = 10.dp)
-                            ,
-                            onClick = {},
-                            colors = CardDefaults.cardColors(containerColor = Color.White),
-                            elevation = CardDefaults.cardElevation(10.dp),
-                            shape = RoundedCornerShape(10.dp)
+                                .fillMaxWidth(1f)
+                                .padding(top = 10.dp)
                         ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth(1f)
-                                    .padding(top = 10.dp)
-                            ) {
-                                if (pagerPrayTime != null)
-                                PrayTimesRow(pagerPrayTime)
-                            }
+                            if (dailyPrayTime.data != null)
+                            PrayTimesRow(dailyPrayTime.data!!)
                         }
                     }
-
 
                 }
                 Status.ERROR -> {
@@ -731,14 +739,15 @@ fun RowScope.PrayTimesRow(prayTime : PrayTimes) {
 
 
 @Composable
-fun AddressBar() {
+fun AddressBar(haptic: HapticFeedback) {
     val mainScreenViewModel : MainScreenViewModel = hiltViewModel()
 
     Box (modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterStart) {
         var isExpanded by remember { mutableStateOf(false) }
         Card (
             onClick = {
-            isExpanded = !isExpanded
+                isExpanded = !isExpanded
+                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
             },
             colors = CardDefaults.cardColors(containerColor = Color.White),
             elevation = CardDefaults.cardElevation(10.dp),
@@ -807,10 +816,12 @@ fun AddressBar() {
 }
 
 @Composable
-fun PrayerBar() {
+fun PrayerBar(haptic: HapticFeedback) {
     Box (modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterStart) {
         Card (
-            onClick = {},
+            onClick = {
+                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+            },
             colors = CardDefaults.cardColors(containerColor = Color.White),
             elevation = CardDefaults.cardElevation(10.dp),
             shape = RoundedCornerShape(10.dp)
@@ -969,6 +980,54 @@ fun TimeCounter(modifier: Modifier = Modifier,currentTime: String,prayTime: Pray
                 center = Offset(circleCenterX, circleCenterY)
             )
         }
+    }
+}
+
+@Composable
+fun PrayerMethodSelector(
+    methods: Map<String, Int>,
+    onMethodSelected: (String) -> Unit
+) {
+    val expanded = remember { mutableStateOf(false) }
+    val selectedMethod = remember { mutableStateOf(methods.keys.first()) }
+
+    Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+        Text(
+            text = "Select Prayer Time Calculation Method",
+            modifier = Modifier.clickable { expanded.value = true }
+        )
+        Text(text = selectedMethod.value, modifier = Modifier.padding(top = 8.dp))
+
+        DropdownMenu(
+            expanded = expanded.value,
+            onDismissRequest = { expanded.value = false }
+        ) {
+            methods.keys.forEach { method ->
+                DropdownMenuItem(
+                    text = {
+                        Text(text = method)
+                    },
+                    onClick = {
+                        selectedMethod.value = method
+                        expanded.value = false
+                        onMethodSelected(method)
+                    }
+                )
+            }
+        }
+    }
+}
+
+fun vibratePhone(context: Context) {
+    val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        val vibratorManager = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
+        vibratorManager.defaultVibrator
+    } else {
+        context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+    }
+    if (vibrator.hasVibrator()) {
+        val vibrationEffect = VibrationEffect.createOneShot(35, VibrationEffect.DEFAULT_AMPLITUDE)
+        vibrator.vibrate(vibrationEffect)
     }
 }
 

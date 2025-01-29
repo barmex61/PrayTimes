@@ -11,6 +11,10 @@
     <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
 
+    <uses-feature android:name="android.hardware.sensor.gyroscope" android:required="true" />
+    <uses-permission android:name="android.permission.VIBRATE"/>
+    <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY" />
+
     <application
         android:name=".MyApplication"
         android:allowBackup="true"
@@ -25,7 +29,8 @@
         <activity
             android:name=".presentation.main_activity.view.MainActivity"
             android:exported="true"
-            android:theme="@style/Theme.PrayerTime">
+            android:theme="@style/Theme.PrayerTime"
+            tools:ignore="LockedOrientationActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
