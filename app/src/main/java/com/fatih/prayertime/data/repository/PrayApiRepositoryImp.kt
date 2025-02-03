@@ -23,8 +23,7 @@ class PrayApiRepositoryImp @Inject constructor(private val prayApi : PrayApi) : 
             if (response.isSuccessful) {
                 response.body()?.let {
                     Log.d("PrayApiRepository", "Response body: $it")
-                    println(it.data.first().meta.offset)
-                    Resource.success(it)
+                Resource.success(it)
                 } ?: Resource.error("Response body is null")
             } else Resource.error("Response is not successfully")
         } catch (e: IOException) {

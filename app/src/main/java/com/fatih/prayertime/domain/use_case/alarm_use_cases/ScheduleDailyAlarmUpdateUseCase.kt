@@ -24,10 +24,10 @@ class ScheduleDailyAlarmUpdateUseCase @Inject constructor() {
                 workRequest
             )/*
             .state.observeForever {
-                println("state: $it")
+                Log.d("state: $it")
             }
 
-        println("executed") */
+        Log.d("executed") */
     }
     /*
     private fun calculateInitialDelay(): Long {

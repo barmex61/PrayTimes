@@ -48,4 +48,8 @@ class PrayDatabaseRepositoryImp @Inject constructor(private val prayDao: PrayDao
     override suspend fun getCurrentLocationPair(): Flow<LocationPair> {
         return prayDao.getCurrentLocationPair()
     }
+
+    override suspend fun deletePrayTimesBeforeDate(dateLong: Long) {
+        prayDao.deletePrayTimesBeforeTheDate(dateLong)
+    }
 }

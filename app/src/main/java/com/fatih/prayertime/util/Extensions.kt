@@ -6,6 +6,9 @@ import com.fatih.prayertime.data.remote.dto.PrayTimesDTO
 import com.fatih.prayertime.domain.model.Address
 import com.fatih.prayertime.domain.model.PrayData
 import com.fatih.prayertime.domain.model.PrayTimes
+import com.fatih.prayertime.domain.use_case.formatted_use_cases.FormattedUseCase
+
+private val formattedUseCase = FormattedUseCase()
 
 fun MonthlyPrayTimesResponseDTO.toPrayTimes(address: Address) : List<PrayTimes> {
     return this.data.map {
@@ -25,6 +28,7 @@ fun PrayTimesDTO.toPrayTimes(date : String,address: Address) : PrayTimes = PrayT
     evening = this.Maghrib.substring(0,5),
     night = this.Isha.substring(0,5),
     date = date,
+    dateLong = formattedUseCase.formatLocalDateToLong(formattedUseCase.formatDDMMYYYYDateToLocalDate(date)),
     latitude = address.latitude,
     longitude = address.longitude,
     country = address.country,

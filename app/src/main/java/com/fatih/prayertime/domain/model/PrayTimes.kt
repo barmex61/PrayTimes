@@ -8,6 +8,7 @@ data class PrayTimes(
     @PrimaryKey(autoGenerate = true)
     val id : Int = 0,
     val date : String,
+    val dateLong : Long,
     val createdAt: Long = System.currentTimeMillis(),
     val morning : String,
     // val sunrise :  String,

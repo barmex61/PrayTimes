@@ -60,6 +60,10 @@ class FormattedUseCase @Inject constructor() {
         return localDateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
     }
 
+    fun formatLocalDateToLong(localDate: LocalDate) : Long {
+        return localDate.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+    }
+
     fun formatLongToLocalDateTime(time: Long) : String {
         return LocalDateTime.ofInstant(Instant.ofEpochMilli(time), ZoneId.systemDefault()).format(formatterDDMMYYYYHHMMSS)
     }

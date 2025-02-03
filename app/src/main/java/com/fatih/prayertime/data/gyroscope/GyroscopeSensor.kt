@@ -5,6 +5,7 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import android.util.Log
 import androidx.compose.runtime.mutableFloatStateOf
 import java.lang.Math.toDegrees
 
@@ -13,6 +14,10 @@ class GyroscopeSensor(context: Context) : SensorEventListener {
     private val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
     private val rotationVectorSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR)
     val rotation = mutableFloatStateOf(0f)
+
+    companion object{
+        const val TAG = "GyroscopeSensor"
+    }
 
     init {
         sensorManager.registerListener(this, rotationVectorSensor, SensorManager.SENSOR_DELAY_UI)
@@ -25,8 +30,9 @@ class GyroscopeSensor(context: Context) : SensorEventListener {
             val orientation = FloatArray(3)
             SensorManager.getOrientation(rotationMatrix, orientation)
             val azimuth = toDegrees(orientation[0].toDouble()).toFloat()
-            rotation.floatValue = azimuth
-            println("Azimuth: $azimuth")
+            rotation.floatValue = (azimuth + 360f) % 360
+
+            Log.d(TAG,"Azimuth: $azimuth")
         }
     }
 

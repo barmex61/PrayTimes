@@ -1,5 +1,6 @@
 package com.fatih.prayertime.presentation.main_screen.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.work.ListenableWorker.Result
@@ -47,6 +48,10 @@ class MainScreenViewModel @Inject constructor(
     private val insertGlobalAlarmUseCase : InsertGlobalAlarmUseCase,
     private val updateGlobalAlarmUseCase: UpdateGlobalAlarmUseCase,
 ) : ViewModel() {
+
+    companion object{
+        const val TAG = "MainScreenViewModel"
+    }
 
     //Pray - Times
 
@@ -128,7 +133,7 @@ class MainScreenViewModel @Inject constructor(
             val globalAlarm = GlobalAlarm(alarmType,alarmTimeLong,alarmTimeString,isEnabled,alarmOffset)
             updateGlobalAlarmUseCase(globalAlarm)
         }catch (e:Exception){
-            println(e.message)
+            Log.d(TAG,e.message?:"Error occurred while updating global alarm")
         }
     }
 
@@ -154,7 +159,7 @@ class MainScreenViewModel @Inject constructor(
         try {
             _globalAlarm.emit(getGlobalAlarmByTypeUseCase(alarmType))
         }catch (e:Exception){
-            println(e.message)
+            Log.d(TAG,e.message?:"Error occurred while getting global alarm")
         }
     }
 
@@ -180,7 +185,7 @@ class MainScreenViewModel @Inject constructor(
                 }
             }
         }catch (e:Exception){
-            println("catch message ${e.message}")
+            Log.d(TAG,"Catch message ${e.message}")
         }
     }
 
@@ -201,7 +206,7 @@ class MainScreenViewModel @Inject constructor(
             val minutes = splitList[1].toInt()
             return Pair(hour, minutes)
         }catch (e:Exception){
-            println(e.message)
+            Log.d(TAG,e.message?:"Error occurred while getting hour and minute from index")
             return Pair(0,0)
         }
     }

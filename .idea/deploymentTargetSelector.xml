@@ -4,7 +4,7 @@
     <selectionStates>
       <SelectionState runConfigName="app">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2025-01-29T11:05:10.131378200Z">
+        <DropdownSelection timestamp="2025-01-30T16:09:56.495733600Z">
           <Target type="DEFAULT_BOOT">
             <handle>
               <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\Fatih\.android\avd\Pixel_3a_API_34_extension_level_7_x86_64.avd" />
@@ -15,7 +15,7 @@
       </SelectionState>
       <SelectionState runConfigName="GreetingPreview (3)">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2025-01-29T11:07:08.946776300Z">
+        <DropdownSelection timestamp="2025-01-29T17:08:16.138255Z">
           <Target type="DEFAULT_BOOT">
             <handle>
               <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\Fatih\.android\avd\Pixel_3a_API_34_extension_level_7_x86_64.avd" />
