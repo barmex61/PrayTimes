@@ -7,12 +7,12 @@
     <path
         android:name="circle_path"
         android:strokeWidth="2"
-        android:strokeColor="@color/red"
+        android:strokeColor="@android:color/holo_red_light"
         android:pathData="M12,2C6.48,2 2,6.48 2,12s4.48,10 10,10 10,-4.48 10,-10S17.52,2 12,2z" />
 
     <path
         android:name="cross_path"
-        android:strokeColor="@color/red"
+        android:strokeColor="@android:color/holo_red_light"
         android:strokeWidth="2"
         android:strokeLineCap="round"
         android:strokeLineJoin="round"

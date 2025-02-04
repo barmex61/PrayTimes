@@ -12,6 +12,7 @@ import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
 import android.provider.Settings
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -95,6 +96,7 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -104,12 +106,10 @@ import com.fatih.prayertime.domain.model.GlobalAlarm
 import com.fatih.prayertime.domain.model.PrayTimes
 import com.fatih.prayertime.presentation.main_activity.viewmodel.AppViewModel
 import com.fatih.prayertime.presentation.main_screen.viewmodel.MainScreenViewModel
-import com.fatih.prayertime.presentation.ui.theme.IconBackGroundColor
-import com.fatih.prayertime.presentation.ui.theme.IconColor
-import com.fatih.prayertime.presentation.ui.theme.LightGreen
 import com.fatih.prayertime.util.NetworkState
 import com.fatih.prayertime.util.Status
 import com.fatih.prayertime.util.convertTimeToSeconds
+import com.fatih.prayertime.util.localDateTime
 import com.fatih.prayertime.util.toAddress
 import com.fatih.prayertime.util.toList
 import kotlinx.coroutines.delay
@@ -128,7 +128,7 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 @Composable
-fun MainScreen(appViewModel: AppViewModel) {
+fun MainScreen(appViewModel: AppViewModel,bottomPaddingValue : Dp) {
     val mainScreenViewModel : MainScreenViewModel = hiltViewModel()
     val scrollState = rememberScrollState()
     GetLocationInformation(mainScreenViewModel,appViewModel)
@@ -155,15 +155,17 @@ fun MainScreen(appViewModel: AppViewModel) {
         }
         AnimatedVisibility(
             visible = isVisible,
-            enter = slideInHorizontally(tween(1000)) + fadeIn(),
-            exit = slideOutHorizontally(tween(1000)) + fadeOut()
+            enter = slideInHorizontally(tween(500)) + fadeIn(),
+            exit = slideOutHorizontally(tween(500)) + fadeOut()
         ){
             PrayScheduleCompose(haptic)
         }
         AnimatedVisibility(
             visible = isVisible,
-            enter = slideInHorizontally(tween(1000)) + fadeIn(),
-            exit = slideOutHorizontally(tween(1000)) + fadeOut()
+            enter = slideInHorizontally(tween(500)) { x ->
+                x / 2
+            } + fadeIn(),
+            exit = slideOutHorizontally(tween(500)) + fadeOut()
         ){
             PrayNotificationCompose(mainScreenViewModel,appViewModel,haptic)
         }
@@ -174,7 +176,9 @@ fun MainScreen(appViewModel: AppViewModel) {
         ){
             DailyPrayCompose(haptic)
         }
-
+        Spacer(
+            modifier = Modifier.height(25.dp + bottomPaddingValue)
+        )
     }
 
 }
@@ -203,7 +207,7 @@ fun DailyPrayCompose(haptic: HapticFeedback) {
         onClick = {
             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
         },
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
         elevation = CardDefaults.cardElevation(10.dp),
         shape = RoundedCornerShape(10.dp)
     )  {
@@ -213,7 +217,6 @@ fun DailyPrayCompose(haptic: HapticFeedback) {
                     modifier = Modifier.padding(start = 10.dp),
                     text = "Daily Prayer",
                     style = MaterialTheme.typography.titleMedium,
-                    color = LocalContentColor.current.copy(alpha = 0.87f),
                     maxLines = 1,
                     softWrap = false,
                 )
@@ -221,7 +224,7 @@ fun DailyPrayCompose(haptic: HapticFeedback) {
                 Card(
                     modifier = Modifier.padding(end = 10.dp),
                     onClick = {},
-                    colors = CardDefaults.cardColors(containerColor = IconColor),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
                     elevation = CardDefaults.cardElevation(10.dp),
                     shape = RoundedCornerShape(10.dp)
                 ) {
@@ -229,7 +232,6 @@ fun DailyPrayCompose(haptic: HapticFeedback) {
                         modifier = Modifier.padding(4.dp),
                         text = "See All",
                         style = MaterialTheme.typography.labelMedium,
-                        color = Color.White,
                         maxLines = 1,
                         softWrap = false,
                         textAlign = TextAlign.Center,
@@ -245,7 +247,7 @@ fun DailyPrayCompose(haptic: HapticFeedback) {
                                 .padding(10.dp)
                                 .weight(1f),
                             onClick = {},
-                            colors = CardDefaults.cardColors(containerColor = Color.White),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
                             elevation = CardDefaults.cardElevation(10.dp),
                             shape = RoundedCornerShape(10.dp)
                         ) {
@@ -314,7 +316,7 @@ fun PrayNotificationCompose(
             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
             rotate = !rotate
         },
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
         elevation = CardDefaults.cardElevation(10.dp),
         shape = RoundedCornerShape(10.dp)
     ) {
@@ -359,7 +361,6 @@ fun PrayNotificationCompose(
                     modifier = Modifier.padding(start = 5.dp),
                     text = "Prayer Tracker",
                     style = MaterialTheme.typography.titleMedium,
-                    color = LocalContentColor.current.copy(alpha = 0.87f),
                     maxLines = 1,
                     softWrap = false,
                     textAlign = TextAlign.Center,
@@ -375,7 +376,7 @@ fun PrayNotificationCompose(
                         rotationX = rotateX.value
                     },
                 onClick = {},
-                colors = CardDefaults.cardColors(containerColor = Color.White),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
                 elevation = CardDefaults.cardElevation(5.dp),
                 shape = RoundedCornerShape(10.dp)
             ) {
@@ -391,6 +392,7 @@ fun PrayNotificationCompose(
                         var initialHour by rememberSaveable { mutableIntStateOf(0) }
                         var initialMinutes by rememberSaveable { mutableIntStateOf(0) }
                         ClassicTimePicker(
+
                             initialHour = initialHour,
                             initialMinutes = initialMinutes,
                             onTimeSelect = { alarmTimeLong,alarmTimeString,offset ->
@@ -459,7 +461,7 @@ fun PrayNotificationCompose(
                         permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
                     }
                 },
-                colors = CardDefaults.cardColors(containerColor = Color.White),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
                 elevation = CardDefaults.cardElevation(5.dp),
                 shape = RoundedCornerShape(10.dp)
             ) {
@@ -470,7 +472,6 @@ fun PrayNotificationCompose(
                     text = "Prayer Together",
                     style = MaterialTheme.typography.titleLarge,
                     fontSize = 18.sp,
-                    color = IconColor,
                     maxLines = 1,
                     softWrap = false,
                     textAlign = TextAlign.Center,
@@ -526,7 +527,7 @@ fun ClassicTimePicker(
 @Composable
 fun AlarmComposable(globalAlarm: GlobalAlarm) {
     val iconColor = animateColorAsState(
-        targetValue = if (globalAlarm.isEnabled) IconColor else Color.Red,
+        targetValue = if (globalAlarm.isEnabled) MaterialTheme.colorScheme.primary else Color.Red,
         animationSpec = tween(1000), label = ""
     )
     val isChecked = rememberSaveable(globalAlarm.isEnabled) { globalAlarm.isEnabled }
@@ -554,7 +555,6 @@ fun AlarmComposable(globalAlarm: GlobalAlarm) {
     Text(
         text = globalAlarm.alarmType,
         style = MaterialTheme.typography.titleSmall,
-        color = LocalContentColor.current.copy(alpha = 0.87f),
         maxLines = 1,
         softWrap = false,
         textAlign = TextAlign.Center,
@@ -571,7 +571,9 @@ fun PrayScheduleCompose(haptic: HapticFeedback) {
         onClick = {
             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
         },
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer
+        ),
         elevation = CardDefaults.cardElevation(10.dp),
         shape = RoundedCornerShape(10.dp)
     ) {
@@ -603,7 +605,6 @@ fun PrayScheduleCompose(haptic: HapticFeedback) {
                         modifier = Modifier.padding(start = 3.dp, top = 7.dp),
                         text = formattedDate,
                         style = MaterialTheme.typography.labelLarge,
-                        color = LocalContentColor.current.copy(alpha = 0.87f),
                         maxLines = 1,
                         softWrap = false,
                         textAlign = TextAlign.Center
@@ -613,7 +614,6 @@ fun PrayScheduleCompose(haptic: HapticFeedback) {
                         text = "Remaining time to next prayer ->",
                         modifier = Modifier.padding(start = 3.dp, top = 1.dp),
                         style = MaterialTheme.typography.labelLarge,
-                        color = LocalContentColor.current.copy(alpha = 0.6f),
                         maxLines = 1,
                         softWrap = false,
                         textAlign = TextAlign.Center
@@ -639,7 +639,7 @@ fun PrayScheduleCompose(haptic: HapticFeedback) {
                             .padding(start = 10.dp, end = 10.dp, bottom = 10.dp)
                         ,
                         onClick = {},
-                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
                         elevation = CardDefaults.cardElevation(10.dp),
                         shape = RoundedCornerShape(10.dp)
                     ) {
@@ -648,8 +648,20 @@ fun PrayScheduleCompose(haptic: HapticFeedback) {
                                 .fillMaxWidth(1f)
                                 .padding(top = 10.dp)
                         ) {
-                            if (dailyPrayTime.data != null)
-                            PrayTimesRow(dailyPrayTime.data!!)
+                            if (dailyPrayTime.data != null){
+                                val localDateTimeNow = LocalDateTime.now()
+                                val index = when{
+                                    localDateTimeNow.isBefore(dailyPrayTime.data!!.localDateTime(dailyPrayTime.data!!.morning)) -> 0
+                                    localDateTimeNow.isBefore(dailyPrayTime.data!!.localDateTime(dailyPrayTime.data!!.noon)) -> 1
+                                    localDateTimeNow.isBefore(dailyPrayTime.data!!.localDateTime(dailyPrayTime.data!!.afternoon)) -> 2
+                                    localDateTimeNow.isBefore(dailyPrayTime.data!!.localDateTime(dailyPrayTime.data!!.evening)) -> 3
+                                    localDateTimeNow.isBefore(dailyPrayTime.data!!.localDateTime(dailyPrayTime.data!!.night)) -> 4
+                                    else -> 0
+                                }
+                                println(index)
+                                PrayTimesRow(dailyPrayTime.data!!, index)
+
+                            }
                         }
                     }
 
@@ -683,7 +695,6 @@ fun AnimatedTimer(formattedTime : String,previousTime : String){
                     modifier = Modifier.padding(top = 1.dp),
                     text = it.toString(),
                     style = MaterialTheme.typography.headlineLarge,
-                    color = LocalContentColor.current.copy(alpha = 0.87f),
                     fontWeight = FontWeight.Bold,
                     maxLines = 1,
                     softWrap = false,
@@ -695,9 +706,10 @@ fun AnimatedTimer(formattedTime : String,previousTime : String){
 }
 
 @Composable
-fun RowScope.PrayTimesRow(prayTime : PrayTimes) {
+fun RowScope.PrayTimesRow(prayTime : PrayTimes,index : Int) {
+    Log.d("PrayTimesRow",index.toString())
     val prayList = prayTime.toList()
-    prayList.forEach { prayPair ->
+    prayList.forEachIndexed { currentIndex ,prayPair->
         val icon = when(prayPair.first){
             "Morning" -> painterResource(R.drawable.morning)
             "Noon" -> painterResource(R.drawable.noon)
@@ -706,6 +718,7 @@ fun RowScope.PrayTimesRow(prayTime : PrayTimes) {
             "Night" -> painterResource(R.drawable.night)
             else -> painterResource(R.drawable.morning)
         }
+        val color = if (currentIndex == index) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSecondaryContainer
         Column(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -718,11 +731,14 @@ fun RowScope.PrayTimesRow(prayTime : PrayTimes) {
                 softWrap = false,
                 textAlign = TextAlign.Center,
                 fontWeight = FontWeight.W600,
+                color = color
             )
             Icon(
                 modifier = Modifier
                     .padding(top = 5.dp)
-                    .size(35.dp), painter = icon,contentDescription = prayPair.first)
+                    .size(35.dp), painter = icon,contentDescription = prayPair.first,
+                tint = color
+            )
             Text(
                 modifier = Modifier.padding(top = 5.dp, bottom = 8.dp),
                 text = prayPair.second,
@@ -731,6 +747,7 @@ fun RowScope.PrayTimesRow(prayTime : PrayTimes) {
                 softWrap = false,
                 textAlign = TextAlign.Center,
                 fontWeight = FontWeight.W500,
+                color = color
             )
         }
     }
@@ -749,19 +766,22 @@ fun AddressBar(haptic: HapticFeedback) {
                 isExpanded = !isExpanded
                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
             },
-            colors = CardDefaults.cardColors(containerColor = Color.White),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+            ),
             elevation = CardDefaults.cardElevation(10.dp),
             shape = RoundedCornerShape(10.dp)
         )
         {
             Row(
                 Modifier.padding(start = 7.dp, end = 7.dp, top = 3.dp, bottom = 3.dp)
+                    .background(color = Color.Transparent)
             ) {
 
                 Icon(
                     imageVector = Icons.Outlined.LocationOn,
                     contentDescription = "Location Icon",
-                    tint = IconColor
+                    tint = MaterialTheme.colorScheme.primary
                 )
                 val prayTimes by mainScreenViewModel.dailyPrayTimes.collectAsState()
                 val currentAddress by remember {
@@ -788,7 +808,6 @@ fun AddressBar(haptic: HapticFeedback) {
                         .basicMarquee(),
                     text = text,
                     style = MaterialTheme.typography.labelLarge,
-                    color = LocalContentColor.current.copy(alpha = 0.87f),
                     maxLines = 1,
                     softWrap = false,
                     textAlign = TextAlign.Center
@@ -808,7 +827,8 @@ fun AddressBar(haptic: HapticFeedback) {
         ) {
             Icon(
                 imageVector = Icons.Outlined.Notifications,
-                contentDescription = "Notification Icon"
+                contentDescription = "Notification Icon",
+                tint = MaterialTheme.colorScheme.primary
             )
         }
 
@@ -822,7 +842,7 @@ fun PrayerBar(haptic: HapticFeedback) {
             onClick = {
                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
             },
-            colors = CardDefaults.cardColors(containerColor = Color.White),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
             elevation = CardDefaults.cardElevation(10.dp),
             shape = RoundedCornerShape(10.dp)
         )
@@ -831,17 +851,17 @@ fun PrayerBar(haptic: HapticFeedback) {
                 modifier = Modifier
                     .fillMaxWidth(1f)
                     .padding(start = 15.dp, end = 15.dp, top = 10.dp, bottom = 10.dp)
+                    .background(color = Color.Transparent)
             ) {
                 Icon(
                     imageVector = Icons.Outlined.Favorite,
                     contentDescription = "Location Icon",
-                    tint = IconColor
+                    tint = MaterialTheme.colorScheme.primary
                 )
                 Text(
                     modifier = Modifier.padding(start = 3.dp, top = 1.dp),
                     text = "Start your day with these prayers",
                     style = MaterialTheme.typography.labelLarge,
-                    color = LocalContentColor.current.copy(alpha = 0.87f),
                     maxLines = 1,
                     softWrap = false,
                     textAlign = TextAlign.Center
@@ -851,7 +871,7 @@ fun PrayerBar(haptic: HapticFeedback) {
                     modifier = Modifier
                         .background(
                             shape = RoundedCornerShape(15.dp),
-                            color = IconBackGroundColor
+                            color = MaterialTheme.colorScheme.background
                         )
                         .size(25.dp),
                     imageVector = Icons.AutoMirrored.Outlined.KeyboardArrowRight,
@@ -938,9 +958,16 @@ fun TimeCounter(modifier: Modifier = Modifier,currentTime: String,prayTime: Pray
             this.scaleX = scale.value
         }, contentAlignment = Alignment.Center) {
 
-        Text(modifier = Modifier.graphicsLayer {
+        Text(
+            modifier = Modifier.graphicsLayer
+            {
             this.rotationY = rotationY.value
-        }, text = formattedTime, fontSize = 18.sp)
+            },
+            text = formattedTime, fontSize = 18.sp
+        )
+        val primaryColor = MaterialTheme.colorScheme.primary
+        val secondaryColor = MaterialTheme.colorScheme.secondary
+        val bgColor = MaterialTheme.colorScheme.background
         Canvas(modifier = Modifier.fillMaxSize()) {
             val center = Offset(size.width / 2f, size.height / 2f)
             val radius = size.minDimension / 2f - 20f
@@ -948,7 +975,7 @@ fun TimeCounter(modifier: Modifier = Modifier,currentTime: String,prayTime: Pray
             val circleRadius = 17f
 
             drawCircle(
-                color = IconBackGroundColor,
+                color = bgColor,
                 center = center,
                 radius = radius,
                 style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
@@ -956,7 +983,7 @@ fun TimeCounter(modifier: Modifier = Modifier,currentTime: String,prayTime: Pray
 
             drawArc(
                 brush = Brush.linearGradient(
-                    colors = listOf(IconColor, LightGreen),
+                    colors = listOf(primaryColor, secondaryColor),
                     tileMode = TileMode.Repeated
                 ),
                 startAngle = -90f,
@@ -973,7 +1000,7 @@ fun TimeCounter(modifier: Modifier = Modifier,currentTime: String,prayTime: Pray
 
             drawCircle(
                 brush = Brush.linearGradient(
-                    colors = listOf(IconColor, LightGreen),
+                    colors = listOf(primaryColor, secondaryColor),
                     tileMode = TileMode.Repeated
                 ),
                 radius = circleRadius,

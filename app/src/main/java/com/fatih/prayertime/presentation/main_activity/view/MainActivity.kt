@@ -3,35 +3,56 @@ package com.fatih.prayertime.presentation.main_activity.view
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.provider.Settings
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Arrangement
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Face
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
 
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemColors
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Snackbar
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -39,28 +60,39 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource.Companion.SideEffect
+import androidx.compose.ui.platform.LocalContext
 
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavOptions
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import com.fatih.prayertime.R
+import com.fatih.prayertime.domain.model.PrayerNotification
+import com.fatih.prayertime.domain.model.ThemeOption
 import com.fatih.prayertime.domain.use_case.alarm_use_cases.ScheduleDailyAlarmUpdateUseCase
 import com.fatih.prayertime.domain.use_case.formatted_use_cases.FormattedUseCase
 import com.fatih.prayertime.presentation.compass_screen.view.CompassScreen
 import com.fatih.prayertime.presentation.main_activity.viewmodel.AppViewModel
 import com.fatih.prayertime.presentation.main_screen.view.MainScreen
-import com.fatih.prayertime.presentation.ui.theme.BackGround
-import com.fatih.prayertime.presentation.ui.theme.IconColor
+import com.fatih.prayertime.presentation.settings_screen.view.AppearanceSettingsSection
+import com.fatih.prayertime.presentation.settings_screen.view.PrayerNotificationSettings
+import com.fatih.prayertime.presentation.settings_screen.view.SettingsScreen
+import com.fatih.prayertime.presentation.settings_screen.view.SwitchSettingItem
 import com.fatih.prayertime.presentation.ui.theme.PrayerTimeTheme
 import com.fatih.prayertime.util.BottomNavigationItem
 import dagger.hilt.android.AndroidEntryPoint
@@ -70,33 +102,33 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
-    companion object{
+    companion object {
         const val TAG = "MainActivity"
     }
+
     @Inject
-    lateinit var formattedUseCase : FormattedUseCase
+    lateinit var formattedUseCase: FormattedUseCase
+
     @Inject
     lateinit var scheduleDailyAlarmUpdateUseCase: ScheduleDailyAlarmUpdateUseCase
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge(
-            navigationBarStyle = SystemBarStyle.light(
-                android.graphics.Color.TRANSPARENT,
-                android.graphics.Color.TRANSPARENT
-            ),
-            statusBarStyle = SystemBarStyle.light(
-                android.graphics.Color.TRANSPARENT,
-                android.graphics.Color.TRANSPARENT
-            )
-        )
+
         setContent {
-            PrayerTimeTheme(dynamicColor = false, darkTheme = false) {
+            val appViewModel: AppViewModel = hiltViewModel()
+            val settings by appViewModel.settingsState.collectAsState()
+            val darkTheme = when(settings.selectedTheme){
+                ThemeOption.DARK -> true
+                ThemeOption.LIGHT -> false
+                ThemeOption.SYSTEM_DEFAULT -> isSystemInDarkTheme()
+            }
+            UpdateSystemBars(darkTheme)
+            PrayerTimeTheme (darkTheme = darkTheme ){
                 val navController = rememberNavController()
                 val bottomNavItems = bottomNavItems()
-                val appViewModel: AppViewModel = hiltViewModel()
+                val powerSavingState by appViewModel.powerSavingState.collectAsState()
                 val isLocationPermissionGranted by appViewModel.isLocationPermissionGranted.collectAsState()
                 var isCalculating by remember { mutableStateOf(true) }
-                val showLocationPermissionRationale by appViewModel.showLocationPermissionRationale.collectAsState()
                 val permissionLauncher =
                     rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
                         appViewModel.onLocationPermissionResult(permissions, this)
@@ -107,6 +139,7 @@ class MainActivity : ComponentActivity() {
 
                 LaunchedEffect(key1 = Unit) {
                     appViewModel.checkLocationPermission()
+                    appViewModel.checkPowerSavingMode()
                     if (!isLocationPermissionGranted) {
                         permissionLauncher.launch(appViewModel.locationPermissions)
                         isCalculating = true
@@ -135,9 +168,9 @@ class MainActivity : ComponentActivity() {
                     },
                     bottomBar = {
                         BottomAppBar(
-                            modifier = Modifier.clip(RoundedCornerShape(20.dp)),
+                            containerColor = MaterialTheme.colorScheme.primaryContainer,
+                            modifier = Modifier.clip(RoundedCornerShape(30.dp)),
                             tonalElevation = 10.dp,
-                            containerColor = Color.White
                         ) {
                             var selectedItemIndex by rememberSaveable { mutableIntStateOf(0) }
                             bottomNavItems.forEachIndexed { index, item ->
@@ -146,17 +179,21 @@ class MainActivity : ComponentActivity() {
                                     label = { Text(item.title) },
                                     selected = selectedItemIndex == index,
                                     colors = NavigationBarItemColors(
-                                        selectedIconColor = IconColor,
-                                        selectedTextColor = IconColor,
-                                        unselectedIconColor = Color.Black,
-                                        unselectedTextColor = Color.Black,
+                                        selectedIconColor = MaterialTheme.colorScheme.primary,
+                                        selectedTextColor = MaterialTheme.colorScheme.primary,
+                                        unselectedIconColor = MaterialTheme.colorScheme.onBackground,
+                                        unselectedTextColor = MaterialTheme.colorScheme.onBackground,
                                         selectedIndicatorColor = Color.Transparent,
                                         disabledIconColor = Color.Gray,
                                         disabledTextColor = Color.Gray,
                                     ),
                                     onClick = {
                                         selectedItemIndex = index
-                                        navController.navigate(item.title)
+                                        navController.navigate(item.title) {
+                                            popUpTo(navController.graph.id) {
+                                                inclusive = true // Başlangıç sayfasını dahil et
+                                            }
+                                            launchSingleTop = true                                         }
                                     }
                                 )
                             }
@@ -165,15 +202,19 @@ class MainActivity : ComponentActivity() {
                 ) { innerPadding ->
                     Box(
                         modifier = Modifier
-                            .background(BackGround)
                             .padding(
                                 15.dp,
-                                innerPadding.calculateTopPadding() + 10.dp,
+                                top = innerPadding.calculateTopPadding() ,
                                 15.dp,
-                                innerPadding.calculateBottomPadding()
-                            ),
+                                0.dp
+                            )
+                            .background(MaterialTheme.colorScheme.background)
+                        ,
                     )
                     {
+                        if (powerSavingState == true) {
+                            showBatteryOptimizationDialog()
+                        }
                         NavHost(
                             navController = navController,
                             startDestination = bottomNavItems.first().title
@@ -184,15 +225,15 @@ class MainActivity : ComponentActivity() {
                                 ) {
                                     when (item.title) {
                                         "Home" -> {
-                                            MainScreen(appViewModel)
+                                            MainScreen(appViewModel,innerPadding.calculateBottomPadding())
                                         }
 
                                         "Qibla" -> {
-                                            CompassScreen()
+                                            CompassScreen(innerPadding.calculateBottomPadding())
                                         }
 
                                         "Profile" -> {
-                                            //ProfileScreen()
+                                            SettingsScreen(innerPadding.calculateBottomPadding())
                                         }
 
                                         "About" -> {
@@ -210,56 +251,151 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-            val workInfos = WorkManager.getInstance(applicationContext).getWorkInfosByTagLiveData("AlarmWorker")
+            val workInfos =
+                WorkManager.getInstance(applicationContext).getWorkInfosByTagLiveData("AlarmWorker")
 
             workInfos.observe(this) { workInfoList ->
                 if (!workInfoList.any { it.state == WorkInfo.State.ENQUEUED || it.state == WorkInfo.State.RUNNING }) {
                     scheduleDailyAlarmUpdateUseCase.execute(this)
                 }
                 workInfoList.forEach { workInfo ->
-                    Log.d(TAG,"WorkInfo ID: ${workInfo.id}")
-                    Log.d(TAG,"State: ${workInfo.state}")
-                    Log.d(TAG,"Next Schedule Time: ${formattedUseCase.formatLongToLocalDateTime(workInfo.nextScheduleTimeMillis)}")
+                    Log.d(TAG, "WorkInfo ID: ${workInfo.id}")
+                    Log.d(TAG, "State: ${workInfo.state}")
+                    Log.d(
+                        TAG,
+                        "Next Schedule Time: ${formattedUseCase.formatLongToLocalDateTime(workInfo.nextScheduleTimeMillis)}"
+                    )
+                }
+            }
+            val doubleBackToExit = remember { mutableStateOf(false) }
+            val context = LocalContext.current
+            BackHandler(true) {
+                if (doubleBackToExit.value) {
+                    finish()
+                } else {
+                    doubleBackToExit.value = true
+                    Toast.makeText(context, "Press back again to exit", Toast.LENGTH_SHORT).show()
+                    Handler(Looper.getMainLooper()).postDelayed({
+                        doubleBackToExit.value = false
+                    }, 2000)
                 }
             }
         }
     }
 
-    @Composable
-    fun bottomNavItems() = listOf(
-        BottomNavigationItem(
-            title = "Home",
-            icon = ImageVector.vectorResource(id = R.drawable.mosque_icon),
-            route = "home"
-        ),
-        BottomNavigationItem(
-            title = "Qibla",
-            icon = ImageVector.vectorResource(id = R.drawable.compass_icon),
-            route = "qibla"
-        ),
-        BottomNavigationItem(
-            title = "Profile",
-            icon = Icons.Outlined.Face,
-            route = "profile"
-        ),
-        BottomNavigationItem(
-            title = "About",
-            icon = Icons.Outlined.Face,
-            route = "about"
-        ),
-        BottomNavigationItem(
-            title = "Contact",
-            icon = Icons.Outlined.Face,
-            route = "contact"
+    private fun showBatteryOptimizationDialog() {
+        AlertDialog.Builder(this)
+            .setTitle("MIUI Battery Optimization")
+            .setMessage("Xiaomi model telefonlarda bildirimlerin düzgün çalışabilmesi için arkaplandaki kısıtlamaları iptal etmeniz gerekmektedir.Ayarlardan arkaplanda pil tasarrufunu devre dışı bırakın. ")
+            .setPositiveButton("Settings") { _, _ ->
+                val intent = Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
+                startActivity(intent)
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+}
+@Composable
+fun ComponentActivity.UpdateSystemBars(isDarkMode: Boolean) {
+    val statusBarStyle = if (isDarkMode) {
+        SystemBarStyle.dark(android.graphics.Color.TRANSPARENT)
+    } else {
+        SystemBarStyle.light(android.graphics.Color.TRANSPARENT, android.graphics.Color.TRANSPARENT)
+    }
+
+    SideEffect {
+        enableEdgeToEdge(
+            statusBarStyle = statusBarStyle,
+            navigationBarStyle = SystemBarStyle.light(
+                android.graphics.Color.TRANSPARENT,
+                android.graphics.Color.TRANSPARENT
+            )
         )
+    }
+}
+@Composable
+fun bottomNavItems() = listOf(
+    BottomNavigationItem(
+        title = "Home",
+        icon = ImageVector.vectorResource(id = R.drawable.mosque_icon),
+        route = "home"
+    ),
+    BottomNavigationItem(
+        title = "Qibla",
+        icon = ImageVector.vectorResource(id = R.drawable.compass_icon),
+        route = "qibla"
+    ),
+    BottomNavigationItem(
+        title = "Profile",
+        icon = Icons.Outlined.Face,
+        route = "profile"
+    ),
+    BottomNavigationItem(
+        title = "About",
+        icon = Icons.Outlined.Face,
+        route = "about"
+    ),
+    BottomNavigationItem(
+        title = "Contact",
+        icon = Icons.Outlined.Face,
+        route = "contact"
     )
+)
 
 @Preview(showBackground = true)
 @Composable
 fun GreetingPreview() {
-    PrayerTimeTheme(dynamicColor = false, darkTheme = false) {
+    PrayerTimeTheme() {
+        val prayerNotifications: List<PrayerNotification> = listOf(
+            PrayerNotification("Sabah Namazı", true, 30),
+            PrayerNotification("Öğle Namazı", true, 30),
+            PrayerNotification("İkindi Namazı", false, 30),
+            PrayerNotification("Akşam Namazı", false, 30),
+            PrayerNotification("Yatsı Namazı", true, 30)
+        )
+        //val appViewModel : AppViewModel = hiltViewModel()
+        //val uiSettings by appViewModel.settingsState.collectAsState()
+        Column(modifier = Modifier.padding(16.dp)) {
+            Card (
+                colors = CardDefaults.cardColors(containerColor = Color.Blue),
+                elevation = CardDefaults.cardElevation(10.dp),
+                shape = RoundedCornerShape(10.dp),
+            ){
+                Text(modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp), text = "Ayarlar", style = MaterialTheme.typography.headlineMedium)
+            }
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            // Görünüm Seçenekleri
+            Card (
+                colors = CardDefaults.cardColors(containerColor = Color.Blue),
+                elevation = CardDefaults.cardElevation(10.dp),
+                shape = RoundedCornerShape(10.dp),
+            ){
+                Text(modifier = Modifier.padding(vertical = 7.dp, horizontal = 8.dp), text = "Görünüm", style = MaterialTheme.typography.titleMedium)
+                AppearanceSettingsSection(ThemeOption.DARK) { }
+            }
 
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            Card (
+                colors = CardDefaults.cardColors(containerColor = Color.Blue),
+                elevation = CardDefaults.cardElevation(10.dp),
+                shape = RoundedCornerShape(10.dp),
+            ){
+                // Bildirim Seçenekleri
+                Text(modifier = Modifier.padding(vertical = 7.dp, horizontal = 10.dp),text = "Bildirim", style = MaterialTheme.typography.titleMedium)
+                Spacer(modifier = Modifier.height(8.dp))
+                SwitchSettingItem("Titreşim", true) { }
+            }
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            Card (
+                colors = CardDefaults.cardColors(containerColor = Color.Blue),
+                elevation = CardDefaults.cardElevation(10.dp),
+                shape = RoundedCornerShape(10.dp),
+            ){
+                PrayerNotificationSettings(prayerNotifications, {str -> })
+            }
+        }
     }
+
 }
-}
+
 

@@ -152,15 +152,6 @@ class MainScreenViewModel @Inject constructor(
             val alarmTimeString = formattedUseCase.formatLongToLocalDateTime(alarmTimeLong)
             updateGlobalAlarmUseCase(globalAlarm.copy(isEnabled = true, alarmTime = alarmTimeLong, alarmTimeString = alarmTimeString))
         }
-
-    }
-
-    fun getGlobalAlarm(alarmType: String) = viewModelScope.launch(Dispatchers.Default){
-        try {
-            _globalAlarm.emit(getGlobalAlarmByTypeUseCase(alarmType))
-        }catch (e:Exception){
-            Log.d(TAG,e.message?:"Error occurred while getting global alarm")
-        }
     }
 
     private fun initAndSetGlobalAlarmList() =  viewModelScope.launch(Dispatchers.Default){

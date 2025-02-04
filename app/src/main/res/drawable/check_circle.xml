@@ -6,14 +6,14 @@
 
     <path
         android:name="circle_path"
-        android:strokeColor="@color/iconColor"
+        android:strokeColor="@android:color/holo_green_light"
         android:strokeWidth="2"
 
         android:pathData="M12,2C6.48,2 2,6.48 2,12s4.48,10 10,10 10,-4.48 10,-10S17.52,2 12,2z" />
 
     <path
         android:name="check_path"
-        android:fillColor="@color/iconColor"
+        android:fillColor="@android:color/holo_green_light"
         android:strokeWidth="1"
         android:pathData="M10,17l-5,-5 1.41,-1.41L10,14.17l7.59,-7.59L19,8l-9,9z"
         android:trimPathEnd="1"

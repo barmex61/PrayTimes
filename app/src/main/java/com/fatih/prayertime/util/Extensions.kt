@@ -1,5 +1,6 @@
 package com.fatih.prayertime.util
 
+import android.util.Log
 import com.fatih.prayertime.data.remote.dto.MonthlyPrayTimesResponseDTO
 import com.fatih.prayertime.data.remote.dto.PrayDataDTO
 import com.fatih.prayertime.data.remote.dto.PrayTimesDTO
@@ -7,6 +8,7 @@ import com.fatih.prayertime.domain.model.Address
 import com.fatih.prayertime.domain.model.PrayData
 import com.fatih.prayertime.domain.model.PrayTimes
 import com.fatih.prayertime.domain.use_case.formatted_use_cases.FormattedUseCase
+import java.time.LocalDateTime
 
 private val formattedUseCase = FormattedUseCase()
 
@@ -75,6 +77,12 @@ fun String?.convertTimeToSeconds(): Int {
         }
     }
     return 0
+}
+
+
+fun PrayTimes.localDateTime(time : String):org.threeten.bp.LocalDateTime {
+    val localDateTimeStr = "$date $time:00"
+    return formattedUseCase.formatDDMMYYYYHHMMDateToLocalDateTime(localDateTimeStr)
 }
 
 enum class PrayTimesString {

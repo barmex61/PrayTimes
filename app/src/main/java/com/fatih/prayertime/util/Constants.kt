@@ -1,5 +1,6 @@
 package com.fatih.prayertime.util
 
+import com.fatih.prayertime.domain.model.EsmaulHusna
 
 
 object Constants {
@@ -30,4 +31,6 @@ object Constants {
         "Comunidade Islamica de Lisboa" to 22,
         "Ministry of Awqaf, Islamic Affairs and Holy Places, Jordan" to 23
     )
+    var esmaulHusnaList: List<EsmaulHusna> = emptyList()
+
 }
