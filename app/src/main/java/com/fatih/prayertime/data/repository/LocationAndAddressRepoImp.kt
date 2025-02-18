@@ -67,11 +67,13 @@ class LocationAndAddressRepoImp @Inject constructor(
         if (locationCallback == null){
             locationCallback = object : LocationCallback() {
                 override fun onLocationResult(locationResult: LocationResult) {
+                    Log.d(TAG,"onLocationResult ${locationResult.locations.lastOrNull()}")
                     locationResult.locations.lastOrNull()?.let { location ->
                         CoroutineScope(Dispatchers.IO).launch {
                             try {
                                 val address = getAddressWithRetry(location)
                                 trySend(address)
+
                             } catch (e: IOException) {
                                 Log.d(TAG,"IOException $e")
                                 trySend(Resource.error(e.message))
@@ -88,7 +90,6 @@ class LocationAndAddressRepoImp @Inject constructor(
             }
         }
         try {
-
             fusedLocationProviderClient.removeLocationUpdates(locationCallback!!)
             fusedLocationProviderClient.requestLocationUpdates(
                 locationRequest,
@@ -96,7 +97,7 @@ class LocationAndAddressRepoImp @Inject constructor(
                 Looper.getMainLooper()
             ).addOnFailureListener { exception ->
                 Log.d(TAG,"addOnFailureListener $exception")
-                close(exception) // Hata durumunda Flow'u kapat
+                close(exception)
             }
 
         }catch (e:SecurityException){

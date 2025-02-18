@@ -186,12 +186,12 @@ fun MainScreen(appViewModel: AppViewModel,bottomPaddingValue : Dp) {
 @Composable
 fun GetLocationInformation(mainScreenViewModel: MainScreenViewModel, appViewModel: AppViewModel){
     val permissionGranted by appViewModel.isLocationPermissionGranted.collectAsState()
-    var isLocationTracking by rememberSaveable { mutableStateOf(false) }
+    val isLocationTracking by mainScreenViewModel.isLocationTracking.collectAsState()
     val networkState by appViewModel.networkState.collectAsState()
     LaunchedEffect (key1 = networkState, key2 = permissionGranted){
+        Log.d("MainScreen","networkState $networkState permissionGranted $permissionGranted")
         if (!isLocationTracking && permissionGranted && networkState == NetworkState.Connected){
             mainScreenViewModel.trackLocationAndUpdatePrayTimes()
-            isLocationTracking = true
         }
         if (permissionGranted){
             mainScreenViewModel.getMonthlyPrayTimesFromAPI(Year.now().value, YearMonth.now().monthValue,null)
@@ -392,7 +392,6 @@ fun PrayNotificationCompose(
                         var initialHour by rememberSaveable { mutableIntStateOf(0) }
                         var initialMinutes by rememberSaveable { mutableIntStateOf(0) }
                         ClassicTimePicker(
-
                             initialHour = initialHour,
                             initialMinutes = initialMinutes,
                             onTimeSelect = { alarmTimeLong,alarmTimeString,offset ->
@@ -658,7 +657,6 @@ fun PrayScheduleCompose(haptic: HapticFeedback) {
                                     localDateTimeNow.isBefore(dailyPrayTime.data!!.localDateTime(dailyPrayTime.data!!.night)) -> 4
                                     else -> 0
                                 }
-                                println(index)
                                 PrayTimesRow(dailyPrayTime.data!!, index)
 
                             }
@@ -707,7 +705,6 @@ fun AnimatedTimer(formattedTime : String,previousTime : String){
 
 @Composable
 fun RowScope.PrayTimesRow(prayTime : PrayTimes,index : Int) {
-    Log.d("PrayTimesRow",index.toString())
     val prayList = prayTime.toList()
     prayList.forEachIndexed { currentIndex ,prayPair->
         val icon = when(prayPair.first){

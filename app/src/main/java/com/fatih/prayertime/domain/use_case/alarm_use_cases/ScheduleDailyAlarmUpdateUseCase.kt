@@ -20,7 +20,7 @@ class ScheduleDailyAlarmUpdateUseCase @Inject constructor() {
         WorkManager.getInstance(context)
             .enqueueUniquePeriodicWork(
                 "AlarmWorker",
-                ExistingPeriodicWorkPolicy.CANCEL_AND_REENQUEUE,
+                ExistingPeriodicWorkPolicy.KEEP,
                 workRequest
             )/*
             .state.observeForever {

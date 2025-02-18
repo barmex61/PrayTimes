@@ -67,7 +67,7 @@ object Module {
 
     @Provides
     @Singleton
-    fun provideLocationRequest() : LocationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 10000).apply {
+    fun provideLocationRequest() : LocationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 60000).apply {
         setMinUpdateDistanceMeters(1000f)
     }.build()
 

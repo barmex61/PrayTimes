@@ -1,5 +1,6 @@
 package com.fatih.prayertime.domain.use_case.pray_times_use_cases
 
+import android.util.Log
 import com.fatih.prayertime.domain.model.Address
 import com.fatih.prayertime.domain.model.PrayTimes
 import com.fatih.prayertime.domain.repository.PrayApiRepository
@@ -10,8 +11,9 @@ import javax.inject.Inject
 class GetMonthlyPrayTimesFromApiUseCase @Inject constructor(private val repository: PrayApiRepository)  {
 
     suspend operator fun invoke(year : Int, month : Int,address: Address) : Resource<List<PrayTimes>> {
-        val response = repository.getMonthlyPrayTimes(year, month, address.latitude, address.longitude)
         return try {
+            val response = repository.getMonthlyPrayTimes(year, month, address.latitude, address.longitude)
+            Log.d("GetMonthlyPrayTimesFromApiUseCase",response.toString())
             if (response.data != null) Resource.success(response.data.toPrayTimes(address))
             else Resource.error(response.message)
         }catch (e:Exception){

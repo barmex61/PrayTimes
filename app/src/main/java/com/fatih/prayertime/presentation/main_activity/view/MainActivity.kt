@@ -58,6 +58,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -96,6 +97,9 @@ import com.fatih.prayertime.presentation.settings_screen.view.SwitchSettingItem
 import com.fatih.prayertime.presentation.ui.theme.PrayerTimeTheme
 import com.fatih.prayertime.util.BottomNavigationItem
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 
@@ -189,11 +193,19 @@ class MainActivity : ComponentActivity() {
                                     ),
                                     onClick = {
                                         selectedItemIndex = index
-                                        navController.navigate(item.title) {
-                                            popUpTo(navController.graph.id) {
-                                                inclusive = true // Başlangıç sayfasını dahil et
+                                        val currentScreen = navController.currentBackStackEntry?.destination?.route
+
+                                        if (currentScreen != item.title) {
+                                            navController.navigate(item.title) {
+                                                popUpTo(navController.graph.startDestinationId) {
+                                                    inclusive = false
+                                                    saveState = false
+                                                }
+
+                                                launchSingleTop = true
+                                                restoreState = false // Ekran state'ini saklama, her seferinde baştan oluştur
                                             }
-                                            launchSingleTop = true                                         }
+                                        }
                                     }
                                 )
                             }

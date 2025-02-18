@@ -18,6 +18,7 @@ import com.fatih.prayertime.domain.use_case.pray_times_use_cases.GetDailyPrayTim
 import com.fatih.prayertime.domain.use_case.alarm_use_cases.InsertGlobalAlarmUseCase
 import com.fatih.prayertime.domain.use_case.pray_times_use_cases.InsertPrayTimeIntoDbUseCase
 import com.fatih.prayertime.domain.use_case.alarm_use_cases.UpdateGlobalAlarmUseCase
+import com.fatih.prayertime.domain.use_case.location_use_cases.RemoveLocationCallbackUseCase
 import com.fatih.prayertime.util.PrayTimesString
 import com.fatih.prayertime.util.Resource
 import com.fatih.prayertime.util.Status
@@ -44,7 +45,7 @@ class MainScreenViewModel @Inject constructor(
     private val insertPrayTimeIntoDbUseCase : InsertPrayTimeIntoDbUseCase,
     private val getLastKnownAddressFromDatabaseUseCase: GetLastKnowAddressFromDatabaseUseCase,
     private val getAllGlobalAlarmsUseCase: GetAllGlobalAlarmsUseCase,
-    private val getGlobalAlarmByTypeUseCase: GetGlobalAlarmByTypeUseCase,
+    private val removeLocationCallbackUseCase: RemoveLocationCallbackUseCase,
     private val insertGlobalAlarmUseCase : InsertGlobalAlarmUseCase,
     private val updateGlobalAlarmUseCase: UpdateGlobalAlarmUseCase,
 ) : ViewModel() {
@@ -60,14 +61,19 @@ class MainScreenViewModel @Inject constructor(
 
     private val _searchAddress : MutableStateFlow<Address?> = MutableStateFlow(null)
 
+    private val _isLocationTracking : MutableStateFlow<Boolean> = MutableStateFlow(false)
+    val isLocationTracking : StateFlow<Boolean> = _isLocationTracking
+
     private fun updateSearchAddress(address: Address){
         _searchAddress.value = address
     }
 
     fun trackLocationAndUpdatePrayTimes() = viewModelScope.launch(Dispatchers.IO) {
+        _isLocationTracking.value = true
         getLocationAndAddressUseCase().collect { resource ->
             when(resource.status){
                 Status.SUCCESS -> {
+                    Log.d(TAG,"resource ${resource.data}")
                     getMonthlyPrayTimesFromAPI(Year.now().value, YearMonth.now().monthValue,resource.data!!)
                 }
                 else -> Unit
@@ -220,6 +226,13 @@ class MainScreenViewModel @Inject constructor(
 
     }
   }
+    private fun removeCallbacks(){
+        _isLocationTracking.value = false
+        removeLocationCallbackUseCase()
+    }
 
-
+    override fun onCleared() {
+        removeCallbacks()
+        super.onCleared()
+    }
 }

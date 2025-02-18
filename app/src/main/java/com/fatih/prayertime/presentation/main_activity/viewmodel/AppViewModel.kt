@@ -30,7 +30,6 @@ import javax.inject.Inject
 class AppViewModel @Inject constructor(
     private val getNetworkStateUseCase: GetNetworkStateUseCase,
     private val permissionsUseCase: PermissionsUseCase,
-    private val removeLocationCallbackUseCase: RemoveLocationCallbackUseCase,
     private val isPowerSavingEnabledUseCase: IsPowerSavingEnabledUseCase,
     private val getSettingsUseCase: GetSettingsUseCase,
     private val saveSettingsUseCase: SaveSettingsUseCase
@@ -125,7 +124,6 @@ class AppViewModel @Inject constructor(
             launch {
                 getSettingsUseCase.invoke().distinctUntilChanged()
                     .collectLatest{ settings ->
-                        println("settings $settings")
                         _settingsState.value = settings
                 }
             }
@@ -134,8 +132,4 @@ class AppViewModel @Inject constructor(
         checkPowerSavingMode()
     }
 
-    override fun onCleared() {
-        removeLocationCallbackUseCase()
-        super.onCleared()
-    }
 }
