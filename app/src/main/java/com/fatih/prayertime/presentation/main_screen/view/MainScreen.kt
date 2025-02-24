@@ -387,25 +387,6 @@ fun PrayNotificationCompose(
 
                     val globalAlarmList by mainScreenViewModel.globalAlarmList.collectAsState()
                     if (globalAlarmList != null) {
-                        var showDialog by rememberSaveable { mutableStateOf(false) }
-                        val selectedGlobalAlarm by mainScreenViewModel.selectedGlobalAlarm.collectAsState()
-                        var initialHour by rememberSaveable { mutableIntStateOf(0) }
-                        var initialMinutes by rememberSaveable { mutableIntStateOf(0) }
-                        ClassicTimePicker(
-                            initialHour = initialHour,
-                            initialMinutes = initialMinutes,
-                            onTimeSelect = { alarmTimeLong,alarmTimeString,offset ->
-                            if (selectedGlobalAlarm == null) return@ClassicTimePicker
-                            mainScreenViewModel.updateGlobalAlarm(
-                                selectedGlobalAlarm!!.alarmType,
-                                alarmTimeLong,
-                                alarmTimeString,
-                                !selectedGlobalAlarm!!.isEnabled,
-                                offset,
-                            )
-                        }, onDismissListener = {
-                            showDialog = false
-                        },showDialog)
                         globalAlarmList!!.forEachIndexed { index, globalAlarm ->
                             Column (
                                 modifier = Modifier
@@ -423,12 +404,14 @@ fun PrayNotificationCompose(
                                                     false,
                                                     0L)
                                                 return@clickable
+                                            }else{
+                                                mainScreenViewModel.updateGlobalAlarm(
+                                                    globalAlarm.alarmType,
+                                                    mainScreenViewModel.getAlarmTime(index).first ,
+                                                    mainScreenViewModel.getAlarmTime(index).second,
+                                                    true,
+                                                    0L)
                                             }
-                                            val initialTimeValues = mainScreenViewModel.getHourAndMinuteFromIndex(index)
-                                            showDialog = true
-                                            mainScreenViewModel.setSelectedGlobalAlarm(globalAlarm)
-                                            initialHour = initialTimeValues.first
-                                            initialMinutes = initialTimeValues.second
                                         } else {
                                             permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
                                         }
@@ -480,47 +463,6 @@ fun PrayNotificationCompose(
         }
     }
 }
-
-@Composable
-fun ClassicTimePicker(
-    initialHour : Int,
-    initialMinutes : Int,
-    onTimeSelect : (Long,String,Long) -> Unit,
-    onDismissListener: OnDismissListener,
-    showDialog : Boolean = false) {
-    val context = LocalContext.current
-    val calendar = remember { Calendar.getInstance() }
-    val formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm", Locale.getDefault())
-    calendar.set(Calendar.HOUR_OF_DAY,initialHour)
-    calendar.set(Calendar.MINUTE,initialMinutes)
-    calendar.set(Calendar.SECOND, 0)
-    calendar.set(Calendar.MILLISECOND, 0)
-    val initialTimeInMillis = calendar.timeInMillis
-    val timePickerDialog = TimePickerDialog(
-        context,
-        { _, hourOfDay, minute ->
-            calendar.set(Calendar.HOUR_OF_DAY, hourOfDay)
-            calendar.set(Calendar.MINUTE, minute)
-            val selectedTimeInMillis = calendar.timeInMillis
-            val selectedTimeString = LocalDateTime.ofInstant(Instant.ofEpochMilli(selectedTimeInMillis), ZoneId.systemDefault()).format(formatter)
-            val offset = selectedTimeInMillis - initialTimeInMillis
-            onTimeSelect(selectedTimeInMillis,selectedTimeString,offset)
-        },
-        calendar[Calendar.HOUR_OF_DAY],
-        calendar[Calendar.MINUTE],
-        true
-    ).apply {
-        setOnDismissListener(onDismissListener)
-    }
-
-    LaunchedEffect(showDialog) {
-        if (showDialog) {
-            timePickerDialog.show()
-        }
-    }
-
-}
-
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable

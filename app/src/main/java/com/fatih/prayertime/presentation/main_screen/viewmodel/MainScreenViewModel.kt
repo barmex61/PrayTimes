@@ -118,15 +118,6 @@ class MainScreenViewModel @Inject constructor(
     private val _globalAlarmList : MutableStateFlow<List<GlobalAlarm>?> = MutableStateFlow(null)
     val globalAlarmList : StateFlow<List<GlobalAlarm>?> = _globalAlarmList
 
-    private val _globalAlarm = MutableStateFlow<GlobalAlarm?>(null)
-
-    private val _selectedGlobalAlarm = MutableStateFlow<GlobalAlarm?>(null)
-    val selectedGlobalAlarm : StateFlow<GlobalAlarm?> = _selectedGlobalAlarm
-
-    fun setSelectedGlobalAlarm(globalAlarm: GlobalAlarm) {
-        _selectedGlobalAlarm.value = globalAlarm
-    }
-
     fun updateGlobalAlarm(
         alarmType : String,
         alarmTimeLong: Long,
@@ -134,7 +125,6 @@ class MainScreenViewModel @Inject constructor(
         isEnabled: Boolean,
         alarmOffset: Long
     ) = viewModelScope.launch(Dispatchers.Default){
-
         try {
             val globalAlarm = GlobalAlarm(alarmType,alarmTimeLong,alarmTimeString,isEnabled,alarmOffset)
             updateGlobalAlarmUseCase(globalAlarm)
@@ -186,9 +176,9 @@ class MainScreenViewModel @Inject constructor(
         }
     }
 
-    fun getHourAndMinuteFromIndex(index: Int) : Pair<Int,Int>  {
+    fun getAlarmTime(index: Int) : Pair<Long,String>  {
 
-        _dailyPrayTimes.value.data?:return Pair(0,0)
+        _dailyPrayTimes.value.data?:return Pair(0L,"00:00:00")
         val prayTimes = _dailyPrayTimes.value.data!!
         val timeString = when(index){
             0 -> prayTimes.morning
@@ -198,13 +188,12 @@ class MainScreenViewModel @Inject constructor(
             else -> prayTimes.night
         }
         try {
-            val splitList = timeString.split(":")
-            val hour = splitList.first().toInt()
-            val minutes = splitList[1].toInt()
-            return Pair(hour, minutes)
+            val timeLong = formattedUseCase.formatHHMMtoLong(timeString)
+            val timeStr = formattedUseCase.formatLongToLocalDateTime(timeLong)
+            return Pair(timeLong, timeStr)
         }catch (e:Exception){
             Log.d(TAG,e.message?:"Error occurred while getting hour and minute from index")
-            return Pair(0,0)
+            return Pair(0L,"00:00:00")
         }
     }
 
