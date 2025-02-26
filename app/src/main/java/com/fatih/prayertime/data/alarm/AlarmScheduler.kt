@@ -7,17 +7,26 @@ import android.content.Intent
 import android.os.Build
 import android.util.Log
 import androidx.core.app.AlarmManagerCompat
+import com.fatih.prayertime.data.settings.SettingsDataStore
 import com.fatih.prayertime.domain.model.GlobalAlarm
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 
-class AlarmScheduler @Inject constructor(private val context: Context) {
+class AlarmScheduler @Inject constructor(
+    private val context: Context,
+    private val settingsDataStore: SettingsDataStore
+) {
 
     private val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
     private fun schedule(alarm: GlobalAlarm) {
+        val settings = runBlocking { settingsDataStore.settings.first() }
         val intent = Intent(context, AlarmReceiver::class.java).apply {
             putExtra("ALARM_TYPE", alarm.alarmType)
             putExtra("ALARM_MESSAGE", alarm.alarmType)
+            putExtra("ALARM_VIBRATION",settings.vibrationEnabled)
+            putExtra("ALARM_SOUND_URI",alarm.soundUri)
         }
         val pendingIntent = PendingIntent.getBroadcast(
             context,

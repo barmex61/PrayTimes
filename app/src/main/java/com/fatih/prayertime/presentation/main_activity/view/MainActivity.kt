@@ -19,20 +19,15 @@ import androidx.appcompat.app.AlertDialog
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.Arrangement
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Face
 import androidx.compose.material3.BottomAppBar
@@ -45,10 +40,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemColors
-import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Snackbar
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -58,48 +51,35 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.input.nestedscroll.NestedScrollSource.Companion.SideEffect
 import androidx.compose.ui.platform.LocalContext
 
 import androidx.compose.ui.res.vectorResource
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavOptions
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import com.fatih.prayertime.R
-import com.fatih.prayertime.domain.model.PrayerNotification
 import com.fatih.prayertime.domain.model.ThemeOption
 import com.fatih.prayertime.domain.use_case.alarm_use_cases.ScheduleDailyAlarmUpdateUseCase
 import com.fatih.prayertime.domain.use_case.formatted_use_cases.FormattedUseCase
 import com.fatih.prayertime.presentation.compass_screen.view.CompassScreen
 import com.fatih.prayertime.presentation.main_activity.viewmodel.AppViewModel
 import com.fatih.prayertime.presentation.main_screen.view.MainScreen
-import com.fatih.prayertime.presentation.settings_screen.view.AppearanceSettingsSection
-import com.fatih.prayertime.presentation.settings_screen.view.PrayerNotificationSettings
 import com.fatih.prayertime.presentation.settings_screen.view.SettingsScreen
 import com.fatih.prayertime.presentation.settings_screen.view.SwitchSettingItem
 import com.fatih.prayertime.presentation.ui.theme.PrayerTimeTheme
 import com.fatih.prayertime.util.BottomNavigationItem
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 
@@ -245,15 +225,15 @@ class MainActivity : ComponentActivity() {
                                         }
 
                                         "Profile" -> {
-                                            SettingsScreen(innerPadding.calculateBottomPadding())
+                                            //ProfileScreen()
                                         }
 
                                         "About" -> {
                                             //AboutScreen()
                                         }
 
-                                        "Contact" -> {
-                                            //ContactScreen()
+                                        "Settings" -> {
+                                            SettingsScreen(innerPadding.calculateBottomPadding())
                                         }
                                     }
                                 }
@@ -348,8 +328,8 @@ fun bottomNavItems() = listOf(
         route = "about"
     ),
     BottomNavigationItem(
-        title = "Contact",
-        icon = Icons.Outlined.Face,
+        title = "Settings",
+        icon = ImageVector.vectorResource(id = R.drawable.settings_icon),
         route = "contact"
     )
 )
@@ -358,54 +338,7 @@ fun bottomNavItems() = listOf(
 @Composable
 fun GreetingPreview() {
     PrayerTimeTheme() {
-        val prayerNotifications: List<PrayerNotification> = listOf(
-            PrayerNotification("Sabah Namazı", true, 30),
-            PrayerNotification("Öğle Namazı", true, 30),
-            PrayerNotification("İkindi Namazı", false, 30),
-            PrayerNotification("Akşam Namazı", false, 30),
-            PrayerNotification("Yatsı Namazı", true, 30)
-        )
-        //val appViewModel : AppViewModel = hiltViewModel()
-        //val uiSettings by appViewModel.settingsState.collectAsState()
-        Column(modifier = Modifier.padding(16.dp)) {
-            Card (
-                colors = CardDefaults.cardColors(containerColor = Color.Blue),
-                elevation = CardDefaults.cardElevation(10.dp),
-                shape = RoundedCornerShape(10.dp),
-            ){
-                Text(modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp), text = "Ayarlar", style = MaterialTheme.typography.headlineMedium)
-            }
-            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-            // Görünüm Seçenekleri
-            Card (
-                colors = CardDefaults.cardColors(containerColor = Color.Blue),
-                elevation = CardDefaults.cardElevation(10.dp),
-                shape = RoundedCornerShape(10.dp),
-            ){
-                Text(modifier = Modifier.padding(vertical = 7.dp, horizontal = 8.dp), text = "Görünüm", style = MaterialTheme.typography.titleMedium)
-                AppearanceSettingsSection(ThemeOption.DARK) { }
-            }
 
-            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-            Card (
-                colors = CardDefaults.cardColors(containerColor = Color.Blue),
-                elevation = CardDefaults.cardElevation(10.dp),
-                shape = RoundedCornerShape(10.dp),
-            ){
-                // Bildirim Seçenekleri
-                Text(modifier = Modifier.padding(vertical = 7.dp, horizontal = 10.dp),text = "Bildirim", style = MaterialTheme.typography.titleMedium)
-                Spacer(modifier = Modifier.height(8.dp))
-                SwitchSettingItem("Titreşim", true) { }
-            }
-            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-            Card (
-                colors = CardDefaults.cardColors(containerColor = Color.Blue),
-                elevation = CardDefaults.cardElevation(10.dp),
-                shape = RoundedCornerShape(10.dp),
-            ){
-                PrayerNotificationSettings(prayerNotifications, {str -> })
-            }
-        }
     }
 
 }

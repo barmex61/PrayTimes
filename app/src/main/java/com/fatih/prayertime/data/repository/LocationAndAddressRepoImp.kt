@@ -67,13 +67,12 @@ class LocationAndAddressRepoImp @Inject constructor(
         if (locationCallback == null){
             locationCallback = object : LocationCallback() {
                 override fun onLocationResult(locationResult: LocationResult) {
-                    Log.d(TAG,"onLocationResult ${locationResult.locations.lastOrNull()}")
+                    Log.d(TAG,"onLocationResult")
                     locationResult.locations.lastOrNull()?.let { location ->
                         CoroutineScope(Dispatchers.IO).launch {
                             try {
                                 val address = getAddressWithRetry(location)
                                 trySend(address)
-
                             } catch (e: IOException) {
                                 Log.d(TAG,"IOException $e")
                                 trySend(Resource.error(e.message))

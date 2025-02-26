@@ -44,8 +44,16 @@ class FormattedUseCase @Inject constructor() {
         return LocalDate.parse(date, formatterDDMMYYYY)
     }
 
+    fun formatHHMMSStoLong(time: String): Long {
+        return LocalTime.parse(time, formatterHHMMSS).atDate(LocalDate.now()).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+    }
+
     fun formatHHMMtoLong(time: String): Long {
         return LocalTime.parse(time, formatterHHMM).atDate(LocalDate.now()).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+    }
+
+    fun formatHHMMtoLongWithLocalDate(time: String, localDate: LocalDate): Long {
+        return LocalTime.parse(time, formatterHHMM).atDate(localDate).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
     }
 
     fun formatHHMM(localDateTime: LocalDateTime) : String {
@@ -66,6 +74,12 @@ class FormattedUseCase @Inject constructor() {
 
     fun formatLongToLocalDateTime(time: Long) : String {
         return LocalDateTime.ofInstant(Instant.ofEpochMilli(time), ZoneId.systemDefault()).format(formatterDDMMYYYYHHMMSS)
+    }
+
+    fun addMinutesToTime(time: String, minutesToAdd: Long): String {
+        val localTime = LocalTime.parse(time, formatterHHMM)
+        val newTime = localTime.plusMinutes(minutesToAdd)
+        return newTime.format(formatterHHMM)
     }
 
 }

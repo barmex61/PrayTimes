@@ -3,15 +3,12 @@ package com.fatih.prayertime.presentation.main_screen.viewmodel
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.work.ListenableWorker.Result
-import com.fatih.prayertime.data.remote.dto.Date
 import com.fatih.prayertime.domain.model.GlobalAlarm
 import com.fatih.prayertime.domain.model.Address
 import com.fatih.prayertime.domain.model.PrayTimes
 import com.fatih.prayertime.domain.use_case.formatted_use_cases.FormattedUseCase
 import com.fatih.prayertime.domain.use_case.alarm_use_cases.GetAllGlobalAlarmsUseCase
 import com.fatih.prayertime.domain.use_case.pray_times_use_cases.GetMonthlyPrayTimesFromApiUseCase
-import com.fatih.prayertime.domain.use_case.alarm_use_cases.GetGlobalAlarmByTypeUseCase
 import com.fatih.prayertime.domain.use_case.location_use_cases.GetLastKnowAddressFromDatabaseUseCase
 import com.fatih.prayertime.domain.use_case.location_use_cases.GetLocationAndAddressUseCase
 import com.fatih.prayertime.domain.use_case.pray_times_use_cases.GetDailyPrayTimesWithAddressAndDateUseCase
@@ -22,9 +19,9 @@ import com.fatih.prayertime.domain.use_case.location_use_cases.RemoveLocationCal
 import com.fatih.prayertime.util.PrayTimesString
 import com.fatih.prayertime.util.Resource
 import com.fatih.prayertime.util.Status
+import com.fatih.prayertime.util.getAlarmTimeForPrayTimes
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
@@ -46,7 +43,6 @@ class MainScreenViewModel @Inject constructor(
     private val getLastKnownAddressFromDatabaseUseCase: GetLastKnowAddressFromDatabaseUseCase,
     private val getAllGlobalAlarmsUseCase: GetAllGlobalAlarmsUseCase,
     private val removeLocationCallbackUseCase: RemoveLocationCallbackUseCase,
-    private val insertGlobalAlarmUseCase : InsertGlobalAlarmUseCase,
     private val updateGlobalAlarmUseCase: UpdateGlobalAlarmUseCase,
 ) : ViewModel() {
 
@@ -70,6 +66,7 @@ class MainScreenViewModel @Inject constructor(
 
     fun trackLocationAndUpdatePrayTimes() = viewModelScope.launch(Dispatchers.IO) {
         _isLocationTracking.value = true
+        Log.d(TAG,"trackLocationAndUpdatePrayTimes")
         getLocationAndAddressUseCase().collect { resource ->
             when(resource.status){
                 Status.SUCCESS -> {
@@ -90,11 +87,6 @@ class MainScreenViewModel @Inject constructor(
             insertPrayTimeIntoDbUseCase.insertPrayTimeList(apiResponse.data!!)
             updateSearchAddress(searchAddress)
         }
-    }
-
-    suspend fun getDailyPrayTimesWithDate(date:String) : PrayTimes?{
-        val searchAddress = _searchAddress.value?: return null
-        return getDailyPrayTimesWithAddressAndDateUseCase(searchAddress,date).first()
     }
 
     //Date
@@ -125,6 +117,7 @@ class MainScreenViewModel @Inject constructor(
         isEnabled: Boolean,
         alarmOffset: Long
     ) = viewModelScope.launch(Dispatchers.Default){
+
         try {
             val globalAlarm = GlobalAlarm(alarmType,alarmTimeLong,alarmTimeString,isEnabled,alarmOffset)
             updateGlobalAlarmUseCase(globalAlarm)
@@ -133,48 +126,16 @@ class MainScreenViewModel @Inject constructor(
         }
     }
 
-    fun updateAllGlobalAlarm() = viewModelScope.launch(Dispatchers.IO){
+    fun updateAllGlobalAlarm(enableAllGlobalAlarm : Boolean) = viewModelScope.launch(Dispatchers.IO){
         globalAlarmList.value?.forEach { globalAlarm ->
             dailyPrayTimes.value.data?:return@launch
-            val alarmTime = when(globalAlarm.alarmType){
-                PrayTimesString.Morning.name -> dailyPrayTimes.value.data!!.morning
-                PrayTimesString.Noon.name -> dailyPrayTimes.value.data!!.noon
-                PrayTimesString.Afternoon.name -> dailyPrayTimes.value.data!!.afternoon
-                PrayTimesString.Evening.name -> dailyPrayTimes.value.data!!.evening
-                PrayTimesString.Night.name -> dailyPrayTimes.value.data!!.night
-                else -> "00:00:00"
-            }
+            val alarmTime = getAlarmTimeForPrayTimes(dailyPrayTimes.value.data!!,globalAlarm.alarmType,globalAlarm.alarmOffset,formattedUseCase)
             val alarmTimeLong = formattedUseCase.formatHHMMtoLong(alarmTime)
             val alarmTimeString = formattedUseCase.formatLongToLocalDateTime(alarmTimeLong)
-            updateGlobalAlarmUseCase(globalAlarm.copy(isEnabled = true, alarmTime = alarmTimeLong, alarmTimeString = alarmTimeString))
+            updateGlobalAlarmUseCase(globalAlarm.copy(isEnabled = if (enableAllGlobalAlarm) true else globalAlarm.isEnabled, alarmTime = alarmTimeLong, alarmTimeString = alarmTimeString))
         }
     }
 
-    private fun initAndSetGlobalAlarmList() =  viewModelScope.launch(Dispatchers.Default){
-        try {
-            getAllGlobalAlarmsUseCase().collect { globalAlarmList ->
-                if (globalAlarmList.isEmpty()) {
-                    val initialAlarms = PrayTimesString.entries.map {
-                        GlobalAlarm(
-                            alarmType = it.name,
-                            alarmTime = 0L,
-                            alarmTimeString = "16-01-2025 00:00",
-                            isEnabled = false,
-                            alarmOffset = 0
-                        )
-                    }
-
-                    initialAlarms.forEach { globalAlarms ->
-                        insertGlobalAlarmUseCase(globalAlarms)
-                    }
-                } else {
-                    _globalAlarmList.emit(globalAlarmList)
-                }
-            }
-        }catch (e:Exception){
-            Log.d(TAG,"Catch message ${e.message}")
-        }
-    }
 
     fun getAlarmTime(index: Int) : Pair<Long,String>  {
 
@@ -201,20 +162,24 @@ class MainScreenViewModel @Inject constructor(
     init {
         updateFormattedDate()
         updateFormattedTime()
-        initAndSetGlobalAlarmList()
         viewModelScope.launch(Dispatchers.IO){
             _searchAddress.emit(getLastKnownAddressFromDatabaseUseCase())
             _searchAddress.collectLatest {
                 if (it != null){
                     getDailyPrayTimesWithAddressAndDateUseCase(it,formattedDate.value).collectLatest { prayTimes ->
                         _dailyPrayTimes.emit(Resource.success(prayTimes))
+                    }
                 }
+        } }
+        viewModelScope.launch {
+            getAllGlobalAlarmsUseCase().collect { globalAlarmList ->
+                    _globalAlarmList.emit(globalAlarmList)
             }
 
         }
-
+        updateAllGlobalAlarm(false)
     }
-  }
+
     private fun removeCallbacks(){
         _isLocationTracking.value = false
         removeLocationCallbackUseCase()

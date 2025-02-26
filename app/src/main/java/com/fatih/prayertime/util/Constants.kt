@@ -1,5 +1,6 @@
 package com.fatih.prayertime.util
 
+import androidx.datastore.preferences.core.stringPreferencesKey
 import com.fatih.prayertime.domain.model.EsmaulHusna
 
 
@@ -32,5 +33,6 @@ object Constants {
         "Ministry of Awqaf, Islamic Affairs and Holy Places, Jordan" to 23
     )
     var esmaulHusnaList: List<EsmaulHusna> = emptyList()
+    val SETTINGS_KEY = stringPreferencesKey("settings_json")
 
 }

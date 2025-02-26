@@ -2,9 +2,7 @@ package com.fatih.prayertime.presentation.main_screen.view
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.app.TimePickerDialog
 import android.content.Context
-import android.content.DialogInterface.OnDismissListener
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
@@ -66,7 +64,6 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -74,7 +71,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -113,15 +109,10 @@ import com.fatih.prayertime.util.localDateTime
 import com.fatih.prayertime.util.toAddress
 import com.fatih.prayertime.util.toList
 import kotlinx.coroutines.delay
-import org.threeten.bp.Instant
 import org.threeten.bp.LocalDate
 import org.threeten.bp.LocalDateTime
 import org.threeten.bp.Year
 import org.threeten.bp.YearMonth
-import org.threeten.bp.ZoneId
-import org.threeten.bp.format.DateTimeFormatter
-import java.util.Calendar
-import java.util.Locale
 
 import kotlin.math.PI
 import kotlin.math.cos
@@ -189,6 +180,7 @@ fun GetLocationInformation(mainScreenViewModel: MainScreenViewModel, appViewMode
     val isLocationTracking by mainScreenViewModel.isLocationTracking.collectAsState()
     val networkState by appViewModel.networkState.collectAsState()
     LaunchedEffect (key1 = networkState, key2 = permissionGranted){
+        Log.d("MainScreen","isLocationTracking $isLocationTracking")
         Log.d("MainScreen","networkState $networkState permissionGranted $permissionGranted")
         if (!isLocationTracking && permissionGranted && networkState == NetworkState.Connected){
             mainScreenViewModel.trackLocationAndUpdatePrayTimes()
@@ -438,7 +430,7 @@ fun PrayNotificationCompose(
                 onClick = {
                     haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                     if (isNotificationPermissionGranted) {
-                        mainScreenViewModel.updateAllGlobalAlarm()
+                        mainScreenViewModel.updateAllGlobalAlarm(true)
                     } else {
                         permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
                     }

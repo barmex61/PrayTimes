@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fatih.prayertime.domain.model.Settings
 import com.fatih.prayertime.domain.model.ThemeOption
+import com.fatih.prayertime.domain.use_case.alarm_use_cases.GetAllGlobalAlarmsUseCase
 import com.fatih.prayertime.domain.use_case.location_use_cases.RemoveLocationCallbackUseCase
 import com.fatih.prayertime.domain.use_case.network_state_use_cases.GetNetworkStateUseCase
 import com.fatih.prayertime.domain.use_case.permission_use_case.IsPowerSavingEnabledUseCase
@@ -32,7 +33,8 @@ class AppViewModel @Inject constructor(
     private val permissionsUseCase: PermissionsUseCase,
     private val isPowerSavingEnabledUseCase: IsPowerSavingEnabledUseCase,
     private val getSettingsUseCase: GetSettingsUseCase,
-    private val saveSettingsUseCase: SaveSettingsUseCase
+    private val saveSettingsUseCase: SaveSettingsUseCase,
+    private val getAllGlobalAlarmUseCase : GetAllGlobalAlarmsUseCase
 
 ) : ViewModel() {
 
@@ -114,18 +116,22 @@ class AppViewModel @Inject constructor(
 
     init {
         viewModelScope.launch(Dispatchers.IO){
-            launch {
-                getNetworkStateUseCase().filter{
-                    it != _networkState.value
-                }.collectLatest {
-                    _networkState.value = it
-                }
+            getNetworkStateUseCase().filter{
+                it != _networkState.value
+            }.collectLatest {
+                _networkState.value = it
             }
-            launch {
-                getSettingsUseCase.invoke().distinctUntilChanged()
-                    .collectLatest{ settings ->
-                        _settingsState.value = settings
+        }
+        viewModelScope.launch(Dispatchers.IO) {
+            getSettingsUseCase.invoke().distinctUntilChanged()
+                .collectLatest{ settings ->
+                    _settingsState.value = settings
                 }
+        }
+        viewModelScope.launch(Dispatchers.IO) {
+            getAllGlobalAlarmUseCase().collectLatest {
+                val updatedSettings = _settingsState.value.copy(prayerAlarms = it)
+                saveSettingsUseCase(updatedSettings)
             }
         }
         checkNotificationPermission()

@@ -13,7 +13,6 @@ class GetMonthlyPrayTimesFromApiUseCase @Inject constructor(private val reposito
     suspend operator fun invoke(year : Int, month : Int,address: Address) : Resource<List<PrayTimes>> {
         return try {
             val response = repository.getMonthlyPrayTimes(year, month, address.latitude, address.longitude)
-            Log.d("GetMonthlyPrayTimesFromApiUseCase",response.toString())
             if (response.data != null) Resource.success(response.data.toPrayTimes(address))
             else Resource.error(response.message)
         }catch (e:Exception){

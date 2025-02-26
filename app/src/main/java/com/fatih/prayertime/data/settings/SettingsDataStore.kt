@@ -1,31 +1,33 @@
 package com.fatih.prayertime.data.settings
 
 import android.content.Context
-import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.Preferences
+import android.util.Log
+
 import androidx.datastore.preferences.core.edit
-import androidx.datastore.preferences.core.stringPreferencesKey
-import androidx.datastore.preferences.preferencesDataStore
+import com.fatih.prayertime.domain.model.GlobalAlarm
+
 import com.fatih.prayertime.domain.model.Settings
+import com.fatih.prayertime.util.Constants.SETTINGS_KEY
+import com.fatih.prayertime.util.dataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.sync.Mutex
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import javax.inject.Inject
-import javax.inject.Singleton
 
-private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings_prefs")
-@Singleton
-class SettingsDataStore @Inject constructor(private val context: Context) {
 
-    private val SETTINGS_KEY = stringPreferencesKey("settings_json")
+class SettingsDataStore @Inject constructor(
+    private val context: Context,
+) {
+
     val settings : Flow<Settings>
         get() = context.dataStore.data.map { prefs ->
         val jsonString = prefs[SETTINGS_KEY]
         if (jsonString != null) {
+            println("not null")
             Json.decodeFromString<Settings>(jsonString)
         } else {
+            println("null")
             Settings()
         }
     }

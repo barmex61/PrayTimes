@@ -25,6 +25,8 @@ import com.fatih.prayertime.data.alarm.AlarmScheduler
 import com.fatih.prayertime.data.repository.SettingsRepositoryImp
 import com.fatih.prayertime.data.settings.SettingsDataStore
 import com.fatih.prayertime.domain.repository.SettingsRepository
+import com.fatih.prayertime.domain.use_case.alarm_use_cases.GetAllGlobalAlarmsUseCase
+import com.fatih.prayertime.domain.use_case.alarm_use_cases.InsertGlobalAlarmUseCase
 import com.fatih.prayertime.domain.use_case.permission_use_case.PermissionsUseCase
 import com.fatih.prayertime.util.Constants.BASE_URL
 import com.google.android.gms.location.FusedLocationProviderClient
@@ -39,6 +41,7 @@ import dagger.hilt.components.SingletonComponent
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.Locale
+import javax.inject.Provider
 import javax.inject.Singleton
 
 @InstallIn(SingletonComponent::class)
@@ -67,7 +70,7 @@ object Module {
 
     @Provides
     @Singleton
-    fun provideLocationRequest() : LocationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 60000).apply {
+    fun provideLocationRequest() : LocationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 30000).apply {
         setMinUpdateDistanceMeters(1000f)
     }.build()
 
@@ -109,7 +112,7 @@ object Module {
 
     @Provides
     @Singleton
-    fun provideAlarmScheduler(@ApplicationContext context: Context) = AlarmScheduler(context)
+    fun provideAlarmScheduler(@ApplicationContext context: Context,settingsDataStore: SettingsDataStore) = AlarmScheduler(context,settingsDataStore)
 
     @Provides
     @Singleton
@@ -119,7 +122,17 @@ object Module {
     @Singleton
     fun provideRequestNotificationPermissionUseCase(@ApplicationContext context: Context) = PermissionsUseCase(context)
 
+
     @Provides
     @Singleton
-    fun provideSettingsRepository(@ApplicationContext context: Context) : SettingsRepository = SettingsRepositoryImp(SettingsDataStore(context))
+    fun provideSettingsDataStore(
+        @ApplicationContext context: Context,
+    ): SettingsDataStore = SettingsDataStore(context)
+
+    @Provides
+    @Singleton
+    fun provideSettingsRepository(
+        settingsDataStore: SettingsDataStore
+    ): SettingsRepository = SettingsRepositoryImp(settingsDataStore)
+
 }

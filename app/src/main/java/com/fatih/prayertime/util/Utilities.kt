@@ -2,13 +2,20 @@ package com.fatih.prayertime.util
 
 import android.app.Activity
 import android.app.Application
+import android.content.Context
 import android.content.pm.ActivityInfo
 import android.content.res.AssetManager
 import android.graphics.drawable.GradientDrawable.Orientation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.platform.LocalContext
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.preferencesDataStore
 import com.fatih.prayertime.domain.model.EsmaulHusna
+import com.fatih.prayertime.domain.model.GlobalAlarm
+import com.fatih.prayertime.domain.model.PrayTimes
+import com.fatih.prayertime.domain.use_case.formatted_use_cases.FormattedUseCase
 import org.json.JSONArray
 
 @Composable
@@ -46,3 +53,17 @@ fun convertJsonToEsmaulHusnaList(jsonString: String): List<EsmaulHusna> {
 
     return esmaulHusnaList
 }
+
+fun getAlarmTimeForPrayTimes(dailyPrayTimes : PrayTimes,alarmType : String,alarmOffset : Long,formattedUseCase: FormattedUseCase) : String {
+    val alarmTimeWithoutOffset = when(alarmType){
+        PrayTimesString.Morning.name -> dailyPrayTimes.morning
+        PrayTimesString.Noon.name -> dailyPrayTimes.noon
+        PrayTimesString.Afternoon.name -> dailyPrayTimes.afternoon
+        PrayTimesString.Evening.name -> dailyPrayTimes.evening
+        PrayTimesString.Night.name -> dailyPrayTimes.night
+        else -> "00:00"
+    }
+    return formattedUseCase.addMinutesToTime(alarmTimeWithoutOffset,alarmOffset)
+}
+
+val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings_prefs")
