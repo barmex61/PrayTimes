@@ -27,6 +27,7 @@ import com.fatih.prayertime.data.settings.SettingsDataStore
 import com.fatih.prayertime.domain.repository.SettingsRepository
 import com.fatih.prayertime.domain.use_case.alarm_use_cases.GetAllGlobalAlarmsUseCase
 import com.fatih.prayertime.domain.use_case.alarm_use_cases.InsertGlobalAlarmUseCase
+import com.fatih.prayertime.domain.use_case.formatted_use_cases.FormattedUseCase
 import com.fatih.prayertime.domain.use_case.permission_use_case.PermissionsUseCase
 import com.fatih.prayertime.util.Constants.BASE_URL
 import com.google.android.gms.location.FusedLocationProviderClient
@@ -112,7 +113,7 @@ object Module {
 
     @Provides
     @Singleton
-    fun provideAlarmScheduler(@ApplicationContext context: Context,settingsDataStore: SettingsDataStore) = AlarmScheduler(context,settingsDataStore)
+    fun provideAlarmScheduler(@ApplicationContext context: Context,settingsDataStore: SettingsDataStore,formattedUseCase: FormattedUseCase) = AlarmScheduler(context,settingsDataStore,formattedUseCase)
 
     @Provides
     @Singleton

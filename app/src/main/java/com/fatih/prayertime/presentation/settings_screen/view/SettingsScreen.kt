@@ -42,7 +42,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -63,8 +62,8 @@ import com.fatih.prayertime.presentation.settings_screen.viewmodel.SettingsScree
 @Composable
 fun SettingsScreen(bottomPaddingValue : Dp) {
     val appViewModel : AppViewModel = hiltViewModel()
-    val showSelectedGlobalAlarmOffsetSelectionDialog = rememberSaveable { mutableStateOf(false) }
-    val selectedGlobalAlarm = rememberSaveable { mutableStateOf<GlobalAlarm?>(null) }
+    val showSelectedGlobalAlarmOffsetSelectionDialog = remember{ mutableStateOf(false) }
+    val selectedGlobalAlarm = remember { mutableStateOf<GlobalAlarm?>(null) }
     val uiSettings by appViewModel.settingsState.collectAsState()
     val scrollState = rememberScrollState()
     Box(modifier = Modifier.fillMaxSize(1f), contentAlignment = Alignment.Center){
@@ -188,7 +187,7 @@ fun PrayerNotificationSettings(prayerAlarms: List<GlobalAlarm>, onToggle: (Globa
 @Composable
 fun OffsetMinuteSelectionCompose(selectedGlobalAlarm: GlobalAlarm,closeDialog : () -> Unit) {
     val settingsViewModel : SettingsScreenViewModel = hiltViewModel()
-    var newAlarmOffset by rememberSaveable { mutableLongStateOf(selectedGlobalAlarm.alarmOffset) }
+    var newAlarmOffset by remember { mutableLongStateOf(selectedGlobalAlarm.alarmOffset) }
     val focusManager = LocalFocusManager.current
     Box(modifier = Modifier.fillMaxSize(1f).background(shape = RoundedCornerShape(20.dp), color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.07f)).clickable(enabled = false){}, contentAlignment = Alignment.Center){
         Box(modifier = Modifier.wrapContentSize().clip(RoundedCornerShape(10.dp)).background(MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.9f)).padding(12.dp), contentAlignment = Alignment.Center){

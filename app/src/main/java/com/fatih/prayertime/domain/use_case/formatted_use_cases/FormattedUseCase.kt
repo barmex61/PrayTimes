@@ -1,5 +1,6 @@
 package com.fatih.prayertime.domain.use_case.formatted_use_cases
 
+import org.threeten.bp.DayOfWeek
 import org.threeten.bp.Instant
 import org.threeten.bp.LocalDate
 import org.threeten.bp.LocalDateTime
@@ -26,6 +27,11 @@ class FormattedUseCase @Inject constructor() {
 
     fun formatOfPatternDDMM(localDate: LocalDate): String{
         return localDate.format(formatterDDMM)
+    }
+
+    fun isFriday(dateString: String): Boolean {
+        val dateTime = LocalDateTime.parse(dateString, formatterDDMMYYYYHHMMSS)
+        return dateTime.dayOfWeek == DayOfWeek.FRIDAY
     }
 
     fun formatOfPatternEEE(localDate: LocalDate): String{

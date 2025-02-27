@@ -253,10 +253,7 @@ class MainActivity : ComponentActivity() {
                 workInfoList.forEach { workInfo ->
                     Log.d(TAG, "WorkInfo ID: ${workInfo.id}")
                     Log.d(TAG, "State: ${workInfo.state}")
-                    Log.d(
-                        TAG,
-                        "Next Schedule Time: ${formattedUseCase.formatLongToLocalDateTime(workInfo.nextScheduleTimeMillis)}"
-                    )
+                    Log.d(TAG, "Next Schedule Time: ${formattedUseCase.formatLongToLocalDateTime(workInfo.nextScheduleTimeMillis)}")
                 }
             }
             val doubleBackToExit = remember { mutableStateOf(false) }

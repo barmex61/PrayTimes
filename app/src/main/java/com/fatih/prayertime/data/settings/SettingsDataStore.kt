@@ -19,15 +19,12 @@ import javax.inject.Inject
 class SettingsDataStore @Inject constructor(
     private val context: Context,
 ) {
-
     val settings : Flow<Settings>
         get() = context.dataStore.data.map { prefs ->
         val jsonString = prefs[SETTINGS_KEY]
         if (jsonString != null) {
-            println("not null")
             Json.decodeFromString<Settings>(jsonString)
         } else {
-            println("null")
             Settings()
         }
     }

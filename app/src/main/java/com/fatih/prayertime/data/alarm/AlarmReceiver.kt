@@ -21,7 +21,10 @@ class AlarmReceiver : BroadcastReceiver() {
         val alarmType = intent.getStringExtra("ALARM_TYPE") ?: "Bilinmeyen Alarm"
         val alarmMessage = intent.getStringExtra("ALARM_MESSAGE") ?: "Alarm Çaldı!"
         val enableVibration = intent.getBooleanExtra("ALARM_VIBRATION", true)
-        val alarmSoundUri = intent.getStringExtra("ALARM_SOUND_URI")?.toUri() ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
+        val isSilent = intent.getBooleanExtra("ALARM_IS_SILENT", false)
+        val alarmSoundUri =
+            if(isSilent) RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+            else intent.getStringExtra("ALARM_SOUND_URI")?.toUri() ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
         showNotification(context, alarmType, alarmMessage,enableVibration, alarmSoundUri)
     }
 
