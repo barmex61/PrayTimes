@@ -8,5 +8,4 @@ class UpdateGlobalAlarmUseCase @Inject constructor(private val alarmDatabaseRepo
 
     suspend operator fun invoke(globalAlarm: GlobalAlarm) = alarmDatabaseRepository.updateGlobalAlarm(globalAlarm)
 
-
 }
