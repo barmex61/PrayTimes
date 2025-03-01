@@ -1,5 +1,6 @@
 package com.fatih.prayertime.presentation.main_activity.view
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -9,8 +10,10 @@ import android.provider.Settings
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -42,6 +45,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
@@ -62,6 +66,8 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
+import androidx.navigation.NavDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -96,6 +102,7 @@ class MainActivity : ComponentActivity() {
 
     @Inject
     lateinit var scheduleDailyAlarmUpdateUseCase: ScheduleDailyAlarmUpdateUseCase
+    @SuppressLint("RestrictedApi")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -110,6 +117,7 @@ class MainActivity : ComponentActivity() {
             UpdateSystemBars(darkTheme)
             PrayerTimeTheme (darkTheme = darkTheme ){
                 val navController = rememberNavController()
+                var selectedItemIndex by rememberSaveable { mutableIntStateOf(0) }
                 val powerSavingState by appViewModel.powerSavingState.collectAsState()
                 val isLocationPermissionGranted by appViewModel.isLocationPermissionGranted.collectAsState()
                 var isCalculating by remember { mutableStateOf(true) }
@@ -159,7 +167,6 @@ class MainActivity : ComponentActivity() {
                             modifier = Modifier.clip(RoundedCornerShape(30.dp)),
                             tonalElevation = 10.dp,
                         ) {
-                            var selectedItemIndex by rememberSaveable { mutableIntStateOf(0) }
                             screens.filterIndexed { index, _ -> index <=3 }.forEachIndexed { index, item ->
                                 NavigationBarItem(
                                     icon = {
@@ -194,15 +201,13 @@ class MainActivity : ComponentActivity() {
                                         val currentScreen = navController.currentBackStackEntry?.destination?.route
 
                                         if (currentScreen != item.title) {
-                                            navController.navigate(item.title) {
-                                                println(item.title)
+                                            navController.navigate(item.route) {
                                                 popUpTo(navController.graph.startDestinationId) {
-                                                    inclusive = false
                                                     saveState = false
                                                 }
-
                                                 launchSingleTop = true
-                                                restoreState = false // Ekran state'ini saklama, her seferinde baştan oluştur
+                                                restoreState = false
+                                                navController.popBackStack()
                                             }
                                         }
                                     }
@@ -231,7 +236,7 @@ class MainActivity : ComponentActivity() {
                         ) {
                             screens.forEach { item ->
                                 composable(
-                                    route = item.title,
+                                    route = item.route,
                                 ) {
                                     when (item.title) {
                                         "Home" -> {
@@ -258,6 +263,19 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                 }
+                DisposableEffect (key1 = Unit){
+                    val listener = NavController.OnDestinationChangedListener { controller, destination, arguments ->
+                        Log.d(TAG, "Route: ${destination.route}")
+                        Log.d(TAG, "BackStackEntryCount: ${controller.currentBackStack.value.size}")
+                        val selectedIndex = screens.indexOfFirst { it.route == destination.route }
+                        if (selectedIndex in 0..3) selectedItemIndex = selectedIndex
+                    }
+                    navController.addOnDestinationChangedListener(listener)
+                    onDispose {
+                        navController.removeOnDestinationChangedListener(listener)
+                    }
+
+                }
             }
 
             val workInfos =
@@ -275,7 +293,9 @@ class MainActivity : ComponentActivity() {
             }
             val doubleBackToExit = remember { mutableStateOf(false) }
             val context = LocalContext.current
-            BackHandler(true) {
+
+            BackHandler {
+                println("back")
                 if (doubleBackToExit.value) {
                     finish()
                 } else {
@@ -301,6 +321,7 @@ class MainActivity : ComponentActivity() {
             .show()
     }
 }
+
 @Composable
 fun ComponentActivity.UpdateSystemBars(isDarkMode: Boolean) {
     val statusBarStyle = if (isDarkMode) {

@@ -64,3 +64,10 @@ enum class ResourceType{
     PAINTER
 }
 
+data class ScreenData(
+    val title: String,
+    val iconResourceType : ResourceType,
+    val iconRoute: Int = 0,
+    val route: String
+)
+

@@ -49,7 +49,6 @@ object Constants {
             iconRoute = R.drawable.compass_icon,
             route = "qibla",
             iconResourceType = ResourceType.PAINTER
-
         ),
         ScreenData(
             title = "Utilities",
@@ -60,7 +59,7 @@ object Constants {
         ScreenData(
             title = "Settings",
             iconRoute = R.drawable.settings_icon,
-            route = "contact",
+            route = "settings",
             iconResourceType = ResourceType.VECTOR
         ),
         ScreenData(
