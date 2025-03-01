@@ -1,7 +1,6 @@
 package com.fatih.prayertime.presentation.main_activity.view
 
 import android.content.Intent
-import android.graphics.drawable.VectorDrawable
 import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
@@ -17,42 +16,23 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
-import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.LinearOutSlowInEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Canvas
+
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
+
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
-import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
-import androidx.compose.foundation.lazy.staggeredgrid.items
+
 
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.input.then
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Face
+
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.HorizontalDivider
+
 
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -71,18 +51,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 
 import androidx.compose.ui.res.vectorResource
-import androidx.compose.ui.semantics.text
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -91,25 +67,21 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
-import com.fatih.prayertime.R
 import com.fatih.prayertime.domain.model.ThemeOption
 import com.fatih.prayertime.domain.use_case.alarm_use_cases.ScheduleDailyAlarmUpdateUseCase
 import com.fatih.prayertime.domain.use_case.formatted_use_cases.FormattedUseCase
+import com.fatih.prayertime.presentation.calendar_screen.view.CalendarScreen
 import com.fatih.prayertime.presentation.compass_screen.view.CompassScreen
 import com.fatih.prayertime.presentation.main_activity.viewmodel.AppViewModel
 import com.fatih.prayertime.presentation.main_screen.view.MainScreen
-import com.fatih.prayertime.presentation.quran_screen.view.QuranScreen
+import com.fatih.prayertime.presentation.quran_screen.view.EsmaulHusnaScreen
 import com.fatih.prayertime.presentation.settings_screen.view.SettingsScreen
-import com.fatih.prayertime.presentation.settings_screen.view.SwitchSettingItem
 import com.fatih.prayertime.presentation.ui.theme.PrayerTimeTheme
 import com.fatih.prayertime.presentation.util_screen.view.UtilitiesScreen
-import com.fatih.prayertime.util.BottomNavigationItem
+import com.fatih.prayertime.util.Constants.screens
+import com.fatih.prayertime.util.ResourceType
 import dagger.hilt.android.AndroidEntryPoint
-import java.util.Random
 import javax.inject.Inject
-import kotlin.math.PI
-import kotlin.math.cos
-import kotlin.math.sin
 
 
 @AndroidEntryPoint
@@ -138,7 +110,6 @@ class MainActivity : ComponentActivity() {
             UpdateSystemBars(darkTheme)
             PrayerTimeTheme (darkTheme = darkTheme ){
                 val navController = rememberNavController()
-                val bottomNavItems = bottomNavItems()
                 val powerSavingState by appViewModel.powerSavingState.collectAsState()
                 val isLocationPermissionGranted by appViewModel.isLocationPermissionGranted.collectAsState()
                 var isCalculating by remember { mutableStateOf(true) }
@@ -148,7 +119,10 @@ class MainActivity : ComponentActivity() {
                         isCalculating = false
                     }
                 val resultLauncher =
-                    rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { appViewModel.checkLocationPermission() }
+                    rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+                        appViewModel.checkLocationPermission()
+                        appViewModel.checkPowerSavingMode()
+                    }
 
                 LaunchedEffect(key1 = Unit) {
                     appViewModel.checkLocationPermission()
@@ -186,19 +160,20 @@ class MainActivity : ComponentActivity() {
                             tonalElevation = 10.dp,
                         ) {
                             var selectedItemIndex by rememberSaveable { mutableIntStateOf(0) }
-                            bottomNavItems.forEachIndexed { index, item ->
+                            screens.filterIndexed { index, _ -> index <=3 }.forEachIndexed { index, item ->
                                 NavigationBarItem(
                                     icon = {
                                         when (item.iconResourceType) {
                                             ResourceType.VECTOR -> Icon(
                                                 ImageVector.vectorResource(id = item.iconRoute),
-                                                contentDescription = item.title
+                                                contentDescription = item.title,
+                                                modifier = Modifier.size(24.dp)
                                             )
 
                                             ResourceType.PAINTER -> Icon(
                                                 painterResource(id = item.iconRoute),
                                                 contentDescription = item.title,
-                                                modifier = Modifier.size(32.dp)
+                                                modifier = Modifier.size(24.dp)
                                             )
 
                                         }
@@ -252,9 +227,9 @@ class MainActivity : ComponentActivity() {
                         }
                         NavHost(
                             navController = navController,
-                            startDestination = bottomNavItems.first().title
+                            startDestination = screens.first().title
                         ) {
-                            bottomNavItems.forEach { item ->
+                            screens.forEach { item ->
                                 composable(
                                     route = item.title,
                                 ) {
@@ -262,21 +237,20 @@ class MainActivity : ComponentActivity() {
                                         "Home" -> {
                                             MainScreen(appViewModel,innerPadding.calculateBottomPadding() - 5.dp)
                                         }
-
                                         "Qibla" -> {
                                             CompassScreen(innerPadding.calculateBottomPadding() - 5.dp)
                                         }
-
                                         "Utilities" -> {
-                                            UtilitiesScreen(innerPadding.calculateBottomPadding() - 5.dp)
+                                            UtilitiesScreen(innerPadding.calculateBottomPadding() - 5.dp,navController)
                                         }
-
-                                        "Quran" -> {
-                                            QuranScreen(innerPadding.calculateBottomPadding() - 5.dp)
-                                        }
-
                                         "Settings" -> {
                                             SettingsScreen(innerPadding.calculateBottomPadding() - 5.dp)
+                                        }
+                                        "Esmaul Husna" -> {
+                                            EsmaulHusnaScreen(innerPadding.calculateBottomPadding() - 5.dp)
+                                        }
+                                        "Islamic Calendar" -> {
+                                            CalendarScreen(innerPadding.calculateBottomPadding() - 5.dp)
                                         }
                                     }
                                 }
@@ -345,55 +319,11 @@ fun ComponentActivity.UpdateSystemBars(isDarkMode: Boolean) {
         )
     }
 }
-@Composable
-fun bottomNavItems() = listOf(
-    BottomNavigationItem(
-        title = "Home",
-        iconRoute =R.drawable.mosque_icon,
-        route = "home",
-        iconResourceType = ResourceType.VECTOR
-    ),
-    BottomNavigationItem(
-        title = "Qibla",
-        iconRoute = R.drawable.compass_icon,
-        route = "qibla",
-        iconResourceType = ResourceType.VECTOR
-
-    ),
-    BottomNavigationItem(
-        title = "Utilities",
-        iconRoute = R.drawable.settings_icon,
-        route = "utilities",
-        iconResourceType = ResourceType.VECTOR
-
-    ),
-    BottomNavigationItem(
-        title = "Quran",
-        iconRoute = R.drawable.quran,
-        route = "quran",
-        iconResourceType = ResourceType.PAINTER
-    ),
-    BottomNavigationItem(
-        title = "Settings",
-        iconRoute = R.drawable.settings_icon,
-        route = "contact",
-        iconResourceType = ResourceType.VECTOR
-
-    )
-)
-
-enum class ResourceType{
-    VECTOR,
-    PAINTER
-}
-
-data class Item(val id: Int, val text: String)
-
 
 @Preview(showBackground = true)
 @Composable
 fun GreetingPreview() {
-    PrayerTimeTheme() {
+    PrayerTimeTheme(darkTheme = true) {
 
     }
 

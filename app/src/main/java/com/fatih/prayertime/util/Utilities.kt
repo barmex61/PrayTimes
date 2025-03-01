@@ -57,3 +57,10 @@ fun getAlarmTimeForPrayTimes(dailyPrayTimes : PrayTimes,alarmType : String,alarm
 }
 
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings_prefs")
+
+
+enum class ResourceType{
+    VECTOR,
+    PAINTER
+}
+
