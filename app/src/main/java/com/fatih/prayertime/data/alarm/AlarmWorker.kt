@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
+import com.fatih.prayertime.data.dependency_injection.WorkerLocation
 import com.fatih.prayertime.domain.model.Address
 import com.fatih.prayertime.domain.model.GlobalAlarm
 import com.fatih.prayertime.domain.model.PrayTimes
@@ -34,7 +35,7 @@ import org.threeten.bp.LocalDate
 class AlarmWorker @AssistedInject constructor(
     @Assisted context: Context,
     @Assisted workerParams: WorkerParameters,
-    private val getLocationAndAddressUseCase: GetLocationAndAddressUseCase,
+    @WorkerLocation private val getLocationAndAddressUseCase: GetLocationAndAddressUseCase,
     private val getLastKnowAddressFromDatabaseUseCase: GetLastKnowAddressFromDatabaseUseCase,
     private val formattedUseCase: FormattedUseCase,
     private val getAllGlobalAlarmsUseCase: GetAllGlobalAlarmsUseCase,
@@ -89,20 +90,20 @@ class AlarmWorker @AssistedInject constructor(
             val newGlobalAlarms = globalAlarms.map { alarm ->
                 if (alarm.isEnabled){
                     //Alarm enabled
-                    val prayTimes = getDailyPrayTimesWithAddressAndDateUseCase(lastKnownAddress,localDateString).first() ?: return@map alarm
+                    val prayTimes = getDailyPrayTimesWithAddressAndDateUseCase(lastKnownAddress,localDateString)?: return@map alarm
                     val alarmTime = getAlarmTimeForPrayTimes(prayTimes, alarm.alarmType, alarm.alarmOffset,formattedUseCase)
                     val alarmTimeInMillis = formattedUseCase.formatHHMMtoLong(alarmTime)
                     if (currentTimeInMillis > alarmTimeInMillis){
                         //Current time is greater than alarm time
                         val nextDayString = formattedUseCase.formatOfPatternDDMMYYYY(localDateNow.plusDays(1))
-                        val nextDayPrayTimes = getDailyPrayTimesWithAddressAndDateUseCase(lastKnownAddress, nextDayString).first()
+                        val nextDayPrayTimes = getDailyPrayTimesWithAddressAndDateUseCase(lastKnownAddress, nextDayString)
                         if (nextDayPrayTimes == null){
                             //Next day pray times is null
                             val nextDayLocalDate = formattedUseCase.formatDDMMYYYYDateToLocalDate(nextDayString)
                             val apiResponse = getMonthlyPrayTimesFromApiUseCase(nextDayLocalDate.year, nextDayLocalDate.monthValue, lastKnownAddress)
                             if (apiResponse.status == Status.SUCCESS){
                                 insetPrayTimeIntoDbUseCase.insertPrayTimeList(apiResponse.data!!)
-                                val updatedNextPrayTime = getDailyPrayTimesWithAddressAndDateUseCase(lastKnownAddress, nextDayString).first()
+                                val updatedNextPrayTime = getDailyPrayTimesWithAddressAndDateUseCase(lastKnownAddress, nextDayString)
                                 if (updatedNextPrayTime == null) return@map alarm
                                 else setGlobalAlarm(alarm, updatedNextPrayTime, nextDayString)
                             }else{

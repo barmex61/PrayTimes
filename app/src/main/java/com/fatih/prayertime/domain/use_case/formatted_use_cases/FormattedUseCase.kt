@@ -13,6 +13,7 @@ import javax.inject.Inject
 class FormattedUseCase @Inject constructor() {
 
     private val formatterDDMMYYYY = DateTimeFormatter.ofPattern("dd-MM-yyyy", Locale.getDefault())
+    private val formatterMMYYYY = DateTimeFormatter.ofPattern("MM-yyyy", Locale.getDefault())
     private val formatterDDMM = DateTimeFormatter.ofPattern("dd-MM", Locale.getDefault())
     private val formatterEEE =  DateTimeFormatter.ofPattern("d MMM, EEE", Locale.getDefault())
     private val formatterEEEE = DateTimeFormatter.ofPattern("EEEE", Locale.getDefault())
@@ -21,12 +22,12 @@ class FormattedUseCase @Inject constructor() {
     private val formatterHHMMSS = DateTimeFormatter.ofPattern("HH:mm:ss", Locale.getDefault())
     private val formatterDDMMYYYYHHMMSS = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss", Locale.getDefault())
 
-    fun formatOfPatternDDMMYYYY(localDate: LocalDate): String {
-        return localDate.format(formatterDDMMYYYY)
+    fun formatLocalDateToMMYYYY(localDate: LocalDate): String {
+        return localDate.format(formatterMMYYYY)
     }
 
-    fun formatOfPatternDDMM(localDate: LocalDate): String{
-        return localDate.format(formatterDDMM)
+    fun formatOfPatternDDMMYYYY(localDate: LocalDate): String {
+        return localDate.format(formatterDDMMYYYY)
     }
 
     fun isFriday(dateString: String): Boolean {
@@ -48,10 +49,6 @@ class FormattedUseCase @Inject constructor() {
 
     fun formatDDMMYYYYDateToLocalDate(date: String): LocalDate {
         return LocalDate.parse(date, formatterDDMMYYYY)
-    }
-
-    fun formatHHMMSStoLong(time: String): Long {
-        return LocalTime.parse(time, formatterHHMMSS).atDate(LocalDate.now()).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
     }
 
     fun formatHHMMtoLong(time: String): Long {

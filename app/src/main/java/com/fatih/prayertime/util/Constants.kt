@@ -7,7 +7,7 @@ import com.fatih.prayertime.domain.model.EsmaulHusna
 object Constants {
     const val BASE_URL = "https://api.aladhan.com/v1/"
     const val TUNE = "0,-0,-7,7,6,7,7,0,0"
-    val methods = hashMapOf(
+    val prayApiMethods = hashMapOf(
         "Jafari / Shia Ithna-Ashari" to 0,
         "University of Islamic Sciences, Karachi" to 1,
         "Islamic Society of North America" to 2,
@@ -32,6 +32,8 @@ object Constants {
         "Comunidade Islamica de Lisboa" to 22,
         "Ministry of Awqaf, Islamic Affairs and Holy Places, Jordan" to 23
     )
+    val islamicCalendarMethods = listOf("DIYANET","HJCoSA","UAQ","MATHEMATICAL")
+    val selectedIslamicCalendarMethod = islamicCalendarMethods[0]
     var esmaulHusnaList: List<EsmaulHusna> = emptyList()
     val SETTINGS_KEY = stringPreferencesKey("settings_json")
 

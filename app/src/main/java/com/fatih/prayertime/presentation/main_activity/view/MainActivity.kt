@@ -1,6 +1,7 @@
 package com.fatih.prayertime.presentation.main_activity.view
 
 import android.content.Intent
+import android.graphics.drawable.VectorDrawable
 import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
@@ -16,18 +17,35 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.LinearOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
+import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
+import androidx.compose.foundation.lazy.staggeredgrid.items
 
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.input.then
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Face
 import androidx.compose.material3.BottomAppBar
@@ -53,13 +71,18 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.semantics.text
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -75,12 +98,18 @@ import com.fatih.prayertime.domain.use_case.formatted_use_cases.FormattedUseCase
 import com.fatih.prayertime.presentation.compass_screen.view.CompassScreen
 import com.fatih.prayertime.presentation.main_activity.viewmodel.AppViewModel
 import com.fatih.prayertime.presentation.main_screen.view.MainScreen
+import com.fatih.prayertime.presentation.quran_screen.view.QuranScreen
 import com.fatih.prayertime.presentation.settings_screen.view.SettingsScreen
 import com.fatih.prayertime.presentation.settings_screen.view.SwitchSettingItem
 import com.fatih.prayertime.presentation.ui.theme.PrayerTimeTheme
+import com.fatih.prayertime.presentation.util_screen.view.UtilitiesScreen
 import com.fatih.prayertime.util.BottomNavigationItem
 import dagger.hilt.android.AndroidEntryPoint
+import java.util.Random
 import javax.inject.Inject
+import kotlin.math.PI
+import kotlin.math.cos
+import kotlin.math.sin
 
 
 @AndroidEntryPoint
@@ -159,7 +188,21 @@ class MainActivity : ComponentActivity() {
                             var selectedItemIndex by rememberSaveable { mutableIntStateOf(0) }
                             bottomNavItems.forEachIndexed { index, item ->
                                 NavigationBarItem(
-                                    icon = { Icon(item.icon, contentDescription = item.title) },
+                                    icon = {
+                                        when (item.iconResourceType) {
+                                            ResourceType.VECTOR -> Icon(
+                                                ImageVector.vectorResource(id = item.iconRoute),
+                                                contentDescription = item.title
+                                            )
+
+                                            ResourceType.PAINTER -> Icon(
+                                                painterResource(id = item.iconRoute),
+                                                contentDescription = item.title,
+                                                modifier = Modifier.size(32.dp)
+                                            )
+
+                                        }
+                                    },
                                     label = { Text(item.title) },
                                     selected = selectedItemIndex == index,
                                     colors = NavigationBarItemColors(
@@ -177,6 +220,7 @@ class MainActivity : ComponentActivity() {
 
                                         if (currentScreen != item.title) {
                                             navController.navigate(item.title) {
+                                                println(item.title)
                                                 popUpTo(navController.graph.startDestinationId) {
                                                     inclusive = false
                                                     saveState = false
@@ -196,12 +240,11 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier
                             .padding(
                                 15.dp,
-                                top = innerPadding.calculateTopPadding() ,
+                                top = innerPadding.calculateTopPadding(),
                                 15.dp,
                                 0.dp
                             )
-                            .background(MaterialTheme.colorScheme.background)
-                        ,
+                            .background(MaterialTheme.colorScheme.background),
                     )
                     {
                         if (powerSavingState == true) {
@@ -217,23 +260,23 @@ class MainActivity : ComponentActivity() {
                                 ) {
                                     when (item.title) {
                                         "Home" -> {
-                                            MainScreen(appViewModel,innerPadding.calculateBottomPadding())
+                                            MainScreen(appViewModel,innerPadding.calculateBottomPadding() - 5.dp)
                                         }
 
                                         "Qibla" -> {
-                                            CompassScreen(innerPadding.calculateBottomPadding())
+                                            CompassScreen(innerPadding.calculateBottomPadding() - 5.dp)
                                         }
 
-                                        "Profile" -> {
-                                            //ProfileScreen()
+                                        "Utilities" -> {
+                                            UtilitiesScreen(innerPadding.calculateBottomPadding() - 5.dp)
                                         }
 
-                                        "About" -> {
-                                            //AboutScreen()
+                                        "Quran" -> {
+                                            QuranScreen(innerPadding.calculateBottomPadding() - 5.dp)
                                         }
 
                                         "Settings" -> {
-                                            SettingsScreen(innerPadding.calculateBottomPadding())
+                                            SettingsScreen(innerPadding.calculateBottomPadding() - 5.dp)
                                         }
                                     }
                                 }
@@ -275,7 +318,7 @@ class MainActivity : ComponentActivity() {
     private fun showBatteryOptimizationDialog() {
         AlertDialog.Builder(this)
             .setTitle("MIUI Battery Optimization")
-            .setMessage("Xiaomi model telefonlarda bildirimlerin düzgün çalışabilmesi için arkaplandaki kısıtlamaları iptal etmeniz gerekmektedir.Ayarlardan arkaplanda pil tasarrufunu devre dışı bırakın. ")
+            .setMessage("In order for notifications to work properly on Xiaomi model phones, you need to cancel the background restrictions. Disable background battery saving from settings. ")
             .setPositiveButton("Settings") { _, _ ->
                 val intent = Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
                 startActivity(intent)
@@ -306,30 +349,46 @@ fun ComponentActivity.UpdateSystemBars(isDarkMode: Boolean) {
 fun bottomNavItems() = listOf(
     BottomNavigationItem(
         title = "Home",
-        icon = ImageVector.vectorResource(id = R.drawable.mosque_icon),
-        route = "home"
+        iconRoute =R.drawable.mosque_icon,
+        route = "home",
+        iconResourceType = ResourceType.VECTOR
     ),
     BottomNavigationItem(
         title = "Qibla",
-        icon = ImageVector.vectorResource(id = R.drawable.compass_icon),
-        route = "qibla"
+        iconRoute = R.drawable.compass_icon,
+        route = "qibla",
+        iconResourceType = ResourceType.VECTOR
+
     ),
     BottomNavigationItem(
-        title = "Profile",
-        icon = Icons.Outlined.Face,
-        route = "profile"
+        title = "Utilities",
+        iconRoute = R.drawable.settings_icon,
+        route = "utilities",
+        iconResourceType = ResourceType.VECTOR
+
     ),
     BottomNavigationItem(
-        title = "About",
-        icon = Icons.Outlined.Face,
-        route = "about"
+        title = "Quran",
+        iconRoute = R.drawable.quran,
+        route = "quran",
+        iconResourceType = ResourceType.PAINTER
     ),
     BottomNavigationItem(
         title = "Settings",
-        icon = ImageVector.vectorResource(id = R.drawable.settings_icon),
-        route = "contact"
+        iconRoute = R.drawable.settings_icon,
+        route = "contact",
+        iconResourceType = ResourceType.VECTOR
+
     )
 )
+
+enum class ResourceType{
+    VECTOR,
+    PAINTER
+}
+
+data class Item(val id: Int, val text: String)
+
 
 @Preview(showBackground = true)
 @Composable

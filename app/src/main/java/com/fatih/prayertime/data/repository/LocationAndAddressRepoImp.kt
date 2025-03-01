@@ -64,6 +64,7 @@ class LocationAndAddressRepoImp @Inject constructor(
     }
 
     override suspend fun getLocationAndAddressInformation(): Flow<Resource<Address>> = callbackFlow<Resource<Address>> {
+        println()
         if (locationCallback == null){
             locationCallback = object : LocationCallback() {
                 override fun onLocationResult(locationResult: LocationResult) {
@@ -89,6 +90,7 @@ class LocationAndAddressRepoImp @Inject constructor(
             }
         }
         try {
+
             fusedLocationProviderClient.removeLocationUpdates(locationCallback!!)
             fusedLocationProviderClient.requestLocationUpdates(
                 locationRequest,

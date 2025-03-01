@@ -25,7 +25,7 @@ interface PrayDao {
     AND (district = :district OR (district IS NULL AND :district IS NULL))
     AND date = :date
 """)
-    fun getPrayTimesWithAddressAndDate(country: String?, district: String?, city: String?, date: String): Flow<PrayTimes?>
+    fun getPrayTimesWithAddressAndDate(country: String?, district: String?, city: String?, date: String):PrayTimes?
 
     @Query("SELECT * FROM PrayTimes ORDER BY createdAt DESC LIMIT 1")
     suspend fun getLastInsertedPrayTime() : PrayTimes?

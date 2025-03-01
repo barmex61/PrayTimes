@@ -387,6 +387,7 @@ fun PrayNotificationCompose(
                                     .padding(vertical = 10.dp)
                                     .clip(RoundedCornerShape(10.dp))
                                     .clickable {
+                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                         if (isNotificationPermissionGranted) {
                                             if (globalAlarm.isEnabled){
                                                 mainScreenViewModel.updateGlobalAlarm(

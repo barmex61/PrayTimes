@@ -22,7 +22,7 @@ class PrayDatabaseRepositoryImp @Inject constructor(private val prayDao: PrayDao
     override suspend fun getDailyPrayTimesWithAddressAndDate(
         address: Address,
         date: String
-    ): Flow<PrayTimes?> {
+    ): PrayTimes? {
         val country = address.country
         val district = address.district
         val city = address.city

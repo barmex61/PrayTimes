@@ -2,9 +2,7 @@ package com.fatih.prayertime.data.dependency_injection
 
 import android.content.Context
 import android.location.Geocoder
-import androidx.hilt.work.HiltWorkerFactory
 import androidx.room.Room
-import androidx.work.WorkerFactory
 import com.fatih.prayertime.data.local.dao.GlobalAlarmDao
 import com.fatih.prayertime.data.local.dao.PrayDao
 import com.fatih.prayertime.data.local.database.GlobalAlarmDatabase
@@ -22,12 +20,14 @@ import com.fatih.prayertime.domain.repository.LocationAndAddressRepository
 import com.fatih.prayertime.domain.repository.PrayApiRepository
 import com.fatih.prayertime.domain.repository.PrayDatabaseRepository
 import com.fatih.prayertime.data.alarm.AlarmScheduler
+import com.fatih.prayertime.data.remote.IslamicCalendarApi
+import com.fatih.prayertime.data.repository.IslamicCalendarRepositoryImp
 import com.fatih.prayertime.data.repository.SettingsRepositoryImp
 import com.fatih.prayertime.data.settings.SettingsDataStore
+import com.fatih.prayertime.domain.repository.IslamicCalendarRepository
 import com.fatih.prayertime.domain.repository.SettingsRepository
-import com.fatih.prayertime.domain.use_case.alarm_use_cases.GetAllGlobalAlarmsUseCase
-import com.fatih.prayertime.domain.use_case.alarm_use_cases.InsertGlobalAlarmUseCase
 import com.fatih.prayertime.domain.use_case.formatted_use_cases.FormattedUseCase
+import com.fatih.prayertime.domain.use_case.location_use_cases.GetLocationAndAddressUseCase
 import com.fatih.prayertime.domain.use_case.permission_use_case.PermissionsUseCase
 import com.fatih.prayertime.util.Constants.BASE_URL
 import com.google.android.gms.location.FusedLocationProviderClient
@@ -42,7 +42,7 @@ import dagger.hilt.components.SingletonComponent
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.Locale
-import javax.inject.Provider
+import javax.inject.Qualifier
 import javax.inject.Singleton
 
 @InstallIn(SingletonComponent::class)
@@ -74,14 +74,6 @@ object Module {
     fun provideLocationRequest() : LocationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 30000).apply {
         setMinUpdateDistanceMeters(1000f)
     }.build()
-
-    @Provides
-    @Singleton
-    fun provideLocationAndAddressRepository(
-        fusedLocationProviderClient: FusedLocationProviderClient,
-        locationRequest: LocationRequest,
-        geocoder: Geocoder
-    ) : LocationAndAddressRepository = LocationAndAddressRepoImp(fusedLocationProviderClient,locationRequest,geocoder)
 
     @Provides
     @Singleton
@@ -136,4 +128,59 @@ object Module {
         settingsDataStore: SettingsDataStore
     ): SettingsRepository = SettingsRepositoryImp(settingsDataStore)
 
+    @MainScreenLocation
+    @Provides
+    @Singleton
+    fun provideActivityLocationAndAddressRepository(
+        fusedLocationProviderClient: FusedLocationProviderClient,
+        locationRequest: LocationRequest,
+        geocoder: Geocoder
+    ): LocationAndAddressRepository = LocationAndAddressRepoImp(fusedLocationProviderClient, locationRequest, geocoder)
+
+    @WorkerLocation
+    @Provides
+    @Singleton
+    fun provideWorkerLocationAndAddressRepository(
+        fusedLocationProviderClient: FusedLocationProviderClient,
+        locationRequest: LocationRequest,
+        geocoder: Geocoder
+    ): LocationAndAddressRepository = LocationAndAddressRepoImp(fusedLocationProviderClient, locationRequest, geocoder)
+
+    @MainScreenLocation
+    @Provides
+    @Singleton
+    fun provideActivityGetLocationAndAddressUseCase(
+        @MainScreenLocation locationAndAddressRepository: LocationAndAddressRepository
+    ): GetLocationAndAddressUseCase = GetLocationAndAddressUseCase(locationAndAddressRepository)
+
+    @WorkerLocation
+    @Provides
+    @Singleton
+    fun provideWorkerGetLocationAndAddressUseCase(
+        @WorkerLocation locationAndAddressRepository: LocationAndAddressRepository
+    ): GetLocationAndAddressUseCase = GetLocationAndAddressUseCase(locationAndAddressRepository)
+
+    @Provides
+    @Singleton
+    fun provideLocationAndAddressRepository(
+        fusedLocationProviderClient: FusedLocationProviderClient,
+        locationRequest: LocationRequest,
+        geocoder: Geocoder
+    ): LocationAndAddressRepository = LocationAndAddressRepoImp(fusedLocationProviderClient, locationRequest, geocoder)
+
+    @Provides
+    @Singleton
+    fun provideIslamicCalendarApi() : IslamicCalendarApi = Retrofit.Builder().baseUrl(BASE_URL).addConverterFactory(GsonConverterFactory.create()).build().create(IslamicCalendarApi::class.java)
+
+    @Provides
+    @Singleton
+    fun provideIslamicCalendarRepository(islamicCalendarApi: IslamicCalendarApi) : IslamicCalendarRepository = IslamicCalendarRepositoryImp(islamicCalendarApi)
 }
+
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class MainScreenLocation
+
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class WorkerLocation

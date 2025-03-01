@@ -17,7 +17,7 @@ interface PrayDatabaseRepository {
     suspend fun getDailyPrayTimesWithAddressAndDate(
         address: Address,
         date: String
-    ) : Flow<PrayTimes?>
+    ) : PrayTimes?
 
     suspend fun getCurrentLocationPair() : Flow<LocationPair>
 

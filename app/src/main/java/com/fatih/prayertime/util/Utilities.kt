@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.pm.ActivityInfo
 import android.content.res.AssetManager
 import android.graphics.drawable.GradientDrawable.Orientation
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.platform.LocalContext
@@ -18,17 +19,6 @@ import com.fatih.prayertime.domain.model.PrayTimes
 import com.fatih.prayertime.domain.use_case.formatted_use_cases.FormattedUseCase
 import org.json.JSONArray
 
-@Composable
-fun LockScreenOrientation(orientation: Int){
-    val context = LocalContext.current
-    val activity = (context as? Activity)
-    DisposableEffect (key1 = Unit){
-        activity?.requestedOrientation = orientation
-        onDispose {
-            activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
-        }
-    }
-}
 
 fun getJsonFromAssets(fileName: String,application: Application): String {
     val assetManager: AssetManager = application.assets

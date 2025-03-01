@@ -76,7 +76,7 @@ class MyWidgetProvider() : AppWidgetProvider() {
         val searchDateString = formattedUseCase.formatOfPatternDDMMYYYY(localDateNow.toLocalDate())
 
         val address = getLastKnowAddressFromDatabaseUseCase()
-        val prayTimes = if (address != null) getDailyPrayTimesWithAddressAndDateUseCase(address, searchDateString).first() else null
+        val prayTimes = if (address != null) getDailyPrayTimesWithAddressAndDateUseCase(address, searchDateString) else null
         val prayTimesList = prayTimes?.toList()?.map { it.second } ?: listOf()
         val nextPrayTime = prayTimesList.firstOrNull { it.convertTimeToSeconds() > formattedTimeString.convertTimeToSeconds() }
         val timeDifference = nextPrayTime?.convertTimeToSeconds()?.minus(formattedTimeString.convertTimeToSeconds()) ?: 0
