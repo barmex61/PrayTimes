@@ -60,8 +60,8 @@ class AlarmScheduler @Inject constructor(
     }
 
     fun update(alarm: GlobalAlarm){
-        if(alarm.isEnabled ){
-            if(alarm.alarmTime > System.currentTimeMillis()) schedule(alarm)
+        if(alarm.isEnabled && alarm.alarmType == PrayTimesString.Morning.name){
+            schedule(alarm)
         }else{
             cancel(alarm)
         }

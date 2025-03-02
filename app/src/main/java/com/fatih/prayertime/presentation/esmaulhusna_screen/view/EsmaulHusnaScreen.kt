@@ -82,7 +82,6 @@ fun EsmaulHusnaCard(esmaulHusna: EsmaulHusna) {
         elevation = CardDefaults.cardElevation(8.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
         modifier = Modifier
-            .animateContentSize(tween(1000))
             .padding(bottom = 15.dp, top = 5.dp,start = 10.dp, end = 10.dp)
             .graphicsLayer {
                 translationX = translation.value.dp.toPx()
@@ -96,7 +95,8 @@ fun EsmaulHusnaCard(esmaulHusna: EsmaulHusna) {
 
     ) {
         Column(
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.padding(16.dp).animateContentSize(tween(1000))
+
         ) {
             Text(
                 textAlign = TextAlign.Center,

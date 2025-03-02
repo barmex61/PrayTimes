@@ -21,8 +21,6 @@ class MyApplication : Application() ,Configuration.Provider{
     override fun onCreate() {
         AndroidThreeTen.init(this)
         loadEsmaulHusnaList()
-        deleteDatabase("global_alarm")
-        deleteDatabase("pray_database ")
         super.onCreate()
     }
 

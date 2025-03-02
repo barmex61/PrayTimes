@@ -41,6 +41,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
@@ -49,6 +50,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -58,13 +61,19 @@ import androidx.compose.material.icons.outlined.Face
 import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Divider
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchColors
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -95,6 +104,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.exyte.animatednavbar.utils.noRippleClickable
 import com.fatih.prayertime.R
@@ -102,6 +112,8 @@ import com.fatih.prayertime.domain.model.GlobalAlarm
 import com.fatih.prayertime.domain.model.PrayTimes
 import com.fatih.prayertime.presentation.main_activity.viewmodel.AppViewModel
 import com.fatih.prayertime.presentation.main_screen.viewmodel.MainScreenViewModel
+import com.fatih.prayertime.util.ErrorView
+import com.fatih.prayertime.util.LoadingView
 import com.fatih.prayertime.util.NetworkState
 import com.fatih.prayertime.util.Status
 import com.fatih.prayertime.util.convertTimeToSeconds
@@ -121,11 +133,11 @@ import kotlin.math.sin
 @Composable
 fun MainScreen(appViewModel: AppViewModel,bottomPaddingValue : Dp) {
     val mainScreenViewModel : MainScreenViewModel = hiltViewModel()
+    var showAlarmDialog by remember { mutableStateOf(false) }
     val scrollState = rememberScrollState()
     GetLocationInformation(mainScreenViewModel,appViewModel)
     var isVisible by remember { mutableStateOf(false) }
     val haptic = LocalHapticFeedback.current
-
     LaunchedEffect(Unit){
         isVisible = true
     }
@@ -158,7 +170,9 @@ fun MainScreen(appViewModel: AppViewModel,bottomPaddingValue : Dp) {
             } + fadeIn(),
             exit = slideOutHorizontally(tween(500)) + fadeOut()
         ){
-            PrayNotificationCompose(mainScreenViewModel,appViewModel,haptic)
+            PrayNotificationCompose(mainScreenViewModel,appViewModel,haptic){
+                showAlarmDialog = true
+            }
         }
         AnimatedVisibility(
             visible = isVisible,
@@ -171,7 +185,90 @@ fun MainScreen(appViewModel: AppViewModel,bottomPaddingValue : Dp) {
             modifier = Modifier.height(25.dp + bottomPaddingValue)
         )
     }
+    AnimatedVisibility(
+        visible = showAlarmDialog,
+        enter = fadeIn() + slideInVertically(),
+        exit = fadeOut() + slideOutVertically()
+    ) {
+        println("show dialog")
+        GlobalAlarmsDialog(mainScreenViewModel){
+            showAlarmDialog = false
+        }
+    }
+}
 
+@Composable
+fun GlobalAlarmsDialog(mainScreenViewModel: MainScreenViewModel, onDismiss: () -> Unit) {
+    val globalAlarmList by mainScreenViewModel.globalAlarmList.collectAsState()
+
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            shape = RoundedCornerShape(16.dp),
+            elevation = CardDefaults.cardElevation(8.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(
+                    text = "Alarms",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f))
+                globalAlarmList?.forEach { globalAlarm ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Outlined.Notifications,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Column {
+                                Text(
+                                    text = globalAlarm.alarmType,
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    fontWeight = FontWeight.Medium
+                                )
+                                Text(
+                                    text = globalAlarm.alarmTimeString,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                                )
+                            }
+                        }
+                        Switch(
+                            enabled = false,
+                            checked = globalAlarm.isEnabled,
+                            colors = SwitchDefaults.colors(
+                                disabledUncheckedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f),
+                                disabledCheckedBorderColor = MaterialTheme.colorScheme.primary,
+                                disabledCheckedThumbColor = MaterialTheme.colorScheme.primary,
+                                disabledUncheckedThumbColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 1f),
+                            ),
+                            onCheckedChange = {
+
+                            }
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+                Button(
+                    onClick = onDismiss,
+                    modifier = Modifier.align(Alignment.End),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                ) {
+                    Text(text = "Close")
+                }
+            }
+        }
+    }
 }
 
 @Composable
@@ -190,7 +287,6 @@ fun GetLocationInformation(mainScreenViewModel: MainScreenViewModel, appViewMode
         }
     }
 }
-
 
 @Composable
 fun DailyPrayCompose(haptic: HapticFeedback) {
@@ -214,7 +310,9 @@ fun DailyPrayCompose(haptic: HapticFeedback) {
                 )
                 Spacer(Modifier.weight(1f))
                 Card(
-                    modifier = Modifier.padding(end = 10.dp),
+                    modifier = Modifier
+                        .padding(10.dp)
+                        .height(25.dp),
                     onClick = {},
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
                     elevation = CardDefaults.cardElevation(10.dp),
@@ -285,8 +383,10 @@ fun DailyPrayCompose(haptic: HapticFeedback) {
 fun PrayNotificationCompose(
     mainScreenViewModel: MainScreenViewModel,
     appViewModel: AppViewModel,
-    haptic: HapticFeedback
+    haptic: HapticFeedback,
+    onShowAlarmDialog : () -> Unit
 ) {
+    println("notification")
     var rotate by remember { mutableStateOf(false) }
     val rotateX = animateFloatAsState(
         targetValue = if (rotate) 180f else 360f,
@@ -357,6 +457,30 @@ fun PrayNotificationCompose(
                     softWrap = false,
                     textAlign = TextAlign.Center,
                 )
+                Spacer(
+                    modifier = Modifier.weight(1f)
+                )
+                Card(
+                    modifier = Modifier
+                        .padding(3.dp)
+                        .height(25.dp),
+                    onClick = {
+                        onShowAlarmDialog()
+                    },
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
+                    elevation = CardDefaults.cardElevation(10.dp),
+                    shape = RoundedCornerShape(10.dp)
+                ) {
+                    Text(
+                        modifier = Modifier.padding(4.dp),
+                        text = "See All",
+                        style = MaterialTheme.typography.labelMedium,
+                        maxLines = 1,
+                        softWrap = false,
+                        textAlign = TextAlign.Center,
+                        fontWeight = FontWeight.W600,
+                    )
+                }
 
             }
             Spacer(modifier = Modifier.height(5.dp))
@@ -389,21 +513,23 @@ fun PrayNotificationCompose(
                                     .clickable {
                                         haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                         if (isNotificationPermissionGranted) {
-                                            if (globalAlarm.isEnabled){
+                                            if (globalAlarm.isEnabled) {
                                                 mainScreenViewModel.updateGlobalAlarm(
                                                     globalAlarm.alarmType,
                                                     0L,
                                                     "16-01-2025 00:00",
                                                     false,
-                                                    0L)
+                                                    0L
+                                                )
                                                 return@clickable
-                                            }else{
+                                            } else {
                                                 mainScreenViewModel.updateGlobalAlarm(
                                                     globalAlarm.alarmType,
-                                                    mainScreenViewModel.getAlarmTime(index).first ,
+                                                    mainScreenViewModel.getAlarmTime(index).first,
                                                     mainScreenViewModel.getAlarmTime(index).second,
                                                     true,
-                                                    0L)
+                                                    0L
+                                                )
                                             }
                                         } else {
                                             permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
@@ -460,6 +586,7 @@ fun PrayNotificationCompose(
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun AlarmComposable(globalAlarm: GlobalAlarm) {
+
     val iconColor = animateColorAsState(
         targetValue = if (globalAlarm.isEnabled) MaterialTheme.colorScheme.primary else Color.Red,
         animationSpec = tween(1000), label = ""
@@ -500,6 +627,8 @@ fun AlarmComposable(globalAlarm: GlobalAlarm) {
 @Composable
 fun PrayScheduleCompose(haptic: HapticFeedback) {
     val mainScreenViewModel : MainScreenViewModel = hiltViewModel()
+    val dailyPrayTime by mainScreenViewModel.dailyPrayTimes.collectAsState()
+
     Card(
         modifier = Modifier.padding(top = 20.dp),
         onClick = {
@@ -512,100 +641,73 @@ fun PrayScheduleCompose(haptic: HapticFeedback) {
         shape = RoundedCornerShape(10.dp)
     ) {
         Column {
-            Row (
-                horizontalArrangement = Arrangement.SpaceAround,
-                verticalAlignment = Alignment.CenterVertically
-            ){
-                val formattedTime by mainScreenViewModel.formattedTime.collectAsState()
-                Column(
-                    modifier = Modifier.padding(start = 10.dp, bottom = 10.dp, end = 10.dp),
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    val formattedDate by mainScreenViewModel.formattedDate.collectAsState()
-                    var previousTime by remember { mutableStateOf("") }
-                    var currentDate by remember { mutableStateOf(LocalDate.now()) }
-                    LaunchedEffect(Unit){
-                        while (true){
-                            previousTime = formattedTime
-                            mainScreenViewModel.updateFormattedTime()
-                            if (formattedTime.subSequence(0,5) == "23:59" && LocalDate.now() != currentDate) {
-                                currentDate = LocalDate.now()
-                                mainScreenViewModel.updateFormattedDate()
-                            }
-                            delay(1000)
-                        }
-                    }
-                    Text(
-                        modifier = Modifier.padding(start = 3.dp, top = 7.dp),
-                        text = formattedDate,
-                        style = MaterialTheme.typography.labelLarge,
-                        maxLines = 1,
-                        softWrap = false,
-                        textAlign = TextAlign.Center
-                    )
-                    AnimatedTimer(formattedTime, previousTime)
-                    Text(
-                        text = "Remaining time to next prayer ->",
-                        modifier = Modifier.padding(start = 3.dp, top = 1.dp),
-                        style = MaterialTheme.typography.labelLarge,
-                        maxLines = 1,
-                        softWrap = false,
-                        textAlign = TextAlign.Center
-                    )
-                }
-
-
-                val prayTimes by mainScreenViewModel.dailyPrayTimes.collectAsState()
-                prayTimes.data?.let {
-                    TimeCounter(
-                        Modifier
-                            .weight(1f)
-                            .size(100.dp), formattedTime,it
-                    )
-                }
-            }
+            TimerRow(mainScreenViewModel,dailyPrayTime.data)
             HorizontalDivider(Modifier.padding(15.dp))
-            val dailyPrayTime by mainScreenViewModel.dailyPrayTimes.collectAsState()
             when(dailyPrayTime.status){
                 Status.SUCCESS->{
-                    Card(
-                        modifier = Modifier
-                            .padding(start = 10.dp, end = 10.dp, bottom = 10.dp)
-                        ,
-                        onClick = {},
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
-                        elevation = CardDefaults.cardElevation(10.dp),
-                        shape = RoundedCornerShape(10.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth(1f)
-                                .padding(top = 10.dp)
-                        ) {
-                            if (dailyPrayTime.data != null){
-                                val localDateTimeNow = LocalDateTime.now()
-                                val index = when{
-                                    localDateTimeNow.isBefore(dailyPrayTime.data!!.localDateTime(dailyPrayTime.data!!.morning)) -> 0
-                                    localDateTimeNow.isBefore(dailyPrayTime.data!!.localDateTime(dailyPrayTime.data!!.noon)) -> 1
-                                    localDateTimeNow.isBefore(dailyPrayTime.data!!.localDateTime(dailyPrayTime.data!!.afternoon)) -> 2
-                                    localDateTimeNow.isBefore(dailyPrayTime.data!!.localDateTime(dailyPrayTime.data!!.evening)) -> 3
-                                    localDateTimeNow.isBefore(dailyPrayTime.data!!.localDateTime(dailyPrayTime.data!!.night)) -> 4
-                                    else -> 0
-                                }
-                                PrayTimesRow(dailyPrayTime.data!!, index)
-
-                            }
-                        }
-                    }
-
+                    PrayTimesRowHeader(dailyPrayTime.data)
                 }
                 Status.ERROR -> {
-                    Text(text = dailyPrayTime.message.toString())
+                   ErrorView(dailyPrayTime.message?:"Error occurred while fetching pray times")
                 }
                 Status.LOADING -> {
-                   // CircularProgressIndicator()
+                   LoadingView()
                 }
             }
+        }
+    }
+}
+
+@Composable
+fun TimerRow(mainScreenViewModel: MainScreenViewModel,dailyPrayTime: PrayTimes?) {
+    val formattedDate by mainScreenViewModel.formattedDate.collectAsState()
+    val formattedTime by mainScreenViewModel.formattedTime.collectAsState()
+    Row (
+        horizontalArrangement = Arrangement.SpaceAround,
+        verticalAlignment = Alignment.CenterVertically
+    ){
+        Column(
+            modifier = Modifier.padding(start = 10.dp, bottom = 10.dp, end = 10.dp),
+            verticalArrangement = Arrangement.Center
+        ) {
+            var previousTime by remember { mutableStateOf("") }
+            var currentDate by remember { mutableStateOf(LocalDate.now()) }
+            LaunchedEffect(Unit){
+                while (true){
+                    previousTime = formattedTime
+                    mainScreenViewModel.updateFormattedTime()
+                    if (formattedTime.subSequence(0,5) == "23:59" && LocalDate.now() != currentDate) {
+                        currentDate = LocalDate.now()
+                        mainScreenViewModel.updateFormattedDate()
+                    }
+                    delay(1000)
+                }
+            }
+            Text(
+                modifier = Modifier.padding(start = 3.dp, top = 7.dp),
+                text = formattedDate,
+                style = MaterialTheme.typography.labelLarge,
+                maxLines = 1,
+                softWrap = false,
+                textAlign = TextAlign.Center
+            )
+            AnimatedTimer(formattedTime, previousTime)
+            Text(
+                text = "Remaining time to next prayer ->",
+                modifier = Modifier.padding(start = 3.dp, top = 1.dp),
+                style = MaterialTheme.typography.labelLarge,
+                maxLines = 1,
+                softWrap = false,
+                textAlign = TextAlign.Center
+            )
+        }
+
+        dailyPrayTime?.let {
+            TimeCounter(
+                Modifier
+                    .weight(1f)
+                    .size(100.dp), formattedTime,it
+            )
         }
     }
 }
@@ -639,7 +741,42 @@ fun AnimatedTimer(formattedTime : String,previousTime : String){
 }
 
 @Composable
-fun RowScope.PrayTimesRow(prayTime : PrayTimes,index : Int) {
+fun PrayTimesRowHeader(dailyPrayTime : PrayTimes?) {
+    println("prayTimesRowHeader")
+    Card(
+        modifier = Modifier
+            .padding(start = 10.dp, end = 10.dp, bottom = 10.dp)
+        ,
+        onClick = {},
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
+        elevation = CardDefaults.cardElevation(10.dp),
+        shape = RoundedCornerShape(10.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth(1f)
+                .padding(top = 10.dp)
+        ) {
+            if (dailyPrayTime != null){
+                val localDateTimeNow = LocalDateTime.now()
+                val index = when{
+                    localDateTimeNow.isBefore(dailyPrayTime.localDateTime(dailyPrayTime.morning)) -> 0
+                    localDateTimeNow.isBefore(dailyPrayTime.localDateTime(dailyPrayTime.noon)) -> 1
+                    localDateTimeNow.isBefore(dailyPrayTime.localDateTime(dailyPrayTime.afternoon)) -> 2
+                    localDateTimeNow.isBefore(dailyPrayTime.localDateTime(dailyPrayTime.evening)) -> 3
+                    localDateTimeNow.isBefore(dailyPrayTime.localDateTime(dailyPrayTime.night)) -> 4
+                    else -> 0
+                }
+                PrayTimesRow(dailyPrayTime, index)
+
+            }
+        }
+    }
+}
+
+@Composable
+fun RowScope.PrayTimesRow(prayTime: PrayTimes,index: Int) {
+    println("prayTimesRow")
     val prayList = prayTime.toList()
     prayList.forEachIndexed { currentIndex ,prayPair->
         val icon = when(prayPair.first){
@@ -683,7 +820,6 @@ fun RowScope.PrayTimesRow(prayTime : PrayTimes,index : Int) {
             )
         }
     }
-
 }
 
 
@@ -706,7 +842,8 @@ fun AddressBar(haptic: HapticFeedback) {
         )
         {
             Row(
-                Modifier.padding(start = 7.dp, end = 7.dp, top = 3.dp, bottom = 3.dp)
+                Modifier
+                    .padding(start = 7.dp, end = 7.dp, top = 3.dp, bottom = 3.dp)
                     .background(color = Color.Transparent)
             ) {
 
@@ -950,7 +1087,9 @@ fun PrayerMethodSelector(
     val expanded = remember { mutableStateOf(false) }
     val selectedMethod = remember { mutableStateOf(methods.keys.first()) }
 
-    Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+    Column(modifier = Modifier
+        .fillMaxWidth()
+        .padding(16.dp)) {
         Text(
             text = "Select Prayer Time Calculation Method",
             modifier = Modifier.clickable { expanded.value = true }

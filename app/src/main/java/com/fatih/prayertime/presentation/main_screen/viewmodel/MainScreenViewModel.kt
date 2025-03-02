@@ -172,12 +172,12 @@ class MainScreenViewModel @Inject constructor(
                         updateAllGlobalAlarm(false)
                     }
                 }
-        } }
+        }
+        }
         viewModelScope.launch {
             getAllGlobalAlarmsUseCase().collect { globalAlarmList ->
                 _globalAlarmList.emit(globalAlarmList)
             }
-
         }
         updateAllGlobalAlarm(false)
     }

@@ -23,9 +23,10 @@ class AlarmReceiver : BroadcastReceiver() {
         val enableVibration = intent.getBooleanExtra("ALARM_VIBRATION", true)
         val isSilent = intent.getBooleanExtra("ALARM_IS_SILENT", false)
         val alarmSoundUri =
-            if(isSilent) RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
-            else intent.getStringExtra("ALARM_SOUND_URI")?.toUri() ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
+            if(isSilent) RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE)
+            else intent.getStringExtra("ALARM_SOUND_URI")?.toUri() ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE)
         showNotification(context, alarmType, alarmMessage,enableVibration, alarmSoundUri)
+        println(alarmSoundUri)
     }
 
     private fun showNotification(context: Context, alarmType: String, alarmMessage: String,enableVibration : Boolean,alarmSoundUri : Uri) {

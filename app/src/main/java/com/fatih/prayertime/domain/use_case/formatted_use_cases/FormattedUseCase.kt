@@ -79,9 +79,9 @@ class FormattedUseCase @Inject constructor() {
         return LocalDateTime.ofInstant(Instant.ofEpochMilli(time), ZoneId.systemDefault()).format(formatterDDMMYYYYHHMMSS)
     }
 
-    fun addMinutesToTime(time: String, minutesToAdd: Long): String {
+    fun minusMinutesFromTime(time: String, minutesToAdd: Long): String {
         val localTime = LocalTime.parse(time, formatterHHMM)
-        val newTime = localTime.plusMinutes(minutesToAdd)
+        val newTime = localTime.minusMinutes(minutesToAdd)
         return newTime.format(formatterHHMM)
     }
 
