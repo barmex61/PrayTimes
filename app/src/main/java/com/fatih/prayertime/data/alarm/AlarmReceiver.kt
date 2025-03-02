@@ -7,6 +7,7 @@ import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.media.AudioAttributes
 import android.media.RingtoneManager
 import android.net.Uri
 import android.os.Build
@@ -23,20 +24,25 @@ class AlarmReceiver : BroadcastReceiver() {
         val enableVibration = intent.getBooleanExtra("ALARM_VIBRATION", true)
         val isSilent = intent.getBooleanExtra("ALARM_IS_SILENT", false)
         val alarmSoundUri =
-            if(isSilent) RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE)
-            else intent.getStringExtra("ALARM_SOUND_URI")?.toUri() ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE)
+            if(isSilent) RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+            else intent.getStringExtra("ALARM_SOUND_URI")?.toUri() ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
         showNotification(context, alarmType, alarmMessage,enableVibration, alarmSoundUri)
-        println(alarmSoundUri)
+
     }
 
     private fun showNotification(context: Context, alarmType: String, alarmMessage: String,enableVibration : Boolean,alarmSoundUri : Uri) {
         val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        deleteNotificationChannel(context)
         val channel = NotificationChannel(
             CHANNEL_ID,
             "Alarm Notifications",
             NotificationManager.IMPORTANCE_HIGH
         ).apply {
             description = "Namaz Vakti Alarmları"
+            setSound(alarmSoundUri, AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_ALARM)
+                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                .build())
         }
         notificationManager.createNotificationChannel(channel)
 
@@ -53,7 +59,6 @@ class AlarmReceiver : BroadcastReceiver() {
             .setContentText(alarmMessage)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setSound(alarmSoundUri)
-            .setDefaults(NotificationCompat.DEFAULT_ALL)
             .setAutoCancel(true)
             .setContentIntent(pendingIntent)
             .setVibrate(vibrationPattern)
@@ -62,5 +67,11 @@ class AlarmReceiver : BroadcastReceiver() {
 
     companion object {
         const val CHANNEL_ID = "alarm_channel"
+    }
+
+    private fun deleteNotificationChannel(context: Context) {
+        val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.deleteNotificationChannel(CHANNEL_ID)
+
     }
 }

@@ -1,5 +1,11 @@
 package com.fatih.prayertime.presentation.settings_screen.view
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandIn
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -77,11 +83,13 @@ fun SettingsScreen(bottomPaddingValue: Dp) {
             OtherSettingsCard(uiSettings.silenceWhenCuma) { appViewModel.toggleCuma() }
             Spacer(modifier = Modifier.size(25.dp + bottomPaddingValue))
         }
-        if (showSelectedGlobalAlarmOffsetSelectionDialog.value) {
+        AnimatedVisibility(
+            visible = showSelectedGlobalAlarmOffsetSelectionDialog.value,
+            enter = fadeIn(tween(700)) + expandIn(tween(700),expandFrom = Alignment.Center),
+            exit = fadeOut(tween(700)) + shrinkOut(tween(700),shrinkTowards = Alignment.Center),
+            ) {
             selectedGlobalAlarm.value?.let {
-                OffsetMinuteSelectionHeader(it) {
-                    showSelectedGlobalAlarmOffsetSelectionDialog.value = false
-                }
+                OffsetMinuteSelectionHeader (it){ showSelectedGlobalAlarmOffsetSelectionDialog.value = false }
             }
         }
     }
