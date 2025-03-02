@@ -46,7 +46,8 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.fatih.prayertime.data.remote.dto.islamicdaysdto.IslamicDaysData
+import com.fatih.prayertime.data.remote.dto.islamicdaysdto.IslamicDaysDataDTO
+import com.fatih.prayertime.domain.model.IslamicDaysData
 import com.fatih.prayertime.presentation.util_screen.viewmodel.UtilScreenViewModel
 import com.fatih.prayertime.util.ErrorView
 import com.fatih.prayertime.util.LoadingView
@@ -152,29 +153,21 @@ fun DayCard(day: IslamicDaysData, haptic : HapticFeedback) {
                 modifier = Modifier.padding(start = 5.dp, top = 5.dp, bottom = 5.dp)
             ) {
                 Text(
-                    text = day.gregorian.date,
+                    text = day.date,
                     style = MaterialTheme.typography.bodySmall,
                     maxLines = 1
                 )
                 Text(
-                    text = day.hijri.month.en,
+                    text = day.islamicMonth,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.primary
                 )
-                day.hijri.holidays.forEach { holiday ->
-                    var holidayString: String? = null
-                    try {
-                        holidayString = holiday.toString()
-                    } catch (e: Exception) {
-                        Log.d("UtilScreen", "DayCard: ${e.message}")
-                    }
-                    holidayString?.let {
-                        Text(
-                            text = it,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.error
-                        )
-                    }
+                day.islamicDay.forEach { holiday ->
+                    Text(
+                        text = holiday,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error
+                    )
                 }
             }
         }

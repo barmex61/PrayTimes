@@ -2,8 +2,7 @@ package com.fatih.prayertime.data.repository
 
 import android.util.Log
 import com.fatih.prayertime.data.remote.PrayApi
-import com.fatih.prayertime.data.remote.dto.DailyPrayResponseDTO
-import com.fatih.prayertime.data.remote.dto.MonthlyPrayTimesResponseDTO
+import com.fatih.prayertime.data.remote.dto.praytimesdto.MonthlyPrayTimesResponseDTO
 import com.fatih.prayertime.domain.repository.PrayApiRepository
 import com.fatih.prayertime.util.Resource
 import kotlinx.coroutines.Dispatchers

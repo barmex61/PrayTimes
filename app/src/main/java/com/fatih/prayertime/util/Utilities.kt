@@ -68,6 +68,7 @@ data class ScreenData(
     val title: String,
     val iconResourceType : ResourceType,
     val iconRoute: Int = 0,
+    val painterRoute : Int? = null,
     val route: String
 )
 

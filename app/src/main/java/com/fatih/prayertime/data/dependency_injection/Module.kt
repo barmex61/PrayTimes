@@ -20,16 +20,20 @@ import com.fatih.prayertime.domain.repository.LocationAndAddressRepository
 import com.fatih.prayertime.domain.repository.PrayApiRepository
 import com.fatih.prayertime.domain.repository.PrayDatabaseRepository
 import com.fatih.prayertime.data.alarm.AlarmScheduler
+import com.fatih.prayertime.data.remote.HadithApi
 import com.fatih.prayertime.data.remote.IslamicCalendarApi
+import com.fatih.prayertime.data.repository.HadithRepositoryImp
 import com.fatih.prayertime.data.repository.IslamicCalendarRepositoryImp
 import com.fatih.prayertime.data.repository.SettingsRepositoryImp
 import com.fatih.prayertime.data.settings.SettingsDataStore
+import com.fatih.prayertime.domain.repository.HadithRepository
 import com.fatih.prayertime.domain.repository.IslamicCalendarRepository
 import com.fatih.prayertime.domain.repository.SettingsRepository
 import com.fatih.prayertime.domain.use_case.formatted_use_cases.FormattedUseCase
 import com.fatih.prayertime.domain.use_case.location_use_cases.GetLocationAndAddressUseCase
 import com.fatih.prayertime.domain.use_case.permission_use_case.PermissionsUseCase
-import com.fatih.prayertime.util.Constants.BASE_URL
+import com.fatih.prayertime.util.Constants.ALADHAN_API_BASE_URL
+import com.fatih.prayertime.util.Constants.HADITH_API_BASE_URL
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationServices
@@ -55,7 +59,7 @@ object Module {
 
     @Provides
     @Singleton
-    fun provideRetrofit() : Retrofit = Retrofit.Builder().baseUrl(BASE_URL).addConverterFactory(GsonConverterFactory.create()).build()
+    fun provideRetrofit() : Retrofit = Retrofit.Builder().baseUrl(ALADHAN_API_BASE_URL).addConverterFactory(GsonConverterFactory.create()).build()
 
     @Provides
     @Singleton
@@ -170,11 +174,21 @@ object Module {
 
     @Provides
     @Singleton
-    fun provideIslamicCalendarApi() : IslamicCalendarApi = Retrofit.Builder().baseUrl(BASE_URL).addConverterFactory(GsonConverterFactory.create()).build().create(IslamicCalendarApi::class.java)
+    fun provideIslamicCalendarApi() : IslamicCalendarApi = Retrofit.Builder().baseUrl(ALADHAN_API_BASE_URL).addConverterFactory(GsonConverterFactory.create()).build().create(IslamicCalendarApi::class.java)
 
     @Provides
     @Singleton
     fun provideIslamicCalendarRepository(islamicCalendarApi: IslamicCalendarApi) : IslamicCalendarRepository = IslamicCalendarRepositoryImp(islamicCalendarApi)
+
+    @Provides
+    @Singleton
+    fun provideHadithApi() : HadithApi = Retrofit.Builder().baseUrl(HADITH_API_BASE_URL).addConverterFactory(GsonConverterFactory.create()).build().create(HadithApi::class.java)
+
+    @Provides
+    @Singleton
+    fun provideHadithRepositoryImp(hadithApi: HadithApi) : HadithRepository = HadithRepositoryImp(hadithApi)
+
+
 }
 
 @Qualifier

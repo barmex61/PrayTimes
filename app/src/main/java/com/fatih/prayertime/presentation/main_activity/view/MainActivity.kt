@@ -10,10 +10,8 @@ import android.provider.Settings
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
-import androidx.activity.OnBackPressedCallback
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.BackHandler
-import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -67,7 +65,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import androidx.navigation.NavDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -80,7 +77,8 @@ import com.fatih.prayertime.presentation.calendar_screen.view.CalendarScreen
 import com.fatih.prayertime.presentation.compass_screen.view.CompassScreen
 import com.fatih.prayertime.presentation.main_activity.viewmodel.AppViewModel
 import com.fatih.prayertime.presentation.main_screen.view.MainScreen
-import com.fatih.prayertime.presentation.quran_screen.view.EsmaulHusnaScreen
+import com.fatih.prayertime.presentation.esmaulhusna_screen.view.EsmaulHusnaScreen
+import com.fatih.prayertime.presentation.hadith_screen.view.HadithScreen
 import com.fatih.prayertime.presentation.settings_screen.view.SettingsScreen
 import com.fatih.prayertime.presentation.ui.theme.PrayerTimeTheme
 import com.fatih.prayertime.presentation.util_screen.view.UtilitiesScreen
@@ -256,6 +254,9 @@ class MainActivity : ComponentActivity() {
                                         }
                                         "Islamic Calendar" -> {
                                             CalendarScreen(innerPadding.calculateBottomPadding() - 5.dp)
+                                        }
+                                        "Hadith" -> {
+                                            HadithScreen(innerPadding.calculateBottomPadding() - 5.dp)
                                         }
                                     }
                                 }

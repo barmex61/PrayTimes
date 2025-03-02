@@ -4,5 +4,5 @@ import com.google.gson.annotations.SerializedName
 
 data class IslamicDaysDTO(
     @SerializedName("data")
-    val islamicDaysData: List<IslamicDaysData>
+    val islamicDaysDatumDTOS: List<IslamicDaysDataDTO>
 )

@@ -2,7 +2,8 @@ package com.fatih.prayertime.presentation.util_screen.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.fatih.prayertime.data.remote.dto.islamicdaysdto.IslamicDaysData
+import com.fatih.prayertime.data.remote.dto.islamicdaysdto.IslamicDaysDataDTO
+import com.fatih.prayertime.domain.model.IslamicDaysData
 import com.fatih.prayertime.domain.use_case.formatted_use_cases.FormattedUseCase
 import com.fatih.prayertime.domain.use_case.islamic_calendar_use_case.GetIslamicCalendarForMonthUseCase
 import com.fatih.prayertime.util.Constants.selectedIslamicCalendarMethod

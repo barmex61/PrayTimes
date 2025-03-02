@@ -6,7 +6,8 @@ import com.fatih.prayertime.domain.model.EsmaulHusna
 
 
 object Constants {
-    const val BASE_URL = "https://api.aladhan.com/v1/"
+    const val ALADHAN_API_BASE_URL = "https://api.aladhan.com/v1/"
+    const val HADITH_API_BASE_URL = "https://cdn.jsdelivr.net/gh/fawazahmed0/hadith-api@1/"
     const val TUNE = "0,-0,-7,7,6,7,7,0,0"
     val prayApiMethods = hashMapOf(
         "Jafari / Shia Ithna-Ashari" to 0,
@@ -47,19 +48,20 @@ object Constants {
         ScreenData(
             title = "Qibla",
             iconRoute = R.drawable.compass_icon,
+            painterRoute = R.drawable.compass,
             route = "qibla",
             iconResourceType = ResourceType.PAINTER
-        ),
-        ScreenData(
-            title = "Utilities",
-            iconRoute = R.drawable.settings_icon,
-            route = "utilities",
-            iconResourceType = ResourceType.VECTOR
         ),
         ScreenData(
             title = "Settings",
             iconRoute = R.drawable.settings_icon,
             route = "settings",
+            iconResourceType = ResourceType.VECTOR
+        ),
+        ScreenData(
+            title = "Utilities",
+            iconRoute = R.drawable.baseline_menu_24,
+            route = "utilities",
             iconResourceType = ResourceType.VECTOR
         ),
         ScreenData(
@@ -71,6 +73,7 @@ object Constants {
         ScreenData(
             title = "Quran",
             iconRoute = R.drawable.quran_icon,
+            painterRoute = R.drawable.quran,
             route = "quran",
             iconResourceType = ResourceType.PAINTER
         ),

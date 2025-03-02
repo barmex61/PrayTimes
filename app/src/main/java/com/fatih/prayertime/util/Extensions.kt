@@ -1,14 +1,17 @@
 package com.fatih.prayertime.util
 
-import android.util.Log
-import com.fatih.prayertime.data.remote.dto.MonthlyPrayTimesResponseDTO
-import com.fatih.prayertime.data.remote.dto.PrayDataDTO
-import com.fatih.prayertime.data.remote.dto.PrayTimesDTO
+import com.fatih.prayertime.data.remote.dto.hadithdto.Edition
+import com.fatih.prayertime.data.remote.dto.hadithdto.HadithEdition
+import com.fatih.prayertime.data.remote.dto.islamicdaysdto.IslamicDaysDataDTO
+import com.fatih.prayertime.data.remote.dto.praytimesdto.MonthlyPrayTimesResponseDTO
+import com.fatih.prayertime.data.remote.dto.praytimesdto.PrayDataDTO
+import com.fatih.prayertime.data.remote.dto.praytimesdto.PrayTimesDTO
 import com.fatih.prayertime.domain.model.Address
+import com.fatih.prayertime.domain.model.IslamicDaysData
 import com.fatih.prayertime.domain.model.PrayData
 import com.fatih.prayertime.domain.model.PrayTimes
 import com.fatih.prayertime.domain.use_case.formatted_use_cases.FormattedUseCase
-import java.time.LocalDateTime
+import java.lang.Exception
 
 private val formattedUseCase = FormattedUseCase()
 
@@ -22,7 +25,7 @@ fun PrayDataDTO.toPrayData(address: Address) : PrayData = PrayData(
     prayTimes = this.timings.toPrayTimes(this.date.gregorian.date,address)
 )
 
-fun PrayTimesDTO.toPrayTimes(date : String,address: Address) : PrayTimes = PrayTimes(
+fun PrayTimesDTO.toPrayTimes(date : String, address: Address) : PrayTimes = PrayTimes(
     morning = this.Fajr.substring(0,5),
     //sunrise = this.Sunrise,
     noon = this.Dhuhr.substring(0,5),
@@ -79,6 +82,40 @@ fun String?.convertTimeToSeconds(): Int {
     return 0
 }
 
+fun List<IslamicDaysDataDTO>.toIslamicDaysData() : List<IslamicDaysData> {
+    if (this.isEmpty()) return emptyList()
+    return this.map {
+        it.toIslamicDaysData()
+    }
+}
+
+fun IslamicDaysDataDTO.toIslamicDaysData() : IslamicDaysData = IslamicDaysData(
+    date = this.gregorian.date,
+    islamicDay = try {
+        val islamicDays = mutableListOf<String>()
+        this.hijri.holidays.forEach { holiday ->
+            val holidayString = holiday.toString()
+            islamicDays.add(holidayString)
+        }
+        islamicDays
+    }catch (e:Exception){
+        listOf()
+    },
+    islamicMonth = hijri.month.en
+)
+
+fun HadithEdition.toList() : List<Edition> = listOf(
+    this.abudawud,
+    this.bukhari,
+    this.ibnmajah,
+    this.malik,
+    this.muslim,
+    this.nasai,
+    this.tirmidhi,
+    this.nawawi,
+    this.qudsi,
+    this.dehlawi
+)
 
 fun PrayTimes.localDateTime(time : String):org.threeten.bp.LocalDateTime {
     val localDateTimeStr = "$date $time:00"

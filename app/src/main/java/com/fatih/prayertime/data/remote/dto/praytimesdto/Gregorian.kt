@@ -1,4 +1,4 @@
-package com.fatih.prayertime.data.remote.dto
+package com.fatih.prayertime.data.remote.dto.praytimesdto
 
 data class Gregorian(
     val date: String,
