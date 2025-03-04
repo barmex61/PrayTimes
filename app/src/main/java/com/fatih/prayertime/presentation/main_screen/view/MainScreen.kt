@@ -135,9 +135,9 @@ fun MainScreen(appViewModel: AppViewModel,bottomPaddingValue : Dp) {
     val mainScreenViewModel : MainScreenViewModel = hiltViewModel()
     var showAlarmDialog by remember { mutableStateOf(false) }
     val scrollState = rememberScrollState()
-    GetLocationInformation(mainScreenViewModel,appViewModel)
     var isVisible by remember { mutableStateOf(false) }
     val haptic = LocalHapticFeedback.current
+    GetLocationInformation(mainScreenViewModel,appViewModel)
     LaunchedEffect(Unit){
         isVisible = true
     }
@@ -276,6 +276,7 @@ fun GetLocationInformation(mainScreenViewModel: MainScreenViewModel, appViewMode
     val permissionGranted by appViewModel.isLocationPermissionGranted.collectAsState()
     val isLocationTracking by mainScreenViewModel.isLocationTracking.collectAsState()
     val networkState by appViewModel.networkState.collectAsState()
+    println(networkState)
     LaunchedEffect (key1 = networkState, key2 = permissionGranted){
         Log.d("MainScreen","isLocationTracking $isLocationTracking")
         Log.d("MainScreen","networkState $networkState permissionGranted $permissionGranted")
@@ -955,14 +956,14 @@ fun PrayerBar(haptic: HapticFeedback) {
 
 @SuppressLint("DefaultLocale")
 @Composable
-fun TimeCounter(modifier: Modifier = Modifier,currentTime: String,prayTime: PrayTimes) {
+fun TimeCounter(modifier: Modifier = Modifier, currentTime: String, prayTime: PrayTimes) {
     var isClicked by remember { mutableStateOf(false) }
-    val rotationY = animateFloatAsState(
+    val rotationY by animateFloatAsState(
         targetValue = if (isClicked) 180f else 0f,
         animationSpec = tween(1000, easing = EaseInOutQuad),
         label = ""
     )
-    val scale = animateFloatAsState(
+    val scale by animateFloatAsState(
         targetValue = if (isClicked) 0.99f else 1.01f,
         keyframes {
             durationMillis = 1500
@@ -974,108 +975,91 @@ fun TimeCounter(modifier: Modifier = Modifier,currentTime: String,prayTime: Pray
         },
         label = ""
     )
+
     val prayTimeList = prayTime.toList().map { it.second }
     val currentSeconds = currentTime.convertTimeToSeconds()
 
-    var nextTimeIndex = prayTimeList.indexOfFirst { it.convertTimeToSeconds() > currentSeconds }
-    if (nextTimeIndex == -1) {
-        nextTimeIndex = 0
-    }
+    val nextTimeIndex = prayTimeList.indexOfFirst { it.convertTimeToSeconds() > currentSeconds }.takeIf { it != -1 } ?: 0
     val nextTime = prayTimeList[nextTimeIndex]
     val previousTime = if (nextTimeIndex == 0) prayTimeList.last() else prayTimeList[nextTimeIndex - 1]
 
-    var totalSeconds = nextTime.convertTimeToSeconds() - previousTime.convertTimeToSeconds()
-
-    if (totalSeconds < 0) {
-        totalSeconds += 24 * 3600
+    val totalSeconds = (nextTime.convertTimeToSeconds() - previousTime.convertTimeToSeconds()).let {
+        if (it < 0) it + 24 * 3600 else it
     }
 
-    var elapsedSeconds = currentSeconds - previousTime.convertTimeToSeconds()
-    if(elapsedSeconds < 0) elapsedSeconds += 24 * 3600
-
-    var remainingSeconds =totalSeconds - elapsedSeconds
-
-    val sweepAngle by remember {
-        derivedStateOf {
-            (remainingSeconds.toFloat() / totalSeconds.toFloat()) * 360f
-        }
+    val elapsedSeconds = (currentSeconds - previousTime.convertTimeToSeconds()).let {
+        if (it < 0) it + 24 * 3600 else it
     }
 
-    LaunchedEffect(Unit) {
-        while (true) {
-            delay(1000)
-            elapsedSeconds++
-            remainingSeconds--
-            if (elapsedSeconds >= totalSeconds) {
-                elapsedSeconds -= totalSeconds
-            }
-            if(remainingSeconds < 0) {
-                remainingSeconds += totalSeconds
-            }
-        }
-    }
+    val remainingSeconds = totalSeconds - elapsedSeconds
+    val sweepAngle = (remainingSeconds.toFloat() / totalSeconds.toFloat()) * 360f
 
     val formattedTime = String.format("%02d:%02d:%02d", remainingSeconds / 3600, (remainingSeconds / 60) % 60, remainingSeconds % 60)
 
-    Box(modifier = modifier
-        .noRippleClickable {
-            isClicked = !isClicked
-        }
-        .graphicsLayer {
-            this.rotationY = rotationY.value
-            this.scaleY = scale.value
-            this.scaleX = scale.value
-        }, contentAlignment = Alignment.Center) {
-
+    Box(
+        modifier = modifier
+            .noRippleClickable { isClicked = !isClicked }
+            .graphicsLayer {
+                this.rotationY = rotationY
+                this.scaleY = scale
+                this.scaleX = scale
+            }
+            .padding(top = 8.dp),
+        contentAlignment = Alignment.Center
+    ) {
         Text(
-            modifier = Modifier.graphicsLayer
-            {
-            this.rotationY = rotationY.value
-            },
-            text = formattedTime, fontSize = 18.sp
+            modifier = Modifier.graphicsLayer { this.rotationY = rotationY },
+            text = formattedTime,
+            fontSize = 18.sp
         )
-        val primaryColor = MaterialTheme.colorScheme.primary
-        val secondaryColor = MaterialTheme.colorScheme.secondary
-        val bgColor = MaterialTheme.colorScheme.background
-        Canvas(modifier = Modifier.fillMaxSize()) {
-            val center = Offset(size.width / 2f, size.height / 2f)
-            val radius = size.minDimension / 2f - 20f
-            val strokeWidth = 15f
-            val circleRadius = 17f
 
-            drawCircle(
-                color = bgColor,
-                center = center,
-                radius = radius,
-                style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
-            )
+        TimeCounterCanvas(sweepAngle)
+    }
+}
 
-            drawArc(
-                brush = Brush.linearGradient(
-                    colors = listOf(primaryColor, secondaryColor),
-                    tileMode = TileMode.Repeated
-                ),
-                startAngle = -90f,
-                sweepAngle = sweepAngle,
-                useCenter = false,
-                style = Stroke(width = strokeWidth, cap = StrokeCap.Round),
-                topLeft = Offset(center.x - radius, center.y - radius),
-                size = androidx.compose.ui.geometry.Size(radius * 2, radius * 2)
-            )
+@Composable
+fun TimeCounterCanvas(sweepAngle : Float) {
+    val primaryColor = MaterialTheme.colorScheme.primary
+    val secondaryColor = MaterialTheme.colorScheme.secondary
+    val bgColor = MaterialTheme.colorScheme.background
+    Canvas(modifier = Modifier.fillMaxSize()) {
+        val center = Offset(size.width / 2f, size.height / 2f)
+        val radius = size.minDimension / 2f
+        val strokeWidth = 15f
+        val circleRadius = 17f
 
-            val angleRadians = (-90f + sweepAngle) * (PI / 180f).toFloat()
-            val circleCenterX = center.x + radius * cos(angleRadians)
-            val circleCenterY = center.y + radius * sin(angleRadians)
+        drawCircle(
+            color = bgColor,
+            center = center,
+            radius = radius,
+            style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
+        )
 
-            drawCircle(
-                brush = Brush.linearGradient(
-                    colors = listOf(primaryColor, secondaryColor),
-                    tileMode = TileMode.Repeated
-                ),
-                radius = circleRadius,
-                center = Offset(circleCenterX, circleCenterY)
-            )
-        }
+        drawArc(
+            brush = Brush.linearGradient(
+                colors = listOf(primaryColor, secondaryColor),
+                tileMode = TileMode.Repeated
+            ),
+            startAngle = -90f,
+            sweepAngle = sweepAngle,
+            useCenter = false,
+            style = Stroke(width = strokeWidth, cap = StrokeCap.Round),
+            topLeft = Offset(center.x - radius, center.y - radius),
+            size = androidx.compose.ui.geometry.Size(radius * 2, radius * 2)
+        )
+
+        val angleRadians = (-90f + sweepAngle) * (PI / 180f).toFloat()
+        val circleCenterX = center.x + radius * cos(angleRadians)
+        val circleCenterY = center.y + radius * sin(angleRadians)
+
+        drawCircle(
+            brush = Brush.linearGradient(
+                colors = listOf(primaryColor, secondaryColor),
+                tileMode = TileMode.Repeated
+            ),
+            radius = circleRadius,
+            center = Offset(circleCenterX, circleCenterY)
+        )
     }
 }
 

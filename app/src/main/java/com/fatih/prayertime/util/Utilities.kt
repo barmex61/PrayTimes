@@ -6,11 +6,39 @@ import android.content.res.AssetManager
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStore
+import androidx.navigation.NamedNavArgument
+import androidx.navigation.NavController
+import com.fatih.prayertime.data.remote.dto.hadithdto.SectionDetails
+import com.fatih.prayertime.data.remote.dto.hadithdto.Sections
+import com.fatih.prayertime.data.remote.dto.hadithdto.HadithSectionDetails
 import com.fatih.prayertime.domain.model.EsmaulHusna
 import com.fatih.prayertime.domain.model.PrayTimes
+import com.fatih.prayertime.domain.model.HadithSectionCardData
 import com.fatih.prayertime.domain.use_case.formatted_use_cases.FormattedUseCase
 import org.json.JSONArray
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
+import kotlin.reflect.KProperty1
 
+
+fun navigateToScreen(navController: NavController, screenData: ScreenData,collectionPath : String? = null) {
+    val route = if (collectionPath != null) {
+        val encodedUrl = URLEncoder.encode(collectionPath, StandardCharsets.UTF_8.toString())
+        screenData.route.replace("{collectionPath}", encodedUrl)
+    } else {
+        screenData.route
+    }
+    navController.navigate(route) {
+        anim {
+            enter = android.R.anim.slide_in_left
+            exit = android.R.anim.slide_out_right
+        }
+        popUpTo(navController.graph.startDestinationId) { saveState = false }
+        launchSingleTop = true
+        restoreState = false
+        if (route == "qibla") navController.popBackStack()
+    }
+}
 
 fun getJsonFromAssets(fileName: String,application: Application): String {
     val assetManager: AssetManager = application.assets
@@ -48,6 +76,39 @@ fun getAlarmTimeForPrayTimes(dailyPrayTimes : PrayTimes,alarmType : String,alarm
     return formattedUseCase.minusMinutesFromTime(alarmTimeWithoutOffset,alarmOffset)
 }
 
+fun combineSectionsAndDetails(sections: Sections, sectionDetails: SectionDetails): List<HadithSectionCardData> {
+    val sectionList = sections.toList()
+    val detailsList = sectionDetails.toList()
+
+    return sectionList.zip(detailsList) { section, details ->
+        HadithSectionCardData(section, details)
+    }
+}
+
+fun Sections.toList(): List<String?> {
+    return this::class.members
+        .filterIsInstance<kotlin.reflect.KProperty1<Sections, *>>()
+        .sortedBy { it.name.toInt() }
+        .map { it.get(this) as String? }
+        .filter { !it.isNullOrEmpty() }
+}
+
+fun SectionDetails.toList(): List<HadithSectionDetails?> {
+    return this::class.members
+        .filterIsInstance<kotlin.reflect.KProperty1<SectionDetails, *>>()
+        .sortedBy { it.name.toInt() }
+        .map { it.get(this) as HadithSectionDetails? }
+        .filterNot { it != null && it.hadithnumber_first == 0f && it.hadithnumber_last == 0f }
+}
+
+fun KProperty1<HadithSectionDetails, *>.getPropertyName() : String{
+    return when(this.name){
+        "hadithnumber_first" -> "Starts at page"
+        "hadithnumber_last" -> "Ends at page"
+        else -> ""
+    }
+}
+
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings_prefs")
 
 
@@ -61,6 +122,7 @@ data class ScreenData(
     val iconResourceType : ResourceType,
     val iconRoute: Int = 0,
     val painterRoute : Int? = null,
-    val route: String
+    val route: String,
+    val arguments : List<NamedNavArgument> = emptyList()
 )
 

@@ -67,11 +67,13 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.core.content.ContextCompat.startActivity
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NamedNavArgument
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import com.fatih.prayertime.domain.model.ThemeOption
@@ -82,6 +84,7 @@ import com.fatih.prayertime.presentation.compass_screen.view.CompassScreen
 import com.fatih.prayertime.presentation.main_activity.viewmodel.AppViewModel
 import com.fatih.prayertime.presentation.main_screen.view.MainScreen
 import com.fatih.prayertime.presentation.esmaulhusna_screen.view.EsmaulHusnaScreen
+import com.fatih.prayertime.presentation.hadith_collections_screen.view.HadithCollectionScreen
 import com.fatih.prayertime.presentation.hadith_screen.view.HadithScreen
 import com.fatih.prayertime.presentation.settings_screen.view.SettingsScreen
 import com.fatih.prayertime.presentation.ui.theme.PrayerTimeTheme
@@ -210,7 +213,7 @@ fun MainScreenContent(showBatteryOptimizationDialog: () -> Unit) {
                 showBatteryOptimizationDialog()
             }
 
-            NavHostLayout(navController, innerPadding)
+            NavHostLayout(navController, innerPadding,appViewModel)
         }
     }
 }
@@ -265,8 +268,8 @@ fun BottomAppBarLayout(navController: NavController) {
 }
 
 @Composable
-fun NavHostLayout(navController: NavHostController, innerPadding: PaddingValues) {
-
+fun NavHostLayout(navController: NavHostController, innerPadding: PaddingValues,appViewModel: AppViewModel) {
+    val innerPaddingValue = innerPadding.calculateBottomPadding() - 5.dp
     NavHost(
         navController = navController,
         startDestination = screens.first().title
@@ -274,15 +277,20 @@ fun NavHostLayout(navController: NavHostController, innerPadding: PaddingValues)
         screens.forEach { item ->
             composable(
                 route = item.route,
-            ) {
+                arguments = item.arguments
+            ) { backStackEntry ->
                 when (item.title) {
-                    "Home" -> MainScreen(appViewModel = hiltViewModel(), innerPadding.calculateBottomPadding() - 5.dp)
-                    "Qibla" -> CompassScreen(innerPadding.calculateBottomPadding() - 5.dp)
-                    "Utilities" -> UtilitiesScreen(innerPadding.calculateBottomPadding() - 5.dp, navController)
-                    "Settings" -> SettingsScreen(innerPadding.calculateBottomPadding() - 5.dp)
-                    "Esmaul Husna" -> EsmaulHusnaScreen(innerPadding.calculateBottomPadding() - 5.dp)
-                    "Islamic Calendar" -> CalendarScreen(innerPadding.calculateBottomPadding() - 5.dp)
-                    "Hadith" -> HadithScreen(innerPadding.calculateBottomPadding() - 5.dp)
+                    "Home" -> MainScreen(appViewModel, innerPaddingValue)
+                    "Qibla" -> CompassScreen(innerPaddingValue)
+                    "Utilities" -> UtilitiesScreen(innerPaddingValue, navController)
+                    "Settings" -> SettingsScreen(innerPaddingValue)
+                    "Esmaul Husna" -> EsmaulHusnaScreen(innerPaddingValue)
+                    "Islamic Calendar" -> CalendarScreen(innerPaddingValue)
+                    "Hadith" -> HadithScreen(innerPaddingValue,navController)
+                    "HadithCollections" -> {
+                        val collectionPath = backStackEntry.arguments?.getString("collectionPath") ?: return@composable
+                        HadithCollectionScreen(innerPadding.calculateBottomPadding() - 5.dp,collectionPath)
+                    }
                 }
             }
         }

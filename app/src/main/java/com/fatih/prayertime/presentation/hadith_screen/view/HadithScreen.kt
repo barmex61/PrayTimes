@@ -16,6 +16,7 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -27,11 +28,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.items
-import androidx.compose.foundation.lazy.staggeredgrid.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonColors
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
@@ -50,7 +47,6 @@ import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.res.painterResource
@@ -58,31 +54,22 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
 import com.fatih.prayertime.R
+import com.fatih.prayertime.data.remote.dto.hadithdto.Collection
 import com.fatih.prayertime.data.remote.dto.hadithdto.Edition
-import com.fatih.prayertime.data.remote.dto.hadithdto.HadithEdition
-import com.fatih.prayertime.domain.model.EsmaulHusna
 import com.fatih.prayertime.presentation.hadith_screen.viewmodel.HadithScreenViewModel
+import com.fatih.prayertime.util.Constants
+import com.fatih.prayertime.util.Constants.colors
 import com.fatih.prayertime.util.ErrorView
 import com.fatih.prayertime.util.LoadingView
 import com.fatih.prayertime.util.Status
+import com.fatih.prayertime.util.navigateToScreen
 import com.fatih.prayertime.util.toList
 import kotlin.random.Random
 
 @Composable
-fun HadithScreen(bottomPaddingValues: Dp) {
-    val textColors = listOf(
-        Color(0xFFAAFFAA), // Green tint
-        Color(0xFFFFAAAA), // Red tint
-        Color(0xFFAAAAFF), // Blue tint
-        Color(0xFFFFFFAA), // Yellow tint
-        Color(0xFFAAFFFF), // Cyan tint
-        Color(0xFFFFAAFF), // Magenta tint
-        Color(0xFFFD615F), // Gray tint
-        Color(0xFFB27933), // Brown tint
-        Color(0xFF00897B), // Teal tint
-        Color(0xFF68B469)  // Olive tint
-    )
+fun HadithScreen(bottomPaddingValues: Dp,navController: NavController) {
     val hadithScreenViewModel = hiltViewModel<HadithScreenViewModel>()
     var isVisible by remember { mutableStateOf(false) }
     val hadithEdition by hadithScreenViewModel.hadithEditions.collectAsState()
@@ -102,7 +89,7 @@ fun HadithScreen(bottomPaddingValues: Dp) {
                 ) {
                     val hadithEditionsList = hadithEdition.data!!.toList()
                     items(hadithEditionsList) { hadithEdition ->
-                        HadithEditionCard(hadithEdition,textColors)
+                        HadithEditionCard(hadithEdition,navController)
                     }
                 }
             }
@@ -136,21 +123,25 @@ private fun Modifier.blendMode(
 }
 
 @Composable
-fun HadithEditionCard(hadithEdition: Edition,colors : List<Color>) {
+fun HadithEditionCard(hadithEdition: Edition,navController: NavController) {
     val infiniteTransition = rememberInfiniteTransition()
     var isExpanded by remember { mutableStateOf(false) }
-    val randomColor = colors.random()
+    val randomColor = remember { colors.random() }
+    val targetColor = remember { colors.filter { it != randomColor }.random() }
+
+
     val translation = infiniteTransition.animateFloat(
         initialValue = 0f,
-        targetValue = if (Random.nextBoolean()) Random.nextFloat() * 4f + 1f else Random.nextFloat() * -4f - 1f,
+        targetValue = remember { if (Random.nextBoolean()) Random.nextFloat() * 4f + 1f else Random.nextFloat() * -4f - 1f },
         animationSpec = infiniteRepeatable(
             animation = tween(3000),
             repeatMode = RepeatMode.Reverse
         )
     )
+
     val animatedColor = infiniteTransition.animateColor(
-        initialValue = randomColor ,
-        targetValue = colors.filter { it != randomColor }.random(),
+        initialValue = randomColor,
+        targetValue = targetColor,
         animationSpec = infiniteRepeatable(
             animation = tween(3000),
             repeatMode = RepeatMode.Reverse
@@ -161,92 +152,105 @@ fun HadithEditionCard(hadithEdition: Edition,colors : List<Color>) {
         elevation = CardDefaults.cardElevation(8.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
         modifier = Modifier
-            .padding(bottom = 15.dp, top = 5.dp,start = 10.dp, end = 10.dp)
+            .padding(10.dp)
             .graphicsLayer {
                 translationX = translation.value.dp.toPx()
                 translationY = translation.value.dp.toPx()
                 rotationZ = translation.value / 2f
             },
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
-        onClick = {
-            isExpanded = !isExpanded
-        }
-
+        onClick = { isExpanded = !isExpanded }
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp).animateContentSize(tween(1000)),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Image(
-                painter = painterResource(R.drawable.hadith),
-                contentDescription = "Hadith",
-                modifier = Modifier.fillMaxWidth(),
-                colorFilter = ColorFilter.lighting(
-                    multiply = animatedColor.value,
-                    add = Color.Black
-                )
-            )
-            Row (
-                verticalAlignment = Alignment.CenterVertically
-            ){
-                Text(
-                    textAlign = TextAlign.Center,
-                    text = "Name : ",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = animatedColor.value,
-                )
-                Text(
-                    modifier = Modifier.fillMaxWidth(1f),
-                    textAlign = TextAlign.Center,
-                    text = hadithEdition.name,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = animatedColor.value,
-                )
-            }
-            Spacer(modifier = Modifier.height(8.dp))
-            Row(
-                verticalAlignment = Alignment.CenterVertically
+        CardContent(
+            hadithEdition = hadithEdition,
+            animatedColor = animatedColor.value,
+            randomColor = randomColor,
+            isExpanded = isExpanded,
+            navController = navController
+        )
+    }
+}
 
-            ) {
-                Text(
-                    textAlign = TextAlign.Center,
-                    text = "Book : ",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = animatedColor.value
-                )
-                Text(
-                    modifier = Modifier.fillMaxWidth(1f),
-                    textAlign = TextAlign.Center,
-                    text = hadithEdition.collection.first().book.replaceFirstChar { oldChar -> oldChar.uppercaseChar() },
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = animatedColor.value,
-                )
-            }
-            Spacer(modifier = Modifier.height(15.dp))
-            if (isExpanded) {
-                hadithEdition.collection.forEach { collection ->
-
-                    Text(
-                        modifier = Modifier.fillMaxWidth(0.7f).background(
-                            brush = Brush.verticalGradient(
-                                colors = listOf(
-                                    randomColor,
-                                    animatedColor.value
-                                )
-                            ),
-                            shape = RoundedCornerShape(10.dp)
-                        ).blendMode(BlendMode.Difference),
-                        text = collection.language,
-                        color = Color.White,
-                        textAlign = TextAlign.Center
-                    )
-                    Spacer(
-                        modifier = Modifier.size(7.dp)
-                    )
-                }
-
-            }
+@Composable
+fun CardContent(
+    hadithEdition: Edition,
+    animatedColor: Color,
+    randomColor: Color,
+    isExpanded: Boolean,
+    navController: NavController
+) {
+    Column(
+        modifier = Modifier.padding(16.dp).animateContentSize(tween(1000)),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        HadithImage(animatedColor)
+        HadithInfoRow("Name: ", hadithEdition.name, animatedColor)
+        Spacer(modifier = Modifier.height(8.dp))
+        HadithInfoRow(
+            "Book: ",
+            hadithEdition.collection.first().book.replaceFirstChar { it.uppercaseChar() },
+            animatedColor
+        )
+        Spacer(modifier = Modifier.height(15.dp))
+        if (isExpanded) {
+            LanguageList(hadithEdition.collection, randomColor, animatedColor, navController)
         }
+    }
+}
+
+@Composable
+fun HadithImage(animatedColor: Color) {
+    Image(
+        painter = painterResource(R.drawable.hadith),
+        contentDescription = "Hadith",
+        modifier = Modifier.fillMaxWidth(),
+        colorFilter = ColorFilter.lighting(
+            multiply = animatedColor,
+            add = Color.Black
+        )
+    )
+}
+
+@Composable
+fun HadithInfoRow(label: String, value: String, color: Color) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text(
+            textAlign = TextAlign.Center,
+            text = label,
+            style = MaterialTheme.typography.bodySmall,
+            color = color
+        )
+        Text(
+            modifier = Modifier.fillMaxWidth(1f),
+            textAlign = TextAlign.Center,
+            text = value,
+            style = MaterialTheme.typography.bodyMedium,
+            color = color
+        )
+    }
+}
+
+@Composable
+fun LanguageList(collections: List<Collection>, randomColor: Color, animatedColor: Color,navController: NavController) {
+    collections.forEach { collection ->
+        Text(
+            modifier = Modifier
+                .fillMaxWidth(0.7f)
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(randomColor, animatedColor)
+                    ),
+                    shape = RoundedCornerShape(10.dp)
+                )
+                .blendMode(BlendMode.Difference)
+                .clickable {
+                    navigateToScreen(navController,Constants.screens[4],collection.linkmin)
+                },
+            text = collection.language,
+            color = Color.White,
+            textAlign = TextAlign.Center
+        )
+        Spacer(modifier = Modifier.size(7.dp))
     }
 }

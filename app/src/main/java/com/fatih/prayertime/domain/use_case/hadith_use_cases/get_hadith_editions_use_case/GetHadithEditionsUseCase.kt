@@ -1,4 +1,4 @@
-package com.fatih.prayertime.domain.use_case.get_hadith_editions_use_case
+package com.fatih.prayertime.domain.use_case.hadith_use_cases.get_hadith_editions_use_case
 
 import com.fatih.prayertime.domain.repository.HadithRepository
 import com.fatih.prayertime.util.Resource

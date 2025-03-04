@@ -119,10 +119,9 @@ class AppViewModel @Inject constructor(
 
     init {
         viewModelScope.launch(Dispatchers.IO){
-            getNetworkStateUseCase().filter{
-                it != _networkState.value
-            }.collectLatest {
+            getNetworkStateUseCase().collectLatest {
                 _networkState.value = it
+                println("it $it")
             }  
         }
         viewModelScope.launch(Dispatchers.IO) {

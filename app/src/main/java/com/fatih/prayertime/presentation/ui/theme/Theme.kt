@@ -14,7 +14,7 @@ import androidx.compose.ui.platform.LocalContext
 
 private val LightColorScheme = lightColorScheme(
     primary = Color(0xFFA3B82D),  // Güçlü bir yeşil tonu
-    secondary = Color(0xFFBCE189),  // Gri tonlarıyla uyumlu
+    secondary = Color(0xFFC5F683),  // Gri tonlarıyla uyumlu
     tertiary = Color(0xFF899177),  // Hafif sarı-yeşil tonu
     background = Color(0xFFF9F9F9),  // Açık gri beyaz
     surface = Color(0xFFFFFFFF),
@@ -30,7 +30,7 @@ private val LightColorScheme = lightColorScheme(
 )
 val DarkColorScheme = darkColorScheme(
     primary = Color(0xFF8EC5FC),  // Daha açık mavi
-    secondary = Color(0xFF5A95FF),  // Orta mavi tonu
+    secondary = Color(0xFF0754C7),  // Orta mavi tonu
     tertiary = Color(0xFF2A59A2),  // Daha derin mavi
     primaryContainer = Color(0xFF212121), // Beyaz // Beyaz
     secondaryContainer = Color(0xFF282727),

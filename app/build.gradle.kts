@@ -109,8 +109,7 @@ dependencies {
 
     //Widget-Glance
     implementation (libs.androidx.glance.appwidget)
-
-
+    implementation(kotlin("reflect"))
 
 
 }

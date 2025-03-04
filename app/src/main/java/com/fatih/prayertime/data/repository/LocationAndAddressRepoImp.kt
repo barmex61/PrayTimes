@@ -32,7 +32,6 @@ class LocationAndAddressRepoImp @Inject constructor(
     companion object{
         const val TAG = "LocationAndAddressRepoImp"
     }
-
     private var locationCallback : LocationCallback? = null
 
     private suspend fun getAddressWithRetry(location: Location, maxRetries: Int = 10, retryDelay: Long = 10000): Resource<Address> {
@@ -64,7 +63,6 @@ class LocationAndAddressRepoImp @Inject constructor(
     }
 
     override suspend fun getLocationAndAddressInformation(): Flow<Resource<Address>> = callbackFlow<Resource<Address>> {
-        println()
         if (locationCallback == null){
             locationCallback = object : LocationCallback() {
                 override fun onLocationResult(locationResult: LocationResult) {
@@ -90,7 +88,6 @@ class LocationAndAddressRepoImp @Inject constructor(
             }
         }
         try {
-
             fusedLocationProviderClient.removeLocationUpdates(locationCallback!!)
             fusedLocationProviderClient.requestLocationUpdates(
                 locationRequest,
@@ -112,8 +109,6 @@ class LocationAndAddressRepoImp @Inject constructor(
 
         awaitClose {
             Log.d(TAG,"Close flow")
-            if (locationCallback != null) fusedLocationProviderClient.removeLocationUpdates(locationCallback!!)
-            locationCallback = null
         }
     }.flowOn(Dispatchers.IO) // IO thread'inde çalıştır
 
@@ -123,6 +118,5 @@ class LocationAndAddressRepoImp @Inject constructor(
         }
         locationCallback = null
     }
-
 
 }

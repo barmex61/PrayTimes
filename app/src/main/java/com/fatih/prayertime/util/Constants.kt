@@ -1,11 +1,15 @@
 package com.fatih.prayertime.util
 
+import androidx.compose.ui.graphics.Color
 import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
 import com.fatih.prayertime.R
 import com.fatih.prayertime.domain.model.EsmaulHusna
 
 
 object Constants {
+
     const val ALADHAN_API_BASE_URL = "https://api.aladhan.com/v1/"
     const val HADITH_API_BASE_URL = "https://cdn.jsdelivr.net/gh/fawazahmed0/hadith-api@1/"
     const val TUNE = "0,-0,-7,7,6,7,7,0,0"
@@ -38,6 +42,26 @@ object Constants {
     val selectedIslamicCalendarMethod = islamicCalendarMethods[0]
     var esmaulHusnaList: List<EsmaulHusna> = emptyList()
     val SETTINGS_KEY = stringPreferencesKey("settings_json")
+    val colors = listOf(
+        Color(0xFFFF6632), // Red
+        Color(0xFF0000FF), // Blue
+        Color(0xFFFFFF00), // Yellow
+        Color(0xFFFF00FF), // Magenta
+        Color(0xFF00FFFF), // Cyan
+        Color(0xFFFFA500), // Orange
+        Color(0xFF800080), // Purple
+        Color(0xFF008000), // Dark Green
+        Color(0xFF007C98), // Navy
+        Color(0xFFFFC0CB), // Pink
+        Color(0xFFE07979), // Brown
+        Color(0xFF808080), // Gray
+        Color(0xFF00FF7F), // Spring Green
+        Color(0xFF4682B4), // Steel Blue
+        Color(0xFFD2691E), // Chocolate
+        Color(0xFF9ACD32), // Yellow Green
+        Color(0xFF8A2BE2), // Blue Violet
+        Color(0xFF5F9EA0), // Cadet Blue
+    )
     val screens = listOf(
         ScreenData(
             title = "Home",
@@ -63,6 +87,15 @@ object Constants {
             iconRoute = R.drawable.baseline_menu_24,
             route = "utilities",
             iconResourceType = ResourceType.VECTOR
+        ),
+        ScreenData(
+            title = "HadithCollections",
+            iconRoute = R.drawable.hadith,
+            route = "hadithCollections/{collectionPath}",
+            iconResourceType = ResourceType.PAINTER,
+            arguments = listOf(
+                navArgument("collectionPath"){type = NavType.StringType}
+            )
         ),
         ScreenData(
             title = "Prayer",
@@ -94,7 +127,8 @@ object Constants {
             iconRoute = R.drawable.hadith,
             route = "hadith",
             iconResourceType = ResourceType.PAINTER
-        )
+        ),
+
     )
 
 }
