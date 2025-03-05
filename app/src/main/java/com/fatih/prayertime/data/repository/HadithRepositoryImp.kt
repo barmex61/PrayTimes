@@ -18,13 +18,15 @@ class HadithRepositoryImp @Inject constructor(private val hadithApi: HadithApi) 
 
     override suspend fun getHadithEditions(): Resource<HadithEdition> = withContext(Dispatchers.IO) {
         return@withContext try {
-            val response = hadithApi.getHadithEditions()
-            if (response.isSuccessful) {
-                response.body()?.let {
-                    Resource.success(it)
-                } ?: Resource.error("An unknown error occurred ${response.message()}")
-            } else {
-                Resource.error("An unknown error occurred ${response.message()}")
+            withTimeout(4000){
+                val response = hadithApi.getHadithEditions()
+                if (response.isSuccessful) {
+                    response.body()?.let {
+                        Resource.success(it)
+                    } ?: Resource.error("An unknown error occurred ${response.message()}")
+                } else {
+                    Resource.error("An unknown error occurred ${response.message()}")
+                }
             }
         }catch (e: IOException) {
             Resource.error("Network error: ${e.message}")
@@ -32,6 +34,8 @@ class HadithRepositoryImp @Inject constructor(private val hadithApi: HadithApi) 
             Resource.error("HTTP error: ${e.code()} - ${e.message()}")
         } catch (e: Exception) {
             Resource.error("An unexpected error ss occurred: ${e.message}")
+        }catch (e:TimeoutCancellationException){
+            Resource.error("Timeout error: ${e.message}")
         }
     }
 

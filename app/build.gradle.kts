@@ -108,7 +108,10 @@ dependencies {
     implementation (libs.threetenabp)
 
     //Widget-Glance
+    implementation (libs.google.accompanist.swiperefresh)
     implementation (libs.androidx.glance.appwidget)
+    implementation (libs.google.accompanist.navigation.animation)
+
     implementation(kotlin("reflect"))
 
 

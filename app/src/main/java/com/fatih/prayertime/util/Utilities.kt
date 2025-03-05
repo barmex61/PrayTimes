@@ -8,9 +8,10 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStore
 import androidx.navigation.NamedNavArgument
 import androidx.navigation.NavController
-import com.fatih.prayertime.data.remote.dto.hadithdto.SectionDetails
+import com.fatih.prayertime.data.remote.dto.hadithdto.HadithCollection
+import com.fatih.prayertime.data.remote.dto.hadithdto.HadithSections
 import com.fatih.prayertime.data.remote.dto.hadithdto.Sections
-import com.fatih.prayertime.data.remote.dto.hadithdto.HadithSectionDetails
+import com.fatih.prayertime.data.remote.dto.hadithdto.HadithSectionInfo
 import com.fatih.prayertime.domain.model.EsmaulHusna
 import com.fatih.prayertime.domain.model.PrayTimes
 import com.fatih.prayertime.domain.model.HadithSectionCardData
@@ -21,22 +22,18 @@ import java.nio.charset.StandardCharsets
 import kotlin.reflect.KProperty1
 
 
-fun navigateToScreen(navController: NavController, screenData: ScreenData,collectionPath : String? = null) {
-    val route = if (collectionPath != null) {
-        val encodedUrl = URLEncoder.encode(collectionPath, StandardCharsets.UTF_8.toString())
+fun NavController.navigateToScreen( screenData: ScreenData, path : String? = null) {
+    val route = if (path != null) {
+        val encodedUrl = URLEncoder.encode(path, StandardCharsets.UTF_8.toString())
         screenData.route.replace("{collectionPath}", encodedUrl)
     } else {
         screenData.route
     }
-    navController.navigate(route) {
-        anim {
-            enter = android.R.anim.slide_in_left
-            exit = android.R.anim.slide_out_right
-        }
-        popUpTo(navController.graph.startDestinationId) { saveState = false }
+    this.navigate(route) {
+        popUpTo(this@navigateToScreen.graph.startDestinationId) { saveState = false }
         launchSingleTop = true
         restoreState = false
-        if (route == "qibla") navController.popBackStack()
+        if (route == "qibla") this@navigateToScreen.popBackStack()
     }
 }
 
@@ -76,36 +73,46 @@ fun getAlarmTimeForPrayTimes(dailyPrayTimes : PrayTimes,alarmType : String,alarm
     return formattedUseCase.minusMinutesFromTime(alarmTimeWithoutOffset,alarmOffset)
 }
 
-fun combineSectionsAndDetails(sections: Sections, sectionDetails: SectionDetails): List<HadithSectionCardData> {
-    val sectionList = sections.toList()
-    val detailsList = sectionDetails.toList()
+fun combineSectionsAndDetails(hadithCollection: HadithCollection): List<HadithSectionCardData> {
+    val sectionList = hadithCollection.metadata.sections.toList()
+    val detailsList = hadithCollection.metadata.section_details.toList()
 
     return sectionList.zip(detailsList) { section, details ->
-        HadithSectionCardData(section, details)
+        val subHadithList = hadithCollection.hadiths.subList(details?.hadithnumber_first.anyToInt()!! - 1, details?.hadithnumber_last.anyToInt()!! )
+        HadithSectionCardData(section, details,subHadithList,subHadithList.size)
     }
 }
 
 fun Sections.toList(): List<String?> {
     return this::class.members
-        .filterIsInstance<kotlin.reflect.KProperty1<Sections, *>>()
+        .filterIsInstance<KProperty1<Sections, *>>()
         .sortedBy { it.name.toInt() }
         .map { it.get(this) as String? }
         .filter { !it.isNullOrEmpty() }
 }
 
-fun SectionDetails.toList(): List<HadithSectionDetails?> {
+fun HadithSections.toList(): List<HadithSectionInfo?> {
     return this::class.members
-        .filterIsInstance<kotlin.reflect.KProperty1<SectionDetails, *>>()
+        .filterIsInstance<KProperty1<HadithSections, *>>()
         .sortedBy { it.name.toInt() }
-        .map { it.get(this) as HadithSectionDetails? }
+        .map { it.get(this) as HadithSectionInfo? }
         .filterNot { it != null && it.hadithnumber_first == 0f && it.hadithnumber_last == 0f }
 }
 
-fun KProperty1<HadithSectionDetails, *>.getPropertyName() : String{
+
+fun KProperty1<HadithSectionInfo, *>.getPropertyName() : String{
     return when(this.name){
-        "hadithnumber_first" -> "Starts at page"
-        "hadithnumber_last" -> "Ends at page"
+        "hadithnumber_first" -> "Starts at hadith no"
+        "hadithnumber_last" -> "Ends at hadith no"
         else -> ""
+    }
+}
+
+fun Any?.anyToInt() : Int? {
+    return try {
+        (this as Float).toInt()
+    }catch (e:Exception){
+        null
     }
 }
 

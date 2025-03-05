@@ -1,0 +1,129 @@
+
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColor
+import androidx.compose.animation.core.InfiniteTransition
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.*
+
+import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
+import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
+import androidx.compose.foundation.lazy.staggeredgrid.items
+
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
+
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+
+import com.fatih.prayertime.data.remote.dto.duadto.DuaCategoryDetailData
+import com.fatih.prayertime.presentation.dua_categories_screen.DuaCategoriesViewModel
+import com.fatih.prayertime.util.Constants.colors
+import com.fatih.prayertime.util.ErrorView
+import com.fatih.prayertime.util.LoadingView
+import com.fatih.prayertime.util.Status
+import kotlin.random.Random
+
+@Composable
+fun DuaCategoryDetailScreen(
+    bottomPaddingValues: Dp,
+    duaCategoriesViewModel: DuaCategoriesViewModel
+) {
+    val infiniteTransition = rememberInfiniteTransition()
+    val duaCategoryDetail by duaCategoriesViewModel.duaCategoryDetail.collectAsState()
+    var isVisible by remember { mutableStateOf(false) }
+
+    when(duaCategoryDetail.status){
+        Status.SUCCESS->{
+            duaCategoryDetail.data?:return
+            LazyVerticalStaggeredGrid(
+                modifier = Modifier.padding(bottom = bottomPaddingValues),
+                columns = StaggeredGridCells.Fixed(2)
+            ) {
+               items(duaCategoryDetail.data!!.data){ duaCategoryDetail ->
+                   DuaCategoryDetailCard(duaCategoryDetail,infiniteTransition)
+               }
+            }
+
+        }
+        Status.LOADING->{
+            LoadingView()
+        }
+        Status.ERROR->{
+            ErrorView(duaCategoryDetail.message?:"Error occurred")
+        }
+    }
+    LaunchedEffect(key1 = Unit) {
+        isVisible = true
+    }
+
+}
+
+@Composable
+fun DuaCategoryDetailCard(duaCategoryDetailData: DuaCategoryDetailData, infiniteTransition: InfiniteTransition) {
+
+    val randomColor = remember { colors.random() }
+    val targetColor = remember { colors.filter { it != randomColor }.random() }
+    val translation = infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = if (Random.nextBoolean()) Random.nextFloat() * 2f + 1f else Random.nextFloat() * -2f - 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(3000),
+            repeatMode = RepeatMode.Reverse
+        )
+    )
+
+    val animatedColor = infiniteTransition.animateColor(
+        initialValue = randomColor,
+        targetValue = targetColor,
+        animationSpec = infiniteRepeatable(
+            animation = tween(10000),
+            repeatMode = RepeatMode.Reverse
+        )
+    )
+    val scale = infiniteTransition.animateFloat(
+        initialValue = 1f,
+        targetValue = 1.1f,
+        animationSpec = infiniteRepeatable(tween(3000),repeatMode = RepeatMode.Reverse),
+    )
+    Card(
+        elevation = CardDefaults.cardElevation(8.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+        modifier = Modifier
+            .padding(10.dp)
+            .graphicsLayer {
+                scaleY = scale.value
+                translationX = translation.value.dp.toPx()
+                translationY = translation.value.dp.toPx()
+                rotationZ = translation.value / 2f
+            }
+            .height(IntrinsicSize.Min)
+        ,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
+        onClick = {
+
+        }
+    ) {
+
+        Text(
+            textAlign = TextAlign.Center,
+            text = duaCategoryDetailData.title,
+            style = MaterialTheme.typography.titleMedium,
+            color = animatedColor.value,
+            modifier = Modifier.fillMaxWidth().padding(10.dp)
+        )
+    }
+
+}

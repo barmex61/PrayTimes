@@ -1,6 +1,5 @@
 package com.fatih.prayertime.data.alarm
 
-import android.annotation.SuppressLint
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -10,11 +9,10 @@ import android.content.Intent
 import android.media.AudioAttributes
 import android.media.RingtoneManager
 import android.net.Uri
-import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.net.toUri
 import com.fatih.prayertime.R
-import com.fatih.prayertime.presentation.main_activity.view.MainActivity
+import com.fatih.prayertime.presentation.main_activity.MainActivity
 
 class AlarmReceiver : BroadcastReceiver() {
 

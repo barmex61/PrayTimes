@@ -20,19 +20,24 @@ import com.fatih.prayertime.domain.repository.LocationAndAddressRepository
 import com.fatih.prayertime.domain.repository.PrayApiRepository
 import com.fatih.prayertime.domain.repository.PrayDatabaseRepository
 import com.fatih.prayertime.data.alarm.AlarmScheduler
+import com.fatih.prayertime.data.remote.DuaApi
 import com.fatih.prayertime.data.remote.HadithApi
 import com.fatih.prayertime.data.remote.IslamicCalendarApi
+import com.fatih.prayertime.data.repository.DuaRepositoryImp
 import com.fatih.prayertime.data.repository.HadithRepositoryImp
 import com.fatih.prayertime.data.repository.IslamicCalendarRepositoryImp
 import com.fatih.prayertime.data.repository.SettingsRepositoryImp
 import com.fatih.prayertime.data.settings.SettingsDataStore
+import com.fatih.prayertime.domain.repository.DuaRepository
 import com.fatih.prayertime.domain.repository.HadithRepository
 import com.fatih.prayertime.domain.repository.IslamicCalendarRepository
 import com.fatih.prayertime.domain.repository.SettingsRepository
 import com.fatih.prayertime.domain.use_case.formatted_use_cases.FormattedUseCase
 import com.fatih.prayertime.domain.use_case.location_use_cases.GetLocationAndAddressUseCase
 import com.fatih.prayertime.domain.use_case.permission_use_case.PermissionsUseCase
+import com.fatih.prayertime.util.Constants
 import com.fatih.prayertime.util.Constants.ALADHAN_API_BASE_URL
+import com.fatih.prayertime.util.Constants.DUA_API_BASE_URL
 import com.fatih.prayertime.util.Constants.HADITH_API_BASE_URL
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationRequest
@@ -75,7 +80,7 @@ object Module {
 
     @Provides
     @Singleton
-    fun provideLocationRequest() : LocationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 30000).apply {
+    fun provideLocationRequest() : LocationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 10000).apply {
         setMinUpdateDistanceMeters(1000f)
     }.build()
 
@@ -188,7 +193,13 @@ object Module {
     @Singleton
     fun provideHadithRepositoryImp(hadithApi: HadithApi) : HadithRepository = HadithRepositoryImp(hadithApi)
 
+    @Provides
+    @Singleton
+    fun provideDuaApi() : DuaApi = Retrofit.Builder().baseUrl(DUA_API_BASE_URL).addConverterFactory(GsonConverterFactory.create()).build().create(DuaApi::class.java)
 
+    @Provides
+    @Singleton
+    fun provideDuaRepositoryImp(duaApi: DuaApi) : DuaRepository = DuaRepositoryImp(duaApi)
 }
 
 @Qualifier

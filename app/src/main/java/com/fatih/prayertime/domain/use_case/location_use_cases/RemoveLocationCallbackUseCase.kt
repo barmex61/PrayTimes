@@ -5,8 +5,5 @@ import javax.inject.Inject
 
 class RemoveLocationCallbackUseCase @Inject constructor(private val locationAndAddressRepository: LocationAndAddressRepository) {
 
-    operator fun invoke() {
-        locationAndAddressRepository.removeCallback()
-    }
-
+    operator fun invoke() = locationAndAddressRepository.removeCallback()
 }

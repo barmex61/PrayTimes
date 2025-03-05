@@ -1,4 +1,5 @@
 [versions]
+accompanistSwiperefreshVersion = "0.32.0"
 agp = "8.8.2"
 animatedNavigationBar = "1.0.0"
 animationGraphics = "1.7.6"
@@ -55,6 +56,8 @@ androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version
 animated-navigation-bar = { module = "com.exyte:animated-navigation-bar", version.ref = "animatedNavigationBar" }
 converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "converterGson" }
 geoip2 = { module = "com.maxmind.geoip2:geoip2", version.ref = "geoip2" }
+google-accompanist-navigation-animation = { module = "com.google.accompanist:accompanist-navigation-animation", version.ref = "accompanistSwiperefreshVersion" }
+google-accompanist-swiperefresh = { module = "com.google.accompanist:accompanist-swiperefresh", version.ref = "accompanistSwiperefreshVersion" }
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hiltAndroidCompiler" }
 hilt-android-compiler = { module = "com.google.dagger:hilt-android-compiler", version.ref = "hiltAndroidCompiler" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }

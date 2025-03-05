@@ -1,8 +1,11 @@
 package com.fatih.prayertime.domain.model
 
-import com.fatih.prayertime.data.remote.dto.hadithdto.HadithSectionDetails
+import com.fatih.prayertime.data.remote.dto.hadithdto.Hadith
+import com.fatih.prayertime.data.remote.dto.hadithdto.HadithSectionInfo
 
 data class HadithSectionCardData(
     val section: String?,
-    val details: HadithSectionDetails?
+    val details: HadithSectionInfo?,
+    val hadithList : List<Hadith>,
+    val hadithCount : Int
 )

@@ -5,6 +5,7 @@ import com.fatih.prayertime.data.remote.dto.islamicdaysdto.IslamicDaysDataDTO
 import com.fatih.prayertime.domain.repository.IslamicCalendarRepository
 import com.fatih.prayertime.util.Resource
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.withContext
 import retrofit2.HttpException
 import java.io.IOException
@@ -29,6 +30,8 @@ class IslamicCalendarRepositoryImp @Inject constructor(private val islamicCalend
             Resource.error("HTTP error: ${e.code()} - ${e.message()}")
         } catch (e: Exception) {
             Resource.error("An unexpected error ss occurred: ${e.message}")
+        }catch (e: TimeoutCancellationException){
+            Resource.error("Timeout error: ${e.message}")
         }
     }
 }

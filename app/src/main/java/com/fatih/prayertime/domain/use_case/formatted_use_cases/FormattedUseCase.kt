@@ -30,6 +30,11 @@ class FormattedUseCase @Inject constructor() {
         return localDate.format(formatterDDMMYYYY)
     }
 
+    fun isToday(date: String) : Boolean{
+        val localDate = formatDDMMYYYYDateToLocalDate(date)
+        return localDate.isEqual(LocalDate.now())
+    }
+
     fun isFriday(dateString: String): Boolean {
         val dateTime = LocalDateTime.parse(dateString, formatterDDMMYYYYHHMMSS)
         return dateTime.dayOfWeek == DayOfWeek.FRIDAY

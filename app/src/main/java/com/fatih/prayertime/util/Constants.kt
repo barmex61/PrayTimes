@@ -12,6 +12,7 @@ object Constants {
 
     const val ALADHAN_API_BASE_URL = "https://api.aladhan.com/v1/"
     const val HADITH_API_BASE_URL = "https://cdn.jsdelivr.net/gh/fawazahmed0/hadith-api@1/"
+    const val DUA_API_BASE_URL = "https://dua-dhikr.onrender.com"
     const val TUNE = "0,-0,-7,7,6,7,7,0,0"
     val prayApiMethods = hashMapOf(
         "Jafari / Shia Ithna-Ashari" to 0,
@@ -89,7 +90,19 @@ object Constants {
             iconResourceType = ResourceType.VECTOR
         ),
         ScreenData(
-            title = "HadithCollections",
+            title = "Prayer Detail",
+            iconRoute = R.drawable.pray,
+            route = "duaCategoriesDetail",
+            iconResourceType = ResourceType.PAINTER,
+        ),
+        ScreenData(
+            title = "Hadith Section Detail",
+            iconRoute = R.drawable.hadith,
+            route = "hadithSectionDetailScreen",
+            iconResourceType = ResourceType.PAINTER,
+        ),
+        ScreenData(
+            title = "Hadith Collections",
             iconRoute = R.drawable.hadith,
             route = "hadithCollections/{collectionPath}",
             iconResourceType = ResourceType.PAINTER,
@@ -100,9 +113,10 @@ object Constants {
         ScreenData(
             title = "Prayer",
             iconRoute = R.drawable.pray,
-            route = "prayer",
-            iconResourceType = ResourceType.PAINTER
+            route = "duaCategories",
+            iconResourceType = ResourceType.PAINTER,
         ),
+
         ScreenData(
             title = "Quran",
             iconRoute = R.drawable.quran_icon,

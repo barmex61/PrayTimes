@@ -27,7 +27,7 @@
         android:theme="@style/Theme.PrayerTime"
         tools:targetApi="31">
         <activity
-            android:name=".presentation.main_activity.view.MainActivity"
+            android:name=".presentation.main_activity.MainActivity"
             android:exported="true"
             android:theme="@style/Theme.PrayerTime"
             tools:ignore="LockedOrientationActivity">
