@@ -1,9 +1,6 @@
-package com.fatih.prayertime.domain.use_case.hadith_use_cases.get_hadith_editions_use_case
+package com.fatih.prayertime.domain.use_case.hadith_use_cases
 
 import com.fatih.prayertime.domain.repository.HadithRepository
-import com.fatih.prayertime.util.Resource
-import com.fatih.prayertime.util.Status
-import java.lang.Exception
 import javax.inject.Inject
 
 class GetHadithEditionsUseCase @Inject constructor(private val hadithRepository: HadithRepository) {

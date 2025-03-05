@@ -48,7 +48,7 @@ import kotlin.random.Random
 import kotlin.reflect.full.memberProperties
 
 @Composable
-fun HadithCollectionScreen(bottomPaddingValues: Dp, hadithCollectionViewModel : HadithCollectionViewModel, navController: NavController) {
+fun HadithCollectionScreen(bottomPaddingValues: Dp,collectionPath : String, hadithCollectionViewModel : HadithCollectionViewModel, navController: NavController) {
     val hadithSectionCardDataList by hadithCollectionViewModel.hadithSectionCardDataList.collectAsState()
 
     when(hadithSectionCardDataList.status) {
@@ -64,7 +64,10 @@ fun HadithCollectionScreen(bottomPaddingValues: Dp, hadithCollectionViewModel : 
         }
     }
 
-    TitleView("Hadith Sections")
+    LaunchedEffect(Unit) {
+        hadithCollectionViewModel.updateHadithCollectionPath(collectionPath)
+    }
+    TitleView("Hadith Topics")
 }
 
 @Composable

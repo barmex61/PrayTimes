@@ -50,6 +50,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.fatih.prayertime.R
 import com.fatih.prayertime.data.gyroscope.GyroscopeSensor
 import com.fatih.prayertime.util.LockScreenOrientation
+import com.fatih.prayertime.util.TitleView
 
 
 @Composable
@@ -76,6 +77,7 @@ fun CompassScreen(bottomPaddingValue: Dp, compassScreenViewModel: CompassScreenV
             bottomPaddingValue = bottomPaddingValue
         )
     }
+    TitleView("Qibla Finder")
 }
 
 @OptIn(ExperimentalAnimationApi::class)

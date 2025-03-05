@@ -50,6 +50,7 @@ import com.fatih.prayertime.domain.model.IslamicDaysData
 import com.fatih.prayertime.util.ErrorView
 import com.fatih.prayertime.util.LoadingView
 import com.fatih.prayertime.util.Status
+import com.fatih.prayertime.util.TitleView
 import org.threeten.bp.LocalDate
 import kotlin.random.Random
 
@@ -83,6 +84,7 @@ fun CalendarScreen(bottomPaddingValues : Dp,calendarScreenViewModel: CalendarScr
             ErrorView(message = monthlyIslamicCalendar.message ?: "An unexpected error occurred")
         }
     }
+    TitleView("Islamic Calendar")
 }
 
 @Composable

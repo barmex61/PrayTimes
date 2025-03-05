@@ -85,6 +85,7 @@ import com.fatih.prayertime.presentation.calendar_screen.CalendarScreen
 import com.fatih.prayertime.presentation.compass_screen.CompassScreen
 import com.fatih.prayertime.presentation.dua_categories_screen.DuaCategoriesScreen
 import com.fatih.prayertime.presentation.dua_categories_screen.DuaCategoriesViewModel
+import com.fatih.prayertime.presentation.dua_detail_screen.DuaDetailScreen
 import com.fatih.prayertime.presentation.main_screen.MainScreen
 import com.fatih.prayertime.presentation.esmaulhusna_screen.EsmaulHusnaScreen
 import com.fatih.prayertime.presentation.hadith_collections_screen.HadithCollectionScreen
@@ -314,7 +315,8 @@ fun NavHostLayout(navController: NavHostController, innerPadding: PaddingValues,
                     }
                     "Hadith Section Detail" -> HadithSectionDetailScreen(innerPaddingValue,hadithCollectionViewModel)
                     "Prayer" -> DuaCategoriesScreen(innerPaddingValue,navController,duaCategoriesViewModel)
-                    "Prayer Detail" -> DuaCategoryDetailScreen(innerPaddingValue,duaCategoriesViewModel)
+                    "Prayer Category Detail" -> DuaCategoryDetailScreen(innerPaddingValue,duaCategoriesViewModel,navController)
+                    "Prayer Detail" -> DuaDetailScreen(innerPaddingValue,duaCategoriesViewModel)
                 }
             }
         }

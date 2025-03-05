@@ -44,6 +44,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.fatih.prayertime.util.Constants.screens
 import com.fatih.prayertime.util.ScreenData
+import com.fatih.prayertime.util.TitleView
 import com.fatih.prayertime.util.navigateToScreen
 import kotlin.math.absoluteValue
 @Composable
@@ -59,6 +60,7 @@ fun UtilitiesScreen(bottomPaddingValues: Dp, navController: NavController) {
             UtilitiesRow(rowItems, navController)
         }
     }
+    TitleView("Utilities")
 }
 
 @Composable

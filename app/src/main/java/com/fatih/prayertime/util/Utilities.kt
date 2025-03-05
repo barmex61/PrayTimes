@@ -3,6 +3,10 @@ package com.fatih.prayertime.util
 import android.app.Application
 import android.content.Context
 import android.content.res.AssetManager
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStore
@@ -23,6 +27,7 @@ import kotlin.reflect.KProperty1
 
 
 fun NavController.navigateToScreen( screenData: ScreenData, path : String? = null) {
+    println(screenData)
     val route = if (path != null) {
         val encodedUrl = URLEncoder.encode(path, StandardCharsets.UTF_8.toString())
         screenData.route.replace("{collectionPath}", encodedUrl)
@@ -113,6 +118,12 @@ fun Any?.anyToInt() : Int? {
         (this as Float).toInt()
     }catch (e:Exception){
         null
+    }
+}
+
+fun String.capitalizeFirstLetter(): String {
+    return this.replaceFirstChar {
+        if (it.isLowerCase()) it.titlecase() else it.toString()
     }
 }
 

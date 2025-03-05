@@ -107,6 +107,7 @@ import com.fatih.prayertime.util.ErrorView
 import com.fatih.prayertime.util.LoadingView
 import com.fatih.prayertime.util.NetworkState
 import com.fatih.prayertime.util.Status
+import com.fatih.prayertime.util.TitleView
 import com.fatih.prayertime.util.convertTimeToSeconds
 import com.fatih.prayertime.util.localDateTime
 import com.fatih.prayertime.util.toAddress
@@ -132,45 +133,13 @@ fun MainScreen(appViewModel: AppViewModel, bottomPaddingValue : Dp, mainScreenVi
         isVisible = true
     }
     Column(modifier = Modifier.verticalScroll(scrollState, enabled = true) ){
-        AnimatedVisibility(
-            visible = isVisible,
-            enter = slideInVertically(animationSpec = tween(1000)) + fadeIn(),
-            exit = slideOutVertically(animationSpec = tween(1000)) + fadeOut()
-        ){
-            AddressBar(haptic,mainScreenViewModel)
+        AddressBar(haptic,mainScreenViewModel)
+        PrayerBar(haptic)
+        PrayScheduleCompose(haptic)
+        PrayNotificationCompose(mainScreenViewModel,appViewModel,haptic){
+            showAlarmDialog = true
         }
-        AnimatedVisibility(
-            visible = isVisible,
-            enter = slideInVertically(animationSpec = tween(1000)) + fadeIn(),
-            exit = slideOutVertically(animationSpec = tween(1000)) + fadeOut()
-        ){
-            PrayerBar(haptic)
-        }
-        AnimatedVisibility(
-            visible = isVisible,
-            enter = slideInHorizontally(tween(500)) + fadeIn(),
-            exit = slideOutHorizontally(tween(500)) + fadeOut()
-        ){
-            PrayScheduleCompose(haptic)
-        }
-        AnimatedVisibility(
-            visible = isVisible,
-            enter = slideInHorizontally(tween(500)) { x ->
-                x / 2
-            } + fadeIn(),
-            exit = slideOutHorizontally(tween(500)) + fadeOut()
-        ){
-            PrayNotificationCompose(mainScreenViewModel,appViewModel,haptic){
-                showAlarmDialog = true
-            }
-        }
-        AnimatedVisibility(
-            visible = isVisible,
-            enter = expandIn(expandFrom = Alignment.BottomCenter) + fadeIn(tween(1000)),
-            exit = shrinkOut(shrinkTowards = Alignment.TopCenter) + fadeOut(tween(1000))
-        ){
-            DailyPrayCompose(haptic)
-        }
+        DailyPrayCompose(haptic)
         Spacer(
             modifier = Modifier.height(25.dp + bottomPaddingValue)
         )
@@ -184,6 +153,7 @@ fun MainScreen(appViewModel: AppViewModel, bottomPaddingValue : Dp, mainScreenVi
             showAlarmDialog = false
         }
     }
+    TitleView("Main View")
 }
 
 @Composable

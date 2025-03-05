@@ -3,6 +3,7 @@ package com.fatih.prayertime.util
 import android.app.Activity
 import android.content.pm.ActivityInfo
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColor
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.LinearOutSlowInEasing
@@ -24,6 +25,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -44,11 +46,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import com.fatih.prayertime.util.Constants.colors
 import kotlinx.coroutines.delay
 import kotlin.math.PI
 import kotlin.math.cos
@@ -137,35 +141,30 @@ fun ErrorView(message: String) {
 
 @Composable
 fun TitleView(title : String){
-    println("hello")
     val visible = remember { mutableStateOf(false) }
 
     AnimatedVisibility(
-        modifier = Modifier.fillMaxSize(1f).padding(top = 50.dp),
+        modifier = Modifier.fillMaxWidth().padding(25.dp),
         visible = visible.value,
         enter = fadeIn(animationSpec = tween(1000)) +
-                scaleIn(initialScale = 0.5f, animationSpec = tween(800)) +
-                expandIn(expandFrom = Alignment.Center, animationSpec = tween(800)),
+                scaleIn(initialScale = 0.5f, animationSpec = tween(1000)) +
+                expandIn(expandFrom = Alignment.BottomEnd, animationSpec = tween(800)),
         exit = fadeOut(animationSpec = tween(1000)) +
-                scaleOut(targetScale = 0.5f, animationSpec = tween(800)) +
-                shrinkOut(shrinkTowards = Alignment.Center, animationSpec = tween(800))
+                scaleOut(targetScale = 0.5f, animationSpec = tween(1000)) +
+                shrinkOut(shrinkTowards = Alignment.BottomCenter, animationSpec = tween(800))
     ) {
-        Box(modifier = Modifier.fillMaxSize(1f),  contentAlignment = Alignment.TopCenter){
-            Box(
-                Modifier
-                    .wrapContentSize()
-                    .background(
-                        color = MaterialTheme.colorScheme.primaryContainer,
-                        shape = RoundedCornerShape(20.dp)
-                    )
-                    .padding(15.dp),
-            ){
+        Box(modifier = Modifier.padding(50.dp),  contentAlignment = Alignment.TopCenter){
+
                 Text(
                     text = title,
-                    style = MaterialTheme.typography.titleLarge
-                )
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.background(
+                        color = MaterialTheme.colorScheme.secondaryContainer,
+                        shape = RoundedCornerShape(10.dp)
+                    ).padding(20.dp),
+                    color = MaterialTheme.colorScheme.primary
 
-            }
+                )
         }
 
     }

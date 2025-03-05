@@ -40,6 +40,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.fatih.prayertime.data.remote.dto.hadithdto.Hadith
 import com.fatih.prayertime.presentation.hadith_collections_screen.HadithCollectionViewModel
+import com.fatih.prayertime.util.TitleView
 import kotlin.random.Random
 
 @Composable
@@ -139,10 +140,11 @@ fun HadithSectionDetailScreen(
             Icon(
                 imageVector = if (showAllHadiths) Icons.Default.Close else Icons.Default.List,
                 contentDescription = if (showAllHadiths) "Close All Hadiths" else "Show All Hadiths",
-                tint = MaterialTheme.colorScheme.onPrimary
+                tint = MaterialTheme.colorScheme.primary
             )
         }
     }
+    TitleView("Hadith Details")
 }
 
 @Composable

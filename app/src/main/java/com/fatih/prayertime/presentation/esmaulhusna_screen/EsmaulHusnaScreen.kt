@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.fatih.prayertime.domain.model.EsmaulHusna
 import com.fatih.prayertime.util.Constants.esmaulHusnaList
+import com.fatih.prayertime.util.TitleView
 import kotlin.random.Random
 
 @Composable
@@ -45,6 +46,7 @@ fun EsmaulHusnaScreen(bottomPaddingValues: Dp) {
             EsmaulHusnaCard(esmaulHusna)
         }
     }
+    TitleView("Esmaül Hüsna")
 }
 
 @Composable

@@ -57,6 +57,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.fatih.prayertime.domain.model.GlobalAlarm
 import com.fatih.prayertime.domain.model.ThemeOption
 import com.fatih.prayertime.presentation.main_activity.AppViewModel
+import com.fatih.prayertime.util.TitleView
 
 @Composable
 fun SettingsScreen(bottomPaddingValue: Dp,appViewModel: AppViewModel = hiltViewModel()) {
@@ -91,6 +92,7 @@ fun SettingsScreen(bottomPaddingValue: Dp,appViewModel: AppViewModel = hiltViewM
             }
         }
     }
+    TitleView("Settings")
 }
 
 @Composable

@@ -1,6 +1,5 @@
 package com.fatih.prayertime.presentation.hadith_screen
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColor
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.RepeatMode
@@ -8,10 +7,6 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -33,7 +28,6 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -41,13 +35,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawWithCache
-import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
@@ -62,62 +53,38 @@ import com.fatih.prayertime.util.Constants.screens
 import com.fatih.prayertime.util.ErrorView
 import com.fatih.prayertime.util.LoadingView
 import com.fatih.prayertime.util.Status
+import com.fatih.prayertime.util.TitleView
 import com.fatih.prayertime.util.navigateToScreen
 import com.fatih.prayertime.util.toList
 import kotlin.random.Random
 
 @Composable
 fun HadithScreen(bottomPaddingValues: Dp,navController: NavController,hadithScreenViewModel : HadithScreenViewModel = hiltViewModel()) {
-    var isVisible by remember { mutableStateOf(false) }
     val hadithEdition by hadithScreenViewModel.hadithEditions.collectAsState()
-    AnimatedVisibility(
-        visible = isVisible,
-        enter = fadeIn(tween(1500)) + slideInVertically(tween(1000)),
-        exit = fadeOut(tween(1500)) + slideOutVertically(tween(1000))
-    ){
-        when(hadithEdition.status){
-            Status.LOADING -> {
-                LoadingView()
-            }
-            Status.SUCCESS -> {
-                LazyVerticalStaggeredGrid(
-                    columns = StaggeredGridCells.Fixed(2),
-                    modifier = Modifier.padding(bottom = bottomPaddingValues)
-                ) {
-                    val hadithEditionsList = hadithEdition.data!!.toList()
-                    items(hadithEditionsList) { hadithEdition ->
-                        HadithEditionCard(hadithEdition,navController)
-                    }
+
+    when(hadithEdition.status){
+        Status.LOADING -> {
+            LoadingView()
+        }
+        Status.SUCCESS -> {
+            println("hadith screen")
+            LazyVerticalStaggeredGrid(
+                columns = StaggeredGridCells.Fixed(2),
+                modifier = Modifier.padding(bottom = bottomPaddingValues)
+            ) {
+                val hadithEditionsList = hadithEdition.data!!.toList()
+                items(hadithEditionsList) { hadithEdition ->
+                    HadithEditionCard(hadithEdition,navController)
                 }
             }
-            Status.ERROR -> {
-                ErrorView(hadithEdition.message?:"Unknown Error")
-            }
         }
-
+        Status.ERROR -> {
+            ErrorView(hadithEdition.message?:"Unknown Error")
+        }
     }
-    LaunchedEffect(Unit) {
-        isVisible = true
-    }
-
+    TitleView("Hadith Books")
 }
 
-private fun Modifier.blendMode(
-    blendMode: BlendMode
-) : Modifier {
-    return this.drawWithCache {
-        val graphicsLayer = obtainGraphicsLayer()
-        graphicsLayer.apply {
-            record {
-                drawContent()
-            }
-            this.blendMode = blendMode
-        }
-        onDrawWithContent {
-            drawLayer(graphicsLayer)
-        }
-    }
-}
 
 @Composable
 fun HadithEditionCard(hadithEdition: Edition,navController: NavController) {
@@ -240,9 +207,8 @@ fun LanguageList(collections: List<Collection>, randomColor: Color, animatedColo
                     ),
                     shape = RoundedCornerShape(10.dp)
                 )
-                .blendMode(BlendMode.Difference)
                 .clickable {
-                    navController.navigateToScreen(screens[4],collection.linkmin)
+                    navController.navigateToScreen(screens[6],collection.linkmin)
                 },
             text = collection.language,
             color = Color.White,

@@ -63,7 +63,6 @@ import kotlin.random.Random
 
 @Composable
 fun DuaCategoriesScreen(bottomPaddingValues: Dp, navController: NavController,duaCategoriesViewModel: DuaCategoriesViewModel ) {
-    println("screen")
     val duaCategories by duaCategoriesViewModel.duaCategories.collectAsState()
     Box(modifier = Modifier.fillMaxSize(1f), contentAlignment = Alignment.Center){
 
@@ -79,7 +78,7 @@ fun DuaCategoriesScreen(bottomPaddingValues: Dp, navController: NavController,du
             }
         }
     }
-    TitleView("Dua Categories")
+    TitleView("Dua Topics")
 }
 
 @Composable

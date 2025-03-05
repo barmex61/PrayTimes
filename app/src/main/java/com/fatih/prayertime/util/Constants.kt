@@ -90,7 +90,7 @@ object Constants {
             iconResourceType = ResourceType.VECTOR
         ),
         ScreenData(
-            title = "Prayer Detail",
+            title = "Prayer Category Detail",
             iconRoute = R.drawable.pray,
             route = "duaCategoriesDetail",
             iconResourceType = ResourceType.PAINTER,
@@ -110,6 +110,13 @@ object Constants {
                 navArgument("collectionPath"){type = NavType.StringType}
             )
         ),
+        ScreenData(
+            title = "Prayer Detail",
+            iconRoute = R.drawable.pray,
+            route = "duaDetail",
+            iconResourceType = ResourceType.PAINTER,
+        ),
+
         ScreenData(
             title = "Prayer",
             iconRoute = R.drawable.pray,

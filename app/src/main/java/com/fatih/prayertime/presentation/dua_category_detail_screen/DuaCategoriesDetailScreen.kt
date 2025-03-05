@@ -27,36 +27,41 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 
 import com.fatih.prayertime.data.remote.dto.duadto.DuaCategoryDetailData
 import com.fatih.prayertime.presentation.dua_categories_screen.DuaCategoriesViewModel
 import com.fatih.prayertime.util.Constants.colors
+import com.fatih.prayertime.util.Constants.screens
 import com.fatih.prayertime.util.ErrorView
 import com.fatih.prayertime.util.LoadingView
 import com.fatih.prayertime.util.Status
+import com.fatih.prayertime.util.TitleView
+import com.fatih.prayertime.util.navigateToScreen
 import kotlin.random.Random
 
 @Composable
 fun DuaCategoryDetailScreen(
     bottomPaddingValues: Dp,
-    duaCategoriesViewModel: DuaCategoriesViewModel
+    duaCategoriesViewModel: DuaCategoriesViewModel,
+    navController: NavController
 ) {
     val infiniteTransition = rememberInfiniteTransition()
     val duaCategoryDetail by duaCategoriesViewModel.duaCategoryDetail.collectAsState()
-    var isVisible by remember { mutableStateOf(false) }
 
     when(duaCategoryDetail.status){
         Status.SUCCESS->{
             duaCategoryDetail.data?:return
-            LazyVerticalStaggeredGrid(
-                modifier = Modifier.padding(bottom = bottomPaddingValues),
-                columns = StaggeredGridCells.Fixed(2)
-            ) {
-               items(duaCategoryDetail.data!!.data){ duaCategoryDetail ->
-                   DuaCategoryDetailCard(duaCategoryDetail,infiniteTransition)
-               }
+            Box(modifier = Modifier.fillMaxSize(1f), contentAlignment = Alignment.Center){
+                LazyVerticalStaggeredGrid(
+                    modifier = Modifier.padding(bottom = bottomPaddingValues),
+                    columns = StaggeredGridCells.Fixed(2)
+                ) {
+                    items(duaCategoryDetail.data!!.data){ duaCategoryDetail ->
+                        DuaCategoryDetailCard(duaCategoryDetail,infiniteTransition,duaCategoriesViewModel, navController)
+                    }
+                }
             }
-
         }
         Status.LOADING->{
             LoadingView()
@@ -65,14 +70,17 @@ fun DuaCategoryDetailScreen(
             ErrorView(duaCategoryDetail.message?:"Error occurred")
         }
     }
-    LaunchedEffect(key1 = Unit) {
-        isVisible = true
-    }
+
+    TitleView("Dua Details")
 
 }
 
 @Composable
-fun DuaCategoryDetailCard(duaCategoryDetailData: DuaCategoryDetailData, infiniteTransition: InfiniteTransition) {
+fun DuaCategoryDetailCard(
+    duaCategoryDetailData: DuaCategoryDetailData,
+    infiniteTransition: InfiniteTransition,
+    duaCategoriesViewModel: DuaCategoriesViewModel,
+    navController: NavController) {
 
     val randomColor = remember { colors.random() }
     val targetColor = remember { colors.filter { it != randomColor }.random() }
@@ -113,7 +121,8 @@ fun DuaCategoryDetailCard(duaCategoryDetailData: DuaCategoryDetailData, infinite
         ,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
         onClick = {
-
+            duaCategoriesViewModel.updateDuaId(duaCategoryDetailData.id)
+            navController.navigateToScreen(screens[7])
         }
     ) {
 

@@ -5,7 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fatih.prayertime.data.remote.dto.hadithdto.HadithCollection
 import com.fatih.prayertime.domain.model.HadithSectionCardData
-import com.fatih.prayertime.domain.use_case.hadith_use_cases.get_hadith_collections_use_case.GetHadithCollectionsUseCase
+import com.fatih.prayertime.domain.use_case.hadith_use_cases.GetHadithCollectionsUseCase
 import com.fatih.prayertime.util.Resource
 import com.fatih.prayertime.util.Status
 import com.fatih.prayertime.util.combineSectionsAndDetails
