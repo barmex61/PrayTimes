@@ -79,7 +79,9 @@ fun HadithScreen(bottomPaddingValues: Dp,navController: NavController,hadithScre
             }
         }
         Status.ERROR -> {
-            ErrorView(hadithEdition.message?:"Unknown Error")
+            ErrorView(hadithEdition.message?:"Unknown Error"){
+                hadithScreenViewModel.getHadithEditions()
+            }
         }
     }
     TitleView("Hadith Books")

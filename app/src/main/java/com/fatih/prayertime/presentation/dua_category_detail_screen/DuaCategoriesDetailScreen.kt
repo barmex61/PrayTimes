@@ -38,6 +38,7 @@ import com.fatih.prayertime.util.LoadingView
 import com.fatih.prayertime.util.Status
 import com.fatih.prayertime.util.TitleView
 import com.fatih.prayertime.util.navigateToScreen
+import kotlinx.coroutines.delay
 import kotlin.random.Random
 
 @Composable
@@ -51,14 +52,15 @@ fun DuaCategoryDetailScreen(
 
     when(duaCategoryDetail.status){
         Status.SUCCESS->{
-            duaCategoryDetail.data?:return
             Box(modifier = Modifier.fillMaxSize(1f), contentAlignment = Alignment.Center){
                 LazyVerticalStaggeredGrid(
                     modifier = Modifier.padding(bottom = bottomPaddingValues),
                     columns = StaggeredGridCells.Fixed(2)
                 ) {
-                    items(duaCategoryDetail.data!!.data){ duaCategoryDetail ->
-                        DuaCategoryDetailCard(duaCategoryDetail,infiniteTransition,duaCategoriesViewModel, navController)
+                    duaCategoryDetail.data?.let { duaCategoryDetailData ->
+                        items(duaCategoryDetailData.data){ duaCategoryDetail ->
+                            DuaCategoryDetailCard(duaCategoryDetail,infiniteTransition,duaCategoriesViewModel, navController)
+                        }
                     }
                 }
             }
@@ -67,7 +69,9 @@ fun DuaCategoryDetailScreen(
             LoadingView()
         }
         Status.ERROR->{
-            ErrorView(duaCategoryDetail.message?:"Error occurred")
+            ErrorView(duaCategoryDetail.message?:"Error occurred"){
+                duaCategoriesViewModel.getDuaCategoryDetail()
+            }
         }
     }
 

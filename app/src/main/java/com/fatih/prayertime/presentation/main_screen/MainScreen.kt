@@ -612,7 +612,8 @@ fun PrayScheduleCompose(haptic: HapticFeedback) {
                     PrayTimesRowHeader(dailyPrayTime.data)
                 }
                 Status.ERROR -> {
-                   ErrorView(dailyPrayTime.message?:"Error occurred while fetching pray times")
+                   ErrorView(dailyPrayTime.message?:"Error occurred while fetching pray times"){
+                   }
                 }
                 Status.LOADING -> {
                    LoadingView()

@@ -59,6 +59,7 @@ import com.fatih.prayertime.util.LoadingView
 import com.fatih.prayertime.util.Status
 import com.fatih.prayertime.util.TitleView
 import com.fatih.prayertime.util.navigateToScreen
+import kotlinx.coroutines.delay
 import kotlin.random.Random
 
 @Composable
@@ -74,7 +75,9 @@ fun DuaCategoriesScreen(bottomPaddingValues: Dp, navController: NavController,du
                 LoadingView()
             }
             Status.ERROR ->{
-                ErrorView(message = duaCategories.message.toString())
+                ErrorView(message = duaCategories.message.toString()){
+                    duaCategoriesViewModel.getDuaCategories()
+                }
             }
         }
     }

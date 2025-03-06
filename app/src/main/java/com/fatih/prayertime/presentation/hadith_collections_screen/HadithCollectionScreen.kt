@@ -50,7 +50,9 @@ import kotlin.reflect.full.memberProperties
 @Composable
 fun HadithCollectionScreen(bottomPaddingValues: Dp,collectionPath : String, hadithCollectionViewModel : HadithCollectionViewModel, navController: NavController) {
     val hadithSectionCardDataList by hadithCollectionViewModel.hadithSectionCardDataList.collectAsState()
-
+    LaunchedEffect(Unit) {
+        hadithCollectionViewModel.updateHadithCollectionPath(collectionPath)
+    }
     when(hadithSectionCardDataList.status) {
         Status.SUCCESS -> {
             println("success")
@@ -60,13 +62,13 @@ fun HadithCollectionScreen(bottomPaddingValues: Dp,collectionPath : String, hadi
             LoadingView()
         }
         Status.ERROR ->{
-            ErrorView(message = hadithSectionCardDataList.message.toString())
+            ErrorView(message = hadithSectionCardDataList.message.toString()){
+                hadithCollectionViewModel.getHadithCollection()
+            }
         }
     }
 
-    LaunchedEffect(Unit) {
-        hadithCollectionViewModel.updateHadithCollectionPath(collectionPath)
-    }
+
     TitleView("Hadith Topics")
 }
 

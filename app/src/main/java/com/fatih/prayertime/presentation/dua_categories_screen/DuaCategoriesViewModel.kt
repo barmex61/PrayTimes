@@ -10,11 +10,15 @@ import com.fatih.prayertime.domain.use_case.dua_use_cases.GetDuaCategoriesUseCas
 import com.fatih.prayertime.domain.use_case.dua_use_cases.GetDuaCategoryDetailUseCase
 import com.fatih.prayertime.domain.use_case.dua_use_cases.GetDuaDetailUseCase
 import com.fatih.prayertime.util.Resource
+import com.fatih.prayertime.util.Status
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
 import javax.inject.Inject
 
 @HiltViewModel
@@ -33,13 +37,8 @@ class DuaCategoriesViewModel @Inject constructor(
     private val _duaDetail = MutableStateFlow<Resource<DuaDetail>>(Resource.loading())
     val duaDetail = _duaDetail
 
-    private val duaDetailPath = MutableStateFlow<String>("")
+    private val duaDetailPath = MutableStateFlow("")
     private val duaId = MutableStateFlow(0)
-
-    private fun getDuaCategories() = viewModelScope.launch(Dispatchers.IO){
-        _duaCategories.emit(Resource.loading())
-        _duaCategories.emit(getDuaCategoriesUseCase())
-    }
 
     fun updateDetailPath(detailPath : String) = viewModelScope.launch(Dispatchers.Default){
         duaDetailPath.emit(detailPath)
@@ -49,16 +48,21 @@ class DuaCategoriesViewModel @Inject constructor(
         duaId.emit(id)
     }
 
-    private fun getDuaCategoryDetail(detailPath: String) = viewModelScope.launch(Dispatchers.IO){
+    fun getDuaCategories() = viewModelScope.launch(Dispatchers.IO) {
+        _duaCategories.emit(Resource.loading())
+        _duaCategories.emit(getDuaCategoriesUseCase())
+    }
+
+    fun getDuaCategoryDetail() = viewModelScope.launch(Dispatchers.IO) {
+        println("sda")
         _duaCategoryDetail.emit(Resource.loading())
-        _duaCategoryDetail.emit(getDuaCategoryDetailUseCase(detailPath))
+        _duaCategoryDetail.emit(getDuaCategoryDetailUseCase(duaDetailPath.value))
     }
 
-    private fun getDuaDetail(path:String , id:Int) = viewModelScope.launch(Dispatchers.IO) {
+    fun getDuaDetail() = viewModelScope.launch(Dispatchers.IO) {
         _duaDetail.emit(Resource.loading())
-        _duaDetail.emit(getDuaDetailsUseCase(path,id))
+        _duaDetail.emit(getDuaDetailsUseCase(duaDetailPath.value,duaId.value))
     }
-
 
     init {
         getDuaCategories()
@@ -66,14 +70,14 @@ class DuaCategoriesViewModel @Inject constructor(
             duaDetailPath.collectLatest { path ->
                 if (path.isNotEmpty()) { // Boş path'leri gereksiz yere işlememek için
                     Log.d("HadithCollectionViewModel", "Collection path: $path")
-                    getDuaCategoryDetail(path)
+                    getDuaCategoryDetail()
                 }
             }
         }
         viewModelScope.launch(Dispatchers.IO){
             duaId.collectLatest { id ->
                 if (id != 0){
-                    getDuaDetail(duaDetailPath.value,id)
+                    getDuaDetail()
                 }
             }
         }

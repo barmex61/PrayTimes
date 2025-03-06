@@ -11,6 +11,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import org.threeten.bp.LocalDate
@@ -28,11 +29,11 @@ class CalendarScreenViewModel @Inject constructor(
     private val _searchLocalDate = MutableStateFlow(LocalDate.now())
     val searchLocalDate = _searchLocalDate
 
-    private fun getMonthlyIslamicCalendar(year: Int, month: Int, calendarMethod: String = selectedIslamicCalendarMethod) = viewModelScope.launch(
+    fun getMonthlyIslamicCalendar( calendarMethod: String = selectedIslamicCalendarMethod) = viewModelScope.launch(
         Dispatchers.IO){
         _monthlyIslamicCalendar.value = Resource.loading()
         delay(500)
-        _monthlyIslamicCalendar.value = getIslamicCalendarForMonthUseCase(year, month, calendarMethod)
+        _monthlyIslamicCalendar.value = getIslamicCalendarForMonthUseCase(searchLocalDate.value.year, searchLocalDate.value.monthValue, calendarMethod)
     }
 
     fun updateSearchMonthAndYear(localDate: LocalDate){
@@ -47,10 +48,8 @@ class CalendarScreenViewModel @Inject constructor(
 
     init {
         viewModelScope.launch(Dispatchers.IO){
-            _searchLocalDate.distinctUntilChanged { old, new ->
-                old.monthValue == new.monthValue && old.year == new.year
-            }.collect {
-                getMonthlyIslamicCalendar(it.monthValue, it.year)
+            _searchLocalDate.collectLatest {
+                getMonthlyIslamicCalendar()
             }
         }
     }

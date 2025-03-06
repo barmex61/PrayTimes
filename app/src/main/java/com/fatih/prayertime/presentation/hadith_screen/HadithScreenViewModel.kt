@@ -19,9 +19,14 @@ class HadithScreenViewModel @Inject constructor(
     private val _hadithEditions : MutableStateFlow<Resource<HadithEdition?>> = MutableStateFlow(Resource.loading())
     val hadithEditions = _hadithEditions
 
+    fun getHadithEditions() = viewModelScope.launch(Dispatchers.IO){
+        _hadithEditions.emit(getHadithEditionsUseCase())
+
+    }
+
     init {
         viewModelScope.launch(Dispatchers.IO){
-            _hadithEditions.emit(getHadithEditionsUseCase())
+            getHadithEditions()
         }
     }
 }

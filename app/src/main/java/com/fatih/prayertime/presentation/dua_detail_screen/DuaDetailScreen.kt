@@ -46,7 +46,9 @@ fun DuaDetailScreen(bottomPaddingValues : Dp,duaCategoriesViewModel: DuaCategori
             LoadingView()
         }
         Status.ERROR ->{
-            ErrorView(duaDetail.message?:"An unknown error occurred")
+            ErrorView(duaDetail.message?:"An unknown error occurred"){
+                duaCategoriesViewModel.getDuaDetail()
+            }
         }
         Status.SUCCESS ->{
             Box(modifier = Modifier.fillMaxSize(1f).padding(bottom = bottomPaddingValues), contentAlignment = Alignment.Center){

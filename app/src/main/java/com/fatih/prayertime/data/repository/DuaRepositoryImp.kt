@@ -37,7 +37,7 @@ class DuaRepositoryImp @Inject constructor(private val duaApi: DuaApi) : DuaRepo
         } catch (e: Exception) {
             Resource.error("An unexpected error ss occurred: ${e.message}")
         } catch (e:TimeoutCancellationException){
-            Resource.error("Timeout error: ${e.message}")
+            Resource.error("Timeout error: ${e.message}", exception = e)
         }
     }
 
@@ -60,7 +60,7 @@ class DuaRepositoryImp @Inject constructor(private val duaApi: DuaApi) : DuaRepo
         } catch (e: Exception) {
             Resource.error("An unexpected error ss occurred: ${e.message}")
         }catch (e:TimeoutCancellationException){
-            Resource.error("Timeout error: ${e.message}")
+            Resource.error("Timeout error: ${e.message}", exception = e)
         }
     }
 
@@ -83,7 +83,7 @@ class DuaRepositoryImp @Inject constructor(private val duaApi: DuaApi) : DuaRepo
         } catch (e: Exception) {
             Resource.error("An unexpected error ss occurred: ${e.message}")
         }catch (e:TimeoutCancellationException){
-            Resource.error("Timeout error: ${e.message}")
+            Resource.error("Timeout error: ${e.message}", exception = e)
         }
     }
 

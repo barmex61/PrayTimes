@@ -36,9 +36,9 @@ class HadithCollectionViewModel @Inject constructor(
     private val _selectedHadithIndex : MutableStateFlow<Int> = MutableStateFlow(0)
     val selectedHadithIndex = _selectedHadithIndex
 
-    private fun getHadithCollection(collectionPath : String) = viewModelScope.launch(Dispatchers.IO){
+    fun getHadithCollection() = viewModelScope.launch(Dispatchers.IO){
         _hadithCollection.emit(Resource.loading())
-        _hadithCollection.emit(getHadithCollectionsUseCase(collectionPath))
+        _hadithCollection.emit(getHadithCollectionsUseCase(_hadithCollectionPath.value))
     }
 
     fun updateHadithCollectionPath(collectionPath: String) = viewModelScope.launch(Dispatchers.Default){
@@ -59,7 +59,7 @@ class HadithCollectionViewModel @Inject constructor(
             _hadithCollectionPath.collectLatest { path ->
                 if (path.isNotEmpty()) { // Boş path'leri gereksiz yere işlememek için
                     Log.d("HadithCollectionViewModel", "Collection path: $path")
-                    getHadithCollection(path)
+                    getHadithCollection()
                 }
             }
         }

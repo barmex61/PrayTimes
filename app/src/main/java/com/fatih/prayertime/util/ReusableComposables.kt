@@ -32,8 +32,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -51,6 +55,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.fatih.prayertime.util.Constants.colors
 import kotlinx.coroutines.delay
@@ -112,7 +117,7 @@ fun LoadingView() {
 }
 
 @Composable
-fun ErrorView(message: String) {
+fun ErrorView(message: String,onRetry : () -> Unit) {
     val infiniteTransition = rememberInfiniteTransition()
     val scale by infiniteTransition.animateFloat(
         initialValue = 1f,
@@ -122,19 +127,38 @@ fun ErrorView(message: String) {
             repeatMode = RepeatMode.Reverse
         )
     )
+    val rotate by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(2000, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Restart
+        )
+    )
 
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Icon(
-                imageVector = Icons.Outlined.Close,
-                contentDescription = "Error",
-                tint = Color.Red,
-                modifier = Modifier
-                    .size(64.dp)
-                    .scale(scale)
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(text = message, color = Color.Red, style = MaterialTheme.typography.bodyMedium)
+        Card (onClick = onRetry,colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)) {
+            Spacer(modifier = Modifier.size(16.dp))
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally,modifier = Modifier.padding(16.dp).background(color = Color.Transparent)) {
+                    Icon(
+                        imageVector = Icons.Filled.Refresh,
+                        contentDescription = "Retry",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(64.dp).graphicsLayer {
+                            rotationZ = rotate
+                        }
+                    )
+                    Spacer(modifier = Modifier.size(16.dp))
+                    Text(text = "Click to refresh", color = MaterialTheme.colorScheme.primary, modifier = Modifier.graphicsLayer {
+                        scaleX = scale
+                        scaleY = scale
+                    })
+                }
+
+                Text(textAlign = TextAlign.Center, text = message, color = Color.Red, style = MaterialTheme.typography.bodyMedium)
+                Spacer(modifier = Modifier.height(16.dp))
+            }
         }
     }
 }
