@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
+import java.util.Locale
 import javax.inject.Inject
 
 @HiltViewModel
@@ -54,7 +55,6 @@ class DuaCategoriesViewModel @Inject constructor(
     }
 
     fun getDuaCategoryDetail() = viewModelScope.launch(Dispatchers.IO) {
-        println("sda")
         _duaCategoryDetail.emit(Resource.loading())
         _duaCategoryDetail.emit(getDuaCategoryDetailUseCase(duaDetailPath.value))
     }

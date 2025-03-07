@@ -43,6 +43,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -111,7 +112,7 @@ fun CompassContent(
         val icon = if (inRange) R.drawable.check_circle else R.drawable.rotate_arrow_icon
         Spacer(modifier = Modifier.size(10.dp))
         Text(
-            text = "Telefonunuzu, Kâbe-i Şerif'i aşağıda içerisi boş olan çemberin içerisine gelecek şekilde çevirin.",
+            text = stringResource(R.string.kaaba_text),
             textAlign = TextAlign.Center
         )
         Spacer(modifier = Modifier.size(20.dp))
@@ -222,10 +223,10 @@ fun CompassGyroscopeContent(
             modifier = Modifier.height(-yOffset - 35.dp)
         )
         Text(
-            text = "Kaaba angle : $qiblaDirection",
+            text = stringResource(R.string.kaaba_angle) +" : $qiblaDirection",
         )
         Text(
-            text = "Your angle : ${gyroscopeSensor.rotation.floatValue}",
+            text = stringResource(R.string.your_angle)+" : ${gyroscopeSensor.rotation.floatValue}",
         )
         Spacer(
             modifier = Modifier.height(25.dp)

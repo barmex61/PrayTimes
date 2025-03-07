@@ -1,6 +1,7 @@
 package com.fatih.prayertime.domain.use_case.alarm_use_cases
 
 import android.content.Context
+import android.util.Log
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
@@ -12,29 +13,27 @@ class ScheduleDailyAlarmUpdateUseCase @Inject constructor() {
 
     fun execute(context: Context) {
 
-        val workRequest = PeriodicWorkRequestBuilder<AlarmWorker>(15,TimeUnit.MINUTES)
-            .addTag("AlarmWorker")
-            .build()
+        val workManager = WorkManager.getInstance(context)
 
+        workManager.getWorkInfosForUniqueWorkLiveData("AlarmWorker").observeForever { workInfos ->
+            if (workInfos.isEmpty() || workInfos.any { it.state.isFinished }) {
+                // Eğer hiç yoksa veya tamamlanmışsa yeni iş ekle
+                val workRequest = PeriodicWorkRequestBuilder<AlarmWorker>(15, TimeUnit.MINUTES)
+                    .addTag("AlarmWorker")
+                    .build()
 
-        WorkManager.getInstance(context)
-            .enqueueUniquePeriodicWork(
-                "AlarmWorker",
-                ExistingPeriodicWorkPolicy.KEEP,
-                workRequest
-            )/*
-            .state.observeForever {
-                Log.d("state: $it")
+                workManager.enqueueUniquePeriodicWork(
+                    "AlarmWorker",
+                    ExistingPeriodicWorkPolicy.KEEP,
+                    workRequest
+                )
+                Log.d("Schedule", "Created new work ")
+            } else {
+                Log.d("Schedule", "Already there is a job: ${workInfos.map { it.state }}")
+                Log.d("Schedule", "Next schedule time: ${workInfos.map { it.nextScheduleTimeMillis}}")
             }
-
-        Log.d("executed") */
+        }
     }
-    /*
-    private fun calculateInitialDelay(): Long {
-        val now = LocalDateTime.now()
-        val midnight = now.toLocalDate().atStartOfDay().plusDays(1)
-        return Duration.between(now, midnight).toMillis() + Duration.ofMinutes(30).toMillis()
-    }  */
 
 }
 

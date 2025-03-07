@@ -67,6 +67,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -96,6 +97,7 @@ import com.fatih.prayertime.presentation.settings_screen.SettingsScreen
 import com.fatih.prayertime.presentation.ui.theme.PrayerTimeTheme
 import com.fatih.prayertime.presentation.util_screen.UtilitiesScreen
 import com.fatih.prayertime.util.Constants.screens
+import com.fatih.prayertime.util.PrayTimesString
 import com.google.accompanist.navigation.animation.AnimatedNavHost
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -131,6 +133,7 @@ class MainActivity : ComponentActivity() {
             PrayerTimeTheme(darkTheme = darkTheme) {
                 MainScreenContent(::showBatteryOptimizationDialog)
             }
+            ScheduleAlarm(scheduleDailyAlarmUpdateUseCase)
         }
     }
     private fun showBatteryOptimizationDialog() {
@@ -238,11 +241,11 @@ fun BottomAppBarLayout(navController: NavController) {
                 icon = {
                     Icon(
                         imageVector = ImageVector.vectorResource(id = item.iconRoute),
-                        contentDescription = item.title,
+                        contentDescription = item.title.name,
                         modifier = Modifier.size(24.dp)
                     )
                 },
-                label = { Text(item.title) },
+                label = { Text(text = stringResource(item.title.stringResId)) },
                 selected = selectedItemIndex == index,
                 colors = NavigationBarItemColors(
                     selectedIconColor = MaterialTheme.colorScheme.primary,
@@ -257,7 +260,7 @@ fun BottomAppBarLayout(navController: NavController) {
                     selectedItemIndex = index
                     val currentScreen = navController.currentBackStackEntry?.destination?.route
 
-                    if (currentScreen != item.title) {
+                    if (currentScreen != item.title.name) {
                         navController.navigate(item.route) {
                             popUpTo(navController.graph.startDestinationId) {
                                 saveState = false
@@ -281,7 +284,7 @@ fun NavHostLayout(navController: NavHostController, innerPadding: PaddingValues,
     val duaCategoriesViewModel : DuaCategoriesViewModel = hiltViewModel()
     AnimatedNavHost(
         navController = navController,
-        startDestination = screens.first().title
+        startDestination = screens.first().title.name
     ) {
         screens.forEachIndexed { index , item ->
             composable(
@@ -301,22 +304,22 @@ fun NavHostLayout(navController: NavHostController, innerPadding: PaddingValues,
                 }
             ) { backStackEntry ->
 
-                when (item.title) {
-                    "Home" -> MainScreen(appViewModel, innerPaddingValue)
-                    "Qibla" -> CompassScreen(innerPaddingValue)
-                    "Utilities" -> UtilitiesScreen(innerPaddingValue, navController)
-                    "Settings" -> SettingsScreen(innerPaddingValue)
-                    "Esmaul Husna" -> EsmaulHusnaScreen(innerPaddingValue)
-                    "Islamic Calendar" -> CalendarScreen(innerPaddingValue)
-                    "Hadith" -> HadithScreen(innerPaddingValue,navController)
-                    "Hadith Collections" -> {
+                when (item.title.name) {
+                    PrayTimesString.Home.name -> MainScreen(appViewModel, innerPaddingValue)
+                    PrayTimesString.Qibla.name -> CompassScreen(innerPaddingValue)
+                    PrayTimesString.Utilities.name -> UtilitiesScreen(innerPaddingValue, navController)
+                    PrayTimesString.Settings.name -> SettingsScreen(innerPaddingValue)
+                    PrayTimesString.ESMAUL_HUSNA.name -> EsmaulHusnaScreen(innerPaddingValue)
+                    PrayTimesString.ISLAMIC_CALENDAR.name -> CalendarScreen(innerPaddingValue)
+                    PrayTimesString.HADITH.name-> HadithScreen(innerPaddingValue,navController)
+                    PrayTimesString.HADITH_COLLECTION.name -> {
                         val collectionPath = backStackEntry.arguments?.getString("collectionPath") ?: return@composable
                         HadithCollectionScreen(innerPaddingValue,collectionPath, hadithCollectionViewModel = hadithCollectionViewModel, navController = navController)
                     }
-                    "Hadith Section Detail" -> HadithSectionDetailScreen(innerPaddingValue,hadithCollectionViewModel)
-                    "Prayer" -> DuaCategoriesScreen(innerPaddingValue,navController,duaCategoriesViewModel)
-                    "Prayer Category Detail" -> DuaCategoryDetailScreen(innerPaddingValue,duaCategoriesViewModel,navController)
-                    "Prayer Detail" -> DuaDetailScreen(innerPaddingValue,duaCategoriesViewModel)
+                    PrayTimesString.HADITH_SECTION_DETAILS.name -> HadithSectionDetailScreen(innerPaddingValue,hadithCollectionViewModel)
+                    PrayTimesString.PRAYER.name -> DuaCategoriesScreen(innerPaddingValue,navController,duaCategoriesViewModel)
+                    PrayTimesString.PRAY_CATEGORY_DETAILS.name -> DuaCategoryDetailScreen(innerPaddingValue,duaCategoriesViewModel,navController)
+                    PrayTimesString.PRAYER_DETAIL.name -> DuaDetailScreen(innerPaddingValue,duaCategoriesViewModel)
                 }
             }
         }
@@ -355,6 +358,12 @@ fun ComponentActivity.UpdateSystemBars(isDarkMode: Boolean) {
             )
         )
     }
+}
+
+@Composable
+fun ScheduleAlarm(scheduleDailyAlarmUpdateUseCase: ScheduleDailyAlarmUpdateUseCase) {
+    val context = LocalContext.current
+    scheduleDailyAlarmUpdateUseCase.execute(context)
 }
 
 @Preview(showBackground = true)

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Namaz Zamanı</string>
+    <string name="location_text">Konum</string>
+    <string name="prayer_bar_text">Gününüze bu dualarla başlayın</string>
+    <string name="remaining_time_text">Sonraki namaza kalan süre</string>
+    <string name="morning">Sabah</string>
+    <string name="noon">Öğle</string>
+    <string name="afternoon">İkindi</string>
+    <string name="evening">Akşam</string>
+    <string name="night">Yatsı</string>
+    <string name="prayer_tracker">Namaz takibi</string>
+    <string name="pray_together">Tümünü ayarla</string>
+    <string name="daily_prayer">Günlük Dua</string>
+    <string name="see_all">Tümünü Gör</string>
+    <string name="home">Ana Sayfa</string>
+    <string name="qibla">Kıble</string>
+    <string name="settings">Ayarlar</string>
+    <string name="utilities">Araçlar</string>
+    <string name="kaaba_text">Lütfen telefonunuzu, Kabe görüntüsü çemberin içine girecek şekilde çevirin, böylece kıble yönünü bulabilirsiniz.</string>
+    <string name="kaaba_angle">Kabe Açısı</string>
+    <string name="your_angle">Sizin Açınız</string>
+    <string name="appearance">Görünüm</string>
+    <string name="light">Aydınlık</string>
+    <string name="dark">Karanlık</string>
+    <string name="system_default">Sistem Varsayılanı</string>
+    <string name="notification">Bildirim</string>
+    <string name="vibration">Titreşim</string>
+    <string name="alarm">Alarm</string>
+    <string name="others">Diğerleri</string>
+    <string name="mute_friday">Cuma Namazı sırasında sessize al</string>
+    <string name="prayer">Dua</string>
+    <string name="quran">Kuran-ı Kerim</string>
+    <string name="esmaul_husna">Esmaül Hüsna</string>
+    <string name="islamic_calendar">İslami Takvim</string>
+    <string name="hadith">Hadis</string>
+    <string name="alarms">Alarmlar</string>
+    <string name="change_sound">Sesi değiştir</string>
+    <string name="min_ago">dak. önce</string>
+    <string name="pray_category_details">Pray Category Detail</string>
+    <string name="prayer_detail">Prayer Detail</string>
+    <string name="hadith_collection">Hadith Collection</string>
+    <string name="number_of_prayers">Bu kategorideki dua sayısı</string>
+    <string name="hadith_section_detail">Hadith Section Detail</string>
+</resources>

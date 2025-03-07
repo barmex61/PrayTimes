@@ -102,6 +102,12 @@ fun DuaDetailCard(duaDetail: DuaDetailData) {
             )
             Spacer(modifier = Modifier.height(22.dp))
             Text(
+                text = duaDetail.fawaid,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onPrimaryContainer
+            )
+            Spacer(modifier = Modifier.height(22.dp))
+            Text(
                 text = "Source: ${duaDetail.source}",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onPrimaryContainer

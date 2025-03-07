@@ -16,8 +16,10 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -45,11 +47,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.fatih.prayertime.R
 import com.fatih.prayertime.data.remote.dto.duadto.DuaCategories
 import com.fatih.prayertime.data.remote.dto.duadto.DuaCategoryData
 import com.fatih.prayertime.util.Constants.colors
@@ -60,6 +64,7 @@ import com.fatih.prayertime.util.Status
 import com.fatih.prayertime.util.TitleView
 import com.fatih.prayertime.util.navigateToScreen
 import kotlinx.coroutines.delay
+import java.util.Locale
 import kotlin.random.Random
 
 @Composable
@@ -87,8 +92,10 @@ fun DuaCategoriesScreen(bottomPaddingValues: Dp, navController: NavController,du
 @Composable
 fun DuaCategoriesGridView(duaCategories: DuaCategories, navController: NavController,duaCategoriesViewModel: DuaCategoriesViewModel) {
     LazyVerticalStaggeredGrid (
-        modifier = Modifier.padding(start = 15.dp, end = 15.dp),
         columns = StaggeredGridCells.Fixed(2),
+        verticalItemSpacing = 20.dp,
+        horizontalArrangement = Arrangement.spacedBy(20.dp),
+        contentPadding = PaddingValues(bottom = 40.dp, top = 40.dp, start = 10.dp, end = 10.dp),
     )  {
         items(duaCategories.data) { duaCategoryData ->
             DuaCategoryCard(duaCategoryData, navController, duaCategoriesViewModel)
@@ -114,7 +121,7 @@ fun DuaCategoryCard(duaCategoryData :DuaCategoryData, navController: NavControll
         initialValue = randomColor,
         targetValue = targetColor,
         animationSpec = infiniteRepeatable(
-            animation = tween(10000),
+            animation = tween(3000),
             repeatMode = RepeatMode.Reverse
         )
     )
@@ -127,7 +134,6 @@ fun DuaCategoryCard(duaCategoryData :DuaCategoryData, navController: NavControll
         elevation = CardDefaults.cardElevation(8.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
         modifier = Modifier
-            .padding(bottom = 20.dp, top = 20.dp, start = 10.dp, end = 10.dp)
             .graphicsLayer {
                 scaleY = scale.value
                 translationX = translation.value.dp.toPx()
@@ -150,7 +156,7 @@ fun DuaCategoryCard(duaCategoryData :DuaCategoryData, navController: NavControll
         ) {
             Text(
                 textAlign = TextAlign.Center,
-                text = duaCategoryData.name,
+                text = if (Locale.getDefault().language == "tr") duaCategoryData.nameTr?:duaCategoryData.name else duaCategoryData.name,
                 style = MaterialTheme.typography.titleMedium,
                 color = animatedColor.value,
                 modifier = Modifier.fillMaxWidth()
@@ -158,7 +164,7 @@ fun DuaCategoryCard(duaCategoryData :DuaCategoryData, navController: NavControll
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 textAlign = TextAlign.Center,
-                text = "Number of prayers in this category :  ${duaCategoryData.total}",
+                text = stringResource(R.string.number_of_prayers)+" :  ${duaCategoryData.total}",
                 style = MaterialTheme.typography.titleSmall,
                 color = animatedColor.value,
                 modifier = Modifier.fillMaxWidth()

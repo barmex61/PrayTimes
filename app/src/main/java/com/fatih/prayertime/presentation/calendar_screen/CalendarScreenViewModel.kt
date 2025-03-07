@@ -29,11 +29,10 @@ class CalendarScreenViewModel @Inject constructor(
     private val _searchLocalDate = MutableStateFlow(LocalDate.now())
     val searchLocalDate = _searchLocalDate
 
-    fun getMonthlyIslamicCalendar( calendarMethod: String = selectedIslamicCalendarMethod) = viewModelScope.launch(
-        Dispatchers.IO){
+    fun getMonthlyIslamicCalendar( calendarMethod: String = selectedIslamicCalendarMethod) = viewModelScope.launch(Dispatchers.IO){
         _monthlyIslamicCalendar.value = Resource.loading()
         delay(500)
-        _monthlyIslamicCalendar.value = getIslamicCalendarForMonthUseCase(searchLocalDate.value.year, searchLocalDate.value.monthValue, calendarMethod)
+        _monthlyIslamicCalendar.value = getIslamicCalendarForMonthUseCase(searchLocalDate.value.monthValue, searchLocalDate.value.year, calendarMethod)
     }
 
     fun updateSearchMonthAndYear(localDate: LocalDate){
@@ -47,6 +46,7 @@ class CalendarScreenViewModel @Inject constructor(
     fun isToday(daysData: IslamicDaysData) = formattedUseCase.isToday(daysData.date)
 
     init {
+        updateSearchMonthAndYear(LocalDate.now())
         viewModelScope.launch(Dispatchers.IO){
             _searchLocalDate.collectLatest {
                 getMonthlyIslamicCalendar()

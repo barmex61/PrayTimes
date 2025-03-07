@@ -38,6 +38,7 @@ import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.graphics.graphicsLayer
 
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -130,7 +131,7 @@ fun UtilitiesCardContent(screenData: ScreenData, animationProgress: Float, anima
     ) {
         Image(
             painter = painterResource(id = screenData.painterRoute ?: screenData.iconRoute),
-            contentDescription = screenData.title,
+            contentDescription = screenData.title.name,
             colorFilter = ColorFilter.colorMatrix(
                 ColorMatrix().apply { setToSaturation(animationProgress) }
             ),
@@ -143,7 +144,7 @@ fun UtilitiesCardContent(screenData: ScreenData, animationProgress: Float, anima
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            text = screenData.title,
+            text = stringResource(screenData.title.stringResId),
             style = MaterialTheme.typography.titleLarge,
             color = animatedColor,
             textAlign = TextAlign.Center,

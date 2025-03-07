@@ -47,6 +47,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -54,9 +55,11 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.fatih.prayertime.R
 import com.fatih.prayertime.domain.model.GlobalAlarm
 import com.fatih.prayertime.domain.model.ThemeOption
 import com.fatih.prayertime.presentation.main_activity.AppViewModel
+import com.fatih.prayertime.util.PrayTimesString
 import com.fatih.prayertime.util.TitleView
 
 @Composable
@@ -107,7 +110,7 @@ fun SettingsHeader() {
     ) {
         Text(
             modifier = Modifier.padding(horizontal = 9.dp, vertical = 4.dp),
-            text = "Settings",
+            text = stringResource(R.string.settings),
             style = MaterialTheme.typography.headlineSmall
         )
     }
@@ -123,7 +126,7 @@ fun AppearanceSettingsCard(selectedTheme: ThemeOption, onThemeSelected: (ThemeOp
         Column {
             Text(
                 modifier = Modifier.padding(vertical = 3.dp, horizontal = 10.dp),
-                text = "Appearance",
+                text = stringResource(R.string.appearance),
                 style = MaterialTheme.typography.titleMedium
             )
             AppearanceSettingsSection(selectedTheme, onThemeSelected)
@@ -141,10 +144,10 @@ fun NotificationSettingsCard(vibrationEnabled: Boolean, onToggleVibration: () ->
         Column {
             Text(
                 modifier = Modifier.padding(vertical = 7.dp, horizontal = 10.dp),
-                text = "Notification",
+                text = stringResource(R.string.notification),
                 style = MaterialTheme.typography.titleMedium
             )
-            SwitchSettingItem("Vibration", vibrationEnabled, onToggleVibration)
+            SwitchSettingItem(stringResource(R.string.vibration), vibrationEnabled, onToggleVibration)
         }
     }
 }
@@ -163,7 +166,7 @@ fun AlarmSettingsCard(
         Column {
             Text(
                 modifier = Modifier.padding(vertical = 7.dp, horizontal = 10.dp),
-                text = "Alarm",
+                text = stringResource(R.string.alarms),
                 style = MaterialTheme.typography.titleMedium
             )
             PrayerNotificationSettings(prayerAlarms, onToggle, onMinuteToggle)
@@ -181,10 +184,10 @@ fun OtherSettingsCard(silenceWhenCuma: Boolean, onToggleCuma: () -> Unit) {
         Column {
             Text(
                 modifier = Modifier.padding(vertical = 7.dp, horizontal = 10.dp),
-                text = "Others",
+                text = stringResource(R.string.others),
                 style = MaterialTheme.typography.titleMedium
             )
-            SwitchSettingItem("Mute during friday prayers", silenceWhenCuma, onToggleCuma)
+            SwitchSettingItem(stringResource(R.string.mute_friday), silenceWhenCuma, onToggleCuma)
         }
     }
 }
@@ -195,7 +198,7 @@ fun AppearanceSettingsSection(selectedTheme: ThemeOption, onThemeSelected: (Them
         ThemeOption.entries.forEach { theme ->
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Start,verticalAlignment = Alignment.CenterVertically) {
                 RadioButton(selected = selectedTheme == theme, onClick = { onThemeSelected(theme) })
-                Text(text = theme.name, modifier = Modifier.padding(start = 8.dp))
+                Text(text = stringResource(PrayTimesString.fromString(theme.name).stringResId), modifier = Modifier.padding(start = 8.dp))
             }
         }
     }
@@ -217,10 +220,14 @@ fun PrayerNotificationSettings(prayerAlarms: List<GlobalAlarm>, onToggle: (Globa
         prayerAlarms.forEach { alarm ->
             val alphaValue = if(alarm.isEnabled) 1f else 0.5f
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                Text(text = alarm.alarmType, modifier = Modifier.weight(2f),color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = alphaValue))
+                Text(
+                    text = stringResource(PrayTimesString.fromString(alarm.alarmType).stringResId),
+                    modifier = Modifier.weight(2f),
+                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = alphaValue))
                 Text(
                     color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = alphaValue),
-                    textAlign = TextAlign.Center,text = "${alarm.alarmOffset} min. ago",
+                    textAlign = TextAlign.Center,
+                    text = "${alarm.alarmOffset} " + stringResource(R.string.min_ago),
                     style = MaterialTheme.typography.bodySmall,
                     textDecoration = TextDecoration.Underline,
                     modifier = Modifier
@@ -234,7 +241,7 @@ fun PrayerNotificationSettings(prayerAlarms: List<GlobalAlarm>, onToggle: (Globa
                         alarm.copy(isEnabled = !alarm.isEnabled)
                     )},
                     modifier = Modifier.weight(1f))
-                Text(color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = alphaValue), textAlign = TextAlign.Center, text ="Change the sound", modifier = Modifier.weight(1f), textDecoration = TextDecoration.Underline,style = MaterialTheme.typography.bodySmall)
+                Text(color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = alphaValue), textAlign = TextAlign.Center, text = stringResource(R.string.change_sound), modifier = Modifier.weight(1f), textDecoration = TextDecoration.Underline,style = MaterialTheme.typography.bodySmall)
             }
             Spacer(modifier = Modifier.height(8.dp))
         }

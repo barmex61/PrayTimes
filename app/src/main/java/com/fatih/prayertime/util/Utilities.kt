@@ -7,11 +7,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.layer.drawLayer
+import androidx.compose.ui.text.toLowerCase
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStore
 import androidx.navigation.NamedNavArgument
 import androidx.navigation.NavController
+import com.fatih.prayertime.R
+import com.fatih.prayertime.data.remote.dto.duadto.DuaCategories
+import com.fatih.prayertime.data.remote.dto.duadto.DuaCategoryData
 import com.fatih.prayertime.data.remote.dto.hadithdto.HadithCollection
 import com.fatih.prayertime.data.remote.dto.hadithdto.HadithSections
 import com.fatih.prayertime.data.remote.dto.hadithdto.Sections
@@ -19,8 +23,12 @@ import com.fatih.prayertime.data.remote.dto.hadithdto.HadithSectionInfo
 import com.fatih.prayertime.domain.model.EsmaulHusna
 import com.fatih.prayertime.domain.model.PrayTimes
 import com.fatih.prayertime.domain.model.HadithSectionCardData
+import com.fatih.prayertime.domain.model.PrayCategoryResponseTr
+import com.fatih.prayertime.domain.model.PrayCategoryTr
 import com.fatih.prayertime.domain.use_case.formatted_use_cases.FormattedUseCase
+import com.google.gson.Gson
 import org.json.JSONArray
+import java.io.InputStreamReader
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 import kotlin.reflect.KProperty1
@@ -65,6 +73,22 @@ fun convertJsonToEsmaulHusnaList(jsonString: String): List<EsmaulHusna> {
 
     return esmaulHusnaList
 }
+
+fun loadDuaCategories(context: Context): List<PrayCategoryTr> {
+    val inputStream = context.assets.open("duaCategoryTr.json")
+    val reader = InputStreamReader(inputStream)
+    val response = Gson().fromJson(reader, PrayCategoryResponseTr::class.java)
+    return response.data
+}
+
+fun DuaCategories.addTrSupport() : DuaCategories {
+    return this.apply {
+        this.data.forEachIndexed { index, duaCategoryData ->
+            duaCategoryData.nameTr = Constants.prayCategoryTr[index].nameTr
+        }
+    }
+}
+
 
 fun getAlarmTimeForPrayTimes(dailyPrayTimes : PrayTimes,alarmType : String,alarmOffset : Long,formattedUseCase: FormattedUseCase) : String {
     val alarmTimeWithoutOffset = when(alarmType){
@@ -136,7 +160,7 @@ enum class ResourceType{
 }
 
 data class ScreenData(
-    val title: String,
+    val title: PrayTimesString,
     val iconResourceType : ResourceType,
     val iconRoute: Int = 0,
     val painterRoute : Int? = null,

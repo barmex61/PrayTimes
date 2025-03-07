@@ -5,7 +5,10 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import com.fatih.prayertime.R
+import com.fatih.prayertime.data.remote.dto.duadto.DuaCategories
 import com.fatih.prayertime.domain.model.EsmaulHusna
+import com.fatih.prayertime.domain.model.PrayCategoryTr
+import java.util.Locale
 
 
 object Constants {
@@ -43,6 +46,7 @@ object Constants {
     val selectedIslamicCalendarMethod = islamicCalendarMethods[0]
     var esmaulHusnaList: List<EsmaulHusna> = emptyList()
     val SETTINGS_KEY = stringPreferencesKey("settings_json")
+    var prayCategoryTr : List<PrayCategoryTr> = emptyList()
     val colors = listOf(
         Color(0xFFFF6632), // Red
         Color(0xFF0000FF), // Blue
@@ -65,44 +69,44 @@ object Constants {
     )
     val screens = listOf(
         ScreenData(
-            title = "Home",
+            title = PrayTimesString.Home,
             iconRoute = R.drawable.mosque_icon,
             route = "home",
             iconResourceType = ResourceType.VECTOR
         ),
         ScreenData(
-            title = "Qibla",
+            title = PrayTimesString.Qibla,
             iconRoute = R.drawable.compass_icon,
             painterRoute = R.drawable.compass,
             route = "qibla",
             iconResourceType = ResourceType.PAINTER
         ),
         ScreenData(
-            title = "Settings",
+            title = PrayTimesString.Settings,
             iconRoute = R.drawable.settings_icon,
             route = "settings",
             iconResourceType = ResourceType.VECTOR
         ),
         ScreenData(
-            title = "Utilities",
+            title = PrayTimesString.Utilities,
             iconRoute = R.drawable.baseline_menu_24,
             route = "utilities",
             iconResourceType = ResourceType.VECTOR
         ),
         ScreenData(
-            title = "Prayer Category Detail",
+            title = PrayTimesString.PRAY_CATEGORY_DETAILS,
             iconRoute = R.drawable.pray,
             route = "duaCategoriesDetail",
             iconResourceType = ResourceType.PAINTER,
         ),
         ScreenData(
-            title = "Hadith Section Detail",
+            title = PrayTimesString.HADITH_SECTION_DETAILS,
             iconRoute = R.drawable.hadith,
             route = "hadithSectionDetailScreen",
             iconResourceType = ResourceType.PAINTER,
         ),
         ScreenData(
-            title = "Hadith Collections",
+            title = PrayTimesString.HADITH_COLLECTION,
             iconRoute = R.drawable.hadith,
             route = "hadithCollections/{collectionPath}",
             iconResourceType = ResourceType.PAINTER,
@@ -111,40 +115,40 @@ object Constants {
             )
         ),
         ScreenData(
-            title = "Prayer Detail",
+            title = PrayTimesString.PRAYER_DETAIL,
             iconRoute = R.drawable.pray,
             route = "duaDetail",
             iconResourceType = ResourceType.PAINTER,
         ),
 
         ScreenData(
-            title = "Prayer",
+            title = PrayTimesString.PRAYER,
             iconRoute = R.drawable.pray,
             route = "duaCategories",
             iconResourceType = ResourceType.PAINTER,
         ),
 
         ScreenData(
-            title = "Quran",
+            title = PrayTimesString.QURAN,
             iconRoute = R.drawable.quran_icon,
             painterRoute = R.drawable.quran,
             route = "quran",
             iconResourceType = ResourceType.PAINTER
         ),
         ScreenData(
-            title = "Esmaul Husna",
+            title = PrayTimesString.ESMAUL_HUSNA,
             iconRoute = R.drawable.allah,
             route = "esmaul_husna",
             iconResourceType = ResourceType.PAINTER
         ),
         ScreenData(
-            title = "Islamic Calendar",
+            title = PrayTimesString.ISLAMIC_CALENDAR,
             iconRoute = R.drawable.calendar,
             route = "islamic_calendar",
             iconResourceType = ResourceType.PAINTER
         ),
         ScreenData(
-            title = "Hadith",
+            title = PrayTimesString.HADITH,
             iconRoute = R.drawable.hadith,
             route = "hadith",
             iconResourceType = ResourceType.PAINTER

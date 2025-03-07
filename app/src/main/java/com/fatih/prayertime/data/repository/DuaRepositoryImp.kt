@@ -7,6 +7,7 @@ import com.fatih.prayertime.data.remote.dto.duadto.DuaCategoryDetail
 import com.fatih.prayertime.data.remote.dto.duadto.DuaDetail
 import com.fatih.prayertime.domain.repository.DuaRepository
 import com.fatih.prayertime.util.Resource
+import com.fatih.prayertime.util.addTrSupport
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.delay
@@ -24,7 +25,9 @@ class DuaRepositoryImp @Inject constructor(private val duaApi: DuaApi) : DuaRepo
                 val response = duaApi.getDuaCategories()
                 if (response.isSuccessful) {
                     response.body()?.let {
-                        Resource.success(it)
+                        println("responsenotnull")
+                        val responseWithTrSup = it.addTrSupport()
+                        Resource.success(responseWithTrSup)
                     } ?: Resource.error("Response body is null")
                 } else {
                     Resource.error(response.message())

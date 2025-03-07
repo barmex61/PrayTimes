@@ -12,6 +12,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
@@ -22,6 +23,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 
 import androidx.compose.ui.text.style.TextAlign
@@ -101,7 +103,7 @@ fun DuaCategoryDetailCard(
         initialValue = randomColor,
         targetValue = targetColor,
         animationSpec = infiniteRepeatable(
-            animation = tween(10000),
+            animation = tween(3000),
             repeatMode = RepeatMode.Reverse
         )
     )
@@ -114,14 +116,13 @@ fun DuaCategoryDetailCard(
         elevation = CardDefaults.cardElevation(8.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
         modifier = Modifier
-            .padding(10.dp)
+            .padding(start = 10.dp, end = 10.dp, bottom = 15.dp, top = 15.dp)
             .graphicsLayer {
                 scaleY = scale.value
                 translationX = translation.value.dp.toPx()
                 translationY = translation.value.dp.toPx()
                 rotationZ = translation.value / 2f
             }
-            .height(IntrinsicSize.Min)
         ,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
         onClick = {

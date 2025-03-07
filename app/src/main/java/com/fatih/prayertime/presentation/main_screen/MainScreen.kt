@@ -91,6 +91,7 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
@@ -106,6 +107,7 @@ import com.fatih.prayertime.presentation.main_activity.AppViewModel
 import com.fatih.prayertime.util.ErrorView
 import com.fatih.prayertime.util.LoadingView
 import com.fatih.prayertime.util.NetworkState
+import com.fatih.prayertime.util.PrayTimesString
 import com.fatih.prayertime.util.Status
 import com.fatih.prayertime.util.TitleView
 import com.fatih.prayertime.util.convertTimeToSeconds
@@ -168,7 +170,7 @@ fun GlobalAlarmsDialog(mainScreenViewModel: MainScreenViewModel, onDismiss: () -
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
-                    text = "Alarms",
+                    text = stringResource(R.string.alarms),
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(bottom = 8.dp)
@@ -191,7 +193,7 @@ fun GlobalAlarmsDialog(mainScreenViewModel: MainScreenViewModel, onDismiss: () -
                             Spacer(modifier = Modifier.width(8.dp))
                             Column {
                                 Text(
-                                    text = globalAlarm.alarmType,
+                                    text = stringResource(PrayTimesString.fromString(globalAlarm.alarmType).stringResId),
                                     style = MaterialTheme.typography.bodyLarge,
                                     fontWeight = FontWeight.Medium
                                 )
@@ -263,7 +265,7 @@ fun DailyPrayCompose(haptic: HapticFeedback) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     modifier = Modifier.padding(start = 10.dp),
-                    text = "Daily Prayer",
+                    text = stringResource(R.string.daily_prayer),
                     style = MaterialTheme.typography.titleMedium,
                     maxLines = 1,
                     softWrap = false,
@@ -280,7 +282,7 @@ fun DailyPrayCompose(haptic: HapticFeedback) {
                 ) {
                     Text(
                         modifier = Modifier.padding(4.dp),
-                        text = "See All",
+                        text = stringResource(R.string.see_all),
                         style = MaterialTheme.typography.labelMedium,
                         maxLines = 1,
                         softWrap = false,
@@ -411,7 +413,7 @@ fun PrayNotificationCompose(
                 )
                 Text(
                     modifier = Modifier.padding(start = 5.dp),
-                    text = "Prayer Tracker",
+                    text = stringResource(R.string.prayer_tracker),
                     style = MaterialTheme.typography.titleMedium,
                     maxLines = 1,
                     softWrap = false,
@@ -433,7 +435,7 @@ fun PrayNotificationCompose(
                 ) {
                     Text(
                         modifier = Modifier.padding(4.dp),
-                        text = "See All",
+                        text = stringResource(R.string.see_all),
                         style = MaterialTheme.typography.labelMedium,
                         maxLines = 1,
                         softWrap = false,
@@ -534,7 +536,7 @@ fun PrayNotificationCompose(
                     modifier = Modifier
                         .padding(5.dp)
                         .fillMaxWidth(1f),
-                    text = "Prayer Together",
+                    text = stringResource(R.string.pray_together),
                     style = MaterialTheme.typography.titleLarge,
                     fontSize = 18.sp,
                     maxLines = 1,
@@ -658,7 +660,7 @@ fun TimerRow(mainScreenViewModel: MainScreenViewModel, dailyPrayTime: PrayTimes?
             )
             AnimatedTimer(formattedTime, previousTime)
             Text(
-                text = "Remaining time to next prayer ->",
+                text = stringResource(R.string.remaining_time_text),
                 modifier = Modifier.padding(start = 3.dp, top = 1.dp),
                 style = MaterialTheme.typography.labelLarge,
                 maxLines = 1,
@@ -740,15 +742,14 @@ fun PrayTimesRowHeader(dailyPrayTime : PrayTimes?) {
 
 @Composable
 fun RowScope.PrayTimesRow(prayTime: PrayTimes,index: Int) {
-    println("prayTimesRow")
     val prayList = prayTime.toList()
     prayList.forEachIndexed { currentIndex ,prayPair->
         val icon = when(prayPair.first){
-            "Morning" -> painterResource(R.drawable.morning)
-            "Noon" -> painterResource(R.drawable.noon)
-            "Afternoon" -> painterResource(R.drawable.afternoon)
-            "Evening" -> painterResource(R.drawable.evening)
-            "Night" -> painterResource(R.drawable.night)
+            PrayTimesString.Morning.name -> painterResource(R.drawable.morning)
+            PrayTimesString.Noon.name -> painterResource(R.drawable.noon)
+            PrayTimesString.Afternoon.name -> painterResource(R.drawable.afternoon)
+            PrayTimesString.Evening.name -> painterResource(R.drawable.evening)
+            PrayTimesString.Night.name -> painterResource(R.drawable.night)
             else -> painterResource(R.drawable.morning)
         }
         val color = if (currentIndex == index) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSecondaryContainer
@@ -790,6 +791,7 @@ fun RowScope.PrayTimesRow(prayTime: PrayTimes,index: Int) {
 @Composable
 fun AddressBar(haptic: HapticFeedback,mainScreenViewModel: MainScreenViewModel) {
     val prayTime by mainScreenViewModel.dailyPrayTimes.collectAsState()
+    val locationText = stringResource(R.string.location_text)
     val currentAddress by remember(prayTime) {
         derivedStateOf { prayTime.data?.toAddress() }
     }
@@ -818,11 +820,10 @@ fun AddressBar(haptic: HapticFeedback,mainScreenViewModel: MainScreenViewModel) 
                     contentDescription = "Location Icon",
                     tint = MaterialTheme.colorScheme.primary
                 )
-
                 val text by remember {
                     derivedStateOf {
                         when(currentAddress){
-                            null -> "Location"
+                            null -> locationText
                             else -> if (!isExpanded) {
                                 currentAddress?.city + ", " + currentAddress?.country
                             }else{
@@ -890,7 +891,7 @@ fun PrayerBar(haptic: HapticFeedback) {
                 )
                 Text(
                     modifier = Modifier.padding(start = 3.dp, top = 1.dp),
-                    text = "Start your day with these prayers",
+                    text = stringResource(R.string.prayer_bar_text),
                     style = MaterialTheme.typography.labelLarge,
                     maxLines = 1,
                     softWrap = false,
