@@ -1,8 +1,7 @@
 package com.fatih.prayertime.data.repository
 
-import android.util.Log
 import com.fatih.prayertime.data.remote.DuaApi
-import com.fatih.prayertime.data.remote.dto.duadto.DuaCategories
+import com.fatih.prayertime.data.remote.dto.duadto.DuaCategory
 import com.fatih.prayertime.data.remote.dto.duadto.DuaCategoryDetail
 import com.fatih.prayertime.data.remote.dto.duadto.DuaDetail
 import com.fatih.prayertime.domain.repository.DuaRepository
@@ -10,7 +9,6 @@ import com.fatih.prayertime.util.Resource
 import com.fatih.prayertime.util.addTrSupport
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.TimeoutCancellationException
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import retrofit2.HttpException
@@ -19,7 +17,7 @@ import javax.inject.Inject
 
 class DuaRepositoryImp @Inject constructor(private val duaApi: DuaApi) : DuaRepository {
 
-    override suspend fun getDuaCategories(): Resource<DuaCategories> = withContext(Dispatchers.IO) {
+    override suspend fun getDuaCategories(): Resource<DuaCategory> = withContext(Dispatchers.IO) {
         return@withContext try {
             withTimeout(4000L){
                 val response = duaApi.getDuaCategories()

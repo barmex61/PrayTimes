@@ -5,10 +5,8 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import com.fatih.prayertime.R
-import com.fatih.prayertime.data.remote.dto.duadto.DuaCategories
 import com.fatih.prayertime.domain.model.EsmaulHusna
 import com.fatih.prayertime.domain.model.PrayCategoryTr
-import java.util.Locale
 
 
 object Constants {

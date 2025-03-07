@@ -3,19 +3,12 @@ package com.fatih.prayertime.util
 import android.app.Application
 import android.content.Context
 import android.content.res.AssetManager
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawWithCache
-import androidx.compose.ui.graphics.BlendMode
-import androidx.compose.ui.graphics.layer.drawLayer
-import androidx.compose.ui.text.toLowerCase
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStore
 import androidx.navigation.NamedNavArgument
 import androidx.navigation.NavController
-import com.fatih.prayertime.R
-import com.fatih.prayertime.data.remote.dto.duadto.DuaCategories
-import com.fatih.prayertime.data.remote.dto.duadto.DuaCategoryData
+import com.fatih.prayertime.data.remote.dto.duadto.DuaCategory
 import com.fatih.prayertime.data.remote.dto.hadithdto.HadithCollection
 import com.fatih.prayertime.data.remote.dto.hadithdto.HadithSections
 import com.fatih.prayertime.data.remote.dto.hadithdto.Sections
@@ -81,7 +74,7 @@ fun loadDuaCategories(context: Context): List<PrayCategoryTr> {
     return response.data
 }
 
-fun DuaCategories.addTrSupport() : DuaCategories {
+fun DuaCategory.addTrSupport() : DuaCategory {
     return this.apply {
         this.data.forEachIndexed { index, duaCategoryData ->
             duaCategoryData.nameTr = Constants.prayCategoryTr[index].nameTr

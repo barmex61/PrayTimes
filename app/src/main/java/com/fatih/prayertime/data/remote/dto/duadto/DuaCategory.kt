@@ -1,5 +1,5 @@
 package com.fatih.prayertime.data.remote.dto.duadto
 
-data class DuaCategories(
+data class DuaCategory(
     val data: List<DuaCategoryData>,
 )
