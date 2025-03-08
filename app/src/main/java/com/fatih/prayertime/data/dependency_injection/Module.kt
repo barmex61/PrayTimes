@@ -20,15 +20,12 @@ import com.fatih.prayertime.domain.repository.LocationAndAddressRepository
 import com.fatih.prayertime.domain.repository.PrayApiRepository
 import com.fatih.prayertime.domain.repository.PrayDatabaseRepository
 import com.fatih.prayertime.data.alarm.AlarmScheduler
-import com.fatih.prayertime.data.remote.DuaApi
 import com.fatih.prayertime.data.remote.HadithApi
 import com.fatih.prayertime.data.remote.IslamicCalendarApi
-import com.fatih.prayertime.data.repository.DuaRepositoryImp
 import com.fatih.prayertime.data.repository.HadithRepositoryImp
 import com.fatih.prayertime.data.repository.IslamicCalendarRepositoryImp
 import com.fatih.prayertime.data.repository.SettingsRepositoryImp
 import com.fatih.prayertime.data.settings.SettingsDataStore
-import com.fatih.prayertime.domain.repository.DuaRepository
 import com.fatih.prayertime.domain.repository.HadithRepository
 import com.fatih.prayertime.domain.repository.IslamicCalendarRepository
 import com.fatih.prayertime.domain.repository.SettingsRepository
@@ -193,13 +190,6 @@ object Module {
     @Singleton
     fun provideHadithRepositoryImp(hadithApi: HadithApi) : HadithRepository = HadithRepositoryImp(hadithApi)
 
-    @Provides
-    @Singleton
-    fun provideDuaApi() : DuaApi = Retrofit.Builder().baseUrl(DUA_API_BASE_URL).addConverterFactory(GsonConverterFactory.create()).build().create(DuaApi::class.java)
-
-    @Provides
-    @Singleton
-    fun provideDuaRepositoryImp(duaApi: DuaApi) : DuaRepository = DuaRepositoryImp(duaApi)
 }
 
 @Qualifier

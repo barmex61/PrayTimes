@@ -19,8 +19,6 @@ import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
@@ -31,7 +29,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.PaddingValues
 
 
@@ -75,17 +72,15 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.fatih.prayertime.data.remote.dto.duadto.DuaCategoryDetail
 import com.fatih.prayertime.domain.model.ThemeOption
 import com.fatih.prayertime.domain.use_case.alarm_use_cases.ScheduleDailyAlarmUpdateUseCase
 import com.fatih.prayertime.domain.use_case.formatted_use_cases.FormattedUseCase
 import com.fatih.prayertime.presentation.calendar_screen.CalendarScreen
 import com.fatih.prayertime.presentation.compass_screen.CompassScreen
 import com.fatih.prayertime.presentation.dua_categories_screen.DuaCategoriesScreen
-import com.fatih.prayertime.presentation.dua_categories_screen.DuaCategoriesViewModel
+import com.fatih.prayertime.presentation.dua_category_detail_screen.DuaViewModel
 import com.fatih.prayertime.presentation.dua_detail_screen.DuaDetailScreen
 import com.fatih.prayertime.presentation.main_screen.MainScreen
 import com.fatih.prayertime.presentation.esmaulhusna_screen.EsmaulHusnaScreen
@@ -281,7 +276,8 @@ fun BottomAppBarLayout(navController: NavController) {
 fun NavHostLayout(navController: NavHostController, innerPadding: PaddingValues,appViewModel: AppViewModel) {
     val innerPaddingValue = innerPadding.calculateBottomPadding() - 5.dp
     val hadithCollectionViewModel : HadithCollectionViewModel = hiltViewModel()
-    val duaCategoriesViewModel : DuaCategoriesViewModel = hiltViewModel()
+    val duaViewModel : DuaViewModel = hiltViewModel()
+
     AnimatedNavHost(
         navController = navController,
         startDestination = screens.first().title.name
@@ -317,9 +313,12 @@ fun NavHostLayout(navController: NavHostController, innerPadding: PaddingValues,
                         HadithCollectionScreen(innerPaddingValue,collectionPath, hadithCollectionViewModel = hadithCollectionViewModel, navController = navController)
                     }
                     PrayTimesString.HADITH_SECTION_DETAILS.name -> HadithSectionDetailScreen(innerPaddingValue,hadithCollectionViewModel)
-                    PrayTimesString.PRAYER.name -> DuaCategoriesScreen(innerPaddingValue,navController,duaCategoriesViewModel)
-                    PrayTimesString.PRAY_CATEGORY_DETAILS.name -> DuaCategoryDetailScreen(innerPaddingValue,duaCategoriesViewModel,navController)
-                    PrayTimesString.PRAYER_DETAIL.name -> DuaDetailScreen(innerPaddingValue,duaCategoriesViewModel)
+                    PrayTimesString.PRAYER.name -> DuaCategoriesScreen(innerPaddingValue,navController)
+                    PrayTimesString.PRAY_CATEGORY_DETAILS.name -> {
+                        val categoryIndex = backStackEntry.arguments?.getInt("categoryIndex") ?: return@composable
+                        DuaCategoryDetailScreen(innerPaddingValue,navController, categoryIndex ,duaViewModel)
+                    }
+                    PrayTimesString.PRAYER_DETAIL.name -> DuaDetailScreen(innerPaddingValue,duaViewModel)
                 }
             }
         }

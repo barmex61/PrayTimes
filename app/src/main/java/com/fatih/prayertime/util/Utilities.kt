@@ -20,6 +20,7 @@ import com.fatih.prayertime.domain.model.PrayCategoryResponseTr
 import com.fatih.prayertime.domain.model.PrayCategoryTr
 import com.fatih.prayertime.domain.use_case.formatted_use_cases.FormattedUseCase
 import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import org.json.JSONArray
 import java.io.InputStreamReader
 import java.net.URLEncoder
@@ -27,14 +28,8 @@ import java.nio.charset.StandardCharsets
 import kotlin.reflect.KProperty1
 
 
-fun NavController.navigateToScreen( screenData: ScreenData, path : String? = null) {
-    println(screenData)
-    val route = if (path != null) {
-        val encodedUrl = URLEncoder.encode(path, StandardCharsets.UTF_8.toString())
-        screenData.route.replace("{collectionPath}", encodedUrl)
-    } else {
-        screenData.route
-    }
+fun NavController.navigateToScreen(screenData: ScreenData,alternativeRoute: String? = null) {
+    val route = alternativeRoute ?: screenData.route
     this.navigate(route) {
         popUpTo(this@navigateToScreen.graph.startDestinationId) { saveState = false }
         launchSingleTop = true
@@ -49,37 +44,17 @@ fun getJsonFromAssets(fileName: String,application: Application): String {
     return inputStream.bufferedReader().use { it.readText() }
 }
 
+fun convertJsonToDuaCategory(jsonString: String): DuaCategory {
+    val gson = Gson()
+    val duaCategoriesType = object : TypeToken<DuaCategory>() {}.type
+    return gson.fromJson(jsonString, duaCategoriesType)
+}
+
+
 fun convertJsonToEsmaulHusnaList(jsonString: String): List<EsmaulHusna> {
-    val jsonArray = JSONArray(jsonString)
-    val esmaulHusnaList = mutableListOf<EsmaulHusna>()
-
-    for (i in 0 until jsonArray.length()) {
-        val jsonObject = jsonArray.getJSONObject(i)
-        val esmaulHusna = EsmaulHusna(
-            arabicName = jsonObject.getString("arabicName"),
-            name = jsonObject.getString("name"),
-            shortDescription = jsonObject.getString("shortDescription"),
-            longDescription = jsonObject.getString("longDescription")
-        )
-        esmaulHusnaList.add(esmaulHusna)
-    }
-
-    return esmaulHusnaList
-}
-
-fun loadDuaCategories(context: Context): List<PrayCategoryTr> {
-    val inputStream = context.assets.open("duaCategoryTr.json")
-    val reader = InputStreamReader(inputStream)
-    val response = Gson().fromJson(reader, PrayCategoryResponseTr::class.java)
-    return response.data
-}
-
-fun DuaCategory.addTrSupport() : DuaCategory {
-    return this.apply {
-        this.data.forEachIndexed { index, duaCategoryData ->
-            duaCategoryData.nameTr = Constants.prayCategoryTr[index].nameTr
-        }
-    }
+    val gson = Gson()
+    val listType = object : TypeToken<List<EsmaulHusna>>() {}.type
+    return gson.fromJson(jsonString, listType)
 }
 
 

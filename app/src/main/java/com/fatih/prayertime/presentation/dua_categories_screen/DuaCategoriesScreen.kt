@@ -19,14 +19,13 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
-import androidx.compose.foundation.lazy.staggeredgrid.items
+import androidx.compose.foundation.lazy.staggeredgrid.itemsIndexed
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -37,56 +36,46 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.fatih.prayertime.R
-import com.fatih.prayertime.data.remote.dto.duadto.DuaCategory
 import com.fatih.prayertime.data.remote.dto.duadto.DuaCategoryData
 import com.fatih.prayertime.util.Constants.colors
+import com.fatih.prayertime.util.Constants.duaCategory
 import com.fatih.prayertime.util.Constants.screens
-import com.fatih.prayertime.util.ErrorView
 import com.fatih.prayertime.util.LoadingView
-import com.fatih.prayertime.util.Status
 import com.fatih.prayertime.util.TitleView
 import com.fatih.prayertime.util.navigateToScreen
+
 import java.util.Locale
 import kotlin.random.Random
 
 @Composable
-fun DuaCategoriesScreen(bottomPaddingValues: Dp, navController: NavController,duaCategoriesViewModel: DuaCategoriesViewModel ) {
-    val duaCategories by duaCategoriesViewModel.duaCategories.collectAsState()
-    Box(modifier = Modifier.fillMaxSize(1f), contentAlignment = Alignment.Center){
-
-        when(duaCategories.status) {
-            Status.SUCCESS -> {
-                DuaCategoriesGridView(duaCategories.data!!, navController,duaCategoriesViewModel )
-            }
-            Status.LOADING ->{
-                LoadingView()
-            }
-            Status.ERROR ->{
-                ErrorView(message = duaCategories.message.toString()){
-                    duaCategoriesViewModel.getDuaCategories()
-                }
-            }
+fun DuaCategoriesScreen(bottomPaddingValues: Dp, navController: NavController) {
+    Box(modifier = Modifier.fillMaxSize(1f).padding(bottom = bottomPaddingValues), contentAlignment = Alignment.Center){
+        if (duaCategory != null){
+            DuaCategoriesGridView(duaCategory!!.data, navController )
+        }else{
+            LoadingView()
         }
+
     }
     TitleView("Dua Topics")
 }
 
 @Composable
-fun DuaCategoriesGridView(duaCategory: DuaCategory, navController: NavController, duaCategoriesViewModel: DuaCategoriesViewModel) {
+fun DuaCategoriesGridView(duaCategoryDataList: List<DuaCategoryData>, navController: NavController) {
     LazyVerticalStaggeredGrid (
         columns = StaggeredGridCells.Fixed(2),
         verticalItemSpacing = 20.dp,
         horizontalArrangement = Arrangement.spacedBy(20.dp),
         contentPadding = PaddingValues(bottom = 40.dp, top = 40.dp, start = 10.dp, end = 10.dp),
     )  {
-        items(duaCategory.data) { duaCategoryData ->
-            DuaCategoryCard(duaCategoryData, navController, duaCategoriesViewModel)
+        itemsIndexed(duaCategoryDataList) {index, duaCategoryData ->
+            DuaCategoryCard(duaCategoryData,index, navController)
         }
     }
 }
 
 @Composable
-fun DuaCategoryCard(duaCategoryData :DuaCategoryData, navController: NavController,duaCategoriesViewModel: DuaCategoriesViewModel) {
+fun DuaCategoryCard(duaCategoryData :DuaCategoryData,index: Int, navController: NavController) {
     val infiniteTransition = rememberInfiniteTransition()
     val randomColor = remember { colors.random() }
     val targetColor = remember { colors.filter { it != randomColor }.random() }
@@ -126,8 +115,9 @@ fun DuaCategoryCard(duaCategoryData :DuaCategoryData, navController: NavControll
             ,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
         onClick = {
-            duaCategoriesViewModel.updateDetailPath(duaCategoryData.slug)
-            navController.navigateToScreen(screens[4])
+            //duaCategoriesViewModel.updateDetailPath(duaCategoryData.slug)
+            val route = screens[4].route.replace("{categoryIndex}",index.toString())
+            navController.navigateToScreen(screens[4],route)
         }
     ) {
         Column(
@@ -138,7 +128,7 @@ fun DuaCategoryCard(duaCategoryData :DuaCategoryData, navController: NavControll
         ) {
             Text(
                 textAlign = TextAlign.Center,
-                text = if (Locale.getDefault().language == "tr") duaCategoryData.nameTr?:duaCategoryData.name else duaCategoryData.name,
+                text = if (Locale.getDefault().language == "tr") duaCategoryData.nameTr else duaCategoryData.name,
                 style = MaterialTheme.typography.titleMedium,
                 color = animatedColor.value,
                 modifier = Modifier.fillMaxWidth()

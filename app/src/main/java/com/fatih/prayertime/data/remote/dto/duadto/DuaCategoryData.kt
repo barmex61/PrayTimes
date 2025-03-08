@@ -4,5 +4,5 @@ data class DuaCategoryData(
     val name: String,
     val total: Int,
     var nameTr : String ,
-    val detail: List<DuaDetail>
+    val detail: List<DuaCategoryDetail>
 )

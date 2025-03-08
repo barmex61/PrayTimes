@@ -126,37 +126,86 @@ import kotlin.math.sin
 
 @Composable
 fun MainScreen(appViewModel: AppViewModel, bottomPaddingValue : Dp, mainScreenViewModel : MainScreenViewModel = hiltViewModel()) {
-    var showAlarmDialog by remember { mutableStateOf(false) }
     val scrollState = rememberScrollState()
-    var isVisible by remember { mutableStateOf(false) }
+    var showAlarmDialog by rememberSaveable { mutableStateOf(false) }
     val haptic = LocalHapticFeedback.current
-    GetLocationInformation(mainScreenViewModel,appViewModel)
-    LaunchedEffect(Unit){
-        isVisible = true
-    }
-    Column(modifier = Modifier.verticalScroll(scrollState, enabled = true) ){
-        AddressBar(haptic,mainScreenViewModel)
-        PrayerBar(haptic)
-        PrayScheduleCompose(haptic)
-        PrayNotificationCompose(mainScreenViewModel,appViewModel,haptic){
-            showAlarmDialog = true
+    
+    val screenState by remember(mainScreenViewModel) {
+        derivedStateOf {
+            ScreenState(
+                isLocationTracking = mainScreenViewModel.isLocationTracking.value,
+                dailyPrayTimes = mainScreenViewModel.dailyPrayTimes.value,
+                globalAlarmList = mainScreenViewModel.globalAlarmList.value
+            )
         }
-        DailyPrayCompose(haptic)
+    }
+
+    GetLocationInformation(mainScreenViewModel, appViewModel)
+    
+    Column(modifier = Modifier.verticalScroll(scrollState, enabled = true) ){
+        val addressBarParams = remember(haptic) {
+            AddressBarParams(haptic = haptic)
+        }
+        AddressBar(params = addressBarParams, mainScreenViewModel = mainScreenViewModel)
+        
+        val prayerBarParams = remember(haptic) {
+            PrayerBarParams(haptic = haptic)
+        }
+        PrayerBar(params = prayerBarParams)
+        
+        PrayScheduleCompose(haptic = haptic)
+        
+        val notificationParams = remember(haptic, showAlarmDialog) {
+            PrayNotificationParams(
+                haptic = haptic,
+                onShowDialog = { showAlarmDialog = true }
+            )
+        }
+        PrayNotificationCompose(
+            mainScreenViewModel = mainScreenViewModel,
+            appViewModel = appViewModel,
+            params = notificationParams
+        )
+        
+        DailyPrayCompose(haptic = haptic)
+        
         Spacer(
             modifier = Modifier.height(25.dp + bottomPaddingValue)
         )
     }
+    
     AnimatedVisibility(
         visible = showAlarmDialog,
         enter = fadeIn() + slideInVertically(),
         exit = fadeOut() + slideOutVertically()
     ) {
-        GlobalAlarmsDialog(mainScreenViewModel){
-            showAlarmDialog = false
-        }
+        GlobalAlarmsDialog(
+            mainScreenViewModel = mainScreenViewModel,
+            onDismiss = { showAlarmDialog = false }
+        )
     }
+    
     TitleView("Main View")
 }
+
+private data class ScreenState(
+    val isLocationTracking: Boolean,
+    val dailyPrayTimes: Resource<PrayTimes>,
+    val globalAlarmList: List<GlobalAlarm>
+)
+
+private data class AddressBarParams(
+    val haptic: HapticFeedback
+)
+
+private data class PrayerBarParams(
+    val haptic: HapticFeedback
+)
+
+private data class PrayNotificationParams(
+    val haptic: HapticFeedback,
+    val onShowDialog: () -> Unit
+)
 
 @Composable
 fun GlobalAlarmsDialog(mainScreenViewModel: MainScreenViewModel, onDismiss: () -> Unit) {
@@ -345,8 +394,7 @@ fun DailyPrayCompose(haptic: HapticFeedback) {
 fun PrayNotificationCompose(
     mainScreenViewModel: MainScreenViewModel,
     appViewModel: AppViewModel,
-    haptic: HapticFeedback,
-    onShowAlarmDialog : () -> Unit
+    params: PrayNotificationParams
 ) {
     println("notification")
     var rotate by remember { mutableStateOf(false) }
@@ -367,7 +415,7 @@ fun PrayNotificationCompose(
                 rotationX = rotateX.value
             },
         onClick = {
-            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+            params.haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
             rotate = !rotate
         },
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
@@ -427,7 +475,7 @@ fun PrayNotificationCompose(
                         .padding(3.dp)
                         .height(25.dp),
                     onClick = {
-                        onShowAlarmDialog()
+                        params.onShowDialog()
                     },
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
                     elevation = CardDefaults.cardElevation(10.dp),
@@ -473,7 +521,7 @@ fun PrayNotificationCompose(
                                     .padding(vertical = 10.dp)
                                     .clip(RoundedCornerShape(10.dp))
                                     .clickable {
-                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                        params.haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                         if (isNotificationPermissionGranted) {
                                             if (globalAlarm.isEnabled) {
                                                 mainScreenViewModel.updateGlobalAlarm(
@@ -519,7 +567,7 @@ fun PrayNotificationCompose(
                         rotationX = rotateX.value
                     },
                 onClick = {
-                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    params.haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                     if (isNotificationPermissionGranted) {
                         mainScreenViewModel.updateAllGlobalAlarm(true)
                     } else {
@@ -789,7 +837,7 @@ fun RowScope.PrayTimesRow(prayTime: PrayTimes,index: Int) {
 
 
 @Composable
-fun AddressBar(haptic: HapticFeedback,mainScreenViewModel: MainScreenViewModel) {
+fun AddressBar(params: AddressBarParams, mainScreenViewModel: MainScreenViewModel) {
     val prayTime by mainScreenViewModel.dailyPrayTimes.collectAsState()
     val locationText = stringResource(R.string.location_text)
     val currentAddress by remember(prayTime) {
@@ -800,7 +848,7 @@ fun AddressBar(haptic: HapticFeedback,mainScreenViewModel: MainScreenViewModel) 
         Card (
             onClick = {
                 isExpanded = !isExpanded
-                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                params.haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
             },
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.primaryContainer,
@@ -867,11 +915,11 @@ fun AddressBar(haptic: HapticFeedback,mainScreenViewModel: MainScreenViewModel) 
 }
 
 @Composable
-fun PrayerBar(haptic: HapticFeedback) {
+fun PrayerBar(params: PrayerBarParams) {
     Box (modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterStart) {
         Card (
             onClick = {
-                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                params.haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
             },
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
             elevation = CardDefaults.cardElevation(10.dp),

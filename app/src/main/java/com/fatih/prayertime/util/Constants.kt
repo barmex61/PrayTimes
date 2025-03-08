@@ -5,6 +5,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import com.fatih.prayertime.R
+import com.fatih.prayertime.data.remote.dto.duadto.DuaCategory
 import com.fatih.prayertime.domain.model.EsmaulHusna
 import com.fatih.prayertime.domain.model.PrayCategoryTr
 
@@ -44,7 +45,7 @@ object Constants {
     val selectedIslamicCalendarMethod = islamicCalendarMethods[0]
     var esmaulHusnaList: List<EsmaulHusna> = emptyList()
     val SETTINGS_KEY = stringPreferencesKey("settings_json")
-    var prayCategoryTr : List<PrayCategoryTr> = emptyList()
+    var duaCategory : DuaCategory? = null
     val colors = listOf(
         Color(0xFFFF6632), // Red
         Color(0xFF0000FF), // Blue
@@ -94,7 +95,7 @@ object Constants {
         ScreenData(
             title = PrayTimesString.PRAY_CATEGORY_DETAILS,
             iconRoute = R.drawable.pray,
-            route = "duaCategoriesDetail",
+            route = "duaCategoriesDetail/{categoryIndex}",
             iconResourceType = ResourceType.PAINTER,
         ),
         ScreenData(

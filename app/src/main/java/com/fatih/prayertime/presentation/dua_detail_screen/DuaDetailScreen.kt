@@ -5,12 +5,10 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -24,43 +22,33 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.fatih.prayertime.data.remote.dto.duadto.DuaDetail
-import com.fatih.prayertime.data.remote.dto.duadto.DuaDetailData
-import com.fatih.prayertime.presentation.dua_categories_screen.DuaCategoriesViewModel
-import com.fatih.prayertime.util.ErrorView
+import com.fatih.prayertime.data.remote.dto.duadto.DuaCategoryDetail
+import com.fatih.prayertime.presentation.dua_category_detail_screen.DuaViewModel
 import com.fatih.prayertime.util.LoadingView
-import com.fatih.prayertime.util.Status
 import com.fatih.prayertime.util.TitleView
 import com.fatih.prayertime.util.capitalizeFirstLetter
 import kotlin.random.Random
 
 @Composable
-fun DuaDetailScreen(bottomPaddingValues : Dp,duaCategoriesViewModel: DuaCategoriesViewModel) {
-    val duaDetail by duaCategoriesViewModel.duaDetail.collectAsState()
-    when(duaDetail.status){
-        Status.LOADING -> {
-            LoadingView()
-        }
-        Status.ERROR ->{
-            ErrorView(duaDetail.message?:"An unknown error occurred"){
-                duaCategoriesViewModel.getDuaDetail()
-            }
-        }
-        Status.SUCCESS ->{
-            Box(modifier = Modifier.fillMaxSize(1f).padding(bottom = bottomPaddingValues), contentAlignment = Alignment.Center){
-                DuaDetailCard(duaDetail.data!!.data)
-            }
+fun DuaDetailScreen(bottomPaddingValues : Dp, duaViewModel : DuaViewModel) {
+
+    val duaDetail by duaViewModel.duaDetail.collectAsState()
+
+    if (duaDetail == null){
+        LoadingView()
+    }else{
+        Box(modifier = Modifier.fillMaxSize(1f).padding(bottom = bottomPaddingValues), contentAlignment = Alignment.Center){
+            DuaDetailCard(duaDetail!!)
         }
     }
     TitleView("Dua Detail")
 }
 
 @Composable
-fun DuaDetailCard(duaDetail: DuaDetailData) {
+fun DuaDetailCard(duaDetail: DuaCategoryDetail) {
     val infiniteTransition = rememberInfiniteTransition()
     val scrollState = rememberScrollState()
     val translation = infiniteTransition.animateFloat(
@@ -90,7 +78,7 @@ fun DuaDetailCard(duaDetail: DuaDetailData) {
             )
             Spacer(modifier = Modifier.height(16.dp))
             Text(
-                text = "\" ${duaDetail.latin.capitalizeFirstLetter()} \"",
+                text = duaDetail.latin.capitalizeFirstLetter(),
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onPrimaryContainer
             )

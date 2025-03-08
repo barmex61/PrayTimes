@@ -56,6 +56,8 @@ import com.fatih.prayertime.util.Status
 import com.fatih.prayertime.util.TitleView
 import com.fatih.prayertime.util.navigateToScreen
 import com.fatih.prayertime.util.toList
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 import kotlin.random.Random
 
 @Composable
@@ -210,7 +212,9 @@ fun LanguageList(collections: List<Collection>, randomColor: Color, animatedColo
                     shape = RoundedCornerShape(10.dp)
                 )
                 .clickable {
-                    navController.navigateToScreen(screens[6],collection.linkmin)
+                    val encodedUrl = URLEncoder.encode(collection.linkmin, StandardCharsets.UTF_8.toString())
+                    val route = screens[6].route.replace("{collectionPath}", encodedUrl)
+                    navController.navigateToScreen(screens[6],route)
                 },
             text = collection.language,
             color = Color.White,
