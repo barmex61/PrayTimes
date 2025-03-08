@@ -16,20 +16,13 @@ import com.fatih.prayertime.data.remote.dto.hadithdto.HadithSectionInfo
 import com.fatih.prayertime.domain.model.EsmaulHusna
 import com.fatih.prayertime.domain.model.PrayTimes
 import com.fatih.prayertime.domain.model.HadithSectionCardData
-import com.fatih.prayertime.domain.model.PrayCategoryResponseTr
-import com.fatih.prayertime.domain.model.PrayCategoryTr
 import com.fatih.prayertime.domain.use_case.formatted_use_cases.FormattedUseCase
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
-import org.json.JSONArray
-import java.io.InputStreamReader
-import java.net.URLEncoder
-import java.nio.charset.StandardCharsets
 import kotlin.reflect.KProperty1
 
 
-fun NavController.navigateToScreen(screenData: ScreenData,alternativeRoute: String? = null) {
-    val route = alternativeRoute ?: screenData.route
+fun NavController.navigateToScreen(route: String) {
     this.navigate(route) {
         popUpTo(this@navigateToScreen.graph.startDestinationId) { saveState = false }
         launchSingleTop = true
@@ -135,4 +128,8 @@ data class ScreenData(
     val route: String,
     val arguments : List<NamedNavArgument> = emptyList()
 )
+
+enum class FavoritesType{
+    DUA,HADIS
+}
 

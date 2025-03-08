@@ -8,8 +8,10 @@ data class FavoritesEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
     val type: String, // "dua", "hadis"
-    val itemId: String,
+    val itemId: Int,
     val title: String,
     val content: String,
+    val latin : String? = null,
+    val duaCategoryIndex : Int,
     val timestamp: Long = System.currentTimeMillis()
 ) 

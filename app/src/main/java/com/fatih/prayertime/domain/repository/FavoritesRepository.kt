@@ -8,5 +8,5 @@ interface FavoritesRepository {
     fun getFavoritesByType(type: String): Flow<List<FavoritesEntity>>
     suspend fun addToFavorites(favorite: FavoritesEntity)
     suspend fun removeFromFavorites(favorite: FavoritesEntity)
-    suspend fun isFavorite(itemId: String): Boolean
+    suspend fun isFavorite(itemId: Int): Boolean
 } 

@@ -115,9 +115,8 @@ fun DuaCategoryCard(duaCategoryData :DuaCategoryData,index: Int, navController: 
             ,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
         onClick = {
-            //duaCategoriesViewModel.updateDetailPath(duaCategoryData.slug)
-            val route = screens[4].route.replace("{categoryIndex}",index.toString())
-            navController.navigateToScreen(screens[4],route)
+            val route = screens[4].route.replace("{categoryIndex}","$index")
+            navController.navigateToScreen(route)
         }
     ) {
         Column(

@@ -43,4 +43,10 @@
     <string name="hadith_section_detail">Hadith Section Detail</string>
     <string name="favorites">Favorites</string>
     <string name="statistics">Statistics</string>
+    <string name="no_favorites">No favorites added yet</string>
+    <string name="prayers">Prayers</string>
+    <string name="hadiths">Hadiths</string>
+    <string name="remove_from_favorites">Remove from favorites</string>
+    <string name="add_to_favorites">Add to favorites</string>
+    <string name="are_you_sure_delete_favorite">Are you sure you want to remove this item from your favorites?</string>
 </resources>

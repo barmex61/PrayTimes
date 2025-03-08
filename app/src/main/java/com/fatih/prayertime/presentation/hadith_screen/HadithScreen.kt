@@ -214,7 +214,7 @@ fun LanguageList(collections: List<Collection>, randomColor: Color, animatedColo
                 .clickable {
                     val encodedUrl = URLEncoder.encode(collection.linkmin, StandardCharsets.UTF_8.toString())
                     val route = screens[6].route.replace("{collectionPath}", encodedUrl)
-                    navController.navigateToScreen(screens[6],route)
+                    navController.navigateToScreen(route)
                 },
             text = collection.language,
             color = Color.White,

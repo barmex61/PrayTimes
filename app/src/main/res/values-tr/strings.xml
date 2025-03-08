@@ -44,4 +44,10 @@
     <string name="hadith_section_detail">Hadith Section Detail</string>
     <string name="favorites">Favoriler</string>
     <string name="statistics">İstatistikler</string>
+    <string name="no_favorites">Henüz favori eklenmemiş</string>
+    <string name="prayers">Dualar</string>
+    <string name="hadiths">Hadisler</string>
+    <string name="remove_from_favorites">Favorilerden kaldır</string>
+    <string name="add_to_favorites">Favorilere ekle</string>
+    <string name="are_you_sure_delete_favorite">Bu öğeyi favorilerden kaldırmak istediğinizden emin misiniz?</string>
 </resources>

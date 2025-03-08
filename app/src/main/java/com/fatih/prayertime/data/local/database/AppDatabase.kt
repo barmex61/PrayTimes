@@ -12,7 +12,8 @@ import com.fatih.prayertime.data.local.entity.PrayerStatisticsEntity
         FavoritesEntity::class,
         PrayerStatisticsEntity::class
     ],
-    version = 1
+    version = 1,
+    exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun favoritesDao(): FavoritesDao

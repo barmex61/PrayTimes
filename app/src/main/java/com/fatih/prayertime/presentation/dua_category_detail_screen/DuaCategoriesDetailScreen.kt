@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.*
 
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
+import androidx.compose.foundation.lazy.staggeredgrid.items
 
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -22,12 +23,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.fatih.prayertime.presentation.dua_category_detail_screen.DuaViewModel
+import com.fatih.prayertime.presentation.dua_category_detail_screen.DuaCategoryDetailViewModel
 
 import com.fatih.prayertime.util.Constants.colors
 import com.fatih.prayertime.util.Constants.screens
-import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.foundation.lazy.staggeredgrid.itemsIndexed
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.fatih.prayertime.data.remote.dto.duadto.DuaCategoryDetail
 import com.fatih.prayertime.util.LoadingView
 import com.fatih.prayertime.util.TitleView
@@ -39,14 +40,14 @@ fun DuaCategoryDetailScreen(
     bottomPaddingValues: Dp,
     navController: NavController,
     categoryIndex : Int,
-    duaViewModel : DuaViewModel
+    duaCategoryDetailViewModel : DuaCategoryDetailViewModel = hiltViewModel()
 
 ) {
     val infiniteTransition = rememberInfiniteTransition()
-    val duaCategoryDetailList by duaViewModel.duaCategoryDetailList.collectAsState()
+    val duaCategoryDetailList by duaCategoryDetailViewModel.duaCategoryDetailList.collectAsState()
 
     LaunchedEffect(key1=Unit) {
-        duaViewModel.updateDuaCategoryDetailIndex(categoryIndex)
+        duaCategoryDetailViewModel.updateDuaCategoryDetailIndex(categoryIndex)
     }
 
     if (duaCategoryDetailList == null){
@@ -57,8 +58,8 @@ fun DuaCategoryDetailScreen(
                 modifier = Modifier.padding(bottom = bottomPaddingValues),
                 columns = StaggeredGridCells.Fixed(2)
             ) {
-                itemsIndexed(duaCategoryDetailList!!){ index,duaCategoryDetail ->
-                    DuaCategoryDetailCard(duaCategoryDetail,infiniteTransition ,navController,duaViewModel,index)
+                items(duaCategoryDetailList!!){ duaCategoryDetail ->
+                    DuaCategoryDetailCard(duaCategoryDetail,infiniteTransition ,navController,categoryIndex)
                 }
 
             }
@@ -73,8 +74,7 @@ fun DuaCategoryDetailCard(
     duaCategoryDetail: DuaCategoryDetail,
     infiniteTransition: InfiniteTransition,
     navController: NavController,
-    duaViewModel: DuaViewModel,
-    index : Int) {
+    categoryIndex: Int) {
 
     val randomColor = remember { colors.random() }
     val targetColor = remember { colors.filter { it != randomColor }.random() }
@@ -114,8 +114,9 @@ fun DuaCategoryDetailCard(
         ,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
         onClick = {
-            duaViewModel.updateDuaDetailIndex(index)
-            navController.navigateToScreen(screens[7])
+            val subRoute = screens[7].route.replace("{duaId}","${duaCategoryDetail.id}")
+            val route = subRoute.replace("{categoryIndex}","$categoryIndex")
+            navController.navigateToScreen(route)
         }
     ) {
 

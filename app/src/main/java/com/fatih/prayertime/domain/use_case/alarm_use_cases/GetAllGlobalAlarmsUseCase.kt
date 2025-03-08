@@ -15,7 +15,9 @@ class GetAllGlobalAlarmsUseCase @Inject constructor(
         val globalAlarms = alarmDatabaseRepository.getAllGlobalAlarms()
         println(globalAlarms.first())
         if (globalAlarms.first().isEmpty()) {
-            val initialAlarms = PrayTimesString.entries.map {
+            val initialAlarms = PrayTimesString.entries.filterIndexed { index, _ ->
+                index <= 4
+            }.map {
                 GlobalAlarm(
                     alarmType = it.name,
                     alarmTime = 0L,

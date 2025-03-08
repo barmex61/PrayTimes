@@ -2,49 +2,117 @@ package com.fatih.prayertime.presentation.dua_detail_screen
 
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.fatih.prayertime.R
 import com.fatih.prayertime.data.remote.dto.duadto.DuaCategoryDetail
-import com.fatih.prayertime.presentation.dua_category_detail_screen.DuaViewModel
 import com.fatih.prayertime.util.LoadingView
 import com.fatih.prayertime.util.TitleView
 import com.fatih.prayertime.util.capitalizeFirstLetter
 import kotlin.random.Random
+import androidx.hilt.navigation.compose.hiltViewModel
 
 @Composable
-fun DuaDetailScreen(bottomPaddingValues : Dp, duaViewModel : DuaViewModel) {
+fun DuaDetailScreen(
+    bottomPaddingValues: Dp,
+    duaId: Int,
+    categoryIndex : Int,
+    viewModel: DuaDetailViewModel = hiltViewModel()
+) {
+    val duaDetail by viewModel.duaDetail.collectAsState()
+    val isFavorite by viewModel.isFavorite.collectAsState()
 
-    val duaDetail by duaViewModel.duaDetail.collectAsState()
+    LaunchedEffect(duaId) {
+        viewModel.updateCategoryIndex(categoryIndex)
+        viewModel.updateDuaId(duaId)
+    }
 
-    if (duaDetail == null){
+    if (duaDetail == null) {
         LoadingView()
-    }else{
-        Box(modifier = Modifier.fillMaxSize(1f).padding(bottom = bottomPaddingValues), contentAlignment = Alignment.Center){
+    } else {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(bottom = bottomPaddingValues),
+            contentAlignment = Alignment.Center
+        ) {
             DuaDetailCard(duaDetail!!)
+            AddFavoriteFab(
+                isFavorite = isFavorite,
+                viewModel = viewModel
+            )
         }
     }
     TitleView("Dua Detail")
+}
+
+@Composable
+fun BoxScope.AddFavoriteFab(isFavorite: Boolean,viewModel: DuaDetailViewModel) {
+    val infiniteTransition = rememberInfiniteTransition()
+
+    val fabButtonTransition = infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = -200f,
+        animationSpec = infiniteRepeatable(tween(6000), repeatMode = RepeatMode.Reverse)
+    )
+    val fabButtonRotate = animateFloatAsState(
+        targetValue = if (isFavorite) 360f else 0f,
+    )
+    FloatingActionButton(
+        onClick = {
+            viewModel.toggleFavorite()
+        },
+        modifier = Modifier
+            .padding(16.dp)
+            .align(Alignment.BottomEnd)
+            .graphicsLayer {
+                translationY = fabButtonTransition.value
+                rotationX = fabButtonRotate.value
+            }
+    ) {
+        Icon(
+            imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+            contentDescription = if (isFavorite) {
+                stringResource(id = R.string.remove_from_favorites)
+            } else {
+                stringResource(id = R.string.add_to_favorites)
+            },
+            tint = if (isFavorite) Color.Red else Color.Gray
+        )
+    }
 }
 
 @Composable
@@ -63,6 +131,7 @@ fun DuaDetailCard(duaDetail: DuaCategoryDetail) {
         elevation = CardDefaults.cardElevation(16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
         modifier = Modifier
+            .fillMaxWidth(1f)
             .padding(10.dp)
             .graphicsLayer {
                 translationX = translation.value.dp.toPx()
@@ -70,7 +139,9 @@ fun DuaDetailCard(duaDetail: DuaCategoryDetail) {
             }
 
     ) {
-        Column(modifier = Modifier .verticalScroll(state = scrollState).padding(horizontal = 16.dp, vertical = 16.dp)) {
+        Column(modifier = Modifier
+            .verticalScroll(state = scrollState)
+            .padding(horizontal = 16.dp, vertical = 16.dp)) {
             Text(
                 text = duaDetail.arabic,
                 style = MaterialTheme.typography.headlineMedium,

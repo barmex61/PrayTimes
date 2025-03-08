@@ -116,7 +116,7 @@ object Constants {
         ScreenData(
             title = PrayTimesString.PRAYER_DETAIL,
             iconRoute = R.drawable.pray,
-            route = "duaDetail",
+            route = "duaDetail/{duaId}/{categoryIndex}",
             iconResourceType = ResourceType.PAINTER,
         ),
 

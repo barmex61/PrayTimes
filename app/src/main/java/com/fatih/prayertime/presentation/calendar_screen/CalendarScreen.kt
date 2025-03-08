@@ -11,6 +11,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.animation.with
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
@@ -67,7 +68,7 @@ fun CalendarScreen(bottomPaddingValues : Dp,calendarScreenViewModel: CalendarScr
                 AnimatedContent(
                     targetState = monthlyIslamicCalendar.data,
                     transitionSpec = {
-                        expandIn(tween(750), expandFrom = Alignment.TopCenter) + fadeIn() with
+                        expandIn(tween(750), expandFrom = Alignment.TopCenter) + fadeIn() togetherWith
                                 shrinkOut(tween(750), shrinkTowards = Alignment.BottomEnd)  + fadeOut()
                     }
                 ) { islamicDays ->

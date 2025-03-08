@@ -115,7 +115,7 @@ fun RowScope.UtilitiesCard(screenData: ScreenData, navController: NavController)
         colors = CardDefaults.elevatedCardColors(
             containerColor = MaterialTheme.colorScheme.primaryContainer
         ),
-        onClick = { navController.navigateToScreen(screenData) }
+        onClick = { navController.navigateToScreen(screenData.route) }
     ) {
         UtilitiesCardContent(screenData, animationProgress, animatedColor)
     }

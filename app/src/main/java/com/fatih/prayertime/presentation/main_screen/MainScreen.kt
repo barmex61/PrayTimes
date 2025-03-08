@@ -464,6 +464,7 @@ fun PrayNotificationCompose(
                 ) {
 
                     val globalAlarmList by mainScreenViewModel.globalAlarmList.collectAsState()
+                    println("globalAlarmList ${globalAlarmList?.size}")
                     if (globalAlarmList != null) {
                         globalAlarmList!!.forEachIndexed { index, globalAlarm ->
                             Column (

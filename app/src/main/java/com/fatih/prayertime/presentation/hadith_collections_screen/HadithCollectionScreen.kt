@@ -122,7 +122,7 @@ fun HadithCollectionCard(hadithSectionCardData: HadithSectionCardData, hadithCol
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
         onClick = {
             hadithCollectionViewModel.updateSelectedHadithSection(hadithSectionCardData)
-            navController.navigateToScreen(screens[5])
+            navController.navigateToScreen(screens[5].route)
         }
     ) {
         Column(

@@ -19,5 +19,5 @@ interface FavoritesDao {
     suspend fun deleteFavorite(favorite: FavoritesEntity)
 
     @Query("SELECT EXISTS(SELECT 1 FROM favorites WHERE itemId = :itemId LIMIT 1)")
-    suspend fun isFavorite(itemId: String): Boolean
+    suspend fun isFavorite(itemId: Int): Boolean
 } 

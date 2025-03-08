@@ -298,7 +298,7 @@
       "nameTr": "Akşam Duaları",
       "detail": [
         {
-          "id": 1,
+          "id": 20,
           "title": "Ayat al-Kursi",
           "titleTr": "Ayetel Kürsi",
           "category": "evening-dhikr",
@@ -312,7 +312,7 @@
           "fawaidTr": "Kim bu ayeti sabahleyin okursa akşama kadar korunur. Kim de akşamleyin okursa sabaha kadar korunur."
         },
         {
-          "id": 2,
+          "id": 21,
           "title": "Al-Ikhlas",
           "category": "evening-dhikr",
           "categoryName": "Evening Dhikr",
@@ -327,7 +327,7 @@
           "source": "HR. Abu Dawud No. 4241"
         },
         {
-          "id": 3,
+          "id": 22,
           "title": "Al-Falaq",
           "category": "evening-dhikr",
           "categoryName": "Evening Dhikr",
@@ -342,7 +342,7 @@
           "source": "HR. Abu Dawud No. 4241"
         },
         {
-          "id": 4,
+          "id": 23,
           "title": "An-Naas",
           "category": "evening-dhikr",
           "categoryName": "Evening Dhikr",
@@ -357,7 +357,7 @@
           "source": "HR. Abu Dawud No. 4241"
         },
         {
-          "id": 5,
+          "id": 24,
           "title": "Entering the Evening in the Kingdom of Allah and Seeking His Protection",
           "titleTr": "Allah’ın Egemenliğinde Akşama Girmek ve O’ndan Koruma Talep Etmek",
           "category": "evening-dhikr",
@@ -372,7 +372,7 @@
           "fawaidTr": ""
         },
         {
-          "id": 6,
+          "id": 25,
           "title": "Entering the Evening by Seeking Allah's Mercy",
           "titleTr": "Allah'ın Rahmetini Arayarak Akşama Girmek",
           "category": "evening-dhikr",
@@ -387,7 +387,7 @@
           "fawaidTr": ""
         },
         {
-          "id": 7,
+          "id": 26,
           "title": "The Master of Seeking Forgiveness",
           "titleTr": "Affedicilerin en yücesinden af dilemek",
           "category": "evening-dhikr",
@@ -402,7 +402,7 @@
           "fawaidTr": ""
         },
         {
-          "id": 8,
+          "id": 27,
           "title": "Prayer for Health and Protection",
           "titleTr": "Sağlık ve Koruma İçin Dua",
           "category": "evening-dhikr",
@@ -417,7 +417,7 @@
           "fawaidTr": ""
         },
         {
-          "id": 9,
+          "id": 28,
           "title": "Prayer for Safety in This World and the Hereafter",
           "titleTr": "Dünya ve Ahirette Selamet İçin Dua",
           "category": "evening-dhikr",
@@ -432,7 +432,7 @@
           "fawaidTr": ""
         },
         {
-          "id": 10,
+          "id": 29,
           "title": "Prayer for Seeking Protection from the Whispers of Satan",
           "titleTr": "Şeytanın Vesveselerinden Korunma Duası",
           "category": "evening-dhikr",
@@ -447,7 +447,7 @@
           "fawaidTr": ""
         },
         {
-          "id": 11,
+          "id": 30,
           "title": "Remembrance to Be Protected from All Dangers",
           "titleTr": "Her Türlü Tehlikeden Korunacak Hatıra",
           "category": "evening-dhikr",
@@ -462,7 +462,7 @@
           "fawaidTr": ""
         },
         {
-          "id": 12,
+          "id": 31,
           "title": "Declaration of Contentment with Allah, Islam, and the Prophet Muhammad (Peace Be Upon Him)",
           "titleTr": "Allah'a, İslam'a ve Peygamberimiz Muhammed'e (S.A.V) Razı Olma Beyanı",
           "category": "evening-dhikr",
@@ -477,7 +477,7 @@
           "fawaidTr": ""
         },
         {
-          "id": 13,
+          "id": 32,
           "title": "Asking for Guidance from Allah",
           "titleTr": "Allah'tan Hidayet İstemek",
           "category": "evening-dhikr",
@@ -492,7 +492,7 @@
           "fawaidTr": ""
         },
         {
-          "id": 14,
+          "id": 33,
           "title": "Entering the Evening on the Natural Disposition of Islam",
           "titleTr": "İslam'ın Doğal Mizacı Üzerine Akşama Giriş",
           "category": "evening-dhikr",
@@ -507,7 +507,7 @@
           "fawaidTr": ""
         },
         {
-          "id": 15,
+          "id": 34,
           "title": "Remembrance of the Oneness of Allah",
           "titleTr": "Allah'ın birliğini anmak",
           "category": "evening-dhikr",
@@ -522,7 +522,7 @@
           "fawaidTr": ""
         },
         {
-          "id": 16,
+          "id": 35,
           "title": "Reciting Praise to Allah",
           "titleTr": "Allah'a hamd etmek",
           "category": "evening-dhikr",
@@ -537,7 +537,7 @@
           "fawaidTr": ""
         },
         {
-          "id": 17,
+          "id": 36,
           "title": "Daily Praise (Tasbih and Alhamdulillah)",
           "titleTr": "Günlük Hamd (Tesbih ve Elhamdülillah)",
           "category": "evening-dhikr",
@@ -552,7 +552,7 @@
           "fawaidTr": ""
         },
         {
-          "id": 18,
+          "id": 37,
           "title": "Seeking Forgiveness 100 Times a Day",
           "titleTr": "Günde 100 Kez Af Dilemek",
           "category": "evening-dhikr",
@@ -567,7 +567,7 @@
           "fawaidTr": ""
         },
         {
-          "id": 19,
+          "id": 38,
           "title": "Allah'ın Yarattıklarının Şerrinden Korunma Duası",
           "category": "evening-dhikr",
           "categoryName": "Evening Dhikr",
@@ -588,7 +588,7 @@
       "nameTr": "Seçili Dualar",
       "detail": [
         {
-          "id": 1,
+          "id": 39,
           "title": "Dua Seeking Good In This World And In The Hereafter",
           "titleTr": "Dünyada ve Ahirette İyilik Aramak İçin Dua",
           "category": "selected-dua",
@@ -603,7 +603,7 @@
           "source": "QS. Al-Baqarah: 201, al-Bukhari: 6389, HR. Muslim: 2690"
         },
         {
-          "id": 2,
+          "id": 40,
           "title": "Dua To Make Heart Firm Upon Deen #1",
           "titleTr": "Kalbi Din Üzerine Sağlamlaştırmak İçin Dua #1",
           "category": "selected-dua",
@@ -618,7 +618,7 @@
           "source": "HR. at-Tirmidzi, No. 3522 and Ahmad, 6: 315"
         },
         {
-          "id": 3,
+          "id": 41,
           "title": "Dua To Make Heart Firm Upon Deen #2",
           "titleTr": "Kalbi Din Üzerine Sağlamlaştırmak İçin Dua #2",
           "category": "selected-dua",
@@ -633,7 +633,7 @@
           "source": "HR. Muslim No. 2654"
         },
         {
-          "id": 4,
+          "id": 42,
           "title": "Dua To Make Heart Firm Upon Deen #3",
           "titleTr": "Kalbi Din Üzerine Sağlamlaştırmak İçin Dua #3",
           "category": "selected-dua",
@@ -648,7 +648,7 @@
           "source": "QS. Ali Imran: 8"
         },
         {
-          "id": 5,
+          "id": 43,
           "title": "Dua To Seek Refuge Against The Loss Of Pleasure",
           "titleTr": "Zevk Kaybına Karşı Sığınma Duası",
           "category": "selected-dua",
@@ -663,7 +663,7 @@
           "source": "HR. Muslim No. 2739"
         },
         {
-          "id": 6,
+          "id": 44,
           "title": "Dua To Resist Affliction",
           "titleTr": "Sıkıntılara Karşı Direnmek İçin Dua",
           "category": "selected-dua",
@@ -678,7 +678,7 @@
           "source": "HR. al-Bukhari: 6616, Muslim: 2707"
         },
         {
-          "id": 7,
+          "id": 45,
           "title": "Dua To Be Released From Debt, Anxiety, Weakness, Laziness, Fear, And Pressure from Others",
           "titleTr": "Borçtan, Endişeden, Zayıflıktan, Tembellikten, Korkudan ve Başkalarının Baskısından Kurtulmak İçin Dua",
           "category": "selected-dua",
@@ -693,7 +693,7 @@
           "source": "HR. Abu Dawud No. 1555"
         },
         {
-          "id": 8,
+          "id": 46,
           "title": "Dua When Getting Good News",
           "titleTr": "İyi Haber Alınca Okunacak Dua",
           "category": "selected-dua",
@@ -715,7 +715,7 @@
       "nameTr": "Namazdan Sonra Okunacak Dualar",
       "detail" : [
         {
-          "id": 1,
+          "id": 47,
           "title": "Istighfar",
           "titleTr": "Töve istiğfar",
           "category": "dhikr-after-salah",
@@ -730,7 +730,7 @@
           "fawaidTr": ""
         },
         {
-          "id": 2,
+          "id": 48,
           "title": "Allah, The Giver of Peace",
           "titleTr": "Allah-u Teala, Selamet Veren",
           "category": "dhikr-after-salah",
@@ -745,7 +745,7 @@
           "fawaidTr": ""
         },
         {
-          "id": 3,
+          "id": 49,
           "title": "Allah, The Preventer and The Giver of All Things",
           "titleTr": "Her Şeyi Önleyen ve Veren Allah",
           "category": "dhikr-after-salah",
@@ -760,7 +760,7 @@
           "fawaidTr": ""
         },
         {
-          "id": 4,
+          "id": 50,
           "title": "Allah, The Possessor of All and The Only One Worthy of Worship",
           "titleTr": "Her şeyin sahibi ve tek ibadete layık olan Allah",
           "category": "dhikr-after-salah",
@@ -775,7 +775,7 @@
           "fawaidTr": ""
         },
         {
-          "id": 5,
+          "id": 51,
           "title": "Tasbih",
           "titleTr": "Tesbih",
           "category": "dhikr-after-salah",
@@ -790,7 +790,7 @@
           "fawaidTr": ""
         },
         {
-          "id": 6,
+          "id": 52,
           "title": "Tahmid",
           "titleTr": "Tahmid",
           "category": "dhikr-after-salah",
@@ -805,7 +805,7 @@
           "fawaidTr": ""
         },
         {
-          "id": 7,
+          "id": 53,
           "title": "Takbir",
           "titleTr": "Tekbir",
           "category": "dhikr-after-salah",
@@ -820,7 +820,7 @@
           "fawaidTr": ""
         },
         {
-          "id": 8,
+          "id": 54,
           "title": "There is No Partner for Allah, and To Him Belongs All Things",
           "titleTr": "Allah'ın ortağı yoktur ve her şey O'nundur",
           "category": "dhikr-after-salah",
@@ -835,7 +835,7 @@
           "fawaidTr": ""
         },
         {
-          "id": 9,
+          "id": 55,
           "title": "Ayat al-Kursi",
           "titleTr": "Ayetül Kürsi",
           "category": "dhikr-after-salah",
@@ -850,7 +850,7 @@
           "source": "HR. at-Tirmidzi: 2879"
         },
         {
-          "id": 10,
+          "id": 56,
           "title": "Al-Ikhlas",
           "titleTr": "İhlas Suresi",
           "category": "dhikr-after-salah",
@@ -865,7 +865,7 @@
           "source": "HR. Abu Dawud No. 4241"
         },
         {
-          "id": 11,
+          "id": 57,
           "title": "Al-Falaq",
           "category": "dhikr-after-salah",
           "categoryName": "Dhikr After Salah",
@@ -879,7 +879,7 @@
           "source": "HR. Abu Dawud No. 4241"
         },
         {
-          "id": 12,
+          "id": 58,
           "title": "An-Naas",
           "category": "dhikr-after-salah",
           "categoryName": "Dhikr After Salah",
@@ -894,7 +894,7 @@
           "source": "HR. Abu Dawud No. 4241"
         },
         {
-          "id": 13,
+          "id": 59,
           "title": "Supplication for Beneficial Knowledge, Good Provision, and Accepted Deeds",
           "titleTr": "Faydalı İlim, İyi Rızık ve Kabul Edilmiş Ameller İçin Dua",
           "category": "dhikr-after-salah",
@@ -916,7 +916,7 @@
       "nameTr": "Günlük Dualar",
       "detail": [
         {
-          "id": 1,
+          "id": 60,
           "title": "Supplication Before Sleeping",
           "titleTr": "Uyumadan Önce Okunacak Dua",
           "category": "daily-dua",
@@ -931,7 +931,7 @@
           "fawaidTr": ""
         },
         {
-          "id": 2,
+          "id": 61,
           "title": "Supplication Upon Waking Up",
           "titleTr": "Uyanırken okunacak dua",
           "category": "daily-dua",
@@ -946,7 +946,7 @@
           "fawaidTr": ""
         },
         {
-          "id": 3,
+          "id": 62,
           "title": "Supplication Entering the Bathroom",
           "titleTr": "Banyoya Girerken Dua",
           "category": "daily-dua",
@@ -961,7 +961,7 @@
           "fawaidTr": ""
         },
         {
-          "id": 4,
+          "id": 63,
           "title": "Supplication Leaving the Bathroom",
           "titleTr": "Banyodan Çıkarken Okunacak Dua",
           "category": "daily-dua",
@@ -976,7 +976,7 @@
           "fawaidTr": ""
         },
         {
-          "id": 5,
+          "id": 64,
           "title": "Supplication Before Eating",
           "titleTr": "Yemekten Önce Okunacak Dua",
           "category": "daily-dua",
@@ -991,7 +991,7 @@
           "fawaidTr": ""
         },
         {
-          "id": 6,
+          "id": 65,
           "title": "Supplication If Forgetting Bismillah at the Beginning of a Meal",
           "titleTr": "Yemeğin Başında Bismillah Unutulursa Okunacak Dua",
           "category": "daily-dua",
@@ -1006,7 +1006,7 @@
           "fawaidTr": ""
         },
         {
-          "id": 7,
+          "id": 66,
           "title": "Supplication After Eating",
           "titleTr": "Yemekten Sonra Okunacak Dua",
           "category": "daily-dua",
@@ -1021,7 +1021,7 @@
           "fawaidTr": ""
         },
         {
-          "id": 8,
+          "id": 67,
           "title": "Supplication Entering the Mosque",
           "titleTr": "Camiye Girerken Okunacak Dua",
           "category": "daily-dua",
@@ -1036,7 +1036,7 @@
           "fawaidTr": ""
         },
         {
-          "id": 9,
+          "id": 68,
           "title": "Supplication Leaving the Mosque",
           "titleTr": "Camiden Çıkarken Okunacak Dua",
           "category": "daily-dua",
@@ -1051,7 +1051,7 @@
           "fawaidTr": ""
         },
         {
-          "id": 10,
+          "id": 69,
           "title": "Supplication Before Performing Ablution",
           "titleTr": "",
           "category": "daily-dua",
@@ -1066,7 +1066,7 @@
           "fawaidTr": ""
         },
         {
-          "id": 11,
+          "id": 70,
           "title": "Supplication After Performing Ablution",
           "titleTr": "Abdestten Sonra Yapılacak Dua",
           "category": "daily-dua",
@@ -1081,7 +1081,7 @@
           "fawaidTr": ""
         },
         {
-          "id": 12,
+          "id": 71,
           "title": "Supplication for Breaking the Fast",
           "titleTr": "Orucu Bozma Duası",
           "category": "daily-dua",
@@ -1096,7 +1096,7 @@
           "fawaidTr": ""
         },
         {
-          "id": 13,
+          "id": 72,
           "title": "Supplication Entering the House #1",
           "titleTr": "Eve Girerken Okunacak Dua #1",
           "category": "daily-dua",
@@ -1111,7 +1111,7 @@
           "fawaidTr": ""
         },
         {
-          "id": 14,
+          "id": 73,
           "title": "Supplication Entering the House #2",
           "titleTr": "Eve Girerken Okunacak Dua #2",
           "category": "daily-dua",
@@ -1126,7 +1126,7 @@
           "fawaidTr": ""
         },
         {
-          "id": 15,
+          "id": 74,
           "title": "Supplication Leaving the House",
           "titleTr": "Evden Çıkarken Okunacak Dua",
           "category": "daily-dua",
@@ -1141,7 +1141,7 @@
           "fawaidTr": ""
         },
         {
-          "id": 16,
+          "id": 75,
           "title": "Supplication for Protection from Causing or Experiencing Harm Outside the House",
           "titleTr": "Ev Dışında Zarar Vermekten veya Zarar Görmekten Korunma Duası",
           "category": "daily-dua",
@@ -1156,7 +1156,7 @@
           "fawaidTr": ""
         },
         {
-          "id": 17,
+          "id": 76,
           "title": "Travel Supplication",
           "titleTr": "Seyahat Duası",
           "category": "daily-dua",
@@ -1171,7 +1171,7 @@
           "fawaidTr": ""
         },
         {
-          "id": 18,
+          "id": 77,
           "title": "Supplication of a Resident for Someone Who is Traveling",
           "titleTr": "Seyahat Eden Birine İkamet Edenin Duası",
           "category": "daily-dua",
@@ -1186,7 +1186,7 @@
           "fawaidTr": ""
         },
         {
-          "id": 19,
+          "id": 78,
           "title": "Supplication for Piety from a Resident to Someone Who is Traveling",
           "titleTr": "Yerli Birinin Seyahat Eden Birine Takva Duası",
           "category": "daily-dua",
@@ -1201,7 +1201,7 @@
           "fawaidTr": ""
         },
         {
-          "id": 20,
+          "id":79,
           "title": "Supplication When Wearing New Clothes",
           "titleTr": "Yeni Elbise Giyerken Okunacak Dua",
           "category": "daily-dua",
@@ -1216,7 +1216,7 @@
           "fawaidTr": ""
         },
         {
-          "id": 21,
+          "id": 80,
           "title": "Supplication When Wearing Clothes",
           "titleTr": "Giysi Giyerken Okunacak Dua",
           "category": "daily-dua",
@@ -1231,7 +1231,7 @@
           "fawaidTr": ""
         },
         {
-          "id": 22,
+          "id": 81,
           "title": "Supplication When Mounting a Vehicle",
           "titleTr": "Araca Binerken Okunacak Dua",
           "category": "daily-dua",
@@ -1246,7 +1246,7 @@
           "fawaidTr": ""
         },
         {
-          "id": 23,
+          "id": 82,
           "title": "Supplication When it Rains",
           "titleTr": "Yağmur Yağdığında Dua",
           "category": "daily-dua",
@@ -1261,7 +1261,7 @@
           "fawaidTr": ""
         },
         {
-          "id": 24,
+          "id": 83,
           "title": "Supplication During Heavy Rain",
           "titleTr": "Şiddetli Yağmurda Dua",
           "category": "daily-dua",
@@ -1276,7 +1276,7 @@
           "fawaidTr": ""
         },
         {
-          "id": 25,
+          "id": 84,
           "title": "Supplication After it Rains",
           "titleTr": "Yağmurdan Sonra Dua",
           "category": "daily-dua",
@@ -1291,7 +1291,7 @@
           "fawaidTr": ""
         },
         {
-          "id": 26,
+          "id": 85,
           "title": "Supplication During Strong Wind",
           "titleTr": "Kuvvetli Rüzgar Eserken Dua",
           "category": "daily-dua",
@@ -1306,7 +1306,7 @@
           "fawaidTr": ""
         },
         {
-          "id": 27,
+          "id": 86,
           "title": "The Best Supplication for Seeking Forgiveness (Sayyid al-Istighfar)",
           "titleTr": "Affedilmeyi Dilemek İçin En İyi Dua (Seyyid el-İstiğfar)",
           "category": "daily-dua",
@@ -1321,7 +1321,7 @@
           "fawaidTr": ""
         },
         {
-          "id": 28,
+          "id": 87,
           "title": "Supplication for Ease in All Matters",
           "titleTr": "Her İşin Kolaylığı İçin Dua",
           "category": "daily-dua",
@@ -1336,7 +1336,7 @@
           "fawaidTr": ""
         },
         {
-          "id": 29,
+          "id": 88,
           "title": "Supplication When Afflicted by Calamity",
           "titleTr": "Felaketle Karşılaşıldığında Yapılacak Dua",
           "category": "daily-dua",
@@ -1351,7 +1351,7 @@
           "fawaidTr": ""
         },
         {
-          "id": 30,
+          "id": 89,
           "title": "Supplication When in Debt",
           "titleTr": "Borçluyken Yapılacak Dua",
           "category": "daily-dua",
@@ -1366,7 +1366,7 @@
           "fawaidTr": ""
         },
         {
-          "id": 31,
+          "id": 90,
           "title": "Supplication for Protection from Laziness, Sadness, and Debt",
           "titleTr": "Tembellikten, Üzüntüden ve Borçtan Korunma Duası",
           "category": "daily-dua",
@@ -1381,7 +1381,7 @@
           "fawaidTr": ""
         },
         {
-          "id": 32,
+          "id":91,
           "title": "Supplication After Sneezing",
           "titleTr": "Hapşırdıktan Sonra Okunacak Dua",
           "category": "daily-dua",
@@ -1396,7 +1396,7 @@
           "fawaidTr": ""
         },
         {
-          "id": 33,
+          "id": 92,
           "title": "Supplication Upon Hearing Someone Sneeze",
           "titleTr": "Birinin Hapşırdığını Duyunca Yapılacak Dua",
           "category": "daily-dua",
@@ -1411,7 +1411,7 @@
           "fawaidTr": ""
         },
         {
-          "id": 34,
+          "id": 93,
           "title": "Response to Someone Who Says 'Yarhamukallah' After You Sneeze",
           "titleTr": "Hapşırdıktan Sonra 'Yerhamukallah' Diyen Birine Cevap",
           "category": "daily-dua",
@@ -1426,7 +1426,7 @@
           "fawaidTr": ""
         },
         {
-          "id": 35,
+          "id": 94,
           "title": "Supplication for Good Character",
           "titleTr": "İyi Ahlak İçin Dua",
           "category": "daily-dua",
@@ -1441,7 +1441,7 @@
           "fawaidTr": ""
         },
         {
-          "id": 36,
+          "id": 95,
           "title": "Prayer for Protection from Satan",
           "titleTr": "Şeytandan Korunma Duası",
           "category": "daily-dua",
@@ -1456,7 +1456,7 @@
           "fawaidTr": "Şüphesiz Allah, Hz. Muhammed'e ve tüm takipçilerine, özellikle ölüm yaklaşırken, her türlü faaliyette şeytanın vesveselerinden sığınmalarını emretmektedir. Şeytan, insanların kalplerine kötülük vesveseleri verir ve kötülüğü teşvik eder."
         },
         {
-          "id": 37,
+          "id": 96,
           "title": "Prayer After the Adhan",
           "titleTr": "Ezan Sonrası Dua",
           "category": "daily-dua",
@@ -1471,7 +1471,7 @@
           "source": "Narrated by Abu Dawud (529), at-Tirmidhi (211), an-Nasa'i (2:26), Ibn Majah (722)"
         },
         {
-          "id": 38,
+          "id": 97,
           "title": "Prayer for Forgiveness for Parents",
           "titleTr": "Ebeveynler İçin Bağışlanma Duası",
           "category": "daily-dua",
