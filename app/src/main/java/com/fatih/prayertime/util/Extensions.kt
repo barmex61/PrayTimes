@@ -144,6 +144,8 @@ enum class PrayTimesString(val stringResId: Int) {
     PRAYER(R.string.prayer),
     PRAYER_DETAIL(R.string.prayer_detail),
     HADITH_COLLECTION(R.string.hadith_collection),
+    FAVORITES(R.string.favorites),
+    STATISTICS(R.string.statistics),
     HADITH(R.string.hadith),
     NIGHT(R.string.night);
 

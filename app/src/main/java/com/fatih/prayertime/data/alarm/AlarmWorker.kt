@@ -5,7 +5,7 @@ import android.util.Log
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import com.fatih.prayertime.data.dependency_injection.WorkerLocation
+import com.fatih.prayertime.di.WorkerLocation
 import com.fatih.prayertime.domain.model.Address
 import com.fatih.prayertime.domain.model.GlobalAlarm
 import com.fatih.prayertime.domain.model.PrayTimes

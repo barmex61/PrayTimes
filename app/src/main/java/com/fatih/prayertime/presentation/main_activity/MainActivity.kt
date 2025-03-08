@@ -84,11 +84,13 @@ import com.fatih.prayertime.presentation.dua_category_detail_screen.DuaViewModel
 import com.fatih.prayertime.presentation.dua_detail_screen.DuaDetailScreen
 import com.fatih.prayertime.presentation.main_screen.MainScreen
 import com.fatih.prayertime.presentation.esmaulhusna_screen.EsmaulHusnaScreen
+import com.fatih.prayertime.presentation.favorites_screen.FavoritesScreen
 import com.fatih.prayertime.presentation.hadith_collections_screen.HadithCollectionScreen
 import com.fatih.prayertime.presentation.hadith_collections_screen.HadithCollectionViewModel
 import com.fatih.prayertime.presentation.hadith_section_detail_screen.HadithSectionDetailScreen
 import com.fatih.prayertime.presentation.hadith_screen.HadithScreen
 import com.fatih.prayertime.presentation.settings_screen.SettingsScreen
+import com.fatih.prayertime.presentation.statistics_screen.StatisticsScreen
 import com.fatih.prayertime.presentation.ui.theme.PrayerTimeTheme
 import com.fatih.prayertime.presentation.util_screen.UtilitiesScreen
 import com.fatih.prayertime.util.Constants.screens
@@ -319,6 +321,8 @@ fun NavHostLayout(navController: NavHostController, innerPadding: PaddingValues,
                         DuaCategoryDetailScreen(innerPaddingValue,navController, categoryIndex ,duaViewModel)
                     }
                     PrayTimesString.PRAYER_DETAIL.name -> DuaDetailScreen(innerPaddingValue,duaViewModel)
+                    PrayTimesString.FAVORITES.name -> FavoritesScreen(innerPaddingValue)
+                    PrayTimesString.STATISTICS.name -> StatisticsScreen(innerPaddingValue)
                 }
             }
         }

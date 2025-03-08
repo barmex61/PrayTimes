@@ -69,90 +69,92 @@ object Constants {
     val screens = listOf(
         ScreenData(
             title = PrayTimesString.Home,
-            iconRoute = R.drawable.mosque_icon,
             route = "home",
-            iconResourceType = ResourceType.VECTOR
+            iconRoute = R.drawable.home_icon,
+            arguments = emptyList()
         ),
         ScreenData(
             title = PrayTimesString.Qibla,
-            iconRoute = R.drawable.compass_icon,
-            painterRoute = R.drawable.compass,
             route = "qibla",
-            iconResourceType = ResourceType.PAINTER
-        ),
-        ScreenData(
-            title = PrayTimesString.Settings,
-            iconRoute = R.drawable.settings_icon,
-            route = "settings",
-            iconResourceType = ResourceType.VECTOR
+            iconRoute = R.drawable.compass_icon,
+            arguments = emptyList()
         ),
         ScreenData(
             title = PrayTimesString.Utilities,
-            iconRoute = R.drawable.baseline_menu_24,
             route = "utilities",
-            iconResourceType = ResourceType.VECTOR
+            iconRoute = R.drawable.utilities_icon,
+            arguments = emptyList()
         ),
         ScreenData(
-            title = PrayTimesString.PRAY_CATEGORY_DETAILS,
-            iconRoute = R.drawable.pray,
-            route = "duaCategoriesDetail/{categoryIndex}",
-            iconResourceType = ResourceType.PAINTER,
+            title = PrayTimesString.Settings,
+            route = "settings",
+            iconRoute = R.drawable.settings_icon,
+            arguments = emptyList()
         ),
         ScreenData(
-            title = PrayTimesString.HADITH_SECTION_DETAILS,
-            iconRoute = R.drawable.hadith,
-            route = "hadithSectionDetailScreen",
-            iconResourceType = ResourceType.PAINTER,
+            title = PrayTimesString.ESMAUL_HUSNA,
+            route = "esmaulhusna",
+            iconRoute = R.drawable.esmaul_husna_icon,
+            arguments = emptyList()
+        ),
+        ScreenData(
+            title = PrayTimesString.ISLAMIC_CALENDAR,
+            route = "calendar",
+            iconRoute = R.drawable.calendar_icon,
+            arguments = emptyList()
+        ),
+        ScreenData(
+            title = PrayTimesString.HADITH,
+            route = "hadith",
+            iconRoute = R.drawable.hadith_icon,
+            arguments = emptyList()
         ),
         ScreenData(
             title = PrayTimesString.HADITH_COLLECTION,
-            iconRoute = R.drawable.hadith,
-            route = "hadithCollections/{collectionPath}",
-            iconResourceType = ResourceType.PAINTER,
+            route = "hadith_collection/{collectionPath}",
+            iconRoute = R.drawable.hadith_collection_icon,
             arguments = listOf(
-                navArgument("collectionPath"){type = NavType.StringType}
+                navArgument("collectionPath") { type = NavType.StringType }
+            )
+        ),
+        ScreenData(
+            title = PrayTimesString.HADITH_SECTION_DETAILS,
+            route = "hadith_section_details",
+            iconRoute = R.drawable.hadith_details_icon,
+            arguments = emptyList()
+        ),
+        ScreenData(
+            title = PrayTimesString.PRAYER,
+            route = "prayer",
+            iconRoute = R.drawable.prayer_icon,
+            arguments = emptyList()
+        ),
+        ScreenData(
+            title = PrayTimesString.PRAY_CATEGORY_DETAILS,
+            route = "pray_category_details/{categoryIndex}",
+            iconRoute = R.drawable.prayer_details_icon,
+            arguments = listOf(
+                navArgument("categoryIndex") { type = NavType.IntType }
             )
         ),
         ScreenData(
             title = PrayTimesString.PRAYER_DETAIL,
-            iconRoute = R.drawable.pray,
-            route = "duaDetail",
-            iconResourceType = ResourceType.PAINTER,
-        ),
-
-        ScreenData(
-            title = PrayTimesString.PRAYER,
-            iconRoute = R.drawable.pray,
-            route = "duaCategories",
-            iconResourceType = ResourceType.PAINTER,
-        ),
-
-        ScreenData(
-            title = PrayTimesString.QURAN,
-            iconRoute = R.drawable.quran_icon,
-            painterRoute = R.drawable.quran,
-            route = "quran",
-            iconResourceType = ResourceType.PAINTER
+            route = "prayer_detail",
+            iconRoute = R.drawable.prayer_detail_icon,
+            arguments = emptyList()
         ),
         ScreenData(
-            title = PrayTimesString.ESMAUL_HUSNA,
-            iconRoute = R.drawable.allah,
-            route = "esmaul_husna",
-            iconResourceType = ResourceType.PAINTER
+            title = PrayTimesString.FAVORITES,
+            route = "favorites",
+            iconRoute = R.drawable.favorite_icon,
+            arguments = emptyList()
         ),
         ScreenData(
-            title = PrayTimesString.ISLAMIC_CALENDAR,
-            iconRoute = R.drawable.calendar,
-            route = "islamic_calendar",
-            iconResourceType = ResourceType.PAINTER
-        ),
-        ScreenData(
-            title = PrayTimesString.HADITH,
-            iconRoute = R.drawable.hadith,
-            route = "hadith",
-            iconResourceType = ResourceType.PAINTER
-        ),
-
+            title = PrayTimesString.STATISTICS,
+            route = "statistics",
+            iconRoute = R.drawable.statistics_icon,
+            arguments = emptyList()
+        )
     )
 
 }

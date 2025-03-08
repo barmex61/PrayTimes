@@ -3,7 +3,7 @@ package com.fatih.prayertime.presentation.main_screen
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.fatih.prayertime.data.dependency_injection.MainScreenLocation
+import com.fatih.prayertime.di.MainScreenLocation
 import com.fatih.prayertime.domain.model.GlobalAlarm
 import com.fatih.prayertime.domain.model.Address
 import com.fatih.prayertime.domain.model.PrayTimes

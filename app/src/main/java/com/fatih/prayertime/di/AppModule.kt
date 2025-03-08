@@ -1,4 +1,4 @@
-package com.fatih.prayertime.data.dependency_injection
+package com.fatih.prayertime.di
 
 import android.content.Context
 import android.location.Geocoder
@@ -20,20 +20,31 @@ import com.fatih.prayertime.domain.repository.LocationAndAddressRepository
 import com.fatih.prayertime.domain.repository.PrayApiRepository
 import com.fatih.prayertime.domain.repository.PrayDatabaseRepository
 import com.fatih.prayertime.data.alarm.AlarmScheduler
+import com.fatih.prayertime.data.dependency_injection.MainScreenLocation
+import com.fatih.prayertime.data.dependency_injection.WorkerLocation
+import com.fatih.prayertime.data.local.dao.FavoritesDao
+import com.fatih.prayertime.data.local.dao.PrayerStatisticsDao
+import com.fatih.prayertime.data.local.database.AppDatabase
 import com.fatih.prayertime.data.remote.HadithApi
 import com.fatih.prayertime.data.remote.IslamicCalendarApi
+import com.fatih.prayertime.data.repository.FavoritesRepositoryImpl
 import com.fatih.prayertime.data.repository.HadithRepositoryImp
 import com.fatih.prayertime.data.repository.IslamicCalendarRepositoryImp
+import com.fatih.prayertime.data.repository.PrayerStatisticsRepositoryImpl
 import com.fatih.prayertime.data.repository.SettingsRepositoryImp
 import com.fatih.prayertime.data.settings.SettingsDataStore
-import com.fatih.prayertime.di.MainScreenLocation
-import com.fatih.prayertime.di.WorkerLocation
+import com.fatih.prayertime.domain.repository.FavoritesRepository
 import com.fatih.prayertime.domain.repository.HadithRepository
 import com.fatih.prayertime.domain.repository.IslamicCalendarRepository
+import com.fatih.prayertime.domain.repository.PrayerStatisticsRepository
 import com.fatih.prayertime.domain.repository.SettingsRepository
 import com.fatih.prayertime.domain.use_case.formatted_use_cases.FormattedUseCase
 import com.fatih.prayertime.domain.use_case.location_use_cases.GetLocationAndAddressUseCase
 import com.fatih.prayertime.domain.use_case.permission_use_case.PermissionsUseCase
+import com.fatih.prayertime.domain.use_case.favorites_use_cases.GetAllFavoritesUseCase
+import com.fatih.prayertime.domain.use_case.favorites_use_cases.RemoveFavoriteUseCase
+import com.fatih.prayertime.domain.use_case.statistics_use_cases.GetPrayerCountsUseCase
+import com.fatih.prayertime.domain.use_case.statistics_use_cases.GetStatisticsUseCase
 import com.fatih.prayertime.util.Constants.ALADHAN_API_BASE_URL
 import com.fatih.prayertime.util.Constants.HADITH_API_BASE_URL
 import com.google.android.gms.location.FusedLocationProviderClient
@@ -189,6 +200,64 @@ object Module {
     @Provides
     @Singleton
     fun provideHadithRepositoryImp(hadithApi: HadithApi) : HadithRepository = HadithRepositoryImp(hadithApi)
+
+    @Provides
+    @Singleton
+    fun provideAppDatabase(@ApplicationContext context: Context): AppDatabase {
+        return Room.databaseBuilder(
+            context,
+            AppDatabase::class.java,
+            AppDatabase.DATABASE_NAME
+        ).build()
+    }
+
+    @Provides
+    @Singleton
+    fun provideFavoritesDao(database: AppDatabase): FavoritesDao {
+        return database.favoritesDao()
+    }
+
+    @Provides
+    @Singleton
+    fun providePrayerStatisticsDao(database: AppDatabase): PrayerStatisticsDao {
+        return database.prayerStatisticsDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideFavoritesRepository(favoritesDao: FavoritesDao): FavoritesRepository {
+        return FavoritesRepositoryImpl(favoritesDao)
+    }
+
+    @Provides
+    @Singleton
+    fun providePrayerStatisticsRepository(statisticsDao: PrayerStatisticsDao): PrayerStatisticsRepository {
+        return PrayerStatisticsRepositoryImpl(statisticsDao)
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetAllFavoritesUseCase(repository: FavoritesRepository): GetAllFavoritesUseCase {
+        return GetAllFavoritesUseCase(repository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideRemoveFavoriteUseCase(repository: FavoritesRepository): RemoveFavoriteUseCase {
+        return RemoveFavoriteUseCase(repository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetStatisticsUseCase(repository: PrayerStatisticsRepository): GetStatisticsUseCase {
+        return GetStatisticsUseCase(repository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetPrayerCountsUseCase(repository: PrayerStatisticsRepository): GetPrayerCountsUseCase {
+        return GetPrayerCountsUseCase(repository)
+    }
 
 }
 
