@@ -75,7 +75,7 @@ fun FavoritesScreen(
             LazyColumn {
                 items(
                     items = favorites,
-                    key = { it.id }
+                    key = { it.itemId }
                 ) { favorite ->
                     val f = 75.dp.toPxf()
                     var isVisible by remember { mutableStateOf(true) }
