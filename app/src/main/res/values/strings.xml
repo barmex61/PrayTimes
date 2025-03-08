@@ -41,6 +41,6 @@
     <string name="hadith_collection">Hadith Collection</string>
     <string name="number_of_prayers">Number of prayers in this category</string>
     <string name="hadith_section_detail">Hadith Section Detail</string>
-    <string name="favorites">Favoriler</string>
-    <string name="statistics">İstatistikler</string>
+    <string name="favorites">Favorites</string>
+    <string name="statistics">Statistics</string>
 </resources>

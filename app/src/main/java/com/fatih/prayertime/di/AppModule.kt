@@ -20,8 +20,6 @@ import com.fatih.prayertime.domain.repository.LocationAndAddressRepository
 import com.fatih.prayertime.domain.repository.PrayApiRepository
 import com.fatih.prayertime.domain.repository.PrayDatabaseRepository
 import com.fatih.prayertime.data.alarm.AlarmScheduler
-import com.fatih.prayertime.data.dependency_injection.MainScreenLocation
-import com.fatih.prayertime.data.dependency_injection.WorkerLocation
 import com.fatih.prayertime.data.local.dao.FavoritesDao
 import com.fatih.prayertime.data.local.dao.PrayerStatisticsDao
 import com.fatih.prayertime.data.local.database.AppDatabase

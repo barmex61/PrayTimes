@@ -50,12 +50,13 @@ import com.fatih.prayertime.util.navigateToScreen
 import kotlin.math.absoluteValue
 @Composable
 fun UtilitiesScreen(bottomPaddingValues: Dp, navController: NavController) {
-    val utilityScreens = remember { screens.drop(screens.size-5) + screens[1] }
+    val utilityScreens = remember { screens.drop(8) + screens[1] }
+    println(utilityScreens.size)
 
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .padding(bottom = bottomPaddingValues)
+            .padding(bottom = bottomPaddingValues + 20.dp)
     ) {
         items(utilityScreens.chunked(2)) { rowItems ->
             UtilitiesRow(rowItems, navController)
