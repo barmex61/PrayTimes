@@ -15,8 +15,6 @@ import com.fatih.prayertime.util.FavoritesType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import java.util.Locale
 
@@ -33,8 +31,8 @@ class DuaDetailViewModel @Inject constructor(
     private val _isFavorite = MutableStateFlow(false)
     val isFavorite = _isFavorite.asStateFlow()
 
-    val duaCategoryIndex = MutableStateFlow(0)
-    val duaId = MutableStateFlow(0)
+    private val duaCategoryIndex = MutableStateFlow(0)
+    private val duaId = MutableStateFlow(0)
 
     fun updateDuaId(duaId: Int) = viewModelScope.launch(Dispatchers.Default){
         this@DuaDetailViewModel.duaId.emit(duaId)
@@ -51,7 +49,7 @@ class DuaDetailViewModel @Inject constructor(
     }
 
     private fun checkIsFavorite(duaId: Int) = viewModelScope.launch(Dispatchers.IO){
-        _isFavorite.value = isFavoriteUseCase(duaId)
+        _isFavorite.value = isFavoriteUseCase(duaId,FavoritesType.DUA.name)
     }
 
     fun toggleFavorite() = viewModelScope.launch(Dispatchers.IO){
@@ -59,7 +57,6 @@ class DuaDetailViewModel @Inject constructor(
             if (_isFavorite.value) {
                 removeFavoriteUseCase(
                     FavoritesEntity(
-                        id = dua.id,
                         type = FavoritesType.DUA.name,
                         duaCategoryIndex = duaCategoryIndex.value,
                         title = if (Locale.getDefault().language == "tr") dua.titleTr else dua.title,
@@ -71,7 +68,6 @@ class DuaDetailViewModel @Inject constructor(
             } else {
                 addFavoriteUseCase(
                     FavoritesEntity(
-                        id = dua.id,
                         type = FavoritesType.DUA.name,
                         duaCategoryIndex = duaCategoryIndex.value,
                         title = if (Locale.getDefault().language == "tr") dua.titleTr else dua.title,

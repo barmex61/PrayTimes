@@ -26,18 +26,23 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.fatih.prayertime.R
 import com.fatih.prayertime.data.remote.dto.hadithdto.Hadith
 import com.fatih.prayertime.presentation.hadith_collections_screen.HadithCollectionViewModel
 import com.fatih.prayertime.util.TitleView
@@ -48,12 +53,14 @@ fun HadithSectionDetailScreen(
     bottomPaddingValues: Dp,
     hadithCollectionViewModel: HadithCollectionViewModel
 ) {
+    val hadithDetail by hadithCollectionViewModel.hadithDetail.collectAsState()
+    val isFavorite by hadithCollectionViewModel.isFavorite.collectAsState()
     val selectedHadithSection by hadithCollectionViewModel.selectedHadithSection.collectAsState()
     val selectedIndex by hadithCollectionViewModel.selectedHadithIndex.collectAsState()
     var direction by remember { mutableIntStateOf(1) }
     val infiniteTransition = rememberInfiniteTransition()
 
-    var showAllHadiths by remember { mutableStateOf(false) } // "Tüm Hadisleri Göster" seçeneği için durum
+    var showAllHadiths by remember { mutableStateOf(false) }
     val fabButtonTransition = infiniteTransition.animateFloat(
         initialValue = 0f,
         targetValue = -200f,
@@ -62,6 +69,13 @@ fun HadithSectionDetailScreen(
     val fabButtonRotate = animateFloatAsState(
         targetValue = if (showAllHadiths) 360f else 0f,
     )
+
+    LaunchedEffect(hadithDetail) {
+        hadithDetail?.let {
+            hadithCollectionViewModel.checkIsFavorite(it.id)
+        }
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -128,19 +142,33 @@ fun HadithSectionDetailScreen(
             }
         }
 
-        FloatingActionButton(
-            onClick = { showAllHadiths = !showAllHadiths },
+        FavoriteFab(
+            isFavorite = isFavorite,
             modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(bottom = 80.dp, end = 16.dp),
+            onClick = {
+                hadithDetail?.let { hadith ->
+                    hadithCollectionViewModel.toggleFavorite(
+                        hadithId = hadith.id,
+                        title = hadith.title,
+                        content = hadith.content
+                    )
+                }
+            }
+        )
+
+        FloatingActionButton(
+            onClick = {
+                hadithCollectionViewModel.getRandomHadith()
+            },
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
                 .padding(16.dp)
-                .align(Alignment.BottomEnd).graphicsLayer {
-                    translationY = fabButtonTransition.value
-                    rotationX = fabButtonRotate.value
-                } // Sağ alt köşe
         ) {
             Icon(
-                imageVector = if (showAllHadiths) Icons.Default.Close else Icons.Default.List,
-                contentDescription = if (showAllHadiths) "Close All Hadiths" else "Show All Hadiths",
-                tint = MaterialTheme.colorScheme.primary
+                imageVector = Icons.Default.Refresh,
+                contentDescription = "Rastgele Hadis"
             )
         }
     }
@@ -405,5 +433,34 @@ fun HadithDetailSection(hadith: Hadith,infiniteTransition: InfiniteTransition) {
                 modifier = Modifier.align(Alignment.End)
             )
         }
+    }
+}
+
+@Composable
+fun FavoriteFab(
+    isFavorite: Boolean,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
+    val infiniteTransition = rememberInfiniteTransition()
+    val fabButtonRotate = animateFloatAsState(
+        targetValue = if (isFavorite) 360f else 0f,
+    )
+
+    FloatingActionButton(
+        onClick = onClick,
+        modifier = modifier.graphicsLayer {
+            rotationX = fabButtonRotate.value
+        }
+    ) {
+        Icon(
+            imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+            contentDescription = if (isFavorite) {
+                stringResource(id = R.string.remove_from_favorites)
+            } else {
+                stringResource(id = R.string.add_to_favorites)
+            },
+            tint = if (isFavorite) Color.Red else Color.Gray
+        )
     }
 }

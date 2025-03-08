@@ -2,13 +2,8 @@ package com.fatih.prayertime.presentation.dua_category_detail_screen
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.fatih.prayertime.data.local.entity.FavoritesEntity
 import com.fatih.prayertime.data.remote.dto.duadto.DuaCategoryDetail
-import com.fatih.prayertime.domain.use_case.favorites_use_cases.AddFavoriteUseCase
-import com.fatih.prayertime.domain.use_case.favorites_use_cases.IsFavoriteUseCase
-import com.fatih.prayertime.domain.use_case.favorites_use_cases.RemoveFavoriteUseCase
 import com.fatih.prayertime.util.Constants.duaCategory
-import com.fatih.prayertime.util.FavoritesType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow

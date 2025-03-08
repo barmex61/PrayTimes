@@ -12,6 +12,6 @@ data class FavoritesEntity(
     val title: String,
     val content: String,
     val latin : String? = null,
-    val duaCategoryIndex : Int,
+    val duaCategoryIndex : Int? = null,
     val timestamp: Long = System.currentTimeMillis()
 ) 

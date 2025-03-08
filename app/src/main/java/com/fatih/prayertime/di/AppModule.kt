@@ -5,8 +5,6 @@ import android.location.Geocoder
 import androidx.room.Room
 import com.fatih.prayertime.data.local.dao.GlobalAlarmDao
 import com.fatih.prayertime.data.local.dao.PrayDao
-import com.fatih.prayertime.data.local.database.GlobalAlarmDatabase
-import com.fatih.prayertime.data.local.database.PrayDatabase
 import com.fatih.prayertime.data.network.NetworkConnectivityManager
 import com.fatih.prayertime.data.remote.PrayApi
 import com.fatih.prayertime.data.repository.AlarmDatabaseRepositoryImp
@@ -97,14 +95,10 @@ object Module {
     @Provides
     @Singleton
     fun provideConnectivityRepository(networkConnectivityManager: NetworkConnectivityManager) : ConnectivityRepository = ConnectivityRepositoryImp(networkConnectivityManager )
-
+    
     @Provides
     @Singleton
-    fun providePrayDatabase(@ApplicationContext context: Context) = Room.databaseBuilder(context, PrayDatabase::class.java, "pray_database").build()
-
-    @Provides
-    @Singleton
-    fun providePrayDao(prayDatabase: PrayDatabase) = prayDatabase.prayDao()
+    fun providePrayDao(appDatabase: AppDatabase) = appDatabase.prayDao()
 
     @Provides
     @Singleton
@@ -112,11 +106,7 @@ object Module {
 
     @Provides
     @Singleton
-    fun provideAlarmDatabase(@ApplicationContext context: Context) = Room.databaseBuilder(context,GlobalAlarmDatabase::class.java, "global_alarm").build()
-
-    @Provides
-    @Singleton
-    fun provideAlarmDao(globalAlarmDatabase: GlobalAlarmDatabase) = globalAlarmDatabase.globalAlarmDao()
+    fun provideAlarmDao(appDatabase: AppDatabase) = appDatabase.globalAlarmDao()
 
     @Provides
     @Singleton
