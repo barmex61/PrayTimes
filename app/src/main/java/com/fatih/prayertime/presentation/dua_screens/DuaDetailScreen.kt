@@ -1,4 +1,4 @@
-package com.fatih.prayertime.presentation.dua_detail_screen
+package com.fatih.prayertime.presentation.dua_screens
 
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -29,7 +29,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -41,16 +40,17 @@ import com.fatih.prayertime.R
 import com.fatih.prayertime.data.remote.dto.duadto.DuaCategoryDetail
 import kotlin.random.Random
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.fatih.prayertime.presentation.dua_detail_screen.DuaDetailViewModel
 import com.fatih.prayertime.util.extensions.capitalizeFirstLetter
-import com.fatih.prayertime.util.ui.composables.LoadingView
-import com.fatih.prayertime.util.ui.composables.TitleView
+import com.fatih.prayertime.util.composables.LoadingView
+import com.fatih.prayertime.util.composables.TitleView
 
 @Composable
 fun DuaDetailScreen(
     bottomPaddingValues: Dp,
     duaId: Int,
     categoryIndex : Int,
-    viewModel: DuaDetailViewModel = hiltViewModel()
+    viewModel: DuaViewModel
 ) {
     val duaDetail by viewModel.duaDetail.collectAsState()
     val isFavorite by viewModel.isFavorite.collectAsState()

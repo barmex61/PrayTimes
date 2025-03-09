@@ -1,4 +1,4 @@
-package com.fatih.prayertime.presentation.dua_categories_screen
+package com.fatih.prayertime.presentation.dua_screens
 
 import androidx.compose.animation.animateColor
 import androidx.compose.animation.animateContentSize
@@ -19,12 +19,14 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
-import androidx.compose.foundation.lazy.staggeredgrid.itemsIndexed
+import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -37,26 +39,44 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.fatih.prayertime.R
 import com.fatih.prayertime.data.remote.dto.duadto.DuaCategoryData
+import com.fatih.prayertime.util.composables.ErrorView
 import com.fatih.prayertime.util.config.NavigationConfig.screens
 import com.fatih.prayertime.util.config.ThemeConfig.colors
 import com.fatih.prayertime.util.extensions.navigateToScreen
-import com.fatih.prayertime.util.ui.composables.LoadingView
-import com.fatih.prayertime.util.ui.composables.TitleView
-
-
+import com.fatih.prayertime.util.composables.LoadingView
+import com.fatih.prayertime.util.composables.TitleView
+import com.fatih.prayertime.util.model.state.Status
 import java.util.Locale
 import kotlin.random.Random
 
 @Composable
-fun DuaCategoriesScreen(bottomPaddingValues: Dp, navController: NavController) {
-    Box(modifier = Modifier.fillMaxSize(1f).padding(bottom = bottomPaddingValues), contentAlignment = Alignment.Center){
-        if (null != null){
-            DuaCategoriesGridView(duaCategory!!.data, navController )
-        }else{
+fun DuaCategoriesScreen(
+    bottomPaddingValues: Dp,
+    navController: NavController,
+    duaViewModel: DuaViewModel
+) {
+    val duaCategoryState by duaViewModel.duaState.collectAsState()
+    when(duaCategoryState.status){
+        Status.ERROR ->{
+            ErrorView(duaCategoryState.message?:"Error occurred") {
+                duaViewModel.loadDua()
+            }
+        }
+        Status.LOADING ->{
             LoadingView()
         }
+        Status.SUCCESS->{
+            Box(modifier = Modifier.fillMaxSize(1f).padding(bottom = bottomPaddingValues), contentAlignment = Alignment.Center){
+                if (duaCategoryState.data != null){
+                    DuaCategoriesGridView(duaCategoryState.data!!.data, navController )
+                }else{
+                    LoadingView()
+                }
 
+            }
+        }
     }
+
     TitleView("Dua Topics")
 }
 
@@ -68,14 +88,14 @@ fun DuaCategoriesGridView(duaCategoryDataList: List<DuaCategoryData>, navControl
         horizontalArrangement = Arrangement.spacedBy(20.dp),
         contentPadding = PaddingValues(bottom = 40.dp, top = 40.dp, start = 10.dp, end = 10.dp),
     )  {
-        itemsIndexed(duaCategoryDataList) {index, duaCategoryData ->
-            DuaCategoryCard(duaCategoryData,index, navController)
+        items(duaCategoryDataList) {duaCategoryData ->
+            DuaCategoryCard(duaCategoryData, navController)
         }
     }
 }
 
 @Composable
-fun DuaCategoryCard(duaCategoryData :DuaCategoryData,index: Int, navController: NavController) {
+fun DuaCategoryCard(duaCategoryData :DuaCategoryData, navController: NavController) {
     val infiniteTransition = rememberInfiniteTransition()
     val randomColor = remember { colors.random() }
     val targetColor = remember { colors.filter { it != randomColor }.random() }
@@ -115,7 +135,7 @@ fun DuaCategoryCard(duaCategoryData :DuaCategoryData,index: Int, navController: 
             ,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
         onClick = {
-            val route = screens[4].route.replace("{categoryIndex}","$index")
+            val route = screens[4].route.replace("{categoryId}","${duaCategoryData.id}")
             navController.navigateToScreen(route)
         }
     ) {

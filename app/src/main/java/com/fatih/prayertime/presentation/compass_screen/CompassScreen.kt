@@ -50,8 +50,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.fatih.prayertime.R
 import com.fatih.prayertime.data.gyroscope.GyroscopeSensor
-import com.fatih.prayertime.util.ui.composables.LockScreenOrientation
-import com.fatih.prayertime.util.ui.composables.TitleView
+import com.fatih.prayertime.util.composables.LockScreenOrientation
+import com.fatih.prayertime.util.composables.TitleView
 
 
 @Composable

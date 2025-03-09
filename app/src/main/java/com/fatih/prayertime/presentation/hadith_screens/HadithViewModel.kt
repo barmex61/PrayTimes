@@ -1,4 +1,4 @@
-package com.fatih.prayertime.presentation.hadith_collections_screen
+package com.fatih.prayertime.presentation.hadith_screens
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
@@ -6,15 +6,18 @@ import androidx.lifecycle.viewModelScope
 import com.fatih.prayertime.data.local.entity.FavoritesEntity
 import com.fatih.prayertime.data.remote.dto.hadithdto.Hadith
 import com.fatih.prayertime.data.remote.dto.hadithdto.HadithCollection
+import com.fatih.prayertime.data.remote.dto.hadithdto.HadithEdition
 import com.fatih.prayertime.domain.model.HadithSectionCardData
 import com.fatih.prayertime.domain.use_case.favorites_use_cases.AddFavoriteUseCase
 import com.fatih.prayertime.domain.use_case.favorites_use_cases.IsFavoriteUseCase
 import com.fatih.prayertime.domain.use_case.favorites_use_cases.RemoveFavoriteUseCase
 import com.fatih.prayertime.domain.use_case.hadith_use_cases.GetHadithCollectionsUseCase
-import com.fatih.prayertime.util.FavoritesType
-import com.fatih.prayertime.util.Resource
-import com.fatih.prayertime.util.Status
-import com.fatih.prayertime.util.combineSectionsAndDetails
+import com.fatih.prayertime.domain.use_case.hadith_use_cases.GetHadithEditionsUseCase
+import com.fatih.prayertime.util.extensions.generateItemId
+import com.fatih.prayertime.util.model.enums.FavoritesType
+import com.fatih.prayertime.util.model.state.Resource
+import com.fatih.prayertime.util.model.state.Status
+import com.fatih.prayertime.util.utils.HadithUtils.combineSectionsAndDetails
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,16 +28,24 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import java.util.Locale
 import javax.inject.Inject
 
 @HiltViewModel
-class HadithCollectionViewModel @Inject constructor(
+class HadithViewModel @Inject constructor(
     private val getHadithCollectionsUseCase: GetHadithCollectionsUseCase,
     private val isFavoriteUseCase: IsFavoriteUseCase,
     private val removeFavoriteUseCase: RemoveFavoriteUseCase,
-    private val addFavoriteUseCase: AddFavoriteUseCase
+    private val addFavoriteUseCase: AddFavoriteUseCase,
+    private val getHadithEditionsUseCase: GetHadithEditionsUseCase
 )  : ViewModel(){
+
+    // Hadith Editions Screen
+    private val _hadithEditions : MutableStateFlow<Resource<HadithEdition?>> = MutableStateFlow(Resource.loading())
+    val hadithEditions = _hadithEditions
+
+    fun getHadithEditions() = viewModelScope.launch(Dispatchers.IO){
+        _hadithEditions.emit(getHadithEditionsUseCase())
+    }
 
     private val hadithCollectionPath : MutableStateFlow<String> = MutableStateFlow("")
     private val hadithCollection : MutableStateFlow<Resource<HadithCollection>> = MutableStateFlow(Resource.loading())
@@ -97,11 +108,7 @@ class HadithCollectionViewModel @Inject constructor(
     }
 
     fun toggleFavorite(hadith: Hadith) = viewModelScope.launch(Dispatchers.IO){
-        val id = try {
-            hadith.hadithnumber.toInt()
-        }catch (e:Exception){
-            -1
-        }
+        val id = generateItemId(FavoritesType.HADIS.name, hadith.text.substring(0,10), hadithCollectionPath.value, selectedHadithSectionIndex.value, selectedHadithIndex.value)
         if (_isFavorite.value) {
             removeFavoriteUseCase(
                 FavoritesEntity(
@@ -155,6 +162,9 @@ class HadithCollectionViewModel @Inject constructor(
                     }
                 }
             }
+        }
+        viewModelScope.launch(Dispatchers.IO){
+            getHadithEditions()
         }
     }
 

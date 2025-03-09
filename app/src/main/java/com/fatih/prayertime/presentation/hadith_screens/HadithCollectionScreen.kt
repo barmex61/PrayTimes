@@ -1,4 +1,4 @@
-package com.fatih.prayertime.presentation.hadith_collections_screen
+package com.fatih.prayertime.presentation.hadith_screens
 
 import androidx.compose.animation.animateColor
 import androidx.compose.animation.animateContentSize
@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
-import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.foundation.lazy.staggeredgrid.itemsIndexed
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -47,22 +46,22 @@ import com.fatih.prayertime.util.utils.HadithUtils.anyToInt
 import com.fatih.prayertime.util.utils.HadithUtils.getPropertyName
 
 @Composable
-fun HadithCollectionScreen(bottomPaddingValues: Dp,collectionPath : String, hadithCollectionViewModel : HadithCollectionViewModel, navController: NavController) {
-    val hadithSectionCardDataList by hadithCollectionViewModel.hadithSectionCardDataList.collectAsState()
+fun HadithCollectionScreen(bottomPaddingValues: Dp, collectionPath : String, hadithViewModel : HadithViewModel, navController: NavController) {
+    val hadithSectionCardDataList by hadithViewModel.hadithSectionCardDataList.collectAsState()
     LaunchedEffect(Unit) {
-        hadithCollectionViewModel.updateHadithCollectionPath(collectionPath)
+        hadithViewModel.updateHadithCollectionPath(collectionPath)
     }
     when(hadithSectionCardDataList.status) {
         Status.SUCCESS -> {
             println("success")
-            HadithCollectionGridView(hadithSectionCardDataList.data!!,hadithCollectionViewModel, navController ,bottomPaddingValues)
+            HadithCollectionGridView(hadithSectionCardDataList.data!!,hadithViewModel, navController ,bottomPaddingValues)
         }
         Status.LOADING ->{
             LoadingView()
         }
         Status.ERROR ->{
             ErrorView(message = hadithSectionCardDataList.message.toString()){
-                hadithCollectionViewModel.getHadithCollection()
+                hadithViewModel.getHadithCollection()
             }
         }
     }
@@ -72,21 +71,21 @@ fun HadithCollectionScreen(bottomPaddingValues: Dp,collectionPath : String, hadi
 }
 
 @Composable
-fun HadithCollectionGridView(hadithSectionCardDataList: List<HadithSectionCardData>, hadithCollectionViewModel: HadithCollectionViewModel, navController: NavController,bottomPaddingValues: Dp) {
+fun HadithCollectionGridView(hadithSectionCardDataList: List<HadithSectionCardData>, hadithViewModel: HadithViewModel, navController: NavController, bottomPaddingValues: Dp) {
 
     LazyVerticalStaggeredGrid(
         modifier = Modifier.padding(bottom =bottomPaddingValues ),
         columns = StaggeredGridCells.Fixed(2),
     ) {
         itemsIndexed(hadithSectionCardDataList) { index,hadithCollectionCardData ->
-            HadithCollectionCard(index,hadithCollectionCardData, hadithCollectionViewModel, navController  )
+            HadithCollectionCard(index,hadithCollectionCardData, hadithViewModel, navController  )
         }
     }
 }
 
 
 @Composable
-fun HadithCollectionCard(index:Int,hadithSectionCardData: HadithSectionCardData, hadithCollectionViewModel: HadithCollectionViewModel, navController: NavController) {
+fun HadithCollectionCard(index:Int, hadithSectionCardData: HadithSectionCardData, hadithViewModel: HadithViewModel, navController: NavController) {
     val infiniteTransition = rememberInfiniteTransition()
     val randomColor = remember { colors.random() }
     val targetColor = remember { colors.filter { it != randomColor }.random() }
@@ -120,7 +119,7 @@ fun HadithCollectionCard(index:Int,hadithSectionCardData: HadithSectionCardData,
             },
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
         onClick = {
-            hadithCollectionViewModel.updateSelectedHadithSection(hadithSectionCardData,index)
+            hadithViewModel.updateSelectedHadithSection(hadithSectionCardData,index)
             val subRoute = screens[5].route.replace("{collectionPath}","")
             val route = subRoute.replace("{hadithSectionIndex}","")
             navController.navigateToScreen(route)

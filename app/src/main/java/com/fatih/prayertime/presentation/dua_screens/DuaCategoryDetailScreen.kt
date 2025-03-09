@@ -1,4 +1,4 @@
-
+package com.fatih.prayertime.presentation.dua_screens
 import androidx.compose.animation.animateColor
 import androidx.compose.animation.core.InfiniteTransition
 import androidx.compose.animation.core.RepeatMode
@@ -23,15 +23,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.fatih.prayertime.presentation.dua_category_detail_screen.DuaCategoryDetailViewModel
 
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.fatih.prayertime.data.remote.dto.duadto.DuaCategoryDetail
 import com.fatih.prayertime.util.config.NavigationConfig.screens
 import com.fatih.prayertime.util.config.ThemeConfig.colors
 import com.fatih.prayertime.util.extensions.navigateToScreen
-import com.fatih.prayertime.util.ui.composables.LoadingView
-import com.fatih.prayertime.util.ui.composables.TitleView
+import com.fatih.prayertime.util.composables.LoadingView
+import com.fatih.prayertime.util.composables.TitleView
 
 import kotlin.random.Random
 
@@ -39,15 +38,15 @@ import kotlin.random.Random
 fun DuaCategoryDetailScreen(
     bottomPaddingValues: Dp,
     navController: NavController,
-    categoryIndex : Int,
-    duaCategoryDetailViewModel : DuaCategoryDetailViewModel = hiltViewModel()
+    categoryId : Int,
+    duaViewModel: DuaViewModel
 
 ) {
     val infiniteTransition = rememberInfiniteTransition()
-    val duaCategoryDetailList by duaCategoryDetailViewModel.duaCategoryDetailList.collectAsState()
+    val duaCategoryDetailList by duaViewModel.duaCategoryDetailList.collectAsState()
 
     LaunchedEffect(key1=Unit) {
-        duaCategoryDetailViewModel.updateDuaCategoryDetailIndex(categoryIndex)
+        duaViewModel.updateDuaCategoryDetailId(categoryId)
     }
 
     if (duaCategoryDetailList == null){
@@ -59,7 +58,7 @@ fun DuaCategoryDetailScreen(
                 columns = StaggeredGridCells.Fixed(2)
             ) {
                 items(duaCategoryDetailList!!){ duaCategoryDetail ->
-                    DuaCategoryDetailCard(duaCategoryDetail,infiniteTransition ,navController,categoryIndex)
+                    DuaCategoryDetailCard(duaCategoryDetail,infiniteTransition ,navController,categoryId)
                 }
 
             }
@@ -74,7 +73,7 @@ fun DuaCategoryDetailCard(
     duaCategoryDetail: DuaCategoryDetail,
     infiniteTransition: InfiniteTransition,
     navController: NavController,
-    categoryIndex: Int) {
+    categoryId: Int) {
 
     val randomColor = remember { colors.random() }
     val targetColor = remember { colors.filter { it != randomColor }.random() }
@@ -115,7 +114,7 @@ fun DuaCategoryDetailCard(
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
         onClick = {
             val subRoute = screens[7].route.replace("{duaId}","${duaCategoryDetail.id}")
-            val route = subRoute.replace("{categoryIndex}","$categoryIndex")
+            val route = subRoute.replace("{categoryId}","$categoryId")
             navController.navigateToScreen(route)
         }
     ) {

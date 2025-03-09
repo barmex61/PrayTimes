@@ -25,10 +25,10 @@ import androidx.navigation.NavController
 import com.exyte.animatednavbar.utils.toPxf
 import com.fatih.prayertime.R
 import com.fatih.prayertime.data.local.entity.FavoritesEntity
-import com.fatih.prayertime.util.Constants.screens
-import com.fatih.prayertime.util.FavoritesType
-import com.fatih.prayertime.util.TitleView
-import com.fatih.prayertime.util.navigateToScreen
+import com.fatih.prayertime.util.composables.TitleView
+import com.fatih.prayertime.util.config.NavigationConfig.screens
+import com.fatih.prayertime.util.extensions.navigateToScreen
+import com.fatih.prayertime.util.model.enums.FavoritesType
 import kotlinx.coroutines.delay
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets

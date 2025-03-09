@@ -60,7 +60,7 @@ import com.fatih.prayertime.domain.model.GlobalAlarm
 import com.fatih.prayertime.domain.model.ThemeOption
 import com.fatih.prayertime.presentation.main_activity.AppViewModel
 import com.fatih.prayertime.util.model.enums.PrayTimesString
-import com.fatih.prayertime.util.ui.composables.TitleView
+import com.fatih.prayertime.util.composables.TitleView
 
 @Composable
 fun SettingsScreen(bottomPaddingValue: Dp,appViewModel: AppViewModel = hiltViewModel()) {

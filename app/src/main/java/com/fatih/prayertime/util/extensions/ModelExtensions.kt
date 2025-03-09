@@ -12,6 +12,7 @@ import com.fatih.prayertime.domain.model.PrayData
 import com.fatih.prayertime.domain.model.PrayTimes
 import com.fatih.prayertime.domain.use_case.formatted_use_cases.FormattedUseCase
 import com.fatih.prayertime.util.model.enums.PrayTimesString
+import org.threeten.bp.LocalDateTime
 
 private val formattedUseCase = FormattedUseCase()
 
@@ -59,6 +60,12 @@ fun PrayTimes.toAddress(): Address = Address(
     street = this.street,
     fullAddress = this.fullAddress
 )
+
+fun PrayTimes.localDateTime(time : String): LocalDateTime {
+    val localDateTimeStr = "$date $time:00"
+    return formattedUseCase.formatDDMMYYYYHHMMDateToLocalDateTime(localDateTimeStr)
+}
+
 
 fun List<IslamicDaysDataDTO>.toIslamicDaysData(): List<IslamicDaysData> {
     if (this.isEmpty()) return emptyList()

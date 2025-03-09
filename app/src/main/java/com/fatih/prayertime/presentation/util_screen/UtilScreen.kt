@@ -44,13 +44,9 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.fatih.prayertime.domain.model.ScreenData
-import com.fatih.prayertime.util.Constants.screens
-import com.fatih.prayertime.util.ScreenData
-import com.fatih.prayertime.util.TitleView
 import com.fatih.prayertime.util.config.NavigationConfig.screens
 import com.fatih.prayertime.util.extensions.navigateToScreen
-import com.fatih.prayertime.util.navigateToScreen
-import com.fatih.prayertime.util.ui.composables.TitleView
+import com.fatih.prayertime.util.composables.TitleView
 import kotlin.math.absoluteValue
 @Composable
 fun UtilitiesScreen(bottomPaddingValues: Dp, navController: NavController) {

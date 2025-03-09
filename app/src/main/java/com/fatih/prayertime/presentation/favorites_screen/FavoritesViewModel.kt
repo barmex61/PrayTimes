@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.fatih.prayertime.data.local.entity.FavoritesEntity
 import com.fatih.prayertime.domain.use_case.favorites_use_cases.GetAllFavoritesUseCase
 import com.fatih.prayertime.domain.use_case.favorites_use_cases.RemoveFavoriteUseCase
-import com.fatih.prayertime.util.FavoritesType
+import com.fatih.prayertime.util.model.enums.FavoritesType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*

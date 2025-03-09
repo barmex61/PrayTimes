@@ -23,7 +23,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
-import com.fatih.prayertime.util.ui.composables.TitleView
+import com.fatih.prayertime.util.composables.TitleView
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
@@ -102,12 +102,14 @@ import com.fatih.prayertime.domain.model.GlobalAlarm
 import com.fatih.prayertime.domain.model.PrayTimes
 import com.fatih.prayertime.presentation.main_activity.AppViewModel
 import com.fatih.prayertime.util.extensions.convertTimeToSeconds
+import com.fatih.prayertime.util.extensions.localDateTime
+import com.fatih.prayertime.util.extensions.toAddress
 import com.fatih.prayertime.util.extensions.toList
 import com.fatih.prayertime.util.model.enums.PrayTimesString
 import com.fatih.prayertime.util.model.state.NetworkState
 import com.fatih.prayertime.util.model.state.Status
-import com.fatih.prayertime.util.ui.composables.ErrorView
-import com.fatih.prayertime.util.ui.composables.LoadingView
+import com.fatih.prayertime.util.composables.ErrorView
+import com.fatih.prayertime.util.composables.LoadingView
 import kotlinx.coroutines.delay
 import org.threeten.bp.LocalDate
 import org.threeten.bp.LocalDateTime

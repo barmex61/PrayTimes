@@ -1,4 +1,4 @@
-package com.fatih.prayertime.util.ui.composables
+package com.fatih.prayertime.util.composables
 
 import android.app.Activity
 import android.content.pm.ActivityInfo

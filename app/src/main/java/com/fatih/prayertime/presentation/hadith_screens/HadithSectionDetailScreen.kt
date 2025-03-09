@@ -1,4 +1,4 @@
-package com.fatih.prayertime.presentation.hadith_section_detail_screen
+package com.fatih.prayertime.presentation.hadith_screens
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
@@ -42,14 +42,13 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.fatih.prayertime.data.remote.dto.hadithdto.Hadith
-import com.fatih.prayertime.presentation.hadith_collections_screen.HadithCollectionViewModel
-import com.fatih.prayertime.util.TitleView
+import com.fatih.prayertime.util.composables.TitleView
 import kotlin.random.Random
 
 @Composable
 fun HadithSectionDetailScreen(
     bottomPaddingValues: Dp,
-    hadithCollectionViewModel: HadithCollectionViewModel,
+    hadithViewModel: HadithViewModel,
     hadithSectionIndex : Int? = null,
     collectionPath : String? = null,
     hadithIndex : Int ? = null
@@ -59,16 +58,16 @@ fun HadithSectionDetailScreen(
     // For favorite screen to here navigation i need to set this initial parameters otherwise runs normally
     LaunchedEffect(hadithSectionIndex, collectionPath, hadithIndex) {
         if (!initialSetupDone && hadithSectionIndex != null && !collectionPath.isNullOrEmpty() && hadithIndex != null) {
-            hadithCollectionViewModel.updateHadithCollectionPath(collectionPath)
-            hadithCollectionViewModel.updateSelectedHadithSectionIndex(hadithSectionIndex)
-            hadithCollectionViewModel.updateSelectedHadithIndex(hadithIndex)
+            hadithViewModel.updateHadithCollectionPath(collectionPath)
+            hadithViewModel.updateSelectedHadithSectionIndex(hadithSectionIndex)
+            hadithViewModel.updateSelectedHadithIndex(hadithIndex)
             initialSetupDone = true
         }
     }
 
-    val selectedHadithSection by hadithCollectionViewModel.selectedHadithSection.collectAsState()
-    val selectedIndex by hadithCollectionViewModel.selectedHadithIndex.collectAsState()
-    val selectedHadith by hadithCollectionViewModel.selectedHadith.collectAsState()
+    val selectedHadithSection by hadithViewModel.selectedHadithSection.collectAsState()
+    val selectedIndex by hadithViewModel.selectedHadithIndex.collectAsState()
+    val selectedHadith by hadithViewModel.selectedHadith.collectAsState()
     var direction by remember { mutableIntStateOf(1) }
     val infiniteTransition = rememberInfiniteTransition()
 
@@ -105,7 +104,7 @@ fun HadithSectionDetailScreen(
             PageNavigationRow(
                 selectedIndex = selectedIndex,
                 totalPages = selectedHadithSection?.hadithCount ?: 0,
-                onPageChange = { hadithCollectionViewModel.updateSelectedHadithIndex(it) },
+                onPageChange = { hadithViewModel.updateSelectedHadithIndex(it) },
                 changeDirection = { selectedDirection -> direction = selectedDirection },
                 infiniteTransition = infiniteTransition
             )
@@ -153,7 +152,7 @@ fun HadithSectionDetailScreen(
         FloatingActionButton(
             onClick = {
                 if (!showAllHadiths){
-                    hadithCollectionViewModel.toggleFavorite(selectedHadithSection!!.hadithList[selectedIndex])
+                    hadithViewModel.toggleFavorite(selectedHadithSection!!.hadithList[selectedIndex])
                 }
             },
 
@@ -164,10 +163,10 @@ fun HadithSectionDetailScreen(
                     rotationX = fabButtonRotate.value
                 },
         ) {
-            val isFavorite by hadithCollectionViewModel.isFavorite.collectAsState()
+            val isFavorite by hadithViewModel.isFavorite.collectAsState()
             LaunchedEffect(key1 = selectedHadith) {
                 if (selectedHadith != null){
-                    hadithCollectionViewModel.checkIsFavorite(selectedHadith!!.hadithnumber.toInt())
+                    hadithViewModel.checkIsFavorite(selectedHadith!!.hadithnumber.toInt())
                 }
             }
             Icon(

@@ -1,6 +1,7 @@
 {
   "data": [
     {
+      "id" : 1,
       "name": "Morning Dhikr",
       "total": 19,
       "nameTr": "Sabah Duaları",
@@ -294,6 +295,7 @@
     },
     {
       "name": "Evening Dhikr",
+      "id" : 2,
       "total": 19,
       "nameTr": "Akşam Duaları",
       "detail": [
@@ -585,6 +587,7 @@
     {
       "name": "Selected Dua",
       "total": 8,
+      "id" : 3,
       "nameTr": "Seçili Dualar",
       "detail": [
         {
@@ -712,6 +715,7 @@
     {
       "name": "Dhikr After Salah",
       "total": 13,
+      "id" : 4,
       "nameTr": "Namazdan Sonra Okunacak Dualar",
       "detail" : [
         {
@@ -913,6 +917,7 @@
     {
       "name": "Daily Dua",
       "total": 13,
+      "id" : 5,
       "nameTr": "Günlük Dualar",
       "detail": [
         {

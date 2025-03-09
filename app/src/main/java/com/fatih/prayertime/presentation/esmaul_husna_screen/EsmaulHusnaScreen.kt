@@ -1,4 +1,4 @@
-package com.fatih.prayertime.presentation.esmaulhusna_screen
+package com.fatih.prayertime.presentation.esmaul_husna_screen
 
 
 import androidx.compose.animation.animateContentSize
@@ -22,6 +22,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -31,21 +32,38 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.fatih.prayertime.domain.model.EsmaulHusna
-import com.fatih.prayertime.util.Constants.esmaulHusnaList
-import com.fatih.prayertime.util.TitleView
+import com.fatih.prayertime.util.composables.ErrorView
+import com.fatih.prayertime.util.composables.LoadingView
+import com.fatih.prayertime.util.composables.TitleView
+import com.fatih.prayertime.util.model.state.Status
 import kotlin.random.Random
 
 @Composable
-fun EsmaulHusnaScreen(bottomPaddingValues: Dp) {
-    LazyVerticalStaggeredGrid(
-        columns = StaggeredGridCells.Fixed(2),
-        modifier = Modifier.padding(bottom = bottomPaddingValues)
-    ) {
-        items(esmaulHusnaList) { esmaulHusna ->
-            EsmaulHusnaCard(esmaulHusna)
+fun EsmaulHusnaScreen(bottomPaddingValues: Dp,esmaulHusnaViewModel: EsmaulHusnaViewModel = hiltViewModel()) {
+    val esmaulHusnaState by esmaulHusnaViewModel.esmaulHusnaState.collectAsState()
+    when(esmaulHusnaState.status){
+        Status.ERROR ->{
+            ErrorView(esmaulHusnaState.message?:"Error occurred") {
+                esmaulHusnaViewModel.loadEsmaulHusna()
+            }
+        }
+        Status.LOADING ->{
+            LoadingView()
+        }
+        Status.SUCCESS->{
+            LazyVerticalStaggeredGrid(
+                columns = StaggeredGridCells.Fixed(2),
+                modifier = Modifier.padding(bottom = bottomPaddingValues)
+            ) {
+                items(esmaulHusnaState.data!!) { esmaulHusna ->
+                    EsmaulHusnaCard(esmaulHusna)
+                }
+            }
         }
     }
+
     TitleView("Esmaül Hüsna")
 }
 

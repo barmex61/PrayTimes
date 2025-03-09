@@ -1,4 +1,4 @@
-package com.fatih.prayertime.presentation.hadith_screen
+package com.fatih.prayertime.presentation.hadith_screens
 
 import androidx.compose.animation.animateColor
 import androidx.compose.animation.animateContentSize
@@ -43,26 +43,25 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.fatih.prayertime.R
 import com.fatih.prayertime.data.remote.dto.hadithdto.Collection
 import com.fatih.prayertime.data.remote.dto.hadithdto.Edition
-import com.fatih.prayertime.util.Constants.colors
-import com.fatih.prayertime.util.Constants.screens
-import com.fatih.prayertime.util.ErrorView
-import com.fatih.prayertime.util.LoadingView
-import com.fatih.prayertime.util.Status
-import com.fatih.prayertime.util.TitleView
-import com.fatih.prayertime.util.navigateToScreen
-import com.fatih.prayertime.util.toList
+import com.fatih.prayertime.util.composables.ErrorView
+import com.fatih.prayertime.util.composables.LoadingView
+import com.fatih.prayertime.util.composables.TitleView
+import com.fatih.prayertime.util.config.NavigationConfig.screens
+import com.fatih.prayertime.util.config.ThemeConfig.colors
+import com.fatih.prayertime.util.extensions.navigateToScreen
+import com.fatih.prayertime.util.extensions.toList
+import com.fatih.prayertime.util.model.state.Status
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 import kotlin.random.Random
 
 @Composable
-fun HadithScreen(bottomPaddingValues: Dp,navController: NavController,hadithScreenViewModel : HadithScreenViewModel = hiltViewModel()) {
-    val hadithEdition by hadithScreenViewModel.hadithEditions.collectAsState()
+fun HadithEditionsScreen(bottomPaddingValues: Dp, navController: NavController, hadithViewModel: HadithViewModel) {
+    val hadithEdition by hadithViewModel.hadithEditions.collectAsState()
 
     when(hadithEdition.status){
         Status.LOADING -> {
@@ -82,7 +81,7 @@ fun HadithScreen(bottomPaddingValues: Dp,navController: NavController,hadithScre
         }
         Status.ERROR -> {
             ErrorView(hadithEdition.message?:"Unknown Error"){
-                hadithScreenViewModel.getHadithEditions()
+                hadithViewModel.getHadithEditions()
             }
         }
     }
