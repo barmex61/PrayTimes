@@ -19,15 +19,12 @@ import androidx.compose.animation.core.EaseInOutQuad
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.keyframes
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.expandIn
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
-import androidx.compose.animation.shrinkOut
-import androidx.compose.animation.slideInHorizontally
+import com.fatih.prayertime.util.ui.composables.TitleView
 import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Canvas
@@ -104,16 +101,13 @@ import com.fatih.prayertime.R
 import com.fatih.prayertime.domain.model.GlobalAlarm
 import com.fatih.prayertime.domain.model.PrayTimes
 import com.fatih.prayertime.presentation.main_activity.AppViewModel
-import com.fatih.prayertime.util.ErrorView
-import com.fatih.prayertime.util.LoadingView
-import com.fatih.prayertime.util.NetworkState
-import com.fatih.prayertime.util.PrayTimesString
-import com.fatih.prayertime.util.Status
-import com.fatih.prayertime.util.TitleView
-import com.fatih.prayertime.util.convertTimeToSeconds
-import com.fatih.prayertime.util.localDateTime
-import com.fatih.prayertime.util.toAddress
-import com.fatih.prayertime.util.toList
+import com.fatih.prayertime.util.extensions.convertTimeToSeconds
+import com.fatih.prayertime.util.extensions.toList
+import com.fatih.prayertime.util.model.enums.PrayTimesString
+import com.fatih.prayertime.util.model.state.NetworkState
+import com.fatih.prayertime.util.model.state.Status
+import com.fatih.prayertime.util.ui.composables.ErrorView
+import com.fatih.prayertime.util.ui.composables.LoadingView
 import kotlinx.coroutines.delay
 import org.threeten.bp.LocalDate
 import org.threeten.bp.LocalDateTime
@@ -615,8 +609,7 @@ fun PrayScheduleCompose(haptic: HapticFeedback) {
                     PrayTimesRowHeader(dailyPrayTime.data)
                 }
                 Status.ERROR -> {
-                   ErrorView(dailyPrayTime.message?:"Error occurred while fetching pray times"){
-                   }
+                   ErrorView(dailyPrayTime.message?:"Error occurred while fetching pray times"){}
                 }
                 Status.LOADING -> {
                    LoadingView()

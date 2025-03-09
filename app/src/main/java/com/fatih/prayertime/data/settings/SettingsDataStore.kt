@@ -7,8 +7,8 @@ import androidx.datastore.preferences.core.edit
 import com.fatih.prayertime.domain.model.GlobalAlarm
 
 import com.fatih.prayertime.domain.model.Settings
-import com.fatih.prayertime.util.Constants.SETTINGS_KEY
-import com.fatih.prayertime.util.dataStore
+import com.fatih.prayertime.util.utils.DataStoreUtils.SETTINGS_KEY
+import com.fatih.prayertime.util.utils.DataStoreUtils.dataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.encodeToString

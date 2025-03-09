@@ -19,8 +19,8 @@ import com.fatih.prayertime.domain.use_case.pray_times_use_cases.DeletePrayTimes
 import com.fatih.prayertime.domain.use_case.pray_times_use_cases.GetMonthlyPrayTimesFromApiUseCase
 import com.fatih.prayertime.domain.use_case.pray_times_use_cases.GetDailyPrayTimesWithAddressAndDateUseCase
 import com.fatih.prayertime.domain.use_case.pray_times_use_cases.InsertPrayTimeIntoDbUseCase
-import com.fatih.prayertime.util.Status
-import com.fatih.prayertime.util.getAlarmTimeForPrayTimes
+import com.fatih.prayertime.util.model.state.Status
+import com.fatih.prayertime.util.utils.AlarmUtils.getAlarmTimeForPrayTimes
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.Dispatchers

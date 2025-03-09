@@ -3,7 +3,6 @@ package com.fatih.prayertime.presentation.dua_category_detail_screen
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fatih.prayertime.data.remote.dto.duadto.DuaCategoryDetail
-import com.fatih.prayertime.util.Constants.duaCategory
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow

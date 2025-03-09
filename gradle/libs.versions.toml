@@ -37,6 +37,7 @@ workRuntimeKtx = "2.10.0"
 ksp = "2.1.0-1.0.29"
 lifecycleLivedataKtx = "2.8.7"
 glanceAppwidget = "1.1.1"
+leanbackVersion = "1.0.0"
 
 [libraries]
 androidx-animation-graphics = { module = "androidx.compose.animation:animation-graphics", version.ref = "animationGraphics" }
@@ -86,6 +87,7 @@ play-services-location = { module = "com.google.android.gms:play-services-locati
 retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
 threetenabp = { module = "com.jakewharton.threetenabp:threetenabp", version.ref = "threetenabp" }
 androidx-glance-appwidget = { group = "androidx.glance", name = "glance-appwidget", version.ref = "glanceAppwidget" }
+androidx-leanback = { group = "androidx.leanback", name = "leanback", version.ref = "leanbackVersion" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

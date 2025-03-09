@@ -48,10 +48,10 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.fatih.prayertime.domain.model.IslamicDaysData
-import com.fatih.prayertime.util.ErrorView
-import com.fatih.prayertime.util.LoadingView
-import com.fatih.prayertime.util.Status
-import com.fatih.prayertime.util.TitleView
+import com.fatih.prayertime.util.model.state.Status
+import com.fatih.prayertime.util.ui.composables.ErrorView
+import com.fatih.prayertime.util.ui.composables.LoadingView
+import com.fatih.prayertime.util.ui.composables.TitleView
 import org.threeten.bp.LocalDate
 import kotlin.random.Random
 

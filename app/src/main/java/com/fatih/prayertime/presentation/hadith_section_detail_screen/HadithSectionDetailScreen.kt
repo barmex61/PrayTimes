@@ -30,6 +30,7 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -48,14 +49,30 @@ import kotlin.random.Random
 @Composable
 fun HadithSectionDetailScreen(
     bottomPaddingValues: Dp,
-    hadithCollectionViewModel: HadithCollectionViewModel
+    hadithCollectionViewModel: HadithCollectionViewModel,
+    hadithSectionIndex : Int? = null,
+    collectionPath : String? = null,
+    hadithIndex : Int ? = null
 ) {
+    var initialSetupDone by rememberSaveable { mutableStateOf(false) }
+
+    // For favorite screen to here navigation i need to set this initial parameters otherwise runs normally
+    LaunchedEffect(hadithSectionIndex, collectionPath, hadithIndex) {
+        if (!initialSetupDone && hadithSectionIndex != null && !collectionPath.isNullOrEmpty() && hadithIndex != null) {
+            hadithCollectionViewModel.updateHadithCollectionPath(collectionPath)
+            hadithCollectionViewModel.updateSelectedHadithSectionIndex(hadithSectionIndex)
+            hadithCollectionViewModel.updateSelectedHadithIndex(hadithIndex)
+            initialSetupDone = true
+        }
+    }
+
     val selectedHadithSection by hadithCollectionViewModel.selectedHadithSection.collectAsState()
     val selectedIndex by hadithCollectionViewModel.selectedHadithIndex.collectAsState()
+    val selectedHadith by hadithCollectionViewModel.selectedHadith.collectAsState()
     var direction by remember { mutableIntStateOf(1) }
     val infiniteTransition = rememberInfiniteTransition()
 
-    var showAllHadiths by remember { mutableStateOf(false) } // "Tüm Hadisleri Göster" seçeneği için durum
+    var showAllHadiths by remember { mutableStateOf(false) }
     val fabButtonTransition = infiniteTransition.animateFloat(
         initialValue = 0f,
         targetValue = -200f,
@@ -65,7 +82,6 @@ fun HadithSectionDetailScreen(
         targetValue = if (showAllHadiths) 360f else 0f,
         animationSpec = tween(2000)
     )
-    val selectedHadith = remember(key1 = selectedIndex) { selectedHadithSection!!.hadithList[selectedIndex] }
 
 
     Box(
@@ -73,6 +89,7 @@ fun HadithSectionDetailScreen(
             .fillMaxSize()
             .padding(bottom = bottomPaddingValues, top = 12.dp)
     ) {
+        println(selectedHadithSection)
         selectedHadithSection?:return@Box
         Column(
             modifier = Modifier
@@ -110,7 +127,7 @@ fun HadithSectionDetailScreen(
                 }
             }
 
-            if(!showAllHadiths){
+            if(!showAllHadiths && selectedHadith!= null){
 
                 AnimatedContent(
                     targetState = selectedHadith,
@@ -126,7 +143,7 @@ fun HadithSectionDetailScreen(
                 ) {
                     LazyColumn {
                         item {
-                            HadithDetailSection(it,infiniteTransition)
+                            HadithDetailSection(it!!,infiniteTransition)
                         }
                     }
                 }
@@ -149,7 +166,9 @@ fun HadithSectionDetailScreen(
         ) {
             val isFavorite by hadithCollectionViewModel.isFavorite.collectAsState()
             LaunchedEffect(key1 = selectedHadith) {
-                hadithCollectionViewModel.checkIsFavorite(selectedHadith.hadithnumber.toInt())
+                if (selectedHadith != null){
+                    hadithCollectionViewModel.checkIsFavorite(selectedHadith!!.hadithnumber.toInt())
+                }
             }
             Icon(
                 imageVector = Icons.Default.Favorite,
@@ -390,7 +409,7 @@ fun HadithDetailSection(hadith: Hadith,infiniteTransition: InfiniteTransition) {
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
-                text = hadith.text,
+                text = hadith?.text?:"",
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onPrimaryContainer,
                 textAlign = TextAlign.Justify

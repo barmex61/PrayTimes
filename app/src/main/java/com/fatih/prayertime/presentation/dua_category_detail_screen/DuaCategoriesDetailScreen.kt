@@ -25,14 +25,14 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.fatih.prayertime.presentation.dua_category_detail_screen.DuaCategoryDetailViewModel
 
-import com.fatih.prayertime.util.Constants.colors
-import com.fatih.prayertime.util.Constants.screens
-import androidx.compose.foundation.lazy.staggeredgrid.itemsIndexed
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.fatih.prayertime.data.remote.dto.duadto.DuaCategoryDetail
-import com.fatih.prayertime.util.LoadingView
-import com.fatih.prayertime.util.TitleView
-import com.fatih.prayertime.util.navigateToScreen
+import com.fatih.prayertime.util.config.NavigationConfig.screens
+import com.fatih.prayertime.util.config.ThemeConfig.colors
+import com.fatih.prayertime.util.extensions.navigateToScreen
+import com.fatih.prayertime.util.ui.composables.LoadingView
+import com.fatih.prayertime.util.ui.composables.TitleView
+
 import kotlin.random.Random
 
 @Composable

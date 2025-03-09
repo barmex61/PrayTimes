@@ -5,8 +5,8 @@ import androidx.lifecycle.viewModelScope
 import com.fatih.prayertime.domain.model.IslamicDaysData
 import com.fatih.prayertime.domain.use_case.formatted_use_cases.FormattedUseCase
 import com.fatih.prayertime.domain.use_case.islamic_calendar_use_case.GetIslamicCalendarForMonthUseCase
-import com.fatih.prayertime.util.Constants.selectedIslamicCalendarMethod
-import com.fatih.prayertime.util.Resource
+import com.fatih.prayertime.util.config.ApiConfig.selectedIslamicCalendarMethod
+import com.fatih.prayertime.util.model.state.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay

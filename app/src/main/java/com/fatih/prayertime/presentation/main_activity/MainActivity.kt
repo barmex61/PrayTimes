@@ -314,7 +314,12 @@ fun NavHostLayout(navController: NavHostController, innerPadding: PaddingValues,
                         val collectionPath = backStackEntry.arguments?.getString("collectionPath") ?: return@composable
                         HadithCollectionScreen(innerPaddingValue,collectionPath, hadithCollectionViewModel = hadithCollectionViewModel, navController = navController)
                     }
-                    PrayTimesString.HADITH_SECTION_DETAILS.name -> HadithSectionDetailScreen(innerPaddingValue,hadithCollectionViewModel)
+                    PrayTimesString.HADITH_SECTION_DETAILS.name -> {
+                        val collectionPath = backStackEntry.arguments?.getString("collectionPath")
+                        val hadithSectionIndex = backStackEntry.arguments?.getString("hadithSectionIndex")
+                        val hadithIndex = backStackEntry.arguments?.getString("hadithIndex")
+                        HadithSectionDetailScreen(innerPaddingValue, hadithCollectionViewModel, hadithSectionIndex?.toIntOrNull(), collectionPath,hadithIndex?.toIntOrNull())
+                    }
                     PrayTimesString.PRAYER.name -> DuaCategoriesScreen(innerPaddingValue,navController)
                     PrayTimesString.PRAY_CATEGORY_DETAILS.name -> {
                         val categoryIndex = backStackEntry.arguments?.getString("categoryIndex") ?: return@composable

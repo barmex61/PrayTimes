@@ -30,6 +30,8 @@ import com.fatih.prayertime.util.FavoritesType
 import com.fatih.prayertime.util.TitleView
 import com.fatih.prayertime.util.navigateToScreen
 import kotlinx.coroutines.delay
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 
 @Composable
 fun FavoritesScreen(
@@ -137,6 +139,14 @@ fun FavoritesScreen(
                                         if (favorite.type == FavoritesType.DUA.name) {
                                             val subRoute = screens[7].route.replace("{duaId}","${favorite.itemId}")
                                             val route = subRoute.replace("{categoryIndex}","${favorite.duaCategoryIndex}")
+                                            navController.navigateToScreen(route)
+                                        }
+                                        if(favorite.type == FavoritesType.HADIS.name){
+                                            val encodedUrl = URLEncoder.encode(favorite.hadithCollectionPath, StandardCharsets.UTF_8.toString())
+                                            val route = screens[5].route
+                                                .replace("{collectionPath}",encodedUrl)
+                                                .replace("{hadithSectionIndex}","${favorite.hadithSectionIndex}")
+                                                .replace("{hadithIndex}","${favorite.hadithIndex}")
                                             navController.navigateToScreen(route)
                                         }
                                     }

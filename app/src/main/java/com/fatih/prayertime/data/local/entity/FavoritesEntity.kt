@@ -7,10 +7,13 @@ import androidx.room.PrimaryKey
 data class FavoritesEntity(
     val type: String, // "dua", "hadis"
     @PrimaryKey(autoGenerate = false)
-    val itemId: Int,
+    val itemId: Long,
     val title: String,
     val content: String,
     val latin : String? = null,
     val duaCategoryIndex : Int? = null,
+    val hadithCollectionPath : String? = null,
+    val hadithSectionIndex : Int? = null,
+    val hadithIndex : Int? = null,
     val timestamp: Long = System.currentTimeMillis()
 ) 

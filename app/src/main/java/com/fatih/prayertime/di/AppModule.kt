@@ -1,5 +1,6 @@
 package com.fatih.prayertime.di
 
+import android.app.Application
 import android.content.Context
 import android.location.Geocoder
 import androidx.room.Room
@@ -26,12 +27,14 @@ import com.fatih.prayertime.data.remote.IslamicCalendarApi
 import com.fatih.prayertime.data.repository.FavoritesRepositoryImpl
 import com.fatih.prayertime.data.repository.HadithRepositoryImp
 import com.fatih.prayertime.data.repository.IslamicCalendarRepositoryImp
+import com.fatih.prayertime.data.repository.LocalDataRepositoryImpl
 import com.fatih.prayertime.data.repository.PrayerStatisticsRepositoryImpl
 import com.fatih.prayertime.data.repository.SettingsRepositoryImp
 import com.fatih.prayertime.data.settings.SettingsDataStore
 import com.fatih.prayertime.domain.repository.FavoritesRepository
 import com.fatih.prayertime.domain.repository.HadithRepository
 import com.fatih.prayertime.domain.repository.IslamicCalendarRepository
+import com.fatih.prayertime.domain.repository.LocalDataRepository
 import com.fatih.prayertime.domain.repository.PrayerStatisticsRepository
 import com.fatih.prayertime.domain.repository.SettingsRepository
 import com.fatih.prayertime.domain.use_case.formatted_use_cases.FormattedUseCase
@@ -41,12 +44,13 @@ import com.fatih.prayertime.domain.use_case.favorites_use_cases.GetAllFavoritesU
 import com.fatih.prayertime.domain.use_case.favorites_use_cases.RemoveFavoriteUseCase
 import com.fatih.prayertime.domain.use_case.statistics_use_cases.GetPrayerCountsUseCase
 import com.fatih.prayertime.domain.use_case.statistics_use_cases.GetStatisticsUseCase
-import com.fatih.prayertime.util.Constants.ALADHAN_API_BASE_URL
-import com.fatih.prayertime.util.Constants.HADITH_API_BASE_URL
+import com.fatih.prayertime.util.config.ApiConfig.ALADHAN_API_BASE_URL
+import com.fatih.prayertime.util.config.ApiConfig.HADITH_API_BASE_URL
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
+import dagger.Binds
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -246,6 +250,12 @@ object Module {
     fun provideGetPrayerCountsUseCase(repository: PrayerStatisticsRepository): GetPrayerCountsUseCase {
         return GetPrayerCountsUseCase(repository)
     }
+
+    @Provides
+    @Singleton
+    fun bindLocalDataRepository(
+        @ApplicationContext context: Context,
+    ): LocalDataRepository = LocalDataRepositoryImpl(context as Application)
 
 }
 

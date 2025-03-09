@@ -37,12 +37,12 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.fatih.prayertime.R
 import com.fatih.prayertime.data.remote.dto.duadto.DuaCategoryData
-import com.fatih.prayertime.util.Constants.colors
-import com.fatih.prayertime.util.Constants.duaCategory
-import com.fatih.prayertime.util.Constants.screens
-import com.fatih.prayertime.util.LoadingView
-import com.fatih.prayertime.util.TitleView
-import com.fatih.prayertime.util.navigateToScreen
+import com.fatih.prayertime.util.config.NavigationConfig.screens
+import com.fatih.prayertime.util.config.ThemeConfig.colors
+import com.fatih.prayertime.util.extensions.navigateToScreen
+import com.fatih.prayertime.util.ui.composables.LoadingView
+import com.fatih.prayertime.util.ui.composables.TitleView
+
 
 import java.util.Locale
 import kotlin.random.Random
@@ -50,7 +50,7 @@ import kotlin.random.Random
 @Composable
 fun DuaCategoriesScreen(bottomPaddingValues: Dp, navController: NavController) {
     Box(modifier = Modifier.fillMaxSize(1f).padding(bottom = bottomPaddingValues), contentAlignment = Alignment.Center){
-        if (duaCategory != null){
+        if (null != null){
             DuaCategoriesGridView(duaCategory!!.data, navController )
         }else{
             LoadingView()

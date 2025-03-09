@@ -16,9 +16,9 @@ import com.fatih.prayertime.domain.use_case.pray_times_use_cases.GetDailyPrayTim
 import com.fatih.prayertime.domain.use_case.pray_times_use_cases.InsertPrayTimeIntoDbUseCase
 import com.fatih.prayertime.domain.use_case.alarm_use_cases.UpdateGlobalAlarmUseCase
 import com.fatih.prayertime.domain.use_case.location_use_cases.RemoveLocationCallbackUseCase
-import com.fatih.prayertime.util.Resource
-import com.fatih.prayertime.util.Status
-import com.fatih.prayertime.util.getAlarmTimeForPrayTimes
+import com.fatih.prayertime.util.model.state.Resource
+import com.fatih.prayertime.util.model.state.Status
+import com.fatih.prayertime.util.utils.AlarmUtils.getAlarmTimeForPrayTimes
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow

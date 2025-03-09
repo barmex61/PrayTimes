@@ -39,11 +39,11 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.fatih.prayertime.R
 import com.fatih.prayertime.data.remote.dto.duadto.DuaCategoryDetail
-import com.fatih.prayertime.util.LoadingView
-import com.fatih.prayertime.util.TitleView
-import com.fatih.prayertime.util.capitalizeFirstLetter
 import kotlin.random.Random
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.fatih.prayertime.util.extensions.capitalizeFirstLetter
+import com.fatih.prayertime.util.ui.composables.LoadingView
+import com.fatih.prayertime.util.ui.composables.TitleView
 
 @Composable
 fun DuaDetailScreen(

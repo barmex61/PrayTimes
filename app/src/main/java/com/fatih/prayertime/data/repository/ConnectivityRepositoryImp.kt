@@ -2,7 +2,7 @@ package com.fatih.prayertime.data.repository
 
 import com.fatih.prayertime.data.network.NetworkConnectivityManager
 import com.fatih.prayertime.domain.repository.ConnectivityRepository
-import com.fatih.prayertime.util.NetworkState
+import com.fatih.prayertime.util.model.state.NetworkState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow

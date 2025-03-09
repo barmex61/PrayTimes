@@ -8,7 +8,7 @@ import com.fatih.prayertime.domain.use_case.alarm_use_cases.UpdateGlobalAlarmUse
 import com.fatih.prayertime.domain.use_case.formatted_use_cases.FormattedUseCase
 import com.fatih.prayertime.domain.use_case.location_use_cases.GetLastKnowAddressFromDatabaseUseCase
 import com.fatih.prayertime.domain.use_case.pray_times_use_cases.GetDailyPrayTimesWithAddressAndDateUseCase
-import com.fatih.prayertime.util.getAlarmTimeForPrayTimes
+import com.fatih.prayertime.util.utils.AlarmUtils.getAlarmTimeForPrayTimes
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

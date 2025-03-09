@@ -18,9 +18,12 @@ import com.fatih.prayertime.util.combineSectionsAndDetails
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.util.Locale
 import javax.inject.Inject
@@ -42,9 +45,22 @@ class HadithCollectionViewModel @Inject constructor(
     private val _selectedHadithSection : MutableStateFlow<HadithSectionCardData?> = MutableStateFlow(null)
     val selectedHadithSection = _selectedHadithSection
 
+    private val selectedHadithSectionIndex = MutableStateFlow(0)
+
     private val _selectedHadithIndex : MutableStateFlow<Int> = MutableStateFlow(0)
     val selectedHadithIndex = _selectedHadithIndex
 
+    private val _selectedHadith: StateFlow<Hadith?> = combine(
+        _selectedHadithIndex,
+        _selectedHadithSection
+    ) { index, section ->
+        section?.hadithList?.getOrNull(index)
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = null
+    )
+    val selectedHadith = _selectedHadith
 
     fun getHadithCollection() = viewModelScope.launch(Dispatchers.IO){
         hadithCollection.emit(Resource.loading())
@@ -55,9 +71,18 @@ class HadithCollectionViewModel @Inject constructor(
         hadithCollectionPath.emit(collectionPath)
     }
 
-    fun updateSelectedHadithSection(hadithSectionCardData: HadithSectionCardData) = viewModelScope.launch(Dispatchers.Default){
+    fun updateSelectedHadithSection(hadithSectionCardData: HadithSectionCardData,index:Int) = viewModelScope.launch(Dispatchers.Default){
         _selectedHadithSection.emit(hadithSectionCardData)
+        selectedHadithSectionIndex.emit(index)
         _selectedHadithIndex.emit(0)
+    }
+
+    private fun updateSelectedHadithSection(index:Int) = viewModelScope.launch(Dispatchers.Default){
+        _selectedHadithSection.emit(hadithSectionCardDataList.value.data?.get(index))
+    }
+
+    fun updateSelectedHadithSectionIndex(index: Int) = viewModelScope.launch(Dispatchers.Default){
+        selectedHadithSectionIndex.emit(index)
     }
 
     fun updateSelectedHadithIndex(hadithIndex : Int) = viewModelScope.launch(Dispatchers.Default){
@@ -68,7 +93,7 @@ class HadithCollectionViewModel @Inject constructor(
     val isFavorite = _isFavorite.asStateFlow()
 
     fun checkIsFavorite(hadithId : Int) = viewModelScope.launch(Dispatchers.IO){
-        _isFavorite.value = isFavoriteUseCase(hadithId, FavoritesType.DUA.name)
+        _isFavorite.value = isFavoriteUseCase(hadithId, FavoritesType.HADIS.name)
     }
 
     fun toggleFavorite(hadith: Hadith) = viewModelScope.launch(Dispatchers.IO){
@@ -78,23 +103,27 @@ class HadithCollectionViewModel @Inject constructor(
             -1
         }
         if (_isFavorite.value) {
-            println("remove")
             removeFavoriteUseCase(
                 FavoritesEntity(
                     type = FavoritesType.HADIS.name,
                     title = hadith.text,
                     itemId = id,
                     content = "",
+                    hadithCollectionPath = hadithCollectionPath.value,
+                    hadithSectionIndex = selectedHadithSectionIndex.value,
+                    hadithIndex = selectedHadithIndex.value
                 )
             )
         } else {
-            println("add")
             addFavoriteUseCase(
                 FavoritesEntity(
                     type = FavoritesType.HADIS.name,
                     title = hadith.text,
                     itemId = id,
                     content ="",
+                    hadithCollectionPath = hadithCollectionPath.value,
+                    hadithSectionIndex = selectedHadithSectionIndex.value,
+                    hadithIndex = selectedHadithIndex.value
                 )
             )
         }
@@ -122,6 +151,7 @@ class HadithCollectionViewModel @Inject constructor(
                     }
                     Status.SUCCESS ->{
                         _hadithSectionCardDataList.emit(Resource.success(combineSectionsAndDetails(hadithCollection.value.data!!)))
+                        updateSelectedHadithSection(selectedHadithSectionIndex.value)
                     }
                 }
             }

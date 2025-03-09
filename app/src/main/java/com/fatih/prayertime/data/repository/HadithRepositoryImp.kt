@@ -4,7 +4,7 @@ import com.fatih.prayertime.data.remote.HadithApi
 import com.fatih.prayertime.data.remote.dto.hadithdto.HadithCollection
 import com.fatih.prayertime.data.remote.dto.hadithdto.HadithEdition
 import com.fatih.prayertime.domain.repository.HadithRepository
-import com.fatih.prayertime.util.Resource
+import com.fatih.prayertime.util.model.state.Resource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.withContext

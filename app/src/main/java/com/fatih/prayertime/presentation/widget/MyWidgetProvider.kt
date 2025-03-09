@@ -12,14 +12,13 @@ import com.fatih.prayertime.R
 import com.fatih.prayertime.domain.use_case.formatted_use_cases.FormattedUseCase
 import com.fatih.prayertime.domain.use_case.location_use_cases.GetLastKnowAddressFromDatabaseUseCase
 import com.fatih.prayertime.domain.use_case.pray_times_use_cases.GetDailyPrayTimesWithAddressAndDateUseCase
-import com.fatih.prayertime.util.convertTimeToSeconds
-import com.fatih.prayertime.util.toList
+import com.fatih.prayertime.util.extensions.convertTimeToSeconds
+import com.fatih.prayertime.util.extensions.toList
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.threeten.bp.LocalDateTime

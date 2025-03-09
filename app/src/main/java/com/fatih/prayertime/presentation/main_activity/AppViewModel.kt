@@ -15,7 +15,7 @@ import com.fatih.prayertime.domain.use_case.permission_use_case.IsPowerSavingEna
 import com.fatih.prayertime.domain.use_case.permission_use_case.PermissionsUseCase
 import com.fatih.prayertime.domain.use_case.settings_use_cases.GetSettingsUseCase
 import com.fatih.prayertime.domain.use_case.settings_use_cases.SaveSettingsUseCase
-import com.fatih.prayertime.util.NetworkState
+import com.fatih.prayertime.util.model.state.NetworkState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow

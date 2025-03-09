@@ -1,11 +1,10 @@
 package com.fatih.prayertime.domain.use_case.pray_times_use_cases
 
-import android.util.Log
 import com.fatih.prayertime.domain.model.Address
 import com.fatih.prayertime.domain.model.PrayTimes
 import com.fatih.prayertime.domain.repository.PrayApiRepository
-import com.fatih.prayertime.util.Resource
-import com.fatih.prayertime.util.toPrayTimes
+import com.fatih.prayertime.util.extensions.toPrayTimes
+import com.fatih.prayertime.util.model.state.Resource
 import javax.inject.Inject
 
 class GetMonthlyPrayTimesFromApiUseCase @Inject constructor(private val repository: PrayApiRepository)  {

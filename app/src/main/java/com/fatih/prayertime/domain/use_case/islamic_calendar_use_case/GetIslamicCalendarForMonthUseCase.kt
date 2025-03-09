@@ -2,9 +2,10 @@ package com.fatih.prayertime.domain.use_case.islamic_calendar_use_case
 
 import com.fatih.prayertime.domain.model.IslamicDaysData
 import com.fatih.prayertime.domain.repository.IslamicCalendarRepository
-import com.fatih.prayertime.util.Resource
-import com.fatih.prayertime.util.Status
-import com.fatih.prayertime.util.toIslamicDaysData
+import com.fatih.prayertime.util.extensions.toIslamicDaysData
+import com.fatih.prayertime.util.model.state.Resource
+import com.fatih.prayertime.util.model.state.Status
+
 import javax.inject.Inject
 
 class GetIslamicCalendarForMonthUseCase @Inject constructor(private val islamicCalendarRepository: IslamicCalendarRepository) {

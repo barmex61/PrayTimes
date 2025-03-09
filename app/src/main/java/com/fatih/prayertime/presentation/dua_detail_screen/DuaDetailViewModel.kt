@@ -12,6 +12,7 @@ import com.fatih.prayertime.domain.use_case.favorites_use_cases.IsFavoriteUseCas
 import com.fatih.prayertime.domain.use_case.favorites_use_cases.RemoveFavoriteUseCase
 import com.fatih.prayertime.util.Constants
 import com.fatih.prayertime.util.FavoritesType
+import com.fatih.prayertime.util.model.enums.FavoritesType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow

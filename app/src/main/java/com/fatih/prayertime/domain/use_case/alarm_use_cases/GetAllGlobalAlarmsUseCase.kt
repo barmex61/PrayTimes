@@ -2,7 +2,7 @@ package com.fatih.prayertime.domain.use_case.alarm_use_cases
 
 import com.fatih.prayertime.domain.model.GlobalAlarm
 import com.fatih.prayertime.domain.repository.AlarmDatabaseRepository
-import com.fatih.prayertime.util.PrayTimesString
+import com.fatih.prayertime.util.model.enums.PrayTimesString
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import javax.inject.Inject

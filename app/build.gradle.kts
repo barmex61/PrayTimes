@@ -56,6 +56,7 @@ dependencies {
     implementation (libs.material3)
     implementation (libs.material)
     implementation(libs.androidx.glance.appwidget)
+    implementation(libs.androidx.leanback)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

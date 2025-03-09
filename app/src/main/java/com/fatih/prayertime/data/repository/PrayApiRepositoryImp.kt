@@ -4,7 +4,7 @@ import android.util.Log
 import com.fatih.prayertime.data.remote.PrayApi
 import com.fatih.prayertime.data.remote.dto.praytimesdto.MonthlyPrayTimesResponseDTO
 import com.fatih.prayertime.domain.repository.PrayApiRepository
-import com.fatih.prayertime.util.Resource
+import com.fatih.prayertime.util.model.state.Resource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.withContext

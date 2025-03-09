@@ -7,7 +7,7 @@ import android.os.Looper
 import android.util.Log
 import com.fatih.prayertime.domain.model.Address
 import com.fatih.prayertime.domain.repository.LocationAndAddressRepository
-import com.fatih.prayertime.util.Resource
+import com.fatih.prayertime.util.model.state.Resource
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest

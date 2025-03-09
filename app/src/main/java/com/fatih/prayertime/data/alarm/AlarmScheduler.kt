@@ -4,13 +4,11 @@ import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.os.Build
 import android.util.Log
-import androidx.core.app.AlarmManagerCompat
 import com.fatih.prayertime.data.settings.SettingsDataStore
 import com.fatih.prayertime.domain.model.GlobalAlarm
 import com.fatih.prayertime.domain.use_case.formatted_use_cases.FormattedUseCase
-import com.fatih.prayertime.util.PrayTimesString
+import com.fatih.prayertime.util.model.enums.PrayTimesString
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
