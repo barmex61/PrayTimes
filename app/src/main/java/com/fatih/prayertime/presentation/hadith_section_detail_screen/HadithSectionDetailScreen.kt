@@ -63,7 +63,9 @@ fun HadithSectionDetailScreen(
     )
     val fabButtonRotate = animateFloatAsState(
         targetValue = if (showAllHadiths) 360f else 0f,
+        animationSpec = tween(2000)
     )
+    val selectedHadith = remember(key1 = selectedIndex) { selectedHadithSection!!.hadithList[selectedIndex] }
 
 
     Box(
@@ -109,10 +111,7 @@ fun HadithSectionDetailScreen(
             }
 
             if(!showAllHadiths){
-                val selectedHadith = remember { selectedHadithSection!!.hadithList[selectedIndex] }
-                LaunchedEffect(key1 = selectedHadith) {
-                    hadithCollectionViewModel.checkIsFavorite(selectedHadith.hadithnumber.toInt())
-                }
+
                 AnimatedContent(
                     targetState = selectedHadith,
                     transitionSpec = {
@@ -142,13 +141,16 @@ fun HadithSectionDetailScreen(
             },
 
             modifier = Modifier
-                .padding(bottom = 64.dp)
+                .padding(bottom = 84.dp, end = 16.dp)
                 .align(Alignment.BottomEnd).graphicsLayer {
                     translationY = fabButtonTransition.value
                     rotationX = fabButtonRotate.value
-                }, // Sağ alt köşe
+                },
         ) {
             val isFavorite by hadithCollectionViewModel.isFavorite.collectAsState()
+            LaunchedEffect(key1 = selectedHadith) {
+                hadithCollectionViewModel.checkIsFavorite(selectedHadith.hadithnumber.toInt())
+            }
             Icon(
                 imageVector = Icons.Default.Favorite,
                 contentDescription = if (showAllHadiths) "Close All Hadiths" else "Show All Hadiths",
@@ -162,7 +164,7 @@ fun HadithSectionDetailScreen(
                 .align(Alignment.BottomEnd).graphicsLayer {
                     translationY = fabButtonTransition.value
                     rotationX = fabButtonRotate.value
-                } // Sağ alt köşe
+                }
         ) {
             Icon(
                 imageVector = if (showAllHadiths) Icons.Default.Close else Icons.Default.List,

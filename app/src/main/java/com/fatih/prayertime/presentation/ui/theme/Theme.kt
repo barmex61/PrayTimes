@@ -27,7 +27,8 @@ private val LightColorScheme = lightColorScheme(
     onTertiary = Color.Black,  // Tertiary metin rengi siyah
     onBackground = Color(0xFF000000),  // Arka plan için siyah metin
     onSurface = Color(0xFF000000), // Surface için siyah metin
-)
+    onError = Color(0xFFD55252),
+    )
 val DarkColorScheme = darkColorScheme(
     primary = Color(0xFF8EC5FC),  // Daha açık mavi
     secondary = Color(0xFF0754C7),  // Orta mavi tonu
@@ -41,6 +42,7 @@ val DarkColorScheme = darkColorScheme(
     onPrimary = Color.White,  // Beyaz metin rengi
     onSecondary = Color.Black,  // Siyah metin rengi
     onTertiary = Color.White,  // Beyaz metin rengi
+    onError = Color(0xFFD55252),
     onBackground = Color(0xFFDDDDDD),  // Koyu modda daha açık gri metin
     onSurface = Color(0xFFFFFFFF),  // Surface üzerinde beyaz metin
 )

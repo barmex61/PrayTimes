@@ -243,7 +243,8 @@ fun FavoriteItem(
             .fillMaxWidth()
             .padding(8.dp),
         elevation = CardDefaults.cardElevation(4.dp),
-        onClick = onItemClick
+        onClick = onItemClick,
+        colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
     ) {
         Row(
             modifier = Modifier
@@ -279,17 +280,16 @@ fun FavoriteItem(
                 }
 
             }
-            
             IconButton(
-                onClick = onDeleteClick
+                onClick = onDeleteClick,
             ) {
                 Icon(
                     imageVector = Icons.Default.Delete,
                     contentDescription = stringResource(id = R.string.remove_from_favorites),
-                    tint = MaterialTheme.colorScheme.error,
+                    tint = MaterialTheme.colorScheme.onError,
                     modifier = Modifier.graphicsLayer(
                         rotationZ = deleteIconRotation
-                    )
+                    ).padding(start = 16.dp)
                 )
             }
         }
