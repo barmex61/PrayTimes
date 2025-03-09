@@ -49,6 +49,7 @@
                 android:resource="@xml/my_app_widget_info" />
         </receiver>
         <receiver android:name=".data.alarm.AlarmReceiver" android:exported="false" android:enabled="true" />
+        <receiver android:name=".data.alarm.StatisticsReceiver" android:exported="false" android:enabled="true"/>
         <provider
             android:name="androidx.startup.InitializationProvider"
             android:authorities="${applicationId}.androidx-startup"

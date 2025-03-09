@@ -28,7 +28,7 @@ class SettingsScreenViewModel @Inject constructor(
     fun updateGlobalAlarm(globalAlarm: GlobalAlarm,closeDialog : () -> Unit) = viewModelScope.launch(Dispatchers.IO) {
         dailyPrayTimes?:return@launch
         val alarmTime = getAlarmTimeForPrayTimes(dailyPrayTimes!!,globalAlarm.alarmType,globalAlarm.alarmOffset,formattedUseCase)
-        val alarmTimeLong = formattedUseCase.formatHHMMtoLong(alarmTime)
+        val alarmTimeLong = formattedUseCase.formatHHMMtoLong(alarmTime,formattedUseCase.formatDDMMYYYYDateToLocalDate(dailyPrayTimes!!.date))
         val alarmTimeString = formattedUseCase.formatLongToLocalDateTime(alarmTimeLong)
         updateGlobalAlarmUseCase(globalAlarm.copy(isEnabled = true, alarmTime = alarmTimeLong, alarmTimeString = alarmTimeString))
         closeDialog()

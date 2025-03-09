@@ -17,7 +17,7 @@ class PrayerStatisticsRepositoryImpl @Inject constructor(
         return statisticsDao.getStatisticsByDate(date)
     }
 
-    override suspend fun addStatistic(statistic: PrayerStatisticsEntity) {
+    override suspend fun insertStatistic(statistic: PrayerStatisticsEntity) {
         statisticsDao.insertStatistic(statistic)
     }
 

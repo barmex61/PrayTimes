@@ -21,4 +21,14 @@ object AlarmUtils {
         }
         return formattedUseCase.minusMinutesFromTime(alarmTimeWithoutOffset, alarmOffset)
     }
+
+    fun getAlarmTimeLongForPrayTimes(prayTimes: PrayTimes,formattedUseCase: FormattedUseCase) : List<Long>{
+        val morningTime = formattedUseCase.formatHHMMtoLong(prayTimes.morning, formattedUseCase.formatDDMMYYYYDateToLocalDate(prayTimes.date))
+        val noonTime = formattedUseCase.formatHHMMtoLong(prayTimes.noon, formattedUseCase.formatDDMMYYYYDateToLocalDate(prayTimes.date))
+        val afternoonTime = formattedUseCase.formatHHMMtoLong(prayTimes.afternoon, formattedUseCase.formatDDMMYYYYDateToLocalDate(prayTimes.date))
+        val eveningTime = formattedUseCase.formatHHMMtoLong(prayTimes.evening, formattedUseCase.formatDDMMYYYYDateToLocalDate(prayTimes.date))
+        val nightTime = formattedUseCase.formatHHMMtoLong(prayTimes.night, formattedUseCase.formatDDMMYYYYDateToLocalDate(prayTimes.date))
+
+        return listOf(morningTime, noonTime, afternoonTime, eveningTime, nightTime)
+    }
 } 

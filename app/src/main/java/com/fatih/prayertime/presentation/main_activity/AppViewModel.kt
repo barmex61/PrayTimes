@@ -10,6 +10,7 @@ import com.fatih.prayertime.domain.model.Settings
 import com.fatih.prayertime.domain.model.ThemeOption
 import com.fatih.prayertime.domain.use_case.alarm_use_cases.GetAllGlobalAlarmsUseCase
 import com.fatih.prayertime.domain.use_case.alarm_use_cases.UpdateGlobalAlarmUseCase
+import com.fatih.prayertime.domain.use_case.alarm_use_cases.UpdateStatisticsAlarmUseCase
 import com.fatih.prayertime.domain.use_case.network_state_use_cases.GetNetworkStateUseCase
 import com.fatih.prayertime.domain.use_case.permission_use_case.IsPowerSavingEnabledUseCase
 import com.fatih.prayertime.domain.use_case.permission_use_case.PermissionsUseCase
@@ -34,7 +35,7 @@ class AppViewModel @Inject constructor(
     private val getSettingsUseCase: GetSettingsUseCase,
     private val saveSettingsUseCase: SaveSettingsUseCase,
     private val getAllGlobalAlarmUseCase : GetAllGlobalAlarmsUseCase,
-    private val updateGlobalAlarmUseCase: UpdateGlobalAlarmUseCase
+    private val updateGlobalAlarmUseCase: UpdateGlobalAlarmUseCase,
 
 ) : ViewModel() {
 

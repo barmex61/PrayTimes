@@ -92,7 +92,7 @@ class AlarmWorker @AssistedInject constructor(
                     //Alarm enabled
                     val prayTimes = getDailyPrayTimesWithAddressAndDateUseCase(lastKnownAddress,localDateString)?: return@map alarm
                     val alarmTime = getAlarmTimeForPrayTimes(prayTimes, alarm.alarmType, alarm.alarmOffset,formattedUseCase)
-                    val alarmTimeInMillis = formattedUseCase.formatHHMMtoLong(alarmTime)
+                    val alarmTimeInMillis = formattedUseCase.formatHHMMtoLong(alarmTime,formattedUseCase.formatDDMMYYYYDateToLocalDate(prayTimes.date))
                     if (currentTimeInMillis > alarmTimeInMillis){
                         //Current time is greater than alarm time
                         val nextDayString = formattedUseCase.formatOfPatternDDMMYYYY(localDateNow.plusDays(1))

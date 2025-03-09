@@ -56,8 +56,8 @@ class FormattedUseCase @Inject constructor() {
         return LocalDate.parse(date, formatterDDMMYYYY)
     }
 
-    fun formatHHMMtoLong(time: String): Long {
-        return LocalTime.parse(time, formatterHHMM).atDate(LocalDate.now()).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+    fun formatHHMMtoLong(time: String,localDate: LocalDate): Long {
+        return LocalTime.parse(time, formatterHHMM).atDate(localDate).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
     }
 
     fun formatHHMMtoLongWithLocalDate(time: String, localDate: LocalDate): Long {

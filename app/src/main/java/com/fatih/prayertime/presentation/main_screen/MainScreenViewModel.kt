@@ -15,6 +15,7 @@ import com.fatih.prayertime.domain.use_case.location_use_cases.GetLocationAndAdd
 import com.fatih.prayertime.domain.use_case.pray_times_use_cases.GetDailyPrayTimesWithAddressAndDateUseCase
 import com.fatih.prayertime.domain.use_case.pray_times_use_cases.InsertPrayTimeIntoDbUseCase
 import com.fatih.prayertime.domain.use_case.alarm_use_cases.UpdateGlobalAlarmUseCase
+import com.fatih.prayertime.domain.use_case.alarm_use_cases.UpdateStatisticsAlarmUseCase
 import com.fatih.prayertime.domain.use_case.location_use_cases.RemoveLocationCallbackUseCase
 import com.fatih.prayertime.util.model.state.Resource
 import com.fatih.prayertime.util.model.state.Status
@@ -42,6 +43,7 @@ class MainScreenViewModel @Inject constructor(
     private val getAllGlobalAlarmsUseCase: GetAllGlobalAlarmsUseCase,
     private val removeLocationCallbackUseCase: RemoveLocationCallbackUseCase,
     private val updateGlobalAlarmUseCase: UpdateGlobalAlarmUseCase,
+    private val updateStatisticsAlarmUseCase: UpdateStatisticsAlarmUseCase
 ) : ViewModel() {
 
     companion object{
@@ -128,7 +130,7 @@ class MainScreenViewModel @Inject constructor(
         globalAlarmList.value?.forEach { globalAlarm ->
             dailyPrayTimes.value.data?:return@launch
             val alarmTime = getAlarmTimeForPrayTimes(dailyPrayTimes.value.data!!,globalAlarm.alarmType,globalAlarm.alarmOffset,formattedUseCase)
-            val alarmTimeLong = formattedUseCase.formatHHMMtoLong(alarmTime)
+            val alarmTimeLong = formattedUseCase.formatHHMMtoLong(alarmTime,formattedUseCase.formatDDMMYYYYDateToLocalDate(dailyPrayTimes.value.data!!.date))
             val alarmTimeString = formattedUseCase.formatLongToLocalDateTime(alarmTimeLong)
             updateGlobalAlarmUseCase(globalAlarm.copy(isEnabled = if (enableAllGlobalAlarm) true else globalAlarm.isEnabled, alarmTime = alarmTimeLong, alarmTimeString = alarmTimeString))
         }
@@ -147,7 +149,7 @@ class MainScreenViewModel @Inject constructor(
             else -> prayTimes.night
         }
         try {
-            val timeLong = formattedUseCase.formatHHMMtoLong(timeString)
+            val timeLong = formattedUseCase.formatHHMMtoLong(timeString,formattedUseCase.formatDDMMYYYYDateToLocalDate(prayTimes.date))
             val timeStr = formattedUseCase.formatLongToLocalDateTime(timeLong)
             return Pair(timeLong, timeStr)
         }catch (e:Exception){
@@ -172,8 +174,17 @@ class MainScreenViewModel @Inject constructor(
         }
         }
         viewModelScope.launch {
-            getAllGlobalAlarmsUseCase().collect { globalAlarmList ->
-                _globalAlarmList.emit(globalAlarmList)
+            launch {
+                getAllGlobalAlarmsUseCase().collect { globalAlarmList ->
+                    _globalAlarmList.emit(globalAlarmList)
+                }
+            }
+            launch {
+                _dailyPrayTimes.collectLatest { resource ->
+                    resource.data?.let { prayTimes ->
+                        updateStatisticsAlarmUseCase(prayTimes)
+                    }
+                }
             }
         }
         updateAllGlobalAlarm(false)
