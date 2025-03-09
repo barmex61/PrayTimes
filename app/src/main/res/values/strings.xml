@@ -52,4 +52,5 @@
     <string name="did_u_pray">Did you pray the last prayer?</string>
     <string name="yes">Yes</string>
     <string name="no">No</string>
+    <string name="pray_alarm_message">Prayer Time</string>
 </resources>

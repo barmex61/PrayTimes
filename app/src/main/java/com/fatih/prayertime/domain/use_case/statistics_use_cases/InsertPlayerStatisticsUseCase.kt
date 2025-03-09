@@ -4,7 +4,7 @@ import com.fatih.prayertime.data.local.entity.PrayerStatisticsEntity
 import com.fatih.prayertime.domain.repository.PrayerStatisticsRepository
 import javax.inject.Inject
 
-class AddPrayerStatisticsUseCase @Inject constructor(
+class InsertPlayerStatisticsUseCase @Inject constructor(
     private val repository: PrayerStatisticsRepository
 ) {
     suspend operator fun invoke(statistic: PrayerStatisticsEntity) {

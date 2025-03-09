@@ -78,7 +78,7 @@ fun StatisticsScreen(
                             .padding(16.dp)
                     ) {
                         Text(
-                            text = statistic.prayerName,
+                            text = statistic.prayerType,
                             style = MaterialTheme.typography.titleMedium
                         )
                         Text(
@@ -97,12 +97,6 @@ fun StatisticsScreen(
                                 else 
                                     MaterialTheme.colorScheme.error
                             )
-                            if (statistic.isCompleted && statistic.isOnTime) {
-                                Text(
-                                    text = "Vaktinde",
-                                    color = MaterialTheme.colorScheme.primary
-                                )
-                            }
                         }
                     }
                 }
@@ -118,7 +112,6 @@ fun StatisticsChart(
     modifier: Modifier = Modifier
 ) {
     val primaryColor = MaterialTheme.colorScheme.primary
-    val secondaryColor = MaterialTheme.colorScheme.secondary
 
     Canvas(modifier = modifier.fillMaxSize()) {
         if (statistics.isEmpty()) return@Canvas
@@ -129,47 +122,28 @@ fun StatisticsChart(
         val maxCompleted = statistics.size
         val yStep = height / maxCompleted
 
-        // Çizgi grafiği için path
         val completedPath = Path()
-        val onTimePath = Path()
 
         statistics.forEachIndexed { index, stat ->
             val x = index * xStep
             val completedY = height - (if (stat.isCompleted) 1 else 0) * yStep
-            val onTimeY = height - (if (stat.isOnTime) 1 else 0) * yStep
 
             if (index == 0) {
                 completedPath.moveTo(x, completedY)
-                onTimePath.moveTo(x, onTimeY)
             } else {
                 completedPath.lineTo(x, completedY)
-                onTimePath.lineTo(x, onTimeY)
             }
 
-            // Nokta çizimi
             drawCircle(
                 color = primaryColor,
                 radius = 4f,
                 center = Offset(x, completedY)
             )
-            if (stat.isOnTime) {
-                drawCircle(
-                    color = secondaryColor,
-                    radius = 4f,
-                    center = Offset(x, onTimeY)
-                )
-            }
         }
 
-        // Çizgileri çiz
         drawPath(
             path = completedPath,
             color = primaryColor,
-            style = Stroke(width = 2f)
-        )
-        drawPath(
-            path = onTimePath,
-            color = secondaryColor,
             style = Stroke(width = 2f)
         )
     }

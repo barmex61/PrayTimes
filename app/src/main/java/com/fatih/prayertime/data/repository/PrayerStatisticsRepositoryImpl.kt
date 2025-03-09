@@ -36,4 +36,8 @@ class PrayerStatisticsRepositoryImpl @Inject constructor(
     override fun getStatisticsBetweenDates(startDate: String, endDate: String): Flow<List<PrayerStatisticsEntity>> {
         return statisticsDao.getStatisticsBetweenDates(startDate, endDate)
     }
+
+    override suspend fun isExist(prayerType: String, date: String): Boolean {
+        return statisticsDao.exists(prayerType, date)
+    }
 } 

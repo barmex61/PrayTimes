@@ -51,6 +51,23 @@ fun PrayTimes.toList(): List<Pair<String, String>> = listOf(
     Pair(PrayTimesString.Night.name, this.night)
 )
 
+fun PrayTimes.toPrayTypeList() : List<String> = listOf(
+    PrayTimesString.Morning.name,
+    PrayTimesString.Noon.name,
+    PrayTimesString.Afternoon.name,
+    PrayTimesString.Evening.name,
+    PrayTimesString.Night.name
+)
+
+fun PrayTimes.toPrayTimeList(offsetMinutes : Long? = null) : List<Long> = listOf(
+    formattedUseCase.formatHHMMtoLong(this.morning,formattedUseCase.formatDDMMYYYYDateToLocalDate(this.date)) + if (offsetMinutes != null)  offsetMinutes * 1000L * 60L else 0L,
+    formattedUseCase.formatHHMMtoLong(this.noon,formattedUseCase.formatDDMMYYYYDateToLocalDate(this.date))+ if (offsetMinutes != null)  offsetMinutes * 1000L * 60L else 0L,
+    formattedUseCase.formatHHMMtoLong(this.afternoon,formattedUseCase.formatDDMMYYYYDateToLocalDate(this.date))+ if (offsetMinutes != null)  offsetMinutes * 1000L * 60L else 0L,
+    formattedUseCase.formatHHMMtoLong(this.evening,formattedUseCase.formatDDMMYYYYDateToLocalDate(this.date))+ if (offsetMinutes != null)  offsetMinutes * 1000L * 60L else 0L,
+    formattedUseCase.formatHHMMtoLong(this.night,formattedUseCase.formatDDMMYYYYDateToLocalDate(this.date))+ if (offsetMinutes != null)  offsetMinutes * 1000L * 60L else 0L
+)
+
+fun String.timeToLong(formattedUseCase: FormattedUseCase,date: String) : Long = formattedUseCase.formatHHMMtoLong(this,formattedUseCase.formatDDMMYYYYDateToLocalDate(date))
 fun PrayTimes.toAddress(): Address = Address(
     latitude = this.latitude,
     longitude = this.longitude,

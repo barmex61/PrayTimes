@@ -26,22 +26,24 @@ class AlarmReceiver : BroadcastReceiver() {
         when(alarmType){
             AlarmType.PRAY.name ->{
                 val alarmPrayType = intent.getStringExtra("ALARM_PRAY_TYPE") ?: "Bilinmeyen Alarm"
-                val alarmMessage = intent.getStringExtra("ALARM_MESSAGE") ?: "Alarm Çaldı!"
                 val enableVibration = intent.getBooleanExtra("ALARM_VIBRATION", true)
                 val isSilent = intent.getBooleanExtra("ALARM_IS_SILENT", false)
                 val alarmSoundUri =
                     if(isSilent) RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
                     else intent.getStringExtra("ALARM_SOUND_URI")?.toUri() ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
-                showNotificationForPray(context, alarmPrayType, alarmMessage,enableVibration, alarmSoundUri)
+                showNotificationForPray(context, alarmPrayType, enableVibration, alarmSoundUri)
             }
             AlarmType.STATISTICS.name ->{
                 Log.d("AlarmReceiver","ss")
-                showNotificationForStatistics(context)
+                val prayType = intent.getStringExtra("ALARM_PRAY_TYPE") ?: "Bilinmeyen Alarm"
+                val prayDate = intent.getStringExtra("ALARM_PRAY_DATE")?:""
+
+                showNotificationForStatistics(context,prayType,prayDate)
             }
         }
     }
 
-    private fun showNotificationForPray(context: Context, alarmPrayType: String, alarmMessage: String,enableVibration : Boolean,alarmSoundUri : Uri) {
+    private fun showNotificationForPray(context: Context, alarmPrayType: String, enableVibration : Boolean,alarmSoundUri : Uri) {
         val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         deleteNotificationChannel(context)
         val channel = NotificationChannel(
@@ -67,7 +69,7 @@ class AlarmReceiver : BroadcastReceiver() {
         val builder = NotificationCompat.Builder(context, PRAY_CHANNEL_ID)
             .setSmallIcon(R.drawable.alarm_icon)
             .setContentTitle(alarmPrayType)
-            .setContentText(alarmMessage)
+            .setContentText(context.getString(R.string.pray_alarm_message))
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setSound(alarmSoundUri)
             .setAutoCancel(true)
@@ -76,7 +78,8 @@ class AlarmReceiver : BroadcastReceiver() {
         notificationManager.notify(alarmPrayType.hashCode(),builder.build())
     }
 
-    private fun showNotificationForStatistics(context: Context){
+    private fun showNotificationForStatistics(context: Context,prayType: String,prayDate : String){
+        Log.d("AlarmReceiver","ss2")
         val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         val channel = NotificationChannel(
             STATISTICS_CHANNEL_ID,
@@ -92,12 +95,17 @@ class AlarmReceiver : BroadcastReceiver() {
 
         val yesIntent = Intent(context, StatisticsReceiver::class.java).apply {
             action = context.getString(R.string.yes)
+            putExtra("PRAY_TYPE",prayType)
+            putExtra("PRAY_DATE",prayDate)
         }
         val yesPendingIntent = PendingIntent.getBroadcast(context, 0, yesIntent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
 
-        val noIntent = Intent(context, StaticticsReceiver::class.java).apply {
+        val noIntent = Intent(context, StatisticsReceiver::class.java).apply {
             action = context.getString(R.string.no)
+            putExtra("PRAY_TYPE",prayType)
+            putExtra("PRAY_DATE",prayDate)
         }
+
         val noPendingIntent = PendingIntent.getBroadcast(context, 0, noIntent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
 
         val builder = NotificationCompat.Builder(context, STATISTICS_CHANNEL_ID)
@@ -109,6 +117,7 @@ class AlarmReceiver : BroadcastReceiver() {
             .setVibrate(longArrayOf(0, 500, 1000))
             .addAction(R.drawable.check_circle, context.getString(R.string.yes), yesPendingIntent)
             .addAction(R.drawable.cross_icon, context.getString(R.string.no), noPendingIntent)
+            .setDeleteIntent(noPendingIntent)
 
         notificationManager.notify(context.getString(R.string.did_u_pray).hashCode(),builder.build())
     }
