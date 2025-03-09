@@ -37,7 +37,7 @@ object NavigationConfig {
         ScreenData(
             title = PrayTimesString.PRAY_CATEGORY_DETAILS,
             iconRoute = R.drawable.pray,
-            route = "duaCategoriesDetail/{categoryId}",
+            route = "duaCategoriesDetail",
             iconResourceType = ResourceType.PAINTER,
         ),
         ScreenData(

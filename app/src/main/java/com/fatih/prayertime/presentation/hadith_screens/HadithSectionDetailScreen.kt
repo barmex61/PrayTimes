@@ -82,7 +82,6 @@ fun HadithSectionDetailScreen(
         animationSpec = tween(2000)
     )
 
-
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -164,11 +163,7 @@ fun HadithSectionDetailScreen(
                 },
         ) {
             val isFavorite by hadithViewModel.isFavorite.collectAsState()
-            LaunchedEffect(key1 = selectedHadith) {
-                if (selectedHadith != null){
-                    hadithViewModel.checkIsFavorite(selectedHadith!!.hadithnumber.toInt())
-                }
-            }
+
             Icon(
                 imageVector = Icons.Default.Favorite,
                 contentDescription = if (showAllHadiths) "Close All Hadiths" else "Show All Hadiths",

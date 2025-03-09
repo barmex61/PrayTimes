@@ -22,25 +22,15 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
-
-
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
-
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
-
-
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-
-
 import androidx.compose.foundation.shape.RoundedCornerShape
-
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
-
-
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBarItem
@@ -64,7 +54,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -86,7 +75,6 @@ import com.fatih.prayertime.presentation.main_screen.MainScreen
 import com.fatih.prayertime.presentation.esmaul_husna_screen.EsmaulHusnaScreen
 import com.fatih.prayertime.presentation.favorites_screen.FavoritesScreen
 import com.fatih.prayertime.presentation.hadith_collections_screen.HadithCollectionScreen
-import com.fatih.prayertime.presentation.hadith_collections_screen.HadithCollectionViewModel
 import com.fatih.prayertime.presentation.hadith_screens.HadithEditionsScreen
 import com.fatih.prayertime.presentation.hadith_screens.HadithSectionDetailScreen
 import com.fatih.prayertime.presentation.hadith_screens.HadithViewModel
@@ -313,7 +301,7 @@ fun NavHostLayout(navController: NavHostController, innerPadding: PaddingValues,
                     PrayTimesString.HADITH.name-> HadithEditionsScreen(innerPaddingValue,navController,hadithViewModel)
                     PrayTimesString.HADITH_COLLECTION.name -> {
                         val collectionPath = backStackEntry.arguments?.getString("collectionPath") ?: return@composable
-                        HadithCollectionScreen(innerPaddingValue,collectionPath, hadithCollectionViewModel = hadithViewModel, navController = navController)
+                        HadithCollectionScreen(innerPaddingValue,collectionPath, hadithViewModel = hadithViewModel, navController = navController)
                     }
                     PrayTimesString.HADITH_SECTION_DETAILS.name -> {
                         val collectionPath = backStackEntry.arguments?.getString("collectionPath")
@@ -322,10 +310,8 @@ fun NavHostLayout(navController: NavHostController, innerPadding: PaddingValues,
                         HadithSectionDetailScreen(innerPaddingValue, hadithViewModel, hadithSectionIndex?.toIntOrNull(), collectionPath,hadithIndex?.toIntOrNull())
                     }
                     PrayTimesString.PRAYER.name -> DuaCategoriesScreen(innerPaddingValue,navController,duaViewModel)
-                    PrayTimesString.PRAY_CATEGORY_DETAILS.name -> {
-                        val categoryId = backStackEntry.arguments?.getString("categoryId") ?: return@composable
-                        DuaCategoryDetailScreen(innerPaddingValue,navController, categoryId.toInt(),duaViewModel)
-                    }
+                    PrayTimesString.PRAY_CATEGORY_DETAILS.name -> DuaCategoryDetailScreen(innerPaddingValue,navController,duaViewModel)
+
                     PrayTimesString.PRAYER_DETAIL.name -> {
                         val duaId = backStackEntry.arguments?.getString("duaId") ?: return@composable
                         val categoryId = backStackEntry.arguments?.getString("categoryId") ?: return@composable

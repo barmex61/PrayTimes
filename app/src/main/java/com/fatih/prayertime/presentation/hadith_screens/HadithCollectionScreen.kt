@@ -32,7 +32,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.fatih.prayertime.data.remote.dto.hadithdto.HadithSectionInfo
-import com.fatih.prayertime.domain.model.HadithSectionCardData
+import com.fatih.prayertime.domain.model.HadithSectionData
 import com.fatih.prayertime.util.config.NavigationConfig.screens
 import com.fatih.prayertime.util.extensions.navigateToScreen
 import kotlin.random.Random
@@ -71,13 +71,13 @@ fun HadithCollectionScreen(bottomPaddingValues: Dp, collectionPath : String, had
 }
 
 @Composable
-fun HadithCollectionGridView(hadithSectionCardDataList: List<HadithSectionCardData>, hadithViewModel: HadithViewModel, navController: NavController, bottomPaddingValues: Dp) {
+fun HadithCollectionGridView(hadithSectionDataList: List<HadithSectionData>, hadithViewModel: HadithViewModel, navController: NavController, bottomPaddingValues: Dp) {
 
     LazyVerticalStaggeredGrid(
         modifier = Modifier.padding(bottom =bottomPaddingValues ),
         columns = StaggeredGridCells.Fixed(2),
     ) {
-        itemsIndexed(hadithSectionCardDataList) { index,hadithCollectionCardData ->
+        itemsIndexed(hadithSectionDataList) { index, hadithCollectionCardData ->
             HadithCollectionCard(index,hadithCollectionCardData, hadithViewModel, navController  )
         }
     }
@@ -85,7 +85,7 @@ fun HadithCollectionGridView(hadithSectionCardDataList: List<HadithSectionCardDa
 
 
 @Composable
-fun HadithCollectionCard(index:Int, hadithSectionCardData: HadithSectionCardData, hadithViewModel: HadithViewModel, navController: NavController) {
+fun HadithCollectionCard(index:Int, hadithSectionData: HadithSectionData, hadithViewModel: HadithViewModel, navController: NavController) {
     val infiniteTransition = rememberInfiniteTransition()
     val randomColor = remember { colors.random() }
     val targetColor = remember { colors.filter { it != randomColor }.random() }
@@ -119,7 +119,7 @@ fun HadithCollectionCard(index:Int, hadithSectionCardData: HadithSectionCardData
             },
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
         onClick = {
-            hadithViewModel.updateSelectedHadithSection(hadithSectionCardData,index)
+            hadithViewModel.updateSelectedHadithSection(hadithSectionData,index)
             val subRoute = screens[5].route.replace("{collectionPath}","")
             val route = subRoute.replace("{hadithSectionIndex}","")
             navController.navigateToScreen(route)
@@ -133,7 +133,7 @@ fun HadithCollectionCard(index:Int, hadithSectionCardData: HadithSectionCardData
         ) {
             Text(
                 textAlign = TextAlign.Center,
-                text = hadithSectionCardData.section?:"",
+                text = hadithSectionData.section?:"",
                 style = MaterialTheme.typography.titleMedium,
                 color = animatedColor.value,
                 modifier = Modifier.fillMaxWidth()
@@ -142,8 +142,8 @@ fun HadithCollectionCard(index:Int, hadithSectionCardData: HadithSectionCardData
             HadithSectionInfo::class.memberProperties.filterIndexed { index, _ ->
                 index >= 2
             }.forEach { property ->
-                if (hadithSectionCardData.details != null){
-                    val value = property.get(hadithSectionCardData.details)
+                if (hadithSectionData.details != null){
+                    val value = property.get(hadithSectionData.details)
                     Text(
                         text = "${property.getPropertyName()}: ${value.anyToInt()?:value}",
                         textAlign = TextAlign.Center,

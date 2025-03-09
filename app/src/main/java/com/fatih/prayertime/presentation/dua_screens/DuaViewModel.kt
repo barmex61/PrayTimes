@@ -39,25 +39,21 @@ class DuaViewModel @Inject constructor(
     private val _isFavorite = MutableStateFlow(false)
     val isFavorite = _isFavorite.asStateFlow()
 
-    private val duaCategoryIndex = MutableStateFlow(0)
     private val duaId = MutableStateFlow(0)
 
-    fun updateDuaId(duaId: Int) = viewModelScope.launch(Dispatchers.Default){
-        this@DuaViewModel.duaId.emit(duaId)
-        loadDuaDetail(duaId)
+    fun updateDuaId(id : Int) = viewModelScope.launch(Dispatchers.Default){
+        duaId.emit(id)
     }
 
-    fun updateCategoryIndex(categoryIndex : Int) = viewModelScope.launch(Dispatchers.Default){
-        duaCategoryIndex.emit(categoryIndex)
+    private fun getDuaDetail() = viewModelScope.launch(Dispatchers.IO){
+        _duaDetail.value = _duaState.value.data!!.data.firstOrNull { it.id == _duaCategoryId.value }?.detail?.firstOrNull { it.id == duaId.value }
+        checkIsFavorite()
     }
 
-    private fun loadDuaDetail(duaId: Int) = viewModelScope.launch(Dispatchers.IO){
-        _duaDetail.value = _duaState.value.data!!.data[duaCategoryIndex.value].detail.firstOrNull { it.id == duaId }
-        checkIsFavorite(duaId)
-    }
-
-    private fun checkIsFavorite(duaId: Int) = viewModelScope.launch(Dispatchers.IO){
-        _isFavorite.value = isFavoriteUseCase(duaId,FavoritesType.DUA.name)
+    private fun checkIsFavorite() = viewModelScope.launch(Dispatchers.IO){
+        duaDetail.value ?: return@launch
+        val id = generateItemId(type = FavoritesType.DUA.name, title = duaDetail.value!!.titleTr,null,null,null)
+        _isFavorite.value = isFavoriteUseCase(id,FavoritesType.DUA.name)
     }
 
     fun toggleFavorite() = viewModelScope.launch(Dispatchers.IO){
@@ -67,7 +63,8 @@ class DuaViewModel @Inject constructor(
                 removeFavoriteUseCase(
                     FavoritesEntity(
                         type = FavoritesType.DUA.name,
-                        duaCategoryIndex = duaCategoryIndex.value,
+                        duaCategoryId = _duaCategoryId.value,
+                        duaId = duaId.value,
                         title = if (Locale.getDefault().language == "tr") dua.titleTr else dua.title,
                         itemId = id,
                         content = dua.arabic,
@@ -78,7 +75,8 @@ class DuaViewModel @Inject constructor(
                 addFavoriteUseCase(
                     FavoritesEntity(
                         type = FavoritesType.DUA.name,
-                        duaCategoryIndex = duaCategoryIndex.value,
+                        duaCategoryId = _duaCategoryId.value,
+                        duaId = duaId.value,
                         title = if (Locale.getDefault().language == "tr") dua.titleTr else dua.title,
                         itemId = id,
                         content = dua.arabic,
@@ -96,44 +94,51 @@ class DuaViewModel @Inject constructor(
     private val _duaCategoryDetailList : MutableStateFlow<List<DuaCategoryDetail>?> = MutableStateFlow(null)
     val duaCategoryDetailList = _duaCategoryDetailList
 
-    private val duaCategoryDetailId = MutableStateFlow(0)
+    private val _duaCategoryId = MutableStateFlow(0)
+    val duaCategoryId = _duaCategoryId
 
-    private fun getDuaCategoryDetailList(id : Int) = viewModelScope.launch(Dispatchers.Default){
-        _duaCategoryDetailList.emit(duaState.value.data?.data?.first { it.id == id }?.detail)
+    fun getDuaCategoryDetailList() = viewModelScope.launch(Dispatchers.Default){
+        _duaCategoryDetailList.emit(duaState.value.data?.data?.firstOrNull { it.id == _duaCategoryId.value }?.detail)
     }
 
-    fun updateDuaCategoryDetailId(index: Int) = viewModelScope.launch(Dispatchers.Default){
-        duaCategoryDetailId.emit(index)
+    fun updateDuaCategoryId(index: Int) = viewModelScope.launch(Dispatchers.Default){
+        _duaCategoryId.emit(index)
     }
 
-    // -- Dua Category Detail Screen
+    // -- Dua Category Screen
 
     private val _duaState = MutableStateFlow<Resource<Dua>>(Resource.loading())
     val duaState: StateFlow<Resource<Dua>> = _duaState.asStateFlow()
 
-    fun loadDua() {
-        viewModelScope.launch {
-            try {
-                loadDuaUseCase()
-                getDuaUseCase().collect { duaCategory ->
-                    _duaState.value = if (duaCategory != null) {
-                        Resource.success(duaCategory)
-                    } else {
-                        Resource.error("Dua kategorileri yüklenemedi")
-                    }
+    fun loadDua() = viewModelScope.launch {
+        try {
+            loadDuaUseCase()
+            getDuaUseCase().collect { dua->
+                _duaState.value = if (dua != null) {
+                    Resource.success(dua)
+                } else {
+                    Resource.error("Dua kategorileri yüklenemedi")
                 }
-            } catch (e: Exception) {
-                _duaState.value = Resource.error("Error occurred : ${e.localizedMessage}")
             }
+        } catch (e: Exception) {
+            _duaState.value = Resource.error("Error occurred : ${e.localizedMessage}")
         }
     }
 
     init {
         loadDua()
         viewModelScope.launch(Dispatchers.Default){
-            duaCategoryDetailId.collectLatest {
-                getDuaCategoryDetailList(it)
+            launch {
+                _duaCategoryId.collectLatest {
+                    getDuaCategoryDetailList()
+                }
             }
+            launch {
+                duaId.collectLatest {
+                    getDuaDetail()
+                }
+            }
+
         }
     }
 

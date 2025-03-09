@@ -4,24 +4,23 @@ import com.fatih.prayertime.data.remote.dto.hadithdto.HadithCollection
 import com.fatih.prayertime.data.remote.dto.hadithdto.HadithSectionInfo
 import com.fatih.prayertime.data.remote.dto.hadithdto.HadithSections
 import com.fatih.prayertime.data.remote.dto.hadithdto.Sections
-import com.fatih.prayertime.domain.model.HadithSectionCardData
+import com.fatih.prayertime.domain.model.HadithSectionData
 import kotlin.reflect.KProperty1
 
 object HadithUtils {
-    fun combineSectionsAndDetails(hadithCollection: HadithCollection): List<HadithSectionCardData> {
+    fun combineSectionsAndDetails(hadithCollection: HadithCollection): List<HadithSectionData> {
         val sectionList = hadithCollection.metadata.sections.toList()
         val detailsList = hadithCollection.metadata.section_details.toList()
-
         return sectionList.zip(detailsList) { section, details ->
             val subHadithList = hadithCollection.hadiths.subList(
                 details?.hadithnumber_first.anyToInt()!! - 1,
                 details?.hadithnumber_last.anyToInt()!!
             )
-            HadithSectionCardData(section, details, subHadithList, subHadithList.size)
+            HadithSectionData(section, details, subHadithList, subHadithList.size)
         }
     }
 
-    fun Sections.toList(): List<String?> {
+    private fun Sections.toList(): List<String?> {
         return this::class.members
             .filterIsInstance<KProperty1<Sections, *>>()
             .sortedBy { it.name.toInt() }

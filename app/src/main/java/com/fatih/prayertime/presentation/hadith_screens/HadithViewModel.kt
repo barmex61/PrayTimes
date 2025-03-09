@@ -7,7 +7,7 @@ import com.fatih.prayertime.data.local.entity.FavoritesEntity
 import com.fatih.prayertime.data.remote.dto.hadithdto.Hadith
 import com.fatih.prayertime.data.remote.dto.hadithdto.HadithCollection
 import com.fatih.prayertime.data.remote.dto.hadithdto.HadithEdition
-import com.fatih.prayertime.domain.model.HadithSectionCardData
+import com.fatih.prayertime.domain.model.HadithSectionData
 import com.fatih.prayertime.domain.use_case.favorites_use_cases.AddFavoriteUseCase
 import com.fatih.prayertime.domain.use_case.favorites_use_cases.IsFavoriteUseCase
 import com.fatih.prayertime.domain.use_case.favorites_use_cases.RemoveFavoriteUseCase
@@ -26,6 +26,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -50,10 +51,10 @@ class HadithViewModel @Inject constructor(
     private val hadithCollectionPath : MutableStateFlow<String> = MutableStateFlow("")
     private val hadithCollection : MutableStateFlow<Resource<HadithCollection>> = MutableStateFlow(Resource.loading())
 
-    private val _hadithSectionCardDataList : MutableStateFlow<Resource<List<HadithSectionCardData>>> = MutableStateFlow(Resource.loading())
-    val hadithSectionCardDataList = _hadithSectionCardDataList
+    private val _hadithSectionDataList : MutableStateFlow<Resource<List<HadithSectionData>>> = MutableStateFlow(Resource.loading())
+    val hadithSectionCardDataList = _hadithSectionDataList
 
-    private val _selectedHadithSection : MutableStateFlow<HadithSectionCardData?> = MutableStateFlow(null)
+    private val _selectedHadithSection : MutableStateFlow<HadithSectionData?> = MutableStateFlow(null)
     val selectedHadithSection = _selectedHadithSection
 
     private val selectedHadithSectionIndex = MutableStateFlow(0)
@@ -66,6 +67,8 @@ class HadithViewModel @Inject constructor(
         _selectedHadithSection
     ) { index, section ->
         section?.hadithList?.getOrNull(index)
+    }.onEach {
+        checkIsFavorite()
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
@@ -82,8 +85,8 @@ class HadithViewModel @Inject constructor(
         hadithCollectionPath.emit(collectionPath)
     }
 
-    fun updateSelectedHadithSection(hadithSectionCardData: HadithSectionCardData,index:Int) = viewModelScope.launch(Dispatchers.Default){
-        _selectedHadithSection.emit(hadithSectionCardData)
+    fun updateSelectedHadithSection(hadithSectionData: HadithSectionData, index:Int) = viewModelScope.launch(Dispatchers.Default){
+        _selectedHadithSection.emit(hadithSectionData)
         selectedHadithSectionIndex.emit(index)
         _selectedHadithIndex.emit(0)
     }
@@ -103,8 +106,15 @@ class HadithViewModel @Inject constructor(
     private val _isFavorite = MutableStateFlow(false)
     val isFavorite = _isFavorite.asStateFlow()
 
-    fun checkIsFavorite(hadithId : Int) = viewModelScope.launch(Dispatchers.IO){
-        _isFavorite.value = isFavoriteUseCase(hadithId, FavoritesType.HADIS.name)
+    private fun checkIsFavorite() = viewModelScope.launch(Dispatchers.IO){
+        val id = generateItemId(
+            FavoritesType.HADIS.name,
+            selectedHadith.value!!.text.substring(0,10),
+            hadithCollectionPath.value,
+            selectedHadithSectionIndex.value,
+            selectedHadithIndex.value
+        )
+        _isFavorite.value = isFavoriteUseCase(id, FavoritesType.HADIS.name)
     }
 
     fun toggleFavorite(hadith: Hadith) = viewModelScope.launch(Dispatchers.IO){
@@ -115,6 +125,7 @@ class HadithViewModel @Inject constructor(
                     type = FavoritesType.HADIS.name,
                     title = hadith.text,
                     itemId = id,
+                    hadithId = selectedHadithIndex.value,
                     content = "",
                     hadithCollectionPath = hadithCollectionPath.value,
                     hadithSectionIndex = selectedHadithSectionIndex.value,
@@ -128,6 +139,7 @@ class HadithViewModel @Inject constructor(
                     title = hadith.text,
                     itemId = id,
                     content ="",
+                    hadithId = selectedHadithIndex.value,
                     hadithCollectionPath = hadithCollectionPath.value,
                     hadithSectionIndex = selectedHadithSectionIndex.value,
                     hadithIndex = selectedHadithIndex.value
@@ -151,13 +163,13 @@ class HadithViewModel @Inject constructor(
             hadithCollection.collectLatest { hadithCollection
                 when(hadithCollection.value.status){
                     Status.ERROR ->{
-                        _hadithSectionCardDataList.emit(Resource.error(hadithCollection.value.message?:""))
+                        _hadithSectionDataList.emit(Resource.error(hadithCollection.value.message?:""))
                     }
                     Status.LOADING ->{
-                        _hadithSectionCardDataList.emit(Resource.loading())
+                        _hadithSectionDataList.emit(Resource.loading())
                     }
                     Status.SUCCESS ->{
-                        _hadithSectionCardDataList.emit(Resource.success(combineSectionsAndDetails(hadithCollection.value.data!!)))
+                        _hadithSectionDataList.emit(Resource.success(combineSectionsAndDetails(hadithCollection.value.data!!)))
                         updateSelectedHadithSection(selectedHadithSectionIndex.value)
                     }
                 }

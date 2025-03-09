@@ -1,7 +1,7 @@
 package com.fatih.prayertime.data.repository
 
 import android.app.Application
-import com.fatih.prayertime.data.remote.dto.duadto.DuaCategory
+import com.fatih.prayertime.data.remote.dto.duadto.Dua
 import com.fatih.prayertime.domain.model.EsmaulHusna
 import com.fatih.prayertime.domain.repository.LocalDataRepository
 import com.fatih.prayertime.util.utils.AssetUtils
@@ -15,10 +15,10 @@ class LocalDataRepositoryImpl @Inject constructor(
     private val application: Application
 ) : LocalDataRepository {
 
-    private val duaCategoryFlow = MutableStateFlow<DuaCategory?>(null)
+    private val duaCategoryFlow = MutableStateFlow<Dua?>(null)
     private val esmaulHusnaFlow = MutableStateFlow<List<EsmaulHusna>>(emptyList())
 
-    override suspend fun loadDuaCategory(): DuaCategory {
+    override suspend fun loadDua(): Dua {
         val jsonString = AssetUtils.getJsonFromAssets("dua.json", application)
         val duaCategory = AssetUtils.convertJsonToDuaCategory(jsonString)
         duaCategoryFlow.emit(duaCategory)
@@ -32,7 +32,7 @@ class LocalDataRepositoryImpl @Inject constructor(
         return esmaulHusnaList
     }
 
-    override fun getDuaCategory(): Flow<DuaCategory?> = duaCategoryFlow
+    override fun getDua(): Flow<Dua?> = duaCategoryFlow
 
     override fun getEsmaulHusna(): Flow<List<EsmaulHusna>> = esmaulHusnaFlow
 } 

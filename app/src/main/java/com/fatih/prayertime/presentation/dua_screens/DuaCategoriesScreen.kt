@@ -68,7 +68,7 @@ fun DuaCategoriesScreen(
         Status.SUCCESS->{
             Box(modifier = Modifier.fillMaxSize(1f).padding(bottom = bottomPaddingValues), contentAlignment = Alignment.Center){
                 if (duaCategoryState.data != null){
-                    DuaCategoriesGridView(duaCategoryState.data!!.data, navController )
+                    DuaCategoriesGridView(duaCategoryState.data!!.data,navController,duaViewModel)
                 }else{
                     LoadingView()
                 }
@@ -81,7 +81,7 @@ fun DuaCategoriesScreen(
 }
 
 @Composable
-fun DuaCategoriesGridView(duaCategoryDataList: List<DuaCategoryData>, navController: NavController) {
+fun DuaCategoriesGridView(duaCategoryDataList: List<DuaCategoryData>, navController: NavController,duaViewModel: DuaViewModel) {
     LazyVerticalStaggeredGrid (
         columns = StaggeredGridCells.Fixed(2),
         verticalItemSpacing = 20.dp,
@@ -89,13 +89,17 @@ fun DuaCategoriesGridView(duaCategoryDataList: List<DuaCategoryData>, navControl
         contentPadding = PaddingValues(bottom = 40.dp, top = 40.dp, start = 10.dp, end = 10.dp),
     )  {
         items(duaCategoryDataList) {duaCategoryData ->
-            DuaCategoryCard(duaCategoryData, navController)
+            DuaCategoryCard(duaCategoryData,
+                onNavigate = {
+                    duaViewModel.updateDuaCategoryId(duaCategoryData.id)
+                    navController.navigateToScreen(screens[4].route) },
+            )
         }
     }
 }
 
 @Composable
-fun DuaCategoryCard(duaCategoryData :DuaCategoryData, navController: NavController) {
+fun DuaCategoryCard(duaCategoryData :DuaCategoryData, onNavigate : () -> Unit ) {
     val infiniteTransition = rememberInfiniteTransition()
     val randomColor = remember { colors.random() }
     val targetColor = remember { colors.filter { it != randomColor }.random() }
@@ -134,10 +138,7 @@ fun DuaCategoryCard(duaCategoryData :DuaCategoryData, navController: NavControll
 
             ,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
-        onClick = {
-            val route = screens[4].route.replace("{categoryId}","${duaCategoryData.id}")
-            navController.navigateToScreen(route)
-        }
+        onClick = onNavigate
     ) {
         Column(
             modifier = Modifier

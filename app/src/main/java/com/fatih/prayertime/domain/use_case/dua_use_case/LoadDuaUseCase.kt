@@ -4,5 +4,5 @@ import com.fatih.prayertime.domain.repository.LocalDataRepository
 import javax.inject.Inject
 
 class LoadDuaUseCase @Inject constructor(private val localDataRepository: LocalDataRepository) {
-    suspend operator fun invoke() = localDataRepository.loadDue()
+    suspend operator fun invoke() = localDataRepository.loadDua()
 }

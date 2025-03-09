@@ -39,8 +39,6 @@ import androidx.compose.ui.unit.dp
 import com.fatih.prayertime.R
 import com.fatih.prayertime.data.remote.dto.duadto.DuaCategoryDetail
 import kotlin.random.Random
-import androidx.hilt.navigation.compose.hiltViewModel
-import com.fatih.prayertime.presentation.dua_detail_screen.DuaDetailViewModel
 import com.fatih.prayertime.util.extensions.capitalizeFirstLetter
 import com.fatih.prayertime.util.composables.LoadingView
 import com.fatih.prayertime.util.composables.TitleView
@@ -49,14 +47,14 @@ import com.fatih.prayertime.util.composables.TitleView
 fun DuaDetailScreen(
     bottomPaddingValues: Dp,
     duaId: Int,
-    categoryIndex : Int,
+    categoryId : Int,
     viewModel: DuaViewModel
 ) {
     val duaDetail by viewModel.duaDetail.collectAsState()
     val isFavorite by viewModel.isFavorite.collectAsState()
 
     LaunchedEffect(duaId) {
-        viewModel.updateCategoryIndex(categoryIndex)
+        viewModel.updateDuaCategoryId(categoryId)
         viewModel.updateDuaId(duaId)
     }
 
@@ -80,7 +78,7 @@ fun DuaDetailScreen(
 }
 
 @Composable
-fun BoxScope.AddFavoriteFab(isFavorite: Boolean,viewModel: DuaDetailViewModel) {
+fun BoxScope.AddFavoriteFab(isFavorite: Boolean,viewModel: DuaViewModel) {
     val infiniteTransition = rememberInfiniteTransition()
 
     val fabButtonTransition = infiniteTransition.animateFloat(

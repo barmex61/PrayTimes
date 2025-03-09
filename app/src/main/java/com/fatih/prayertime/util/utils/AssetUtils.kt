@@ -2,7 +2,7 @@ package com.fatih.prayertime.util.utils
 
 import android.app.Application
 import android.content.res.AssetManager
-import com.fatih.prayertime.data.remote.dto.duadto.DuaCategory
+import com.fatih.prayertime.data.remote.dto.duadto.Dua
 import com.fatih.prayertime.domain.model.EsmaulHusna
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
@@ -14,9 +14,9 @@ object AssetUtils {
         return inputStream.bufferedReader().use { it.readText() }
     }
 
-    fun convertJsonToDuaCategory(jsonString: String): DuaCategory {
+    fun convertJsonToDuaCategory(jsonString: String): Dua {
         val gson = Gson()
-        val duaCategoriesType = object : TypeToken<DuaCategory>() {}.type
+        val duaCategoriesType = object : TypeToken<Dua>() {}.type
         return gson.fromJson(jsonString, duaCategoriesType)
     }
 

@@ -137,8 +137,9 @@ fun FavoritesScreen(
                                     },
                                     onItemClick = {
                                         if (favorite.type == FavoritesType.DUA.name) {
-                                            val subRoute = screens[7].route.replace("{duaId}","${favorite.itemId}")
-                                            val route = subRoute.replace("{categoryIndex}","${favorite.duaCategoryIndex}")
+                                            val subRoute = screens[7].route.replace("{duaId}","${favorite.duaId}")
+                                            val route = subRoute.replace("{categoryId}","${favorite.duaCategoryId}")
+                                            println(route)
                                             navController.navigateToScreen(route)
                                         }
                                         if(favorite.type == FavoritesType.HADIS.name){

@@ -25,7 +25,7 @@ class FavoritesRepositoryImpl @Inject constructor(
         favoritesDao.deleteFavorite(favorite)
     }
 
-    override suspend fun isFavorite(itemId: Int,itemType : String): Boolean {
+    override suspend fun isFavorite(itemId: Long,itemType : String): Boolean {
         return favoritesDao.isFavorite(itemId,itemType)
     }
 } 
