@@ -1,10 +1,8 @@
 package com.fatih.prayertime.data.settings
 
 import android.content.Context
-import android.util.Log
 
 import androidx.datastore.preferences.core.edit
-import com.fatih.prayertime.domain.model.GlobalAlarm
 
 import com.fatih.prayertime.domain.model.Settings
 import com.fatih.prayertime.util.utils.DataStoreUtils.SETTINGS_KEY

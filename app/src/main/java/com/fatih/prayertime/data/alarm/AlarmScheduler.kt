@@ -5,9 +5,8 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.util.Log
-import com.fatih.prayertime.R
 import com.fatih.prayertime.data.settings.SettingsDataStore
-import com.fatih.prayertime.domain.model.GlobalAlarm
+import com.fatih.prayertime.domain.model.PrayerAlarm
 import com.fatih.prayertime.domain.model.PrayTimes
 import com.fatih.prayertime.domain.use_case.formatted_use_cases.FormattedUseCase
 import com.fatih.prayertime.util.extensions.toPrayTimeList
@@ -26,36 +25,37 @@ class AlarmScheduler @Inject constructor(
 
     private val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
-    private fun schedulePrayAlarm(alarm: GlobalAlarm) {
+    private fun schedulePrayAlarm(prayerAlarm: PrayerAlarm) {
         val settings = runBlocking { settingsDataStore.settings.first() }
-        val muteAtFridayPrayer = settings.silenceWhenCuma && formattedUseCase.isFriday(alarm.alarmTimeString) && alarm.alarmType == PrayTimesString.Noon.name
+        val muteAtFridayPrayer = settings.silenceWhenCuma && formattedUseCase.isFriday(prayerAlarm.alarmTimeString) && prayerAlarm.alarmType == PrayTimesString.Noon.name
         val intent = Intent(context, AlarmReceiver::class.java).apply {
             putExtra("ALARM_TYPE",AlarmType.PRAY.name)
-            putExtra("ALARM_PRAY_TYPE", alarm.alarmType)
-            putExtra("ALARM_VIBRATION",settings.vibrationEnabled)
-            putExtra("ALARM_SOUND_URI",alarm.soundUri)
-            putExtra("ALARM_IS_SILENT",muteAtFridayPrayer)
+            putExtra("PRAY_TYPE", prayerAlarm.alarmType)
+            putExtra("VIBRATION",settings.vibrationEnabled)
+            putExtra("SOUND_URI",prayerAlarm.soundUri)
+            putExtra("IS_SILENT",muteAtFridayPrayer)
         }
         val pendingIntent = PendingIntent.getBroadcast(
             context,
-            alarm.alarmType.hashCode(),
+            prayerAlarm.alarmType.hashCode(),
             intent,
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
         alarmManager.setExactAndAllowWhileIdle(
             AlarmManager.RTC_WAKEUP,
-            alarm.alarmTime,
+            prayerAlarm.alarmTime,
             pendingIntent
         )
-        Log.d("AlarmScheduler", "Alarm set for ${alarm.alarmTimeString} muteAtFridayPrayer: $muteAtFridayPrayer")
+        Log.d("AlarmScheduler", "Alarm set for ${prayerAlarm.alarmTimeString} muteAtFridayPrayer: $muteAtFridayPrayer")
     }
 
     private fun scheduleStatisticsAlarm(alarmTime : Long,alarmDate : String,alarmType : String){
         val intent = Intent(context, AlarmReceiver::class.java).apply {
             putExtra("ALARM_TYPE",AlarmType.STATISTICS.name)
+            putExtra("PRAY_TYPE",alarmType)
+            putExtra("ALARM_DATE",alarmDate)
         }
-        intent.putExtra("ALARM_PRAY_TYPE",alarmType)
-        intent.putExtra("ALARM_PRAY_DATE",alarmDate)
+
         val pendingIntent = PendingIntent.getBroadcast(
             context,
             alarmTime.toInt(),
@@ -72,7 +72,7 @@ class AlarmScheduler @Inject constructor(
 
     }
 
-    private fun cancel(alarm: GlobalAlarm) {
+    private fun cancel(alarm: PrayerAlarm) {
         val intent = Intent(context, AlarmReceiver::class.java)
         val pendingIntent = PendingIntent.getBroadcast(
             context,
@@ -84,25 +84,32 @@ class AlarmScheduler @Inject constructor(
         alarmManager.cancel(pendingIntent)
     }
 
-    fun updatePrayAlarm(alarm: GlobalAlarm){
+    fun updatePrayAlarm(alarm: PrayerAlarm){
         if(alarm.isEnabled){
             if(alarm.alarmTime > System.currentTimeMillis()){
-                schedulePrayAlarm(alarm)
             }
+            schedulePrayAlarm(alarm)
+
         }else{
             cancel(alarm)
         }
     }
 
-    fun updateStatisticsAlarm(prayTimes: PrayTimes){
+    fun updateStatisticsAlarmForPrayTime(prayTimes: PrayTimes){
         val prayTimeList = prayTimes.toPrayTimeList(30)
         val prayTypeList = prayTimes.toPrayTypeList()
         prayTimeList.zip(prayTypeList).forEach { (prayTime,prayType) ->
             if(prayTime > System.currentTimeMillis()){
-                scheduleStatisticsAlarm(prayTime,prayTimes.date,prayType)
             }
+            println(prayType)
+            scheduleStatisticsAlarm(prayTime,prayTimes.date,prayType)
         }
     }
+
+    fun updateStatisticsAlarmForPrayType(prayTime: Long,alarmDate: String,alarmType: String){
+        scheduleStatisticsAlarm(alarmTime = prayTime, alarmDate = alarmDate, alarmType = alarmType)
+    }
+
 }
 
 

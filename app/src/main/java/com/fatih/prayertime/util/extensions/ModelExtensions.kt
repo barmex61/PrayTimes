@@ -51,7 +51,7 @@ fun PrayTimes.toList(): List<Pair<String, String>> = listOf(
     Pair(PrayTimesString.Night.name, this.night)
 )
 
-fun PrayTimes.toPrayTypeList() : List<String> = listOf(
+fun PrayTimes.toPrayTypeList(): List<String> = listOf(
     PrayTimesString.Morning.name,
     PrayTimesString.Noon.name,
     PrayTimesString.Afternoon.name,
@@ -67,7 +67,6 @@ fun PrayTimes.toPrayTimeList(offsetMinutes : Long? = null) : List<Long> = listOf
     formattedUseCase.formatHHMMtoLong(this.night,formattedUseCase.formatDDMMYYYYDateToLocalDate(this.date))+ if (offsetMinutes != null)  offsetMinutes * 1000L * 60L else 0L
 )
 
-fun String.timeToLong(formattedUseCase: FormattedUseCase,date: String) : Long = formattedUseCase.formatHHMMtoLong(this,formattedUseCase.formatDDMMYYYYDateToLocalDate(date))
 fun PrayTimes.toAddress(): Address = Address(
     latitude = this.latitude,
     longitude = this.longitude,
@@ -83,6 +82,26 @@ fun PrayTimes.localDateTime(time : String): LocalDateTime {
     return formattedUseCase.formatDDMMYYYYHHMMDateToLocalDateTime(localDateTimeStr)
 }
 
+fun PrayTimes.nextPrayTimeLong(currentPrayTime : String) : Long {
+    return when(currentPrayTime){
+        PrayTimesString.Morning.name ->{
+            formattedUseCase.formatHHMMtoLong(this.noon, formattedUseCase.formatDDMMYYYYDateToLocalDate(this.date))
+        }
+        PrayTimesString.Noon.name ->{
+            formattedUseCase.formatHHMMtoLong(this.afternoon, formattedUseCase.formatDDMMYYYYDateToLocalDate(this.date))
+        }
+        PrayTimesString.Afternoon.name ->{
+            formattedUseCase.formatHHMMtoLong(this.evening, formattedUseCase.formatDDMMYYYYDateToLocalDate(this.date))
+        }
+        PrayTimesString.Evening.name ->{
+            formattedUseCase.formatHHMMtoLong(this.night, formattedUseCase.formatDDMMYYYYDateToLocalDate(this.date))
+        }
+        PrayTimesString.Night.name ->{
+            formattedUseCase.formatHHMMtoLong(this.morning, formattedUseCase.formatDDMMYYYYDateToLocalDate(this.date))
+        }
+        else -> 0L
+    }
+}
 
 fun List<IslamicDaysDataDTO>.toIslamicDaysData(): List<IslamicDaysData> {
     if (this.isEmpty()) return emptyList()

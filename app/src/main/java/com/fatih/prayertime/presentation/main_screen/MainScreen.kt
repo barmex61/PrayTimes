@@ -98,7 +98,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.exyte.animatednavbar.utils.noRippleClickable
 import com.fatih.prayertime.R
-import com.fatih.prayertime.domain.model.GlobalAlarm
+import com.fatih.prayertime.domain.model.PrayerAlarm
 import com.fatih.prayertime.domain.model.PrayTimes
 import com.fatih.prayertime.presentation.main_activity.AppViewModel
 import com.fatih.prayertime.util.extensions.convertTimeToSeconds
@@ -156,7 +156,7 @@ fun MainScreen(appViewModel: AppViewModel, bottomPaddingValue : Dp, mainScreenVi
 
 @Composable
 fun GlobalAlarmsDialog(mainScreenViewModel: MainScreenViewModel, onDismiss: () -> Unit) {
-    val globalAlarmList by mainScreenViewModel.globalAlarmList.collectAsState()
+    val globalAlarmList by mainScreenViewModel.prayerAlarmList.collectAsState()
 
     Dialog(onDismissRequest = onDismiss) {
         Card(
@@ -459,7 +459,7 @@ fun PrayNotificationCompose(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
 
-                    val globalAlarmList by mainScreenViewModel.globalAlarmList.collectAsState()
+                    val globalAlarmList by mainScreenViewModel.prayerAlarmList.collectAsState()
                     println("globalAlarmList ${globalAlarmList?.size}")
                     if (globalAlarmList != null) {
                         globalAlarmList!!.forEachIndexed { index, globalAlarm ->
@@ -548,13 +548,13 @@ fun PrayNotificationCompose(
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
-fun AlarmComposable(globalAlarm: GlobalAlarm) {
+fun AlarmComposable(prayerAlarm: PrayerAlarm) {
 
     val iconColor = animateColorAsState(
-        targetValue = if (globalAlarm.isEnabled) MaterialTheme.colorScheme.primary else Color.Red,
+        targetValue = if (prayerAlarm.isEnabled) MaterialTheme.colorScheme.primary else Color.Red,
         animationSpec = tween(1000), label = ""
     )
-    val isChecked = rememberSaveable(globalAlarm.isEnabled) { globalAlarm.isEnabled }
+    val isChecked = rememberSaveable(prayerAlarm.isEnabled) { prayerAlarm.isEnabled }
     val iconDrawable = if (isChecked) painterResource(R.drawable.check_circle) else painterResource(R.drawable.cross_icon)
 
     AnimatedContent(
@@ -577,7 +577,7 @@ fun AlarmComposable(globalAlarm: GlobalAlarm) {
     }
 
     Text(
-        text = globalAlarm.alarmType,
+        text = prayerAlarm.alarmType,
         style = MaterialTheme.typography.titleSmall,
         maxLines = 1,
         softWrap = false,

@@ -7,7 +7,7 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.fatih.prayertime.di.WorkerLocation
 import com.fatih.prayertime.domain.model.Address
-import com.fatih.prayertime.domain.model.GlobalAlarm
+import com.fatih.prayertime.domain.model.PrayerAlarm
 import com.fatih.prayertime.domain.model.PrayTimes
 import com.fatih.prayertime.domain.use_case.alarm_use_cases.GetAllGlobalAlarmsUseCase
 import com.fatih.prayertime.domain.use_case.alarm_use_cases.UpdateGlobalAlarmUseCase
@@ -85,9 +85,9 @@ class AlarmWorker @AssistedInject constructor(
             val currentTimeInMillis = System.currentTimeMillis()
 
             // Get all global alarms
-            val globalAlarms: List<GlobalAlarm> = getAllGlobalAlarmsUseCase().first()
+            val prayerAlarms: List<PrayerAlarm> = getAllGlobalAlarmsUseCase().first()
 
-            val newGlobalAlarms = globalAlarms.map { alarm ->
+            val newGlobalAlarms = prayerAlarms.map { alarm ->
                 if (alarm.isEnabled){
                     //Alarm enabled
                     val prayTimes = getDailyPrayTimesWithAddressAndDateUseCase(lastKnownAddress,localDateString)?: return@map alarm
@@ -133,7 +133,7 @@ class AlarmWorker @AssistedInject constructor(
         }
     }
 
-    private fun setGlobalAlarm(alarm: GlobalAlarm, prayTimes: PrayTimes, localDateString: String): GlobalAlarm {
+    private fun setGlobalAlarm(alarm: PrayerAlarm, prayTimes: PrayTimes, localDateString: String): PrayerAlarm {
         val alarmTime = getAlarmTimeForPrayTimes(prayTimes, alarm.alarmType, alarm.alarmOffset,formattedUseCase)
         val alarmTimeInMillis = formattedUseCase.formatHHMMtoLongWithLocalDate(alarmTime,formattedUseCase.formatDDMMYYYYDateToLocalDate(localDateString))
         val alarmTimeString = formattedUseCase.formatLongToLocalDateTime(alarmTimeInMillis)

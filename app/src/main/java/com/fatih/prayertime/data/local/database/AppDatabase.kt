@@ -8,14 +8,14 @@ import com.fatih.prayertime.data.local.dao.PrayDao
 import com.fatih.prayertime.data.local.dao.PrayerStatisticsDao
 import com.fatih.prayertime.data.local.entity.FavoritesEntity
 import com.fatih.prayertime.data.local.entity.PrayerStatisticsEntity
-import com.fatih.prayertime.domain.model.GlobalAlarm
+import com.fatih.prayertime.domain.model.PrayerAlarm
 import com.fatih.prayertime.domain.model.PrayTimes
 
 @Database(
     entities = [
         FavoritesEntity::class,
         PrayerStatisticsEntity::class,
-        GlobalAlarm::class,
+        PrayerAlarm::class,
         PrayTimes::class
     ],
     version = 1,

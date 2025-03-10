@@ -16,4 +16,6 @@ fun String?.convertTimeToSeconds(): Int {
         }
     }
     return 0
-} 
+}
+
+fun Long.addMinutesToLong(minutes : Long) = this + (minutes * 60 * 1000)

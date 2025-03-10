@@ -5,6 +5,7 @@ import com.fatih.prayertime.data.remote.dto.hadithdto.HadithSectionInfo
 import com.fatih.prayertime.data.remote.dto.hadithdto.HadithSections
 import com.fatih.prayertime.data.remote.dto.hadithdto.Sections
 import com.fatih.prayertime.domain.model.HadithSectionData
+import com.fatih.prayertime.util.model.enums.FavoritesType
 import kotlin.reflect.KProperty1
 
 object HadithUtils {
@@ -50,5 +51,14 @@ object HadithUtils {
         } catch (e: Exception) {
             null
         }
+    }
+
+    fun generateFavoriteItemId(type: String, title: String, collectionPath: String?, sectionIndex: Int?, hadithIndex: Int?): Long {
+        val uniqueString = if (type == FavoritesType.HADIS.name && collectionPath != null && sectionIndex != null && hadithIndex != null) {
+            "$type-$collectionPath-$sectionIndex-$hadithIndex-$title"
+        } else {
+            "$type-$title"
+        }
+        return uniqueString.hashCode().toLong()
     }
 } 

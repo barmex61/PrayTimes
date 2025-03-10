@@ -13,11 +13,11 @@ import com.fatih.prayertime.domain.use_case.favorites_use_cases.IsFavoriteUseCas
 import com.fatih.prayertime.domain.use_case.favorites_use_cases.RemoveFavoriteUseCase
 import com.fatih.prayertime.domain.use_case.hadith_use_cases.GetHadithCollectionsUseCase
 import com.fatih.prayertime.domain.use_case.hadith_use_cases.GetHadithEditionsUseCase
-import com.fatih.prayertime.util.extensions.generateItemId
 import com.fatih.prayertime.util.model.enums.FavoritesType
 import com.fatih.prayertime.util.model.state.Resource
 import com.fatih.prayertime.util.model.state.Status
 import com.fatih.prayertime.util.utils.HadithUtils.combineSectionsAndDetails
+import com.fatih.prayertime.util.utils.HadithUtils.generateFavoriteItemId
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -107,7 +107,7 @@ class HadithViewModel @Inject constructor(
     val isFavorite = _isFavorite.asStateFlow()
 
     private fun checkIsFavorite() = viewModelScope.launch(Dispatchers.IO){
-        val id = generateItemId(
+        val id = generateFavoriteItemId(
             FavoritesType.HADIS.name,
             selectedHadith.value!!.text.substring(0,10),
             hadithCollectionPath.value,
@@ -118,7 +118,7 @@ class HadithViewModel @Inject constructor(
     }
 
     fun toggleFavorite(hadith: Hadith) = viewModelScope.launch(Dispatchers.IO){
-        val id = generateItemId(FavoritesType.HADIS.name, hadith.text.substring(0,10), hadithCollectionPath.value, selectedHadithSectionIndex.value, selectedHadithIndex.value)
+        val id = generateFavoriteItemId(FavoritesType.HADIS.name, hadith.text.substring(0,10), hadithCollectionPath.value, selectedHadithSectionIndex.value, selectedHadithIndex.value)
         if (_isFavorite.value) {
             removeFavoriteUseCase(
                 FavoritesEntity(

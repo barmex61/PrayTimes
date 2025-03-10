@@ -56,7 +56,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.fatih.prayertime.R
-import com.fatih.prayertime.domain.model.GlobalAlarm
+import com.fatih.prayertime.domain.model.PrayerAlarm
 import com.fatih.prayertime.domain.model.ThemeOption
 import com.fatih.prayertime.presentation.main_activity.AppViewModel
 import com.fatih.prayertime.util.model.enums.PrayTimesString
@@ -65,7 +65,7 @@ import com.fatih.prayertime.util.composables.TitleView
 @Composable
 fun SettingsScreen(bottomPaddingValue: Dp,appViewModel: AppViewModel = hiltViewModel()) {
     val showSelectedGlobalAlarmOffsetSelectionDialog = remember { mutableStateOf(false) }
-    val selectedGlobalAlarm = remember { mutableStateOf<GlobalAlarm?>(null) }
+    val selectedPrayerAlarm = remember { mutableStateOf<PrayerAlarm?>(null) }
     val uiSettings by appViewModel.settingsState.collectAsState()
     val scrollState = rememberScrollState()
 
@@ -79,7 +79,7 @@ fun SettingsScreen(bottomPaddingValue: Dp,appViewModel: AppViewModel = hiltViewM
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
             AlarmSettingsCard(uiSettings.prayerAlarms, appViewModel::togglePrayerNotification) { selectedAlarm ->
                 showSelectedGlobalAlarmOffsetSelectionDialog.value = true
-                selectedGlobalAlarm.value = selectedAlarm
+                selectedPrayerAlarm.value = selectedAlarm
             }
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
             OtherSettingsCard(uiSettings.silenceWhenCuma) { appViewModel.toggleCuma() }
@@ -90,7 +90,7 @@ fun SettingsScreen(bottomPaddingValue: Dp,appViewModel: AppViewModel = hiltViewM
             enter = fadeIn(tween(700)) + expandIn(tween(700),expandFrom = Alignment.Center),
             exit = fadeOut(tween(700)) + shrinkOut(tween(700),shrinkTowards = Alignment.Center),
             ) {
-            selectedGlobalAlarm.value?.let {
+            selectedPrayerAlarm.value?.let {
                 OffsetMinuteSelectionHeader (it){ showSelectedGlobalAlarmOffsetSelectionDialog.value = false }
             }
         }
@@ -154,9 +154,9 @@ fun NotificationSettingsCard(vibrationEnabled: Boolean, onToggleVibration: () ->
 
 @Composable
 fun AlarmSettingsCard(
-    prayerAlarms: List<GlobalAlarm>,
-    onToggle: (GlobalAlarm) -> Unit,
-    onMinuteToggle: (GlobalAlarm) -> Unit
+    prayerAlarms: List<PrayerAlarm>,
+    onToggle: (PrayerAlarm) -> Unit,
+    onMinuteToggle: (PrayerAlarm) -> Unit
 ) {
     Card(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
@@ -215,7 +215,7 @@ fun SwitchSettingItem(label: String, isChecked: Boolean, onCheckedChange: () -> 
 }
 
 @Composable
-fun PrayerNotificationSettings(prayerAlarms: List<GlobalAlarm>, onToggle: (GlobalAlarm) -> Unit,onMinuteToggle : (GlobalAlarm) -> Unit) {
+fun PrayerNotificationSettings(prayerAlarms: List<PrayerAlarm>, onToggle: (PrayerAlarm) -> Unit, onMinuteToggle : (PrayerAlarm) -> Unit) {
     Column(modifier = Modifier.padding(8.dp)) {
         prayerAlarms.forEach { alarm ->
             val alphaValue = if(alarm.isEnabled) 1f else 0.5f
@@ -249,7 +249,7 @@ fun PrayerNotificationSettings(prayerAlarms: List<GlobalAlarm>, onToggle: (Globa
 }
 
 @Composable
-fun OffsetMinuteSelectionHeader(selectedGlobalAlarm: GlobalAlarm, closeDialog : () -> Unit) {
+fun OffsetMinuteSelectionHeader(selectedPrayerAlarm: PrayerAlarm, closeDialog : () -> Unit) {
 
     println("recompose")
     Box(modifier = Modifier
@@ -265,17 +265,17 @@ fun OffsetMinuteSelectionHeader(selectedGlobalAlarm: GlobalAlarm, closeDialog : 
             .background(MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.9f))
             .padding(12.dp), contentAlignment = Alignment.Center){
             Column (horizontalAlignment = Alignment.CenterHorizontally){
-                OffsetMinuteSelectionCompose(selectedGlobalAlarm, closeDialog )
+                OffsetMinuteSelectionCompose(selectedPrayerAlarm, closeDialog )
             }
         }
     }
 }
 
 @Composable
-fun OffsetMinuteSelectionCompose(selectedGlobalAlarm: GlobalAlarm,closeDialog: () -> Unit) {
+fun OffsetMinuteSelectionCompose(selectedPrayerAlarm: PrayerAlarm, closeDialog: () -> Unit) {
     val settingsViewModel : SettingsScreenViewModel = hiltViewModel()
     val focusManager = LocalFocusManager.current
-    var newAlarmOffset by remember { mutableLongStateOf(selectedGlobalAlarm.alarmOffset) }
+    var newAlarmOffset by remember { mutableLongStateOf(selectedPrayerAlarm.alarmOffset) }
     Row (horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
         Button(
             shape = RoundedCornerShape(10.dp),
@@ -331,7 +331,7 @@ fun OffsetMinuteSelectionCompose(selectedGlobalAlarm: GlobalAlarm,closeDialog: (
             shape = RoundedCornerShape(10.dp),
             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.9f)),
             onClick = {
-                settingsViewModel.updateGlobalAlarm(selectedGlobalAlarm.copy(alarmOffset = newAlarmOffset),closeDialog)
+                settingsViewModel.updateGlobalAlarm(selectedPrayerAlarm.copy(alarmOffset = newAlarmOffset),closeDialog)
             }) {
             Text(
                 text = "Save",

@@ -5,20 +5,20 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
-import com.fatih.prayertime.domain.model.GlobalAlarm
+import com.fatih.prayertime.domain.model.PrayerAlarm
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface GlobalAlarmDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertGlobalAlarm(globalAlarm: GlobalAlarm)
+    suspend fun insertGlobalAlarm(prayerAlarm: PrayerAlarm)
 
     @Update
-    suspend fun updateGlobalAlarm(globalAlarm: GlobalAlarm)
+    suspend fun updateGlobalAlarm(prayerAlarm: PrayerAlarm)
 
-    @Query("SELECT * FROM GlobalAlarm WHERE alarmType = :alarmType")
-    suspend fun getGlobalAlarmByType(alarmType: String): GlobalAlarm?
+    @Query("SELECT * FROM PrayerAlarm WHERE alarmType = :alarmType")
+    suspend fun getGlobalAlarmByType(alarmType: String): PrayerAlarm?
 
-    @Query("SELECT * FROM GlobalAlarm")
-    fun getAllGlobalAlarms(): Flow<List<GlobalAlarm>>
+    @Query("SELECT * FROM PrayerAlarm")
+    fun getAllGlobalAlarms(): Flow<List<PrayerAlarm>>
 }

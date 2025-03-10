@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 
 @Entity
 @Serializable
-data class GlobalAlarm(
+data class PrayerAlarm(
     @PrimaryKey(autoGenerate = false)
     val alarmType: String,
     val alarmTime: Long,

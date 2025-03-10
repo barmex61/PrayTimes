@@ -1,6 +1,6 @@
 package com.fatih.prayertime.domain.use_case.alarm_use_cases
 
-import com.fatih.prayertime.domain.model.GlobalAlarm
+import com.fatih.prayertime.domain.model.PrayerAlarm
 import com.fatih.prayertime.domain.repository.AlarmDatabaseRepository
 import com.fatih.prayertime.util.model.enums.PrayTimesString
 import kotlinx.coroutines.flow.Flow
@@ -11,14 +11,14 @@ class GetAllGlobalAlarmsUseCase @Inject constructor(
     private val alarmDatabaseRepository: AlarmDatabaseRepository,
     private val insertGlobalAlarmUseCase: InsertGlobalAlarmUseCase
 ){
-    suspend operator fun invoke() : Flow<List<GlobalAlarm>>  {
+    suspend operator fun invoke() : Flow<List<PrayerAlarm>>  {
         val globalAlarms = alarmDatabaseRepository.getAllGlobalAlarms()
         println(globalAlarms.first())
         if (globalAlarms.first().isEmpty()) {
             val initialAlarms = PrayTimesString.entries.filterIndexed { index, _ ->
                 index <= 4
             }.map {
-                GlobalAlarm(
+                PrayerAlarm(
                     alarmType = it.name,
                     alarmTime = 0L,
                     alarmTimeString = "16-01-2025 00:00",

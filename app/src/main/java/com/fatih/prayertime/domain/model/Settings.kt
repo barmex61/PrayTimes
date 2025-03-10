@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 data class Settings(
     val selectedTheme: ThemeOption = ThemeOption.SYSTEM_DEFAULT,
     val vibrationEnabled: Boolean = true,
-    val prayerAlarms: List<GlobalAlarm> = mutableListOf(),
+    val prayerAlarms: List<PrayerAlarm> = mutableListOf(),
     val silenceWhenCuma : Boolean = true
 )
 

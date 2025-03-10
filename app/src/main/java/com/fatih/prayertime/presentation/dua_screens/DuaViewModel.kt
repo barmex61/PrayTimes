@@ -13,9 +13,9 @@ import com.fatih.prayertime.domain.use_case.dua_use_case.LoadDuaUseCase
 import com.fatih.prayertime.domain.use_case.favorites_use_cases.AddFavoriteUseCase
 import com.fatih.prayertime.domain.use_case.favorites_use_cases.IsFavoriteUseCase
 import com.fatih.prayertime.domain.use_case.favorites_use_cases.RemoveFavoriteUseCase
-import com.fatih.prayertime.util.extensions.generateItemId
 import com.fatih.prayertime.util.model.enums.FavoritesType
 import com.fatih.prayertime.util.model.state.Resource
+import com.fatih.prayertime.util.utils.HadithUtils.generateFavoriteItemId
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -52,13 +52,13 @@ class DuaViewModel @Inject constructor(
 
     private fun checkIsFavorite() = viewModelScope.launch(Dispatchers.IO){
         duaDetail.value ?: return@launch
-        val id = generateItemId(type = FavoritesType.DUA.name, title = duaDetail.value!!.titleTr,null,null,null)
+        val id = generateFavoriteItemId(type = FavoritesType.DUA.name, title = duaDetail.value!!.titleTr,null,null,null)
         _isFavorite.value = isFavoriteUseCase(id,FavoritesType.DUA.name)
     }
 
     fun toggleFavorite() = viewModelScope.launch(Dispatchers.IO){
         _duaDetail.value?.let { dua ->
-            val id = generateItemId(type = FavoritesType.DUA.name, title = dua.titleTr,null,null,null)
+            val id = generateFavoriteItemId(type = FavoritesType.DUA.name, title = dua.titleTr,null,null,null)
             if (_isFavorite.value) {
                 removeFavoriteUseCase(
                     FavoritesEntity(

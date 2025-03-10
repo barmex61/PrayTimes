@@ -4,7 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fatih.prayertime.di.MainScreenLocation
-import com.fatih.prayertime.domain.model.GlobalAlarm
+import com.fatih.prayertime.domain.model.PrayerAlarm
 import com.fatih.prayertime.domain.model.Address
 import com.fatih.prayertime.domain.model.PrayTimes
 import com.fatih.prayertime.domain.use_case.formatted_use_cases.FormattedUseCase
@@ -107,8 +107,8 @@ class MainScreenViewModel @Inject constructor(
 
    // Alarm--
 
-    private val _globalAlarmList : MutableStateFlow<List<GlobalAlarm>?> = MutableStateFlow(null)
-    val globalAlarmList : StateFlow<List<GlobalAlarm>?> = _globalAlarmList
+    private val _prayerAlarmList : MutableStateFlow<List<PrayerAlarm>?> = MutableStateFlow(null)
+    val prayerAlarmList : StateFlow<List<PrayerAlarm>?> = _prayerAlarmList
 
     fun updateGlobalAlarm(
         alarmType : String,
@@ -119,15 +119,15 @@ class MainScreenViewModel @Inject constructor(
     ) = viewModelScope.launch(Dispatchers.Default){
 
         try {
-            val globalAlarm = GlobalAlarm(alarmType,alarmTimeLong,alarmTimeString,isEnabled,alarmOffset)
-            updateGlobalAlarmUseCase(globalAlarm)
+            val prayerAlarm = PrayerAlarm(alarmType,alarmTimeLong,alarmTimeString,isEnabled,alarmOffset)
+            updateGlobalAlarmUseCase(prayerAlarm)
         }catch (e:Exception){
             Log.d(TAG,e.message?:"Error occurred while updating global alarm")
         }
     }
 
     fun updateAllGlobalAlarm(enableAllGlobalAlarm : Boolean) = viewModelScope.launch(Dispatchers.IO){
-        globalAlarmList.value?.forEach { globalAlarm ->
+        prayerAlarmList.value?.forEach { globalAlarm ->
             dailyPrayTimes.value.data?:return@launch
             val alarmTime = getAlarmTimeForPrayTimes(dailyPrayTimes.value.data!!,globalAlarm.alarmType,globalAlarm.alarmOffset,formattedUseCase)
             val alarmTimeLong = formattedUseCase.formatHHMMtoLong(alarmTime,formattedUseCase.formatDDMMYYYYDateToLocalDate(dailyPrayTimes.value.data!!.date))
@@ -176,7 +176,7 @@ class MainScreenViewModel @Inject constructor(
         viewModelScope.launch {
             launch {
                 getAllGlobalAlarmsUseCase().collect { globalAlarmList ->
-                    _globalAlarmList.emit(globalAlarmList)
+                    _prayerAlarmList.emit(globalAlarmList)
                 }
             }
             launch {
