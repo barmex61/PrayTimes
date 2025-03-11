@@ -44,7 +44,7 @@ class AlarmReceiver : BroadcastReceiver() {
 
     private fun showNotificationForPray(context: Context, prayType: String, enableVibration : Boolean, alarmSoundUri : Uri) {
         val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        deleteNotificationChannel(context)
+        deleteNotificationChannel(context,PRAY_CHANNEL_ID)
         val channel = NotificationChannel(
             PRAY_CHANNEL_ID,
             "Pray Notifications",
@@ -57,7 +57,6 @@ class AlarmReceiver : BroadcastReceiver() {
                 .build())
         }
         notificationManager.createNotificationChannel(channel)
-
 
         val activityIntent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
@@ -80,6 +79,7 @@ class AlarmReceiver : BroadcastReceiver() {
     private fun showNotificationForStatistics(context: Context, prayType: String, alarmDate : String){
         println("inside $prayType")
         val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        deleteNotificationChannel(context,STATISTICS_CHANNEL_ID)
         val channel = NotificationChannel(
             STATISTICS_CHANNEL_ID,
             "Statistics Notification",
@@ -130,9 +130,9 @@ class AlarmReceiver : BroadcastReceiver() {
         const val STATISTICS_CHANNEL_ID  ="statistics_channel"
     }
 
-    private fun deleteNotificationChannel(context: Context) {
+    private fun deleteNotificationChannel(context: Context,channelId : String) {
         val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        notificationManager.deleteNotificationChannel(PRAY_CHANNEL_ID)
+        notificationManager.deleteNotificationChannel(channelId)
 
     }
 }

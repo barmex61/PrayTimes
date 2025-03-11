@@ -10,8 +10,4 @@ class GetPrayerCountsUseCase @Inject constructor(
     fun getCompletedCount(): Flow<Int> {
         return repository.getCompletedPrayersCount()
     }
-
-    fun getOnTimeCount(): Flow<Int> {
-        return repository.getOnTimePrayersCount()
-    }
 } 

@@ -9,6 +9,8 @@ class GetStatisticsUseCase @Inject constructor(
     private val repository: PrayerStatisticsRepository
 ) {
     operator fun invoke(startDate: String, endDate: String): Flow<List<PrayerStatisticsEntity>> {
+        println(startDate)
+        println(endDate)
         return repository.getStatisticsBetweenDates(startDate, endDate)
     }
 } 

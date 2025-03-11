@@ -182,7 +182,7 @@ class MainScreenViewModel @Inject constructor(
             launch {
                 _dailyPrayTimes.collectLatest { resource ->
                     resource.data?.let { prayTimes ->
-                        updateStatisticsAlarmUseCase(prayTimes)
+                        updateStatisticsAlarmUseCase.updateStatisticsAlarms(prayTimes)
                     }
                 }
             }

@@ -363,7 +363,8 @@ fun ComponentActivity.UpdateSystemBars(isDarkMode: Boolean) {
 @Composable
 fun ScheduleAlarm(scheduleDailyAlarmUpdateUseCase: ScheduleDailyAlarmUpdateUseCase) {
     val context = LocalContext.current
-    scheduleDailyAlarmUpdateUseCase.execute(context)
+    scheduleDailyAlarmUpdateUseCase.executePrayAlarmWorker(context)
+    scheduleDailyAlarmUpdateUseCase.executeStatisticsAlarmWorker(context)
 }
 
 @Preview(showBackground = true)

@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import com.fatih.prayertime.R
 import com.fatih.prayertime.data.local.entity.PrayerStatisticsEntity
+import com.fatih.prayertime.domain.use_case.alarm_use_cases.UpdateStatisticsAlarmUseCase
 import com.fatih.prayertime.domain.use_case.formatted_use_cases.FormattedUseCase
 import com.fatih.prayertime.domain.use_case.location_use_cases.GetLastKnowAddressFromDatabaseUseCase
 import com.fatih.prayertime.domain.use_case.pray_times_use_cases.GetDailyPrayTimesWithAddressAndDateUseCase
@@ -31,7 +32,7 @@ class StatisticsReceiver : BroadcastReceiver() {
     @Inject
     lateinit var updateStatisticsUseCase: InsertPlayerStatisticsUseCase
     @Inject
-    lateinit var alarmScheduler: AlarmScheduler
+    lateinit var updateStatisticsAlarmUseCase: UpdateStatisticsAlarmUseCase
     @Inject
     lateinit var formattedUseCase: FormattedUseCase
     @Inject
@@ -57,10 +58,10 @@ class StatisticsReceiver : BroadcastReceiver() {
                 PrayerStatisticsEntity(id = statisticsId,prayerType = prayType, date = alarmDate, isCompleted = true)
             }
             context.getString(R.string.no) -> {
-                val nextAlarmTime = alarmTime.addMinutesToLong(1L)
+                val nextAlarmTime = alarmTime.addMinutesToLong(30L)
                 val nextPrayTime = prayTimes.nextPrayTimeLong(prayType)
                 if (nextAlarmTime < nextPrayTime){
-                    alarmScheduler.updateStatisticsAlarmForPrayType(nextAlarmTime,alarmDate,prayType)
+                    updateStatisticsAlarmUseCase.updateStatisticsAlarm(nextAlarmTime,alarmDate,prayType)
                 }
                 PrayerStatisticsEntity(id = statisticsId,prayerType = prayType, date = alarmDate, isCompleted = false)
             }

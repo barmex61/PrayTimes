@@ -5,5 +5,6 @@ import com.fatih.prayertime.domain.repository.AlarmDatabaseRepository
 import javax.inject.Inject
 
 class UpdateStatisticsAlarmUseCase @Inject constructor(private val alarmDatabaseRepository: AlarmDatabaseRepository) {
-    suspend operator fun invoke(prayTimes : PrayTimes) = alarmDatabaseRepository.updateStatisticsAlarm(prayTimes)
+    fun updateStatisticsAlarms(prayTimes : PrayTimes) = alarmDatabaseRepository.updateStatisticsAlarmForPrayTime(prayTimes)
+    fun updateStatisticsAlarm(prayTime: Long,alarmDate: String,alarmType: String) = alarmDatabaseRepository.updateStatisticsAlarmForPrayType(prayTime,alarmDate,alarmType)
 }

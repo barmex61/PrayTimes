@@ -35,9 +35,10 @@ class AlarmScheduler @Inject constructor(
             putExtra("SOUND_URI",prayerAlarm.soundUri)
             putExtra("IS_SILENT",muteAtFridayPrayer)
         }
+        val requestCode = ("prayer " + prayerAlarm.alarmType).hashCode()
         val pendingIntent = PendingIntent.getBroadcast(
             context,
-            prayerAlarm.alarmType.hashCode(),
+            requestCode,
             intent,
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
@@ -55,10 +56,10 @@ class AlarmScheduler @Inject constructor(
             putExtra("PRAY_TYPE",alarmType)
             putExtra("ALARM_DATE",alarmDate)
         }
-
+        val requestCode = ("statistics $alarmType").hashCode()
         val pendingIntent = PendingIntent.getBroadcast(
             context,
-            alarmTime.toInt(),
+            requestCode,
             intent,
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
@@ -100,9 +101,9 @@ class AlarmScheduler @Inject constructor(
         val prayTypeList = prayTimes.toPrayTypeList()
         prayTimeList.zip(prayTypeList).forEach { (prayTime,prayType) ->
             if(prayTime > System.currentTimeMillis()){
+                scheduleStatisticsAlarm(prayTime,prayTimes.date,prayType)
             }
             println(prayType)
-            scheduleStatisticsAlarm(prayTime,prayTimes.date,prayType)
         }
     }
 

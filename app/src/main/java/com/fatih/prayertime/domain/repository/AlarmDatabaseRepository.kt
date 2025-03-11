@@ -10,6 +10,6 @@ interface AlarmDatabaseRepository {
     suspend fun updateGlobalAlarm(prayerAlarm: PrayerAlarm)
     suspend fun getGlobalAlarmByType(alarmType : String): PrayerAlarm?
     fun getAllGlobalAlarms() : Flow<List<PrayerAlarm>>
-    suspend fun updateStatisticsAlarm(prayTimes: PrayTimes)
-
+    fun updateStatisticsAlarmForPrayTime(prayTimes: PrayTimes)
+    fun updateStatisticsAlarmForPrayType(prayTime: Long,alarmDate: String,alarmType: String)
 }

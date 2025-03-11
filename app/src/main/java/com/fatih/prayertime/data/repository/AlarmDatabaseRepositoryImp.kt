@@ -30,7 +30,15 @@ class AlarmDatabaseRepositoryImp @Inject constructor(
         return globalAlarmDao.getAllGlobalAlarms()
     }
 
-    override suspend fun updateStatisticsAlarm(prayTimes: PrayTimes) {
+    override fun updateStatisticsAlarmForPrayTime(prayTimes: PrayTimes) {
         alarmScheduler.updateStatisticsAlarmForPrayTime(prayTimes)
+    }
+
+    override  fun updateStatisticsAlarmForPrayType(
+        prayTime: Long,
+        alarmDate: String,
+        alarmType: String
+    ) {
+        alarmScheduler.updateStatisticsAlarmForPrayType(prayTime,alarmDate,alarmType)
     }
 }

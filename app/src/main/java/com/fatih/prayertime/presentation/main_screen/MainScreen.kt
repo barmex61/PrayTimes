@@ -722,11 +722,11 @@ fun PrayTimesRowHeader(dailyPrayTime : PrayTimes?) {
             if (dailyPrayTime != null){
                 val localDateTimeNow = LocalDateTime.now()
                 val index = when{
-                    localDateTimeNow.isBefore(dailyPrayTime.localDateTime(dailyPrayTime.morning)) -> 0
-                    localDateTimeNow.isBefore(dailyPrayTime.localDateTime(dailyPrayTime.noon)) -> 1
-                    localDateTimeNow.isBefore(dailyPrayTime.localDateTime(dailyPrayTime.afternoon)) -> 2
-                    localDateTimeNow.isBefore(dailyPrayTime.localDateTime(dailyPrayTime.evening)) -> 3
-                    localDateTimeNow.isBefore(dailyPrayTime.localDateTime(dailyPrayTime.night)) -> 4
+                    localDateTimeNow.isBefore(dailyPrayTime.localDateTime(dailyPrayTime.morning)) -> 4
+                    localDateTimeNow.isBefore(dailyPrayTime.localDateTime(dailyPrayTime.noon)) -> 0
+                    localDateTimeNow.isBefore(dailyPrayTime.localDateTime(dailyPrayTime.afternoon)) -> 1
+                    localDateTimeNow.isBefore(dailyPrayTime.localDateTime(dailyPrayTime.evening)) -> 2
+                    localDateTimeNow.isBefore(dailyPrayTime.localDateTime(dailyPrayTime.night)) -> 3
                     else -> 0
                 }
                 PrayTimesRow(dailyPrayTime, index)

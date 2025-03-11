@@ -108,6 +108,9 @@ dependencies {
     // Three-Ten
     implementation (libs.threetenabp)
 
+    //Chart
+    implementation ("io.github.ehsannarmani:compose-charts:0.1.2")
+
     //Widget-Glance
     implementation (libs.google.accompanist.swiperefresh)
     implementation (libs.androidx.glance.appwidget)
