@@ -50,7 +50,7 @@ class StatisticsViewModel @Inject constructor(
 
     val statistics = getStatisticsUseCase(
         formattedUseCase.formatOfPatternDDMMYYYY(LocalDate.now().minusWeeks(1).plusDays(1)),
-        formattedUseCase.formatOfPatternDDMMYYYY(LocalDate.now())
+        formattedUseCase.formatOfPatternDDMMYYYY(LocalDate.now().plusWeeks(2))
     ).stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),

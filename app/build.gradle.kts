@@ -110,6 +110,7 @@ dependencies {
 
     //Chart
     implementation ("io.github.ehsannarmani:compose-charts:0.1.2")
+    implementation("com.patrykandpatrick.vico:compose-m3:2.0.3")
 
     //Widget-Glance
     implementation (libs.google.accompanist.swiperefresh)

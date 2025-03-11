@@ -3,6 +3,7 @@ package com.fatih.prayertime.presentation.statistics_screen
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -23,6 +24,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
@@ -31,6 +33,35 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.fatih.prayertime.data.local.entity.PrayerStatisticsEntity
 import com.fatih.prayertime.util.composables.TitleView
 import com.fatih.prayertime.util.config.ThemeConfig.colors
+import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
+import com.patrykandpatrick.vico.compose.cartesian.axis.rememberBottom
+import com.patrykandpatrick.vico.compose.cartesian.axis.rememberStart
+import com.patrykandpatrick.vico.compose.cartesian.cartesianLayerPadding
+import com.patrykandpatrick.vico.compose.cartesian.layer.rememberColumnCartesianLayer
+import com.patrykandpatrick.vico.compose.cartesian.layer.stacked
+import com.patrykandpatrick.vico.compose.cartesian.marker.rememberDefaultCartesianMarker
+import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
+import com.patrykandpatrick.vico.compose.cartesian.rememberVicoZoomState
+import com.patrykandpatrick.vico.compose.common.component.rememberLineComponent
+import com.patrykandpatrick.vico.compose.common.component.rememberTextComponent
+import com.patrykandpatrick.vico.compose.common.component.shapeComponent
+import com.patrykandpatrick.vico.compose.common.fill
+import com.patrykandpatrick.vico.compose.common.insets
+import com.patrykandpatrick.vico.compose.common.rememberHorizontalLegend
+import com.patrykandpatrick.vico.core.cartesian.axis.HorizontalAxis
+import com.patrykandpatrick.vico.core.cartesian.axis.VerticalAxis
+import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModel
+import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
+import com.patrykandpatrick.vico.core.cartesian.data.CartesianValueFormatter
+import com.patrykandpatrick.vico.core.cartesian.data.ColumnCartesianLayerModel
+import com.patrykandpatrick.vico.core.cartesian.data.candlestickSeries
+import com.patrykandpatrick.vico.core.cartesian.data.columnSeries
+import com.patrykandpatrick.vico.core.cartesian.layer.ColumnCartesianLayer
+import com.patrykandpatrick.vico.core.cartesian.marker.DefaultCartesianMarker
+import com.patrykandpatrick.vico.core.common.LegendItem
+import com.patrykandpatrick.vico.core.common.component.TextComponent
+import com.patrykandpatrick.vico.core.common.data.ExtraStore
+import com.patrykandpatrick.vico.core.common.shape.CorneredShape
 import ir.ehsannarmani.compose_charts.ColumnChart
 import ir.ehsannarmani.compose_charts.PieChart
 import ir.ehsannarmani.compose_charts.models.BarProperties
@@ -44,6 +75,9 @@ import ir.ehsannarmani.compose_charts.models.LabelProperties
 import ir.ehsannarmani.compose_charts.models.LineProperties
 import ir.ehsannarmani.compose_charts.models.Pie
 import ir.ehsannarmani.compose_charts.models.PopupProperties
+import kotlinx.coroutines.runBlocking
+import java.text.DecimalFormat
+import kotlin.collections.forEachIndexed
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -123,7 +157,6 @@ fun StatisticsScreen(
         ) {
             StatisticsChart(
                 statistics = statistics,
-                statisticsSummary = statisticsSummary
             )
         }
 
@@ -235,23 +268,55 @@ fun StatisticsScreen(
 @Composable
 fun StatisticsChart(
     statistics: List<PrayerStatisticsEntity>,
-    statisticsSummary: StatisticsSummary
 ) {
     if (statistics.isEmpty()) return
     println("statistics ${statistics.size}")
     val primaryColor = MaterialTheme.colorScheme.primary
     val secondaryColor = MaterialTheme.colorScheme.secondary
-    val completedCount = statisticsSummary.completedPrayers
-    val unCompletedCount = statisticsSummary.missedPrayers
+    val dailyPrayerCounts = remember(statistics) {
+        statistics.groupBy { it.date }
+            .mapValues { (_, prayers) -> prayers.count { it.isCompleted } }
+            .toList()
+            .sortedBy { it.first }
+            .map { (date, count) ->
+                Bars(
+                    label = date.substring(0,5),
+                    values = listOf(
+                        Bars.Data(
+                            value = count.toDouble(),
+                            color = SolidColor(primaryColor)
+                        ),
+                        Bars.Data(
+                            value = 5.0 - count.toDouble(),
+                            color = SolidColor(secondaryColor)
+                        )
+                    )
+                )
+            }
+    }
+    val modelProducer = remember { CartesianChartModelProducer() }
+    // Use `runBlocking` only for previews, which don’t support asynchronous execution.
+    LaunchedEffect(Unit) {
+        modelProducer.runTransaction {
+            // Learn more: https://patrykandpatrick.com/eji9zq.
+            columnSeries { y.values.forEach { series(x, it) } }
+            extras { it[LegendLabelKey] = y.keys }
+        }
+    }
+
+    println(dailyPrayerCounts.size)
 
     Card(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
         elevation = CardDefaults.cardElevation(4.dp),
         shape = CardDefaults.elevatedShape,
     ) {
+
+        JetpackComposeDailyDigitalMediaUse(modelProducer)
+   /*
         ColumnChart(
             modifier = Modifier.fillMaxSize().padding(24.dp),
-            data = listOf() ,
+            data = dailyPrayerCounts ,
             indicatorProperties = HorizontalIndicatorProperties(
                 textStyle = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onPrimaryContainer),
                 indicators = listOf(5.0,4.0,3.0,2.0,1.0,0.0),
@@ -306,40 +371,11 @@ fun StatisticsChart(
             ),
             maxValue = 5.0,
             minValue = 0.0
-        )
+        )  */
     }
-    val errorColor = MaterialTheme.colorScheme.onError
-    var data by remember {
-        mutableStateOf(
-            listOf(
-                Pie(label = "Kılınan", data = completedCount.toDouble(), color = primaryColor, selectedColor = Color.Green),
-                Pie(label = "Kılınmayan", data = unCompletedCount.toDouble(), color = errorColor, selectedColor = Color.Blue),
-            )
-        )
-    }
-    PieChart(
-        modifier = Modifier.size(200.dp),
-        data = data,
-        onPieClick = {
-            println("${it.label} Clicked")
-            val pieIndex = data.indexOf(it)
-            data = data.mapIndexed { mapIndex, pie -> pie.copy(selected = pieIndex == mapIndex) }
-        },
-        selectedScale = 1.2f,
-        scaleAnimEnterSpec = spring<Float>(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessLow
-        ),
-        colorAnimEnterSpec = tween(300),
-        colorAnimExitSpec = tween(300),
-        scaleAnimExitSpec = tween(300),
-        spaceDegreeAnimExitSpec = tween(300),
-        style = Pie.Style.Fill
-    )
-
-
 
 }
+
 
 @Composable
 fun StatisticsCard(
@@ -374,4 +410,78 @@ fun StatisticsCard(
             )
         }
     }
+}
+private val LegendLabelKey = ExtraStore.Key<Set<String>>()
+private val YDecimalFormat = DecimalFormat("#.#")
+private val StartAxisValueFormatter = CartesianValueFormatter.decimal(YDecimalFormat)
+private val StartAxisItemPlacer = VerticalAxis.ItemPlacer.step({ 1.0 })
+private val MarkerValueFormatter = DefaultCartesianMarker.ValueFormatter.default(YDecimalFormat)
+
+@Composable
+private fun JetpackComposeDailyDigitalMediaUse(
+    modelProducer: CartesianChartModelProducer,
+    modifier: Modifier = Modifier,
+) {
+    val columnColors = listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.onError)
+    //alttaki kategorilerin rengi
+    val legendItemLabelComponent = rememberTextComponent(Color.Black)
+    CartesianChartHost(
+        chart =
+            rememberCartesianChart(
+                rememberColumnCartesianLayer(
+                    columnProvider =
+                        ColumnCartesianLayer.ColumnProvider.series(
+                            columnColors.map { color ->
+                                rememberLineComponent(fill = fill(color), thickness = 16.dp)
+                            }
+                        ),
+                    columnCollectionSpacing = 32.dp,
+                    mergeMode = { ColumnCartesianLayer.MergeMode.stacked() },
+                ),
+                startAxis =
+                    VerticalAxis.rememberStart(
+                        label = TextComponent(MaterialTheme.colorScheme.onPrimaryContainer.toArgb()),
+                        valueFormatter = StartAxisValueFormatter,
+                        itemPlacer = StartAxisItemPlacer,
+                    ),
+                bottomAxis =
+                    HorizontalAxis.rememberBottom(
+                        label = TextComponent(color = MaterialTheme.colorScheme.onPrimaryContainer.toArgb()),
+                        itemPlacer = remember { HorizontalAxis.ItemPlacer.segmented() }
+                    ),
+                marker = rememberDefaultCartesianMarker(label = rememberTextComponent(color = Color.Black), valueFormatter = MarkerValueFormatter),
+                layerPadding = { cartesianLayerPadding(scalableStart = 16.dp, scalableEnd = 16.dp) },
+                legend =
+                    rememberHorizontalLegend(
+                        items = { extraStore ->
+                            extraStore[LegendLabelKey].forEachIndexed { index, label ->
+                                add(
+                                    LegendItem(
+                                        shapeComponent(fill(columnColors[index]), CorneredShape.Pill),
+                                        legendItemLabelComponent,
+                                        label,
+                                    )
+                                )
+                            }
+                        },
+                        padding = insets(top = 16.dp),
+                    ),
+            ),
+        modelProducer = modelProducer,
+        modifier = modifier.height(256.dp),
+        zoomState = rememberVicoZoomState(zoomEnabled = true),
+    )
+}
+
+private val x = (2008..2018).toList()
+
+private val y =
+    mapOf(
+        "Kılınan" to listOf<Number>(2, 1, 4, 5, 0, 1, 3, 3, 2, 1, 4),
+        "Kılınmayan" to listOf(3, 4, 1, 0, 5, 4, 2, 2, 3, 4, 1),
+    )
+
+@Composable
+fun PreviewBox(content: @Composable BoxScope.() -> Unit) {
+    Box(modifier = Modifier.background(Color.White).padding(16.dp), content = content)
 }

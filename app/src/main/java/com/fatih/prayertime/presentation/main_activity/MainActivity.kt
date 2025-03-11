@@ -16,6 +16,36 @@ import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.layout.height
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
+
+import androidx.compose.ui.unit.dp
+import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
+import com.patrykandpatrick.vico.compose.cartesian.axis.rememberBottom
+import com.patrykandpatrick.vico.compose.cartesian.axis.rememberStart
+import com.patrykandpatrick.vico.compose.cartesian.cartesianLayerPadding
+import com.patrykandpatrick.vico.compose.cartesian.layer.rememberColumnCartesianLayer
+import com.patrykandpatrick.vico.compose.cartesian.layer.stacked
+import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
+import com.patrykandpatrick.vico.compose.cartesian.rememberVicoZoomState
+import com.patrykandpatrick.vico.compose.common.component.rememberLineComponent
+import com.patrykandpatrick.vico.compose.common.component.rememberTextComponent
+import com.patrykandpatrick.vico.compose.common.component.shapeComponent
+import com.patrykandpatrick.vico.compose.common.fill
+import com.patrykandpatrick.vico.compose.common.insets
+import com.patrykandpatrick.vico.compose.common.rememberHorizontalLegend
+import com.patrykandpatrick.vico.compose.common.vicoTheme
+import com.patrykandpatrick.vico.core.cartesian.axis.*
+import com.patrykandpatrick.vico.core.cartesian.data.*
+import com.patrykandpatrick.vico.core.cartesian.data.CartesianValueFormatter
+import com.patrykandpatrick.vico.core.cartesian.data.columnSeries
+import com.patrykandpatrick.vico.core.cartesian.layer.*
+import com.patrykandpatrick.vico.core.cartesian.marker.DefaultCartesianMarker
+import com.patrykandpatrick.vico.core.common.*
+
+import java.text.DecimalFormat
+import kotlinx.coroutines.runBlocking
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
@@ -25,7 +55,9 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -85,10 +117,59 @@ import com.fatih.prayertime.presentation.util_screen.UtilitiesScreen
 import com.fatih.prayertime.util.config.NavigationConfig.screens
 import com.fatih.prayertime.util.model.enums.PrayTimesString
 import com.google.accompanist.navigation.animation.AnimatedNavHost
+import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
+import com.patrykandpatrick.vico.compose.cartesian.axis.rememberBottom
+import com.patrykandpatrick.vico.compose.cartesian.axis.rememberStart
+import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
+import com.patrykandpatrick.vico.compose.common.component.rememberLineComponent
+import com.patrykandpatrick.vico.compose.common.component.rememberTextComponent
+import com.patrykandpatrick.vico.compose.common.component.shapeComponent
+import com.patrykandpatrick.vico.compose.common.insets
+import com.patrykandpatrick.vico.core.cartesian.axis.HorizontalAxis
+import com.patrykandpatrick.vico.core.cartesian.axis.VerticalAxis
+import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
+import com.patrykandpatrick.vico.core.cartesian.decoration.HorizontalLine
+import com.patrykandpatrick.vico.core.common.data.ExtraStore
+import com.patrykandpatrick.vico.core.common.shape.CorneredShape
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
+import androidx.compose.foundation.layout.height
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
+import androidx.compose.ui.graphics.toArgb
 
+import androidx.compose.ui.unit.dp
+import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
+import com.patrykandpatrick.vico.compose.cartesian.axis.rememberBottom
+import com.patrykandpatrick.vico.compose.cartesian.axis.rememberStart
+import com.patrykandpatrick.vico.compose.cartesian.layer.point
+import com.patrykandpatrick.vico.compose.cartesian.layer.rememberColumnCartesianLayer
+import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLine
+import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLineCartesianLayer
+import com.patrykandpatrick.vico.compose.cartesian.marker.rememberDefaultCartesianMarker
+import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
+import com.patrykandpatrick.vico.compose.cartesian.rememberVicoScrollState
+import com.patrykandpatrick.vico.compose.common.component.rememberLineComponent
+import com.patrykandpatrick.vico.compose.common.component.rememberShapeComponent
+import com.patrykandpatrick.vico.compose.common.component.rememberTextComponent
+import com.patrykandpatrick.vico.compose.common.component.shapeComponent
+import com.patrykandpatrick.vico.compose.common.fill
+import com.patrykandpatrick.vico.compose.common.insets
+import com.patrykandpatrick.vico.compose.common.rememberVerticalLegend
+import com.patrykandpatrick.vico.compose.common.shape.rounded
+import com.patrykandpatrick.vico.compose.common.vicoTheme
+import com.patrykandpatrick.vico.core.cartesian.axis.*
+import com.patrykandpatrick.vico.core.cartesian.data.columnSeries
+import com.patrykandpatrick.vico.core.cartesian.data.lineSeries
+import com.patrykandpatrick.vico.core.cartesian.decoration.*
+import com.patrykandpatrick.vico.core.cartesian.layer.ColumnCartesianLayer
+import com.patrykandpatrick.vico.core.cartesian.layer.LineCartesianLayer
+import com.patrykandpatrick.vico.core.common.LegendItem
+import com.patrykandpatrick.vico.core.common.Position
+import com.patrykandpatrick.vico.core.common.component.TextComponent
+import com.patrykandpatrick.vico.core.common.data.*
+import kotlinx.coroutines.runBlocking
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
@@ -367,10 +448,12 @@ fun ScheduleAlarm(scheduleDailyAlarmUpdateUseCase: ScheduleDailyAlarmUpdateUseCa
     scheduleDailyAlarmUpdateUseCase.executeStatisticsAlarmWorker(context)
 }
 
+
+
 @Preview(showBackground = true)
 @Composable
 fun GreetingPreview() {
-    PrayerTimeTheme(darkTheme = true) {
+    PrayerTimeTheme(darkTheme = false) {
 
     }
 
