@@ -1,83 +1,42 @@
 package com.fatih.prayertime.presentation.statistics_screen
 
-import androidx.compose.animation.*
-import androidx.compose.animation.core.*
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.fatih.prayertime.data.local.entity.PrayerStatisticsEntity
 import com.fatih.prayertime.util.composables.TitleView
-import com.fatih.prayertime.util.config.ThemeConfig.colors
-import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
-import com.patrykandpatrick.vico.compose.cartesian.axis.rememberBottom
-import com.patrykandpatrick.vico.compose.cartesian.axis.rememberStart
-import com.patrykandpatrick.vico.compose.cartesian.cartesianLayerPadding
-import com.patrykandpatrick.vico.compose.cartesian.layer.rememberColumnCartesianLayer
-import com.patrykandpatrick.vico.compose.cartesian.layer.stacked
-import com.patrykandpatrick.vico.compose.cartesian.marker.rememberDefaultCartesianMarker
-import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
-import com.patrykandpatrick.vico.compose.cartesian.rememberVicoZoomState
-import com.patrykandpatrick.vico.compose.common.component.rememberLineComponent
-import com.patrykandpatrick.vico.compose.common.component.rememberTextComponent
-import com.patrykandpatrick.vico.compose.common.component.shapeComponent
-import com.patrykandpatrick.vico.compose.common.fill
-import com.patrykandpatrick.vico.compose.common.insets
-import com.patrykandpatrick.vico.compose.common.rememberHorizontalLegend
-import com.patrykandpatrick.vico.core.cartesian.axis.HorizontalAxis
-import com.patrykandpatrick.vico.core.cartesian.axis.VerticalAxis
-import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModel
-import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
-import com.patrykandpatrick.vico.core.cartesian.data.CartesianValueFormatter
-import com.patrykandpatrick.vico.core.cartesian.data.ColumnCartesianLayerModel
-import com.patrykandpatrick.vico.core.cartesian.data.candlestickSeries
-import com.patrykandpatrick.vico.core.cartesian.data.columnSeries
-import com.patrykandpatrick.vico.core.cartesian.layer.ColumnCartesianLayer
-import com.patrykandpatrick.vico.core.cartesian.marker.DefaultCartesianMarker
-import com.patrykandpatrick.vico.core.common.LegendItem
-import com.patrykandpatrick.vico.core.common.component.TextComponent
-import com.patrykandpatrick.vico.core.common.data.ExtraStore
-import com.patrykandpatrick.vico.core.common.shape.CorneredShape
-import ir.ehsannarmani.compose_charts.ColumnChart
-import ir.ehsannarmani.compose_charts.PieChart
-import ir.ehsannarmani.compose_charts.models.BarProperties
-import ir.ehsannarmani.compose_charts.models.Bars
-import ir.ehsannarmani.compose_charts.models.DividerProperties
-import ir.ehsannarmani.compose_charts.models.GridProperties
-import ir.ehsannarmani.compose_charts.models.HorizontalIndicatorProperties
-import ir.ehsannarmani.compose_charts.models.IndicatorCount
-import ir.ehsannarmani.compose_charts.models.LabelHelperProperties
-import ir.ehsannarmani.compose_charts.models.LabelProperties
-import ir.ehsannarmani.compose_charts.models.LineProperties
-import ir.ehsannarmani.compose_charts.models.Pie
-import ir.ehsannarmani.compose_charts.models.PopupProperties
-import kotlinx.coroutines.runBlocking
-import java.text.DecimalFormat
 import kotlin.collections.forEachIndexed
+import com.fatih.prayertime.R
+import com.fatih.prayertime.util.model.state.StatisticsState
+import org.threeten.bp.LocalDate
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -85,180 +44,77 @@ fun StatisticsScreen(
     bottomPaddingValue: Dp,
     viewModel: StatisticsViewModel = hiltViewModel()
 ) {
-    val statistics by viewModel.statistics.collectAsState()
-    val statisticsSummary by viewModel.statisticsSummary.collectAsState()
+    val statisticsState by viewModel.statisticsState.collectAsState()
+    val context = LocalContext.current
+    val options = remember {
+        listOf(
+            context.getString(R.string.last_7_days),
+            context.getString(R.string.last_30_days),
+            context.getString(R.string.last_3_months),
+            context.getString(R.string.all_times)
+        )
+    }
+    val title = remember { context.getString(R.string.select_date_range) }
     var showDatePicker by remember { mutableStateOf(false) }
-    var selectedDateRange by remember { mutableStateOf("Son 7 Gün") }
+    var selectedDateRangeString by rememberSaveable { mutableStateOf(options[0]) }
+
     val scrollState = rememberScrollState()
+    val longestStreak by viewModel.longestSeries.collectAsState()
+
+    LaunchedEffect(selectedDateRangeString) {
+        val selectedDateRange = when(selectedDateRangeString){
+            options[0] -> LocalDate.now().minusWeeks(1)..LocalDate.now()
+            options[1] -> LocalDate.now().minusMonths(1)..LocalDate.now()
+            options[2] -> LocalDate.now().minusMonths(3)..LocalDate.now()
+            else -> LocalDate.now().minusYears(1)..LocalDate.now()
+        }
+        viewModel.updateDateRange(selectedDateRange)
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(bottom = bottomPaddingValue)
             .verticalScroll(scrollState)
     ) {
+        DateRangeCard(
+            selectedDateRange = selectedDateRangeString,
+            onDateRangeClick = { showDatePicker = true }
+        )
 
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
-            shape = RoundedCornerShape(16.dp),
-            elevation = CardDefaults.cardElevation(4.dp)
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = selectedDateRange,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-                FilledTonalIconButton(
-                    onClick = { showDatePicker = true }
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.DateRange,
-                        contentDescription = "Tarih Seç"
-                    )
-                }
-            }
-        }
+        // Başarı Kartı
+        SuccessCard(
+            completedPercentage = (statisticsState.completedPrayers.toFloat() / statisticsState.totalPrayers.toFloat() * 100).toInt(),
+            longestStreak = longestStreak // Bu değer viewModel'dan gelmeli
+        )
 
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            StatisticsCard(
-                title = "Toplam Kılınan",
-                value = statisticsSummary.completedPrayers.toString(),
-                modifier = Modifier.weight(1f)
-            )
-            StatisticsCard(
-                title = "Kaçırılan",
-                value = statisticsSummary.missedPrayers.toString(),
-                modifier = Modifier.weight(1f)
-            )
-        }
-
-
-
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f)
-                .padding(16.dp)
-        ) {
-            StatisticsChart(
-                statistics = statistics,
-            )
-        }
-
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
-            shape = RoundedCornerShape(16.dp),
-            elevation = CardDefaults.cardElevation(4.dp)
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        text = "Başlangıç",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                    Text(
-                        text = statisticsSummary.startDate,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                }
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        text = "Bitiş",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                    Text(
-                        text = statisticsSummary.endDate,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                }
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        text = "Toplam Namaz",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                    Text(
-                        text = statisticsSummary.totalPrayers.toString(),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                }
-            }
-        }
+        StatisticsSummaryRow(statisticsState = statisticsState)
+        
+        Spacer(modifier = Modifier.height(8.dp))
+        
+        // Namaz Vakti Filtreleme
+        PrayerTimeFilterChips()
+        
+        Spacer(modifier = Modifier.height(8.dp))
+        
+        StatisticsChart(statistics = statisticsState.statistics)
+        
+        // Detaylı Namaz İstatistikleri
+        DetailedPrayerStatistics()
+        
+        StatisticsDetailsCard(statisticsState = statisticsState)
     }
 
-    // Tarih seçici dialog
     if (showDatePicker) {
-        AlertDialog(
+        DateRangePickerDialog(
+            selectedDateRange = selectedDateRangeString,
+            onDateRangeSelected = { range ->
+                selectedDateRangeString = range
+                showDatePicker = false
+            },
             onDismissRequest = { showDatePicker = false },
-            title = {
-                Text(
-                    text = "Tarih Aralığı Seç",
-                    style = MaterialTheme.typography.titleLarge
-                )
-            },
-            text = {
-                Column {
-                    listOf(
-                        "Son 7 Gün",
-                        "Son 30 Gün",
-                        "Son 3 Ay",
-                        "Tüm Zamanlar"
-                    ).forEach { range ->
-                        ListItem(
-                            headlineContent = { Text(range) },
-                            modifier = Modifier.clickable {
-                                selectedDateRange = range
-                                showDatePicker = false
-                                // TODO: viewModel'e seçilen aralığı gönder
-                            }
-                        )
-                    }
-                }
-            },
-            confirmButton = {},
-            dismissButton = {
-                TextButton(onClick = { showDatePicker = false }) {
-                    Text("İptal")
-                }
-            }
+            title = title,
+            options = options
         )
     }
 
@@ -266,116 +122,382 @@ fun StatisticsScreen(
 }
 
 @Composable
+fun DateRangeCard(selectedDateRange: String, onDateRangeClick: () -> Unit) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(4.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = selectedDateRange,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onPrimaryContainer
+            )
+            FilledTonalIconButton(onClick = onDateRangeClick) {
+                Icon(
+                    imageVector = Icons.Default.DateRange,
+                    contentDescription = "Tarih Seç"
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun StatisticsSummaryRow(statisticsState: StatisticsState) {
+    val completedText = stringResource(R.string.completed_pray)
+    val missedText = stringResource(R.string.missed_pray)
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        StatisticsCard(
+            title = completedText,
+            value = statisticsState.completedPrayers.toString(),
+            modifier = Modifier.weight(1f)
+        )
+        StatisticsCard(
+            title = missedText,
+            value = statisticsState.missedPrayers.toString(),
+            modifier = Modifier.weight(1f)
+        )
+    }
+}
+
+@Composable
+fun StatisticsDetailsCard(statisticsState: StatisticsState) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(4.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            StatisticsDetailRow(label = stringResource(R.string.start_date), value = statisticsState.startDate)
+            StatisticsDetailRow(label = stringResource(R.string.end_date), value = statisticsState.endDate)
+            StatisticsDetailRow(label = stringResource(R.string.total_prayer), value = statisticsState.totalPrayers.toString())
+        }
+    }
+}
+
+@Composable
+fun StatisticsDetailRow(label: String, value: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onPrimaryContainer
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onPrimaryContainer
+        )
+    }
+}
+
+@Composable
+fun DateRangePickerDialog(
+    selectedDateRange: String,
+    onDateRangeSelected: (String) -> Unit,
+    onDismissRequest: () -> Unit,
+    title: String,
+    options : List<String>
+) {
+
+    val (selectedOption, onOptionSelected) = rememberSaveable { mutableStateOf(selectedDateRange) }
+
+    AlertDialog(
+        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+        onDismissRequest = onDismissRequest,
+        title = {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleLarge
+            )
+        },
+        text = {
+            Column {
+                options.forEach { range ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                onOptionSelected(range)
+                                onDateRangeSelected(range)
+                            }
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(
+                            selected = (range == selectedOption),
+                            onClick = {
+                                onOptionSelected(range)
+                                onDateRangeSelected(range)
+                            }
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = range,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {},
+        dismissButton = {
+            TextButton(onClick = onDismissRequest) {
+                Text("İptal")
+            }
+        }
+    )
+}
+
+@Composable
 fun StatisticsChart(
     statistics: List<PrayerStatisticsEntity>,
 ) {
     if (statistics.isEmpty()) return
-    println("statistics ${statistics.size}")
-    val primaryColor = MaterialTheme.colorScheme.primary
-    val secondaryColor = MaterialTheme.colorScheme.secondary
-    val dailyPrayerCounts = remember(statistics) {
-        statistics.groupBy { it.date }
-            .mapValues { (_, prayers) -> prayers.count { it.isCompleted } }
-            .toList()
-            .sortedBy { it.first }
-            .map { (date, count) ->
-                Bars(
-                    label = date.substring(0,5),
-                    values = listOf(
-                        Bars.Data(
-                            value = count.toDouble(),
-                            color = SolidColor(primaryColor)
-                        ),
-                        Bars.Data(
-                            value = 5.0 - count.toDouble(),
-                            color = SolidColor(secondaryColor)
-                        )
-                    )
-                )
-            }
-    }
-    val modelProducer = remember { CartesianChartModelProducer() }
-    // Use `runBlocking` only for previews, which don’t support asynchronous execution.
-    LaunchedEffect(Unit) {
-        modelProducer.runTransaction {
-            // Learn more: https://patrykandpatrick.com/eji9zq.
-            columnSeries { y.values.forEach { series(x, it) } }
-            extras { it[LegendLabelKey] = y.keys }
-        }
-    }
 
-    println(dailyPrayerCounts.size)
+    val primaryColor = MaterialTheme.colorScheme.primary
+    val onPrimaryContainer = MaterialTheme.colorScheme.onPrimaryContainer
+    val onError = MaterialTheme.colorScheme.onError
+    val dailyPrayerPairs = remember(statistics) {
+        statistics.groupBy { it.date }
+            .map { (date, prayerStatistics) ->
+                date to prayerStatistics.count { it.isCompleted }
+            }
+            .sortedBy { it.first }
+    }
+    val dateList = dailyPrayerPairs.map { it.first }
+    val completedPrayerList: List<Number> = dailyPrayerPairs.map { it.second }
+    val notCompletedPrayerList: List<Int> = completedPrayerList.map { 5 - it.toInt() }
 
     Card(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
         elevation = CardDefaults.cardElevation(4.dp),
         shape = CardDefaults.elevatedShape,
+        modifier = Modifier
+            .fillMaxWidth()
+            .requiredHeight(400.dp)
+            .padding(8.dp)
     ) {
-
-        JetpackComposeDailyDigitalMediaUse(modelProducer)
-   /*
-        ColumnChart(
-            modifier = Modifier.fillMaxSize().padding(24.dp),
-            data = dailyPrayerCounts ,
-            indicatorProperties = HorizontalIndicatorProperties(
-                textStyle = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onPrimaryContainer),
-                indicators = listOf(5.0,4.0,3.0,2.0,1.0,0.0),
-                count = IndicatorCount.StepBased(1.0),
-                contentBuilder = { value ->
-                    value.toInt().toString()
+        Box(modifier = Modifier.fillMaxSize().padding(top = 16.dp, end = 16.dp, bottom = 16.dp)) {
+            val scrollState = rememberScrollState()
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .horizontalScroll(scrollState)
+            ) {
+                val modifier = if (dateList.size > 7) {
+                    Modifier.width((dateList.size * 160).dp)
+                } else {
+                    Modifier.fillMaxWidth(1f)
                 }
-            ),
-            labelProperties = LabelProperties(
-                textStyle = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onPrimaryContainer),
-                enabled = true
-            ),
-            dividerProperties = DividerProperties(
-                xAxisProperties = LineProperties(
-                    color = SolidColor(MaterialTheme.colorScheme.onPrimaryContainer),
-                    thickness = 1.dp
-                ),
-                yAxisProperties = LineProperties(
-                    color = SolidColor(MaterialTheme.colorScheme.onPrimaryContainer),
-                    thickness = 1.dp
-                )
+                Canvas(
+                    modifier = modifier
+                        .fillMaxHeight()
+                ) {
 
-            ),
-            gridProperties = GridProperties(
-                xAxisProperties = GridProperties.AxisProperties(
-                    color = SolidColor(MaterialTheme.colorScheme.onPrimaryContainer),
-                    thickness = 0.5.dp
-                ),
-                yAxisProperties = GridProperties.AxisProperties(
-                    color = SolidColor(MaterialTheme.colorScheme.onPrimaryContainer),
-                    thickness = 0.5.dp
-                )
-            ),
-            popupProperties = PopupProperties(
-                contentBuilder = { value ->
-                    value.toInt().toString()
-                },
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                textStyle = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onPrimaryContainer)
-            ),
-            labelHelperProperties = LabelHelperProperties(
-                textStyle = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onPrimaryContainer),
-            ),
-            barProperties = BarProperties(
-                cornerRadius = Bars.Data.Radius.Rectangle(topRight = 6.dp, topLeft = 6.dp),
-                spacing = 2.dp,
-                thickness = 18.dp
-            ),
-            animationSpec = spring(
-                dampingRatio = Spring.DampingRatioMediumBouncy,
-                stiffness = Spring.StiffnessLow
-            ),
-            maxValue = 5.0,
-            minValue = 0.0
-        )  */
+                    val width = size.width
+                    val height = size.height
+                    val padding = 100f
+                    val chartWidth = width - (padding * 2)
+                    val chartHeight = height - (padding * 2)
+                    val arrowOffset = 95f // Okun yukarı kaydırılma miktarı
+                    // Sütunlar ve değerler
+                    val columnWidth = 70f
+                    val spacing = 80f // Tarihler arası boşluk
+
+                    // Y ekseni değerleri (0-5)
+                    for (i in 0..5) {
+                        val y = height - padding - (chartHeight * i / 5)
+                        drawLine(
+                            color = primaryColor.copy(alpha = 0.3f),
+                            start = Offset(padding, y),
+                            end = Offset(width - padding, y),
+                            strokeWidth = 5f
+                        )
+                        drawContext.canvas.nativeCanvas.apply {
+                            drawText(
+                                i.toString(),
+                                padding - 45f,
+                                y + 12f,
+                                android.graphics.Paint().apply {
+                                    color = onPrimaryContainer.toArgb()
+                                    textSize = 40f
+                                }
+                            )
+                        }
+                    }
+
+                    dateList.forEachIndexed { index, date ->
+                        val x = padding + 40f+ (index * (columnWidth * 2 + spacing))
+
+                        // Kılınan namazlar (yeşil)
+                        val completedHeight = chartHeight * (completedPrayerList[index].toFloat() / 5)
+                        drawRect(
+                            color = primaryColor,
+                            topLeft = Offset(x, height - padding - completedHeight),
+                            size = Size(columnWidth, completedHeight)
+                        )
+
+                        // Kaçırılan namazlar (kırmızı)
+                        val notCompletedHeight = chartHeight * (notCompletedPrayerList[index].toFloat() / 5)
+                        drawRect(
+                            color = onError,
+                            topLeft = Offset(x + columnWidth, height - padding - notCompletedHeight),
+                            size = Size(columnWidth, notCompletedHeight)
+                        )
+
+                        // Değerleri göster
+                        drawContext.canvas.nativeCanvas.apply {
+                            // Kılınan namaz sayısı
+                            drawText(
+                                completedPrayerList[index].toString(),
+                                x + columnWidth / 2 - 12f,
+                                height - padding - completedHeight - 16f,
+                                android.graphics.Paint().apply {
+                                    color = primaryColor.toArgb()
+                                    textSize = 36f
+                                    isFakeBoldText = true
+                                }
+                            )
+                            // Kaçırılan namaz sayısı
+                            drawText(
+                                notCompletedPrayerList[index].toString(),
+                                x + columnWidth * 1.5f - 12f,
+                                height - padding - notCompletedHeight - 16f,
+                                android.graphics.Paint().apply {
+                                    color = onError.toArgb()
+                                    textSize = 36f
+                                    isFakeBoldText = true
+                                }
+                            )
+                            // Tarih
+                            val dateText = "day"
+                            drawText(
+                                dateText,
+                                x + columnWidth - 25f,
+                                height - padding + 45f,
+                                android.graphics.Paint().apply {
+                                    color = onPrimaryContainer.toArgb()
+                                    textSize = 40f
+                                    isFakeBoldText = true
+                                }
+                            )
+                        }
+                    }
+
+                    // Y ekseni çizgisi ve oku
+                    drawLine(
+                        color = onPrimaryContainer,
+                        start = Offset(padding, padding -arrowOffset),
+                        end = Offset(padding, height - padding),
+                        strokeWidth = 5f
+                    )
+                    // Y ekseni oku
+                    val arrowSize = 30f
+                    val arrowPath = Path().apply {
+                        moveTo(padding, padding - arrowOffset)
+                        lineTo(padding - arrowSize, padding + arrowSize - arrowOffset)
+                        lineTo(padding + arrowSize, padding + arrowSize - arrowOffset)
+                        close()
+                    }
+                    drawPath(
+                        path = arrowPath,
+                        color = onPrimaryContainer
+                    )
+
+                    // X ekseni çizgisi ve oku
+                    drawLine(
+                        color = onPrimaryContainer,
+                        start = Offset(padding, height - padding),
+                        end = Offset(width - padding, height - padding),
+                        strokeWidth = 5f
+                    )
+                    // X ekseni oku
+                    val xArrowPath = Path().apply {
+                        moveTo(width - padding, height - padding)
+                        lineTo(width - padding - arrowSize, height - padding - arrowSize)
+                        lineTo(width - padding - arrowSize, height - padding + arrowSize)
+                        close()
+                    }
+                    drawPath(
+                        path = xArrowPath,
+                        color = onPrimaryContainer
+                    )
+
+
+                }
+            }
+
+            // Legend
+            Row(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(horizontal = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(24.dp)
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(18.dp)
+                            .background(primaryColor)
+                    )
+                    Text(
+                        text = stringResource(R.string.completed_pray),
+                        style = MaterialTheme.typography.titleSmall,
+                        color = primaryColor
+                    )
+                }
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(18.dp)
+                            .background(onError)
+                    )
+                    Text(
+                        text = stringResource(R.string.missed_pray),
+                        style = MaterialTheme.typography.titleSmall,
+                        color = onError
+                    )
+                }
+            }
+        }
     }
-
 }
-
 
 @Composable
 fun StatisticsCard(
@@ -411,77 +533,196 @@ fun StatisticsCard(
         }
     }
 }
-private val LegendLabelKey = ExtraStore.Key<Set<String>>()
-private val YDecimalFormat = DecimalFormat("#.#")
-private val StartAxisValueFormatter = CartesianValueFormatter.decimal(YDecimalFormat)
-private val StartAxisItemPlacer = VerticalAxis.ItemPlacer.step({ 1.0 })
-private val MarkerValueFormatter = DefaultCartesianMarker.ValueFormatter.default(YDecimalFormat)
 
 @Composable
-private fun JetpackComposeDailyDigitalMediaUse(
-    modelProducer: CartesianChartModelProducer,
-    modifier: Modifier = Modifier,
-) {
-    val columnColors = listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.onError)
-    //alttaki kategorilerin rengi
-    val legendItemLabelComponent = rememberTextComponent(Color.Black)
-    CartesianChartHost(
-        chart =
-            rememberCartesianChart(
-                rememberColumnCartesianLayer(
-                    columnProvider =
-                        ColumnCartesianLayer.ColumnProvider.series(
-                            columnColors.map { color ->
-                                rememberLineComponent(fill = fill(color), thickness = 16.dp)
-                            }
-                        ),
-                    columnCollectionSpacing = 32.dp,
-                    mergeMode = { ColumnCartesianLayer.MergeMode.stacked() },
-                ),
-                startAxis =
-                    VerticalAxis.rememberStart(
-                        label = TextComponent(MaterialTheme.colorScheme.onPrimaryContainer.toArgb()),
-                        valueFormatter = StartAxisValueFormatter,
-                        itemPlacer = StartAxisItemPlacer,
-                    ),
-                bottomAxis =
-                    HorizontalAxis.rememberBottom(
-                        label = TextComponent(color = MaterialTheme.colorScheme.onPrimaryContainer.toArgb()),
-                        itemPlacer = remember { HorizontalAxis.ItemPlacer.segmented() }
-                    ),
-                marker = rememberDefaultCartesianMarker(label = rememberTextComponent(color = Color.Black), valueFormatter = MarkerValueFormatter),
-                layerPadding = { cartesianLayerPadding(scalableStart = 16.dp, scalableEnd = 16.dp) },
-                legend =
-                    rememberHorizontalLegend(
-                        items = { extraStore ->
-                            extraStore[LegendLabelKey].forEachIndexed { index, label ->
-                                add(
-                                    LegendItem(
-                                        shapeComponent(fill(columnColors[index]), CorneredShape.Pill),
-                                        legendItemLabelComponent,
-                                        label,
-                                    )
-                                )
-                            }
-                        },
-                        padding = insets(top = 16.dp),
-                    ),
-            ),
-        modelProducer = modelProducer,
-        modifier = modifier.height(256.dp),
-        zoomState = rememberVicoZoomState(zoomEnabled = true),
-    )
+fun SuccessCard(completedPercentage: Int, longestStreak: Int) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer
+        ),
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(4.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Text(
+                text = "Başarı Durumu",
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onPrimaryContainer
+            )
+            
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "$completedPercentage%",
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Text(
+                        text = "Tamamlama",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                }
+                
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "$longestStreak gün",
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Text(
+                        text = "En Uzun Seri",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                }
+            }
+            
+            // Motivasyon Mesajı
+            Text(
+                text = getMotivationMessage(completedPercentage),
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(top = 8.dp)
+            )
+        }
+    }
 }
 
-private val x = (2008..2018).toList()
+@Composable
+fun PrayerTimeFilterChips() {
+    val prayerTimes = listOf("Tümü", "Sabah", "Öğle", "İkindi", "Akşam", "Yatsı")
+    var selectedFilter by remember { mutableStateOf("Tümü") }
+    
+    LazyRow(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
 
-private val y =
-    mapOf(
-        "Kılınan" to listOf<Number>(2, 1, 4, 5, 0, 1, 3, 3, 2, 1, 4),
-        "Kılınmayan" to listOf(3, 4, 1, 0, 5, 4, 2, 2, 3, 4, 1),
-    )
+        items(prayerTimes) { prayerTime ->
+            FilterChip(
+                selected = selectedFilter == prayerTime,
+                onClick = { selectedFilter = prayerTime },
+                label = { Text(prayerTime) },
+                colors = FilterChipDefaults.filterChipColors(
+                    selectedContainerColor = MaterialTheme.colorScheme.primary,
+                    selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+                )
+            )
+        }
+    }
+}
 
 @Composable
-fun PreviewBox(content: @Composable BoxScope.() -> Unit) {
-    Box(modifier = Modifier.background(Color.White).padding(16.dp), content = content)
+fun DetailedPrayerStatistics() {
+    var expandedState by remember { mutableStateOf(false) }
+    
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp)
+            .animateContentSize(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer
+        ),
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(4.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { expandedState = !expandedState },
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Detaylı İstatistikler",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+                Icon(
+                    imageVector = if (expandedState) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                    contentDescription = "Detayları Göster/Gizle",
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            }
+            
+            if (expandedState) {
+                Spacer(modifier = Modifier.height(16.dp))
+                DetailedPrayerRow("Sabah", 85)
+                DetailedPrayerRow("Öğle", 90)
+                DetailedPrayerRow("İkindi", 88)
+                DetailedPrayerRow("Akşam", 95)
+                DetailedPrayerRow("Yatsı", 87)
+            }
+        }
+    }
+}
+
+@Composable
+fun DetailedPrayerRow(prayerName: String, percentage: Int) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = prayerName,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onPrimaryContainer
+            )
+            Text(
+                text = "%$percentage",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.primary
+            )
+        }
+        LinearProgressIndicator(
+            progress = percentage / 100f,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(8.dp)
+                .padding(top = 4.dp),
+            color = MaterialTheme.colorScheme.primary,
+            trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+        )
+    }
+}
+
+private fun getMotivationMessage(percentage: Int): String {
+    return when {
+        percentage >= 90 -> "Mükemmel! Harika bir istatistik yakaladınız! 🌟"
+        percentage >= 70 -> "Çok iyi gidiyorsunuz! Böyle devam edin! 💪"
+        percentage >= 50 -> "İyi gidiyorsunuz, daha da iyisini yapabilirsiniz! 🌱"
+        else -> "Her yeni gün yeni bir başlangıç! 🌅"
+    }
 }

@@ -9,5 +9,6 @@ data class PrayerStatisticsEntity(
     val id: Int,
     val prayerType: String,
     val date: String,
+    val dateLong: Long,
     val isCompleted: Boolean,
 )

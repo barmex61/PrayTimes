@@ -55,7 +55,7 @@ class StatisticsReceiver : BroadcastReceiver() {
         val statisticsId = generateStatisticsId(prayType,alarmDate)
         val statisticsEntity = when (action) {
             context.getString(R.string.yes) -> {
-                PrayerStatisticsEntity(id = statisticsId,prayerType = prayType, date = alarmDate, isCompleted = true)
+                PrayerStatisticsEntity(id = statisticsId,prayerType = prayType, date = alarmDate, isCompleted = true, dateLong = formattedUseCase.formatDDMMYYYYtoLong(alarmDate))
             }
             context.getString(R.string.no) -> {
                 val nextAlarmTime = alarmTime.addMinutesToLong(30L)
@@ -63,7 +63,7 @@ class StatisticsReceiver : BroadcastReceiver() {
                 if (nextAlarmTime < nextPrayTime){
                     updateStatisticsAlarmUseCase.updateStatisticsAlarm(nextAlarmTime,alarmDate,prayType)
                 }
-                PrayerStatisticsEntity(id = statisticsId,prayerType = prayType, date = alarmDate, isCompleted = false)
+                PrayerStatisticsEntity(id = statisticsId,prayerType = prayType, date = alarmDate, isCompleted = false,dateLong = formattedUseCase.formatDDMMYYYYtoLong(alarmDate))
             }
             else -> return
         }

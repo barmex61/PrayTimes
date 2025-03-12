@@ -71,21 +71,21 @@ fun HadithCollectionScreen(bottomPaddingValues: Dp, collectionPath : String, had
 }
 
 @Composable
-fun HadithCollectionGridView(hadithSectionDataList: List<HadithSectionData>, hadithViewModel: HadithViewModel, navController: NavController, bottomPaddingValues: Dp) {
+fun HadithCollectionGridView(hadithSectionDataList: List<HadithSectionData>, hadithCollectionViewModel: HadithViewModel, navController: NavController, bottomPaddingValues: Dp) {
 
     LazyVerticalStaggeredGrid(
         modifier = Modifier.padding(bottom =bottomPaddingValues ),
         columns = StaggeredGridCells.Fixed(2),
     ) {
         itemsIndexed(hadithSectionDataList) { index, hadithCollectionCardData ->
-            HadithCollectionCard(index,hadithCollectionCardData, hadithViewModel, navController  )
+            HadithCollectionCard(index,hadithCollectionCardData, hadithCollectionViewModel, navController  )
         }
     }
 }
 
 
 @Composable
-fun HadithCollectionCard(index:Int, hadithSectionData: HadithSectionData, hadithViewModel: HadithViewModel, navController: NavController) {
+fun HadithCollectionCard(index:Int, hadithSectionData: HadithSectionData, hadithCollectionViewModel: HadithViewModel, navController: NavController) {
     val infiniteTransition = rememberInfiniteTransition()
     val randomColor = remember { colors.random() }
     val targetColor = remember { colors.filter { it != randomColor }.random() }
@@ -119,7 +119,7 @@ fun HadithCollectionCard(index:Int, hadithSectionData: HadithSectionData, hadith
             },
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
         onClick = {
-            hadithViewModel.updateSelectedHadithSection(hadithSectionData,index)
+            hadithCollectionViewModel.updateSelectedHadithSection(hadithSectionData,index)
             val subRoute = screens[5].route.replace("{collectionPath}","")
             val route = subRoute.replace("{hadithSectionIndex}","")
             navController.navigateToScreen(route)

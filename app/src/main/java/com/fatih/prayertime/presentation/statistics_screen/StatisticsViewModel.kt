@@ -1,31 +1,35 @@
 package com.fatih.prayertime.presentation.statistics_screen
 
+import android.app.Application
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.fatih.prayertime.R
 import com.fatih.prayertime.data.local.entity.PrayerStatisticsEntity
 import com.fatih.prayertime.domain.use_case.formatted_use_cases.FormattedUseCase
 import com.fatih.prayertime.domain.use_case.statistics_use_cases.GetPrayerCountsUseCase
 import com.fatih.prayertime.domain.use_case.statistics_use_cases.GetStatisticsUseCase
 import com.fatih.prayertime.domain.use_case.statistics_use_cases.InsertPlayerStatisticsUseCase
+import com.fatih.prayertime.util.model.state.StatisticsState
+import dagger.hilt.android.internal.Contexts.getApplication
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import org.threeten.bp.LocalDate
-import org.threeten.bp.format.DateTimeFormatter
 import javax.inject.Inject
-import kotlin.times
 
 @HiltViewModel
 class StatisticsViewModel @Inject constructor(
     getStatisticsUseCase: GetStatisticsUseCase,
     getPrayerCountsUseCase: GetPrayerCountsUseCase,
-    formattedUseCase: FormattedUseCase,
+    private val formattedUseCase: FormattedUseCase,
     private val insertPlayerStatisticsUseCase: InsertPlayerStatisticsUseCase
 ) : ViewModel() {
 
-   init {
-       insertDummyData()
-   }
+    init {
+        insertDummyData()
+    }
+
     private fun insertDummyData() {
         viewModelScope.launch {
             val dummyData = mutableListOf<PrayerStatisticsEntity>()
@@ -39,7 +43,8 @@ class StatisticsViewModel @Inject constructor(
                             id = day * 5 + index,
                             prayerType = prayerName,
                             date = date,
-                            isCompleted = listOf(true,false).random() // Alternate between true and false
+                            isCompleted = listOf(true,false).random(),// Alternate between true and false, ,
+                            dateLong = formattedUseCase.formatDDMMYYYYtoLong(date)
                         )
                     )
                 }
@@ -48,44 +53,75 @@ class StatisticsViewModel @Inject constructor(
         }
     }
 
-    val statistics = getStatisticsUseCase(
-        formattedUseCase.formatOfPatternDDMMYYYY(LocalDate.now().minusWeeks(1).plusDays(1)),
-        formattedUseCase.formatOfPatternDDMMYYYY(LocalDate.now().plusWeeks(2))
-    ).stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = emptyList()
-    )
+    private val _dateRange = MutableStateFlow(LocalDate.now().minusWeeks(1)..LocalDate.now())
+    val dateRange = _dateRange
 
-    val statisticsSummary = statistics.map { stats ->
+    fun updateDateRange(newRange: ClosedRange<LocalDate>) {
+        _dateRange.value = newRange
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val statisticsState: StateFlow<StatisticsState> = dateRange.flatMapLatest {
+        val startDate = formattedUseCase.formatOfPatternDDMMYYYY(it.start)
+        val endDate = formattedUseCase.formatOfPatternDDMMYYYY(it.endInclusive)
+
+        // Log the input date range
+        println("Fetching statistics from $startDate to $endDate")
+        getStatisticsUseCase(
+            formattedUseCase.formatLocalDateToLong(it.start),
+            formattedUseCase.formatLocalDateToLong(it.endInclusive)
+        )
+
+    }.map { stats ->
+        println(stats)
         if (stats.isEmpty()) {
-            StatisticsSummary(
+            StatisticsState(
                 startDate = "",
                 endDate = "",
                 totalPrayers = 0,
                 completedPrayers = 0,
-                missedPrayers = 0
+                missedPrayers = 0,
+                statistics = emptyList()
             )
         } else {
-            StatisticsSummary(
+            StatisticsState(
                 startDate = stats.first().date,
                 endDate = stats.last().date,
                 totalPrayers = stats.size * 5,
                 completedPrayers = stats.count { it.isCompleted },
-                missedPrayers = stats.count { !it.isCompleted }
+                missedPrayers = stats.count { !it.isCompleted },
+                statistics = stats
             )
         }
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
-        initialValue = StatisticsSummary()
+        initialValue = StatisticsState()
     )
+
+    val longestSeries = statisticsState.map { statState ->
+        var maxStreak = 0
+        var currentStreak = 0
+
+        statState.statistics.groupBy { it.date }
+            .forEach { (_, prayers) ->
+                if (prayers.all { it.isCompleted }) {
+                    currentStreak++
+                    if (currentStreak > maxStreak) {
+                        maxStreak = currentStreak
+                    }
+                } else {
+                    currentStreak = 0
+                }
+            }
+
+        maxStreak
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = 0
+    )
+
+
 }
 
-data class StatisticsSummary(
-    val startDate: String = "",
-    val endDate: String = "",
-    val totalPrayers: Int = 0,
-    val completedPrayers: Int = 0,
-    val missedPrayers: Int = 0
-) 

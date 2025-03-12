@@ -40,10 +40,6 @@ import com.fatih.prayertime.domain.repository.SettingsRepository
 import com.fatih.prayertime.domain.use_case.formatted_use_cases.FormattedUseCase
 import com.fatih.prayertime.domain.use_case.location_use_cases.GetLocationAndAddressUseCase
 import com.fatih.prayertime.domain.use_case.permission_use_case.PermissionsUseCase
-import com.fatih.prayertime.domain.use_case.favorites_use_cases.GetAllFavoritesUseCase
-import com.fatih.prayertime.domain.use_case.favorites_use_cases.RemoveFavoriteUseCase
-import com.fatih.prayertime.domain.use_case.statistics_use_cases.GetPrayerCountsUseCase
-import com.fatih.prayertime.domain.use_case.statistics_use_cases.GetStatisticsUseCase
 import com.fatih.prayertime.util.config.ApiConfig.ALADHAN_API_BASE_URL
 import com.fatih.prayertime.util.config.ApiConfig.HADITH_API_BASE_URL
 import com.google.android.gms.location.FusedLocationProviderClient
@@ -225,30 +221,6 @@ object Module {
     @Singleton
     fun providePrayerStatisticsRepository(statisticsDao: PrayerStatisticsDao): PrayerStatisticsRepository {
         return PrayerStatisticsRepositoryImpl(statisticsDao)
-    }
-
-    @Provides
-    @Singleton
-    fun provideGetAllFavoritesUseCase(repository: FavoritesRepository): GetAllFavoritesUseCase {
-        return GetAllFavoritesUseCase(repository)
-    }
-
-    @Provides
-    @Singleton
-    fun provideRemoveFavoriteUseCase(repository: FavoritesRepository): RemoveFavoriteUseCase {
-        return RemoveFavoriteUseCase(repository)
-    }
-
-    @Provides
-    @Singleton
-    fun provideGetStatisticsUseCase(repository: PrayerStatisticsRepository): GetStatisticsUseCase {
-        return GetStatisticsUseCase(repository)
-    }
-
-    @Provides
-    @Singleton
-    fun provideGetPrayerCountsUseCase(repository: PrayerStatisticsRepository): GetPrayerCountsUseCase {
-        return GetPrayerCountsUseCase(repository)
     }
 
     @Provides

@@ -30,6 +30,9 @@ class FormattedUseCase @Inject constructor() {
         return localDate.format(formatterDDMMYYYY)
     }
 
+    fun formatDDMMYYYYtoLong(dateString: String): Long {
+        return formatLocalDateToLong(formatDDMMYYYYDateToLocalDate(dateString))
+    }
 
     fun isToday(date: String) : Boolean{
         val localDate = formatDDMMYYYYDateToLocalDate(date)

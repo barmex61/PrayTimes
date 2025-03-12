@@ -58,4 +58,14 @@
     <string name="yes">Evet</string>
     <string name="no">Hayır</string>
     <string name="pray_alarm_message">Ezan vakti</string>
+    <string name="last_7_days">Son 7 Gün</string>
+    <string name="last_30_days">Son 30 Gün</string>
+    <string name="last_3_months">Son 3 Ay</string>
+    <string name="all_times">Tüm Zamanlar</string>
+    <string name="select_date_range">Tarih Aralığı seç</string>
+    <string name="completed_pray">Toplam kılınan</string>
+    <string name="missed_pray">Kaçırılan</string>
+    <string name="start_date">Başlangıç Tarihi</string>
+    <string name="end_date">Bitiş Tarihi</string>
+    <string name="total_prayer">Toplam Namaz</string>
 </resources>

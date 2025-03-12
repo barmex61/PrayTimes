@@ -9,6 +9,6 @@ interface PrayerStatisticsRepository {
     suspend fun insertStatistic(statistic: PrayerStatisticsEntity)
     suspend fun updateStatistic(statistic: PrayerStatisticsEntity)
     fun getCompletedPrayersCount(): Flow<Int>
-    fun getStatisticsBetweenDates(startDate: String, endDate: String): Flow<List<PrayerStatisticsEntity>>
+    fun getStatisticsBetweenDates(startDate: Long, endDate: Long): Flow<List<PrayerStatisticsEntity>>
     suspend fun isExist(prayerType: String, date: String): Boolean
 } 
