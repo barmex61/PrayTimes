@@ -46,7 +46,7 @@ import com.fatih.prayertime.util.utils.HadithUtils.anyToInt
 import com.fatih.prayertime.util.utils.HadithUtils.getPropertyName
 
 @Composable
-fun HadithCollectionScreen(bottomPaddingValues: Dp, collectionPath : String, hadithViewModel : HadithViewModel, navController: NavController) {
+fun HadithCollectionScreen(modifier: Modifier, collectionPath: String, hadithViewModel: HadithViewModel, navController: NavController) {
     val hadithSectionCardDataList by hadithViewModel.hadithSectionCardDataList.collectAsState()
     LaunchedEffect(Unit) {
         hadithViewModel.updateHadithCollectionPath(collectionPath)
@@ -54,7 +54,7 @@ fun HadithCollectionScreen(bottomPaddingValues: Dp, collectionPath : String, had
     when(hadithSectionCardDataList.status) {
         Status.SUCCESS -> {
             println("success")
-            HadithCollectionGridView(hadithSectionCardDataList.data!!,hadithViewModel, navController ,bottomPaddingValues)
+            HadithCollectionGridView(hadithSectionCardDataList.data!!,hadithViewModel, navController ,modifier)
         }
         Status.LOADING ->{
             LoadingView()
@@ -71,10 +71,10 @@ fun HadithCollectionScreen(bottomPaddingValues: Dp, collectionPath : String, had
 }
 
 @Composable
-fun HadithCollectionGridView(hadithSectionDataList: List<HadithSectionData>, hadithCollectionViewModel: HadithViewModel, navController: NavController, bottomPaddingValues: Dp) {
+fun HadithCollectionGridView(hadithSectionDataList: List<HadithSectionData>, hadithCollectionViewModel: HadithViewModel, navController: NavController, modifier: Modifier) {
 
     LazyVerticalStaggeredGrid(
-        modifier = Modifier.padding(bottom =bottomPaddingValues ),
+        modifier = modifier,
         columns = StaggeredGridCells.Fixed(2),
     ) {
         itemsIndexed(hadithSectionDataList) { index, hadithCollectionCardData ->

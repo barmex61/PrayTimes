@@ -100,9 +100,7 @@ class AlarmScheduler @Inject constructor(
         val prayTimeList = prayTimes.toPrayTimeList(30)
         val prayTypeList = prayTimes.toPrayTypeList()
         prayTimeList.zip(prayTypeList).forEach { (prayTime,prayType) ->
-            if(prayTime > System.currentTimeMillis()){
-                scheduleStatisticsAlarm(prayTime,prayTimes.date,prayType)
-            }
+            scheduleStatisticsAlarm(prayTime,prayTimes.date,prayType)
             println(prayType)
         }
     }

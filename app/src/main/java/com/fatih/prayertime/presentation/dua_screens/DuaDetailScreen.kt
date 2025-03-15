@@ -34,7 +34,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.fatih.prayertime.R
 import com.fatih.prayertime.data.remote.dto.duadto.DuaCategoryDetail
@@ -45,9 +44,9 @@ import com.fatih.prayertime.util.composables.TitleView
 
 @Composable
 fun DuaDetailScreen(
-    bottomPaddingValues: Dp,
+    modifier: Modifier,
     duaId: Int,
-    categoryId : Int,
+    categoryId: Int,
     viewModel: DuaViewModel
 ) {
     val duaDetail by viewModel.duaDetail.collectAsState()
@@ -62,9 +61,7 @@ fun DuaDetailScreen(
         LoadingView()
     } else {
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(bottom = bottomPaddingValues),
+            modifier = modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
             DuaDetailCard(duaDetail!!)

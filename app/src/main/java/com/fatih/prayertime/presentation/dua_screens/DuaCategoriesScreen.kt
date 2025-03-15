@@ -34,7 +34,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.fatih.prayertime.R
@@ -51,7 +50,7 @@ import kotlin.random.Random
 
 @Composable
 fun DuaCategoriesScreen(
-    bottomPaddingValues: Dp,
+    modifier: Modifier,
     navController: NavController,
     duaViewModel: DuaViewModel
 ) {
@@ -66,7 +65,7 @@ fun DuaCategoriesScreen(
             LoadingView()
         }
         Status.SUCCESS->{
-            Box(modifier = Modifier.fillMaxSize(1f).padding(bottom = bottomPaddingValues), contentAlignment = Alignment.Center){
+            Box(modifier = modifier.fillMaxSize(1f), contentAlignment = Alignment.Center){
                 if (duaCategoryState.data != null){
                     DuaCategoriesGridView(duaCategoryState.data!!.data,navController,duaViewModel)
                 }else{

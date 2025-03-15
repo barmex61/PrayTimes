@@ -30,7 +30,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.fatih.prayertime.domain.model.EsmaulHusna
@@ -41,7 +40,7 @@ import com.fatih.prayertime.util.model.state.Status
 import kotlin.random.Random
 
 @Composable
-fun EsmaulHusnaScreen(bottomPaddingValues: Dp,esmaulHusnaViewModel: EsmaulHusnaViewModel = hiltViewModel()) {
+fun EsmaulHusnaScreen(modifier: Modifier, esmaulHusnaViewModel: EsmaulHusnaViewModel = hiltViewModel()) {
     val esmaulHusnaState by esmaulHusnaViewModel.esmaulHusnaState.collectAsState()
     when(esmaulHusnaState.status){
         Status.ERROR ->{
@@ -55,7 +54,7 @@ fun EsmaulHusnaScreen(bottomPaddingValues: Dp,esmaulHusnaViewModel: EsmaulHusnaV
         Status.SUCCESS->{
             LazyVerticalStaggeredGrid(
                 columns = StaggeredGridCells.Fixed(2),
-                modifier = Modifier.padding(bottom = bottomPaddingValues)
+                modifier = modifier
             ) {
                 items(esmaulHusnaState.data!!) { esmaulHusna ->
                     EsmaulHusnaCard(esmaulHusna)

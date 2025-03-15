@@ -55,7 +55,7 @@ import com.fatih.prayertime.util.composables.TitleView
 
 
 @Composable
-fun CompassScreen(bottomPaddingValue: Dp, compassScreenViewModel: CompassScreenViewModel = hiltViewModel()) {
+fun CompassScreen(modifier: Modifier, compassScreenViewModel: CompassScreenViewModel = hiltViewModel()) {
     val context = LocalContext.current
     val gyroscopeSensor = remember { GyroscopeSensor(context) }
     val qiblaDirection by compassScreenViewModel.qiblaDirection.collectAsState()
@@ -67,15 +67,13 @@ fun CompassScreen(bottomPaddingValue: Dp, compassScreenViewModel: CompassScreenV
         }
     }
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(scrollBehavior),
+        modifier = modifier.fillMaxSize().verticalScroll(scrollBehavior),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         CompassContent(
             gyroscopeSensor = gyroscopeSensor,
             qiblaDirection = qiblaDirection.toFloat(),
-            bottomPaddingValue = bottomPaddingValue
+            modifier = modifier
         )
     }
     TitleView("Qibla Finder")
@@ -86,7 +84,7 @@ fun CompassScreen(bottomPaddingValue: Dp, compassScreenViewModel: CompassScreenV
 fun CompassContent(
     gyroscopeSensor: GyroscopeSensor,
     qiblaDirection: Float,
-    bottomPaddingValue: Dp
+    modifier: Modifier
 ) {
     var inRange by remember { mutableStateOf(false) }
     val animatedColor = animateColorAsState(
@@ -160,7 +158,7 @@ fun CompassContent(
         inRange = inRange,
         onRangeChange = { inRange = it }
     )
-    Spacer(modifier = Modifier.size(25.dp + bottomPaddingValue))
+    Spacer(modifier = Modifier.size(35.dp))
 }
 
 @Composable

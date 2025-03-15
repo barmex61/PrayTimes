@@ -3,7 +3,7 @@ package com.fatih.prayertime.presentation.main_screen
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.fatih.prayertime.di.MainScreenLocation
+import com.fatih.prayertime.data.di.MainScreenLocation
 import com.fatih.prayertime.domain.model.PrayerAlarm
 import com.fatih.prayertime.domain.model.Address
 import com.fatih.prayertime.domain.model.PrayTimes
@@ -19,7 +19,7 @@ import com.fatih.prayertime.domain.use_case.alarm_use_cases.UpdateStatisticsAlar
 import com.fatih.prayertime.domain.use_case.location_use_cases.RemoveLocationCallbackUseCase
 import com.fatih.prayertime.util.model.state.Resource
 import com.fatih.prayertime.util.model.state.Status
-import com.fatih.prayertime.util.utils.AlarmUtils.getAlarmTimeForPrayTimes
+import com.fatih.prayertime.util.utils.AlarmUtils.getPrayTimeForPrayType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -129,10 +129,10 @@ class MainScreenViewModel @Inject constructor(
     fun updateAllGlobalAlarm(enableAllGlobalAlarm : Boolean) = viewModelScope.launch(Dispatchers.IO){
         prayerAlarmList.value?.forEach { globalAlarm ->
             dailyPrayTimes.value.data?:return@launch
-            val alarmTime = getAlarmTimeForPrayTimes(dailyPrayTimes.value.data!!,globalAlarm.alarmType,globalAlarm.alarmOffset,formattedUseCase)
-            val alarmTimeLong = formattedUseCase.formatHHMMtoLong(alarmTime,formattedUseCase.formatDDMMYYYYDateToLocalDate(dailyPrayTimes.value.data!!.date))
-            val alarmTimeString = formattedUseCase.formatLongToLocalDateTime(alarmTimeLong)
-            updateGlobalAlarmUseCase(globalAlarm.copy(isEnabled = if (enableAllGlobalAlarm) true else globalAlarm.isEnabled, alarmTime = alarmTimeLong, alarmTimeString = alarmTimeString))
+            val prayTime = getPrayTimeForPrayType(dailyPrayTimes.value.data!!,globalAlarm.alarmType,globalAlarm.alarmOffset,formattedUseCase)
+            val prayTimeLong = formattedUseCase.formatHHMMtoLong(prayTime,formattedUseCase.formatDDMMYYYYDateToLocalDate(dailyPrayTimes.value.data!!.date))
+            val prayTimeString = formattedUseCase.formatLongToLocalDateTime(prayTimeLong)
+            updateGlobalAlarmUseCase(globalAlarm.copy(isEnabled = if (enableAllGlobalAlarm) true else globalAlarm.isEnabled, alarmTime = prayTimeLong, alarmTimeString = prayTimeString))
         }
     }
 
@@ -183,6 +183,7 @@ class MainScreenViewModel @Inject constructor(
                 _dailyPrayTimes.collectLatest { resource ->
                     resource.data?.let { prayTimes ->
                         updateStatisticsAlarmUseCase.updateStatisticsAlarms(prayTimes)
+
                     }
                 }
             }

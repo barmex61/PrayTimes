@@ -41,7 +41,6 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.fatih.prayertime.R
@@ -60,7 +59,7 @@ import java.nio.charset.StandardCharsets
 import kotlin.random.Random
 
 @Composable
-fun HadithEditionsScreen(bottomPaddingValues: Dp, navController: NavController, hadithViewModel: HadithViewModel) {
+fun HadithEditionsScreen(modifier: Modifier, navController: NavController, hadithViewModel: HadithViewModel) {
     val hadithEdition by hadithViewModel.hadithEditions.collectAsState()
 
     when(hadithEdition.status){
@@ -71,7 +70,7 @@ fun HadithEditionsScreen(bottomPaddingValues: Dp, navController: NavController, 
             println("hadith screen")
             LazyVerticalStaggeredGrid(
                 columns = StaggeredGridCells.Fixed(2),
-                modifier = Modifier.padding(bottom = bottomPaddingValues)
+                modifier = modifier
             ) {
                 val hadithEditionsList = hadithEdition.data!!.toList()
                 items(hadithEditionsList) { hadithEdition ->

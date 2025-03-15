@@ -1,4 +1,4 @@
-package com.fatih.prayertime.di
+package com.fatih.prayertime.data.di
 
 import android.app.Application
 import android.content.Context
@@ -24,11 +24,13 @@ import com.fatih.prayertime.data.local.dao.PrayerStatisticsDao
 import com.fatih.prayertime.data.local.database.AppDatabase
 import com.fatih.prayertime.data.remote.HadithApi
 import com.fatih.prayertime.data.remote.IslamicCalendarApi
+import com.fatih.prayertime.data.remote.QuranApi
 import com.fatih.prayertime.data.repository.FavoritesRepositoryImpl
 import com.fatih.prayertime.data.repository.HadithRepositoryImp
 import com.fatih.prayertime.data.repository.IslamicCalendarRepositoryImp
 import com.fatih.prayertime.data.repository.LocalDataRepositoryImpl
 import com.fatih.prayertime.data.repository.PrayerStatisticsRepositoryImpl
+import com.fatih.prayertime.data.repository.QuranApiRepositoryImp
 import com.fatih.prayertime.data.repository.SettingsRepositoryImp
 import com.fatih.prayertime.data.settings.SettingsDataStore
 import com.fatih.prayertime.domain.repository.FavoritesRepository
@@ -36,17 +38,18 @@ import com.fatih.prayertime.domain.repository.HadithRepository
 import com.fatih.prayertime.domain.repository.IslamicCalendarRepository
 import com.fatih.prayertime.domain.repository.LocalDataRepository
 import com.fatih.prayertime.domain.repository.PrayerStatisticsRepository
+import com.fatih.prayertime.domain.repository.QuranApiRepository
 import com.fatih.prayertime.domain.repository.SettingsRepository
 import com.fatih.prayertime.domain.use_case.formatted_use_cases.FormattedUseCase
 import com.fatih.prayertime.domain.use_case.location_use_cases.GetLocationAndAddressUseCase
 import com.fatih.prayertime.domain.use_case.permission_use_case.PermissionsUseCase
 import com.fatih.prayertime.util.config.ApiConfig.ALADHAN_API_BASE_URL
 import com.fatih.prayertime.util.config.ApiConfig.HADITH_API_BASE_URL
+import com.fatih.prayertime.util.config.ApiConfig.QURAN_API_BASE_URL
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
-import dagger.Binds
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -225,9 +228,19 @@ object Module {
 
     @Provides
     @Singleton
-    fun bindLocalDataRepository(
+    fun provideLocalDataRepository(
         @ApplicationContext context: Context,
     ): LocalDataRepository = LocalDataRepositoryImpl(context as Application)
+
+    @Provides
+    @Singleton
+    fun provideQuranApi(
+        @ApplicationContext context: Context
+    ) : QuranApi = Retrofit.Builder().baseUrl(QURAN_API_BASE_URL).addConverterFactory(GsonConverterFactory.create()).build().create(QuranApi::class.java)
+
+    @Provides
+    @Singleton
+    fun provideQuranRepository(quranApi: QuranApi) : QuranApiRepository = QuranApiRepositoryImp(quranApi)
 
 }
 

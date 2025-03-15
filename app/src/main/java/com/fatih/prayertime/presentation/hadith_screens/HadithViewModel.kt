@@ -109,7 +109,7 @@ class HadithViewModel @Inject constructor(
     private fun checkIsFavorite() = viewModelScope.launch(Dispatchers.IO){
         val id = generateFavoriteItemId(
             FavoritesType.HADIS.name,
-            selectedHadith.value!!.text.substring(0,10),
+            selectedHadith.value!!.text,
             hadithCollectionPath.value,
             selectedHadithSectionIndex.value,
             selectedHadithIndex.value
@@ -118,7 +118,7 @@ class HadithViewModel @Inject constructor(
     }
 
     fun toggleFavorite(hadith: Hadith) = viewModelScope.launch(Dispatchers.IO){
-        val id = generateFavoriteItemId(FavoritesType.HADIS.name, hadith.text.substring(0,10), hadithCollectionPath.value, selectedHadithSectionIndex.value, selectedHadithIndex.value)
+        val id = generateFavoriteItemId(FavoritesType.HADIS.name, hadith.text, hadithCollectionPath.value, selectedHadithSectionIndex.value, selectedHadithIndex.value)
         if (_isFavorite.value) {
             removeFavoriteUseCase(
                 FavoritesEntity(

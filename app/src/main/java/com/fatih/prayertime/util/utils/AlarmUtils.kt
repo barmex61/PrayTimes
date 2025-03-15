@@ -8,7 +8,7 @@ import com.fatih.prayertime.util.model.enums.FavoritesType
 import com.fatih.prayertime.util.model.enums.PrayTimesString
 
 object AlarmUtils {
-    fun getAlarmTimeForPrayTimes(
+    fun getPrayTimeForPrayType(
         dailyPrayTimes: PrayTimes,
         alarmType: String,
         alarmOffset: Long,

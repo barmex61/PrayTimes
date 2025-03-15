@@ -8,7 +8,7 @@ import com.fatih.prayertime.domain.use_case.alarm_use_cases.UpdateGlobalAlarmUse
 import com.fatih.prayertime.domain.use_case.formatted_use_cases.FormattedUseCase
 import com.fatih.prayertime.domain.use_case.location_use_cases.GetLastKnowAddressFromDatabaseUseCase
 import com.fatih.prayertime.domain.use_case.pray_times_use_cases.GetDailyPrayTimesWithAddressAndDateUseCase
-import com.fatih.prayertime.util.utils.AlarmUtils.getAlarmTimeForPrayTimes
+import com.fatih.prayertime.util.utils.AlarmUtils.getPrayTimeForPrayType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -27,10 +27,10 @@ class SettingsScreenViewModel @Inject constructor(
 
     fun updateGlobalAlarm(prayerAlarm: PrayerAlarm, closeDialog : () -> Unit) = viewModelScope.launch(Dispatchers.IO) {
         dailyPrayTimes?:return@launch
-        val alarmTime = getAlarmTimeForPrayTimes(dailyPrayTimes!!,prayerAlarm.alarmType,prayerAlarm.alarmOffset,formattedUseCase)
-        val alarmTimeLong = formattedUseCase.formatHHMMtoLong(alarmTime,formattedUseCase.formatDDMMYYYYDateToLocalDate(dailyPrayTimes!!.date))
-        val alarmTimeString = formattedUseCase.formatLongToLocalDateTime(alarmTimeLong)
-        updateGlobalAlarmUseCase(prayerAlarm.copy(isEnabled = true, alarmTime = alarmTimeLong, alarmTimeString = alarmTimeString))
+        val prayTime = getPrayTimeForPrayType(dailyPrayTimes!!,prayerAlarm.alarmType,prayerAlarm.alarmOffset,formattedUseCase)
+        val prayTimeLong = formattedUseCase.formatHHMMtoLong(prayTime,formattedUseCase.formatDDMMYYYYDateToLocalDate(dailyPrayTimes!!.date))
+        val prayTimeString = formattedUseCase.formatLongToLocalDateTime(prayTimeLong)
+        updateGlobalAlarmUseCase(prayerAlarm.copy(isEnabled = true, alarmTime = prayTimeLong, alarmTimeString = prayTimeString))
         closeDialog()
     }
 

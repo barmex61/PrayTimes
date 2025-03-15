@@ -5,7 +5,7 @@ import android.util.Log
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import com.fatih.prayertime.di.WorkerLocation
+import com.fatih.prayertime.data.di.WorkerLocation
 import com.fatih.prayertime.domain.model.Address
 import com.fatih.prayertime.domain.model.PrayerAlarm
 import com.fatih.prayertime.domain.model.PrayTimes
@@ -20,7 +20,7 @@ import com.fatih.prayertime.domain.use_case.pray_times_use_cases.GetMonthlyPrayT
 import com.fatih.prayertime.domain.use_case.pray_times_use_cases.GetDailyPrayTimesWithAddressAndDateUseCase
 import com.fatih.prayertime.domain.use_case.pray_times_use_cases.InsertPrayTimeIntoDbUseCase
 import com.fatih.prayertime.util.model.state.Status
-import com.fatih.prayertime.util.utils.AlarmUtils.getAlarmTimeForPrayTimes
+import com.fatih.prayertime.util.utils.AlarmUtils.getPrayTimeForPrayType
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.Dispatchers
@@ -95,15 +95,17 @@ class PrayAlarmWorker @AssistedInject constructor(
         val localDateString = formattedUseCase.formatOfPatternDDMMYYYY(localDateNow)
         val localeDateLong = formattedUseCase.formatLocalDateToLong(localDateNow)
         deletePrayTimesBeforeDateUseCase(localeDateLong)
-        val currentTimeInMillis = System.currentTimeMillis()
         return prayerAlarms.map { alarm ->
             if (alarm.isEnabled){
                 //Alarm enabled
-                val prayTimes = getDailyPrayTimesWithAddressAndDateUseCase(lastKnownAddress,localDateString)?: return@map alarm
-                val alarmTime = getAlarmTimeForPrayTimes(prayTimes, alarm.alarmType, alarm.alarmOffset,formattedUseCase)
-                val alarmTimeInMillis = formattedUseCase.formatHHMMtoLong(alarmTime,formattedUseCase.formatDDMMYYYYDateToLocalDate(prayTimes.date))
-                if (currentTimeInMillis > alarmTimeInMillis){
+                val currentTime = System.currentTimeMillis()
+                val alarmTimeInMillis = alarm.alarmTime
+                val prayTime = getDailyPrayTimesWithAddressAndDateUseCase(lastKnownAddress,localDateString) ?: return@map alarm
+                println("alarmTimeInMillis $alarmTimeInMillis")
+                println("prayTimeInMillis $currentTime")
+                if (currentTime > alarmTimeInMillis){
                     //Current time is greater than alarm time
+                    Log.d(TAG,"Alarm already passed . New alarm setting for next day")
                     val nextDayString = formattedUseCase.formatOfPatternDDMMYYYY(localDateNow.plusDays(1))
                     val nextDayPrayTimes = getDailyPrayTimesWithAddressAndDateUseCase(lastKnownAddress, nextDayString)
                     if (nextDayPrayTimes == null){
@@ -114,15 +116,17 @@ class PrayAlarmWorker @AssistedInject constructor(
                             insetPrayTimeIntoDbUseCase.insertPrayTimeList(apiResponse.data!!)
                             val updatedNextPrayTime = getDailyPrayTimesWithAddressAndDateUseCase(lastKnownAddress, nextDayString)
                             if (updatedNextPrayTime == null) return@map alarm
-                            else setGlobalAlarm(alarm, updatedNextPrayTime, nextDayString)
+                            setGlobalAlarm(alarm, updatedNextPrayTime, nextDayString)
                         }else{
-                            return@map alarm
+                            alarm
                         }
                     }else{
                         setGlobalAlarm(alarm, nextDayPrayTimes, nextDayString)
                     }
+
+
                 }else{
-                    Log.d(TAG,"currentAlarmTime < alarmTime $alarm")
+                    Log.d(TAG,"Alarm not triggered yet .There is no change for it $alarm")
                     alarm
                 }
             }else{
@@ -134,10 +138,10 @@ class PrayAlarmWorker @AssistedInject constructor(
     }
 
     private fun setGlobalAlarm(alarm: PrayerAlarm, prayTimes: PrayTimes, localDateString: String): PrayerAlarm {
-        val alarmTime = getAlarmTimeForPrayTimes(prayTimes, alarm.alarmType, alarm.alarmOffset,formattedUseCase)
-        val alarmTimeInMillis = formattedUseCase.formatHHMMtoLongWithLocalDate(alarmTime,formattedUseCase.formatDDMMYYYYDateToLocalDate(localDateString))
-        val alarmTimeString = formattedUseCase.formatLongToLocalDateTime(alarmTimeInMillis)
-        return alarm.copy(alarmTime = alarmTimeInMillis, alarmTimeString = alarmTimeString)
+        val prayTime = getPrayTimeForPrayType(prayTimes, alarm.alarmType, alarm.alarmOffset,formattedUseCase)
+        val prayTimeInMillis = formattedUseCase.formatHHMMtoLongWithLocalDate(prayTime,formattedUseCase.formatDDMMYYYYDateToLocalDate(localDateString))
+        val prayTimeString = formattedUseCase.formatLongToLocalDateTime(prayTimeInMillis)
+        return alarm.copy(alarmTime = prayTimeInMillis, alarmTimeString = prayTimeString)
     }
 
     private fun isAddressesEqual(address1: Address, address2: Address?): Boolean {

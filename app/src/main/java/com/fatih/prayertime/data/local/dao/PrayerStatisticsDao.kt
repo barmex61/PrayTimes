@@ -26,4 +26,7 @@ interface PrayerStatisticsDao {
 
     @Query("SELECT COUNT(*) > 0 FROM prayer_statistics WHERE prayerType = :prayerType AND date = :date")
     suspend fun exists(prayerType: String, date: String): Boolean
+
+    @Query("DELETE FROM prayer_statistics WHERE prayerType =:prayerType")
+    suspend fun deleteStatisticsByType(prayerType: String)
 } 

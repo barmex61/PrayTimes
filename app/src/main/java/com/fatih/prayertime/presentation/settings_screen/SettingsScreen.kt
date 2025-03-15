@@ -52,7 +52,6 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.fatih.prayertime.R
@@ -63,13 +62,13 @@ import com.fatih.prayertime.util.model.enums.PrayTimesString
 import com.fatih.prayertime.util.composables.TitleView
 
 @Composable
-fun SettingsScreen(bottomPaddingValue: Dp,appViewModel: AppViewModel = hiltViewModel()) {
+fun SettingsScreen(modifier: Modifier, appViewModel: AppViewModel = hiltViewModel()) {
     val showSelectedGlobalAlarmOffsetSelectionDialog = remember { mutableStateOf(false) }
     val selectedPrayerAlarm = remember { mutableStateOf<PrayerAlarm?>(null) }
     val uiSettings by appViewModel.settingsState.collectAsState()
     val scrollState = rememberScrollState()
 
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+    Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Column(modifier = Modifier.verticalScroll(scrollState)) {
             SettingsHeader()
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
@@ -83,7 +82,7 @@ fun SettingsScreen(bottomPaddingValue: Dp,appViewModel: AppViewModel = hiltViewM
             }
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
             OtherSettingsCard(uiSettings.silenceWhenCuma) { appViewModel.toggleCuma() }
-            Spacer(modifier = Modifier.size(25.dp + bottomPaddingValue))
+            Spacer(modifier = Modifier.size(35.dp))
         }
         AnimatedVisibility(
             visible = showSelectedGlobalAlarmOffsetSelectionDialog.value,

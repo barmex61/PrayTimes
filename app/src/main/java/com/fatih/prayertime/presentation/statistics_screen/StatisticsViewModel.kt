@@ -1,5 +1,6 @@
 package com.fatih.prayertime.presentation.statistics_screen
 
+import android.annotation.SuppressLint
 import android.app.Application
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -17,6 +18,7 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import org.threeten.bp.LocalDate
 import javax.inject.Inject
+import kotlin.text.toFloat
 
 @HiltViewModel
 class StatisticsViewModel @Inject constructor(
@@ -72,8 +74,8 @@ class StatisticsViewModel @Inject constructor(
             formattedUseCase.formatLocalDateToLong(it.endInclusive)
         )
 
-    }.map { stats ->
-        println(stats)
+    }.mapLatest { stats ->
+        println(stats.size)
         if (stats.isEmpty()) {
             StatisticsState(
                 startDate = "",
@@ -87,7 +89,7 @@ class StatisticsViewModel @Inject constructor(
             StatisticsState(
                 startDate = stats.first().date,
                 endDate = stats.last().date,
-                totalPrayers = stats.size * 5,
+                totalPrayers = stats.size ,
                 completedPrayers = stats.count { it.isCompleted },
                 missedPrayers = stats.count { !it.isCompleted },
                 statistics = stats
@@ -99,7 +101,8 @@ class StatisticsViewModel @Inject constructor(
         initialValue = StatisticsState()
     )
 
-    val longestSeries = statisticsState.map { statState ->
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val longestSeries = statisticsState.mapLatest { statState ->
         var maxStreak = 0
         var currentStreak = 0
 
@@ -122,6 +125,23 @@ class StatisticsViewModel @Inject constructor(
         initialValue = 0
     )
 
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @SuppressLint("DefaultLocale")
+    val completePercentageList: StateFlow<List<Float>> = statisticsState.mapLatest { statState ->
+        val list = mutableListOf<Float>()
+        val totalPrayers = statState.totalPrayers.toFloat()
+        statState.statistics.groupBy {
+            it.prayerType
+        }.forEach {
+            list.add(String.format("%.1f", (it.value.count { it.isCompleted }.toFloat() / totalPrayers * 100)).toFloat())
+        }
+        println(list.size)
+        list
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = mutableListOf()
+    )
 
 }
 

@@ -1,13 +1,14 @@
 package com.fatih.prayertime.presentation.statistics_screen
 
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.animateIntAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -16,19 +17,21 @@ import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.*
+import androidx.compose.material3.ProgressIndicatorDefaults.drawStopIndicator
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.fatih.prayertime.data.local.entity.PrayerStatisticsEntity
@@ -37,13 +40,15 @@ import kotlin.collections.forEachIndexed
 import com.fatih.prayertime.R
 import com.fatih.prayertime.util.model.state.StatisticsState
 import org.threeten.bp.LocalDate
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StatisticsScreen(
-    bottomPaddingValue: Dp,
+    modifier: Modifier,
     viewModel: StatisticsViewModel = hiltViewModel()
 ) {
+    println("statistics screen")
     val statisticsState by viewModel.statisticsState.collectAsState()
     val context = LocalContext.current
     val options = remember {
@@ -54,13 +59,13 @@ fun StatisticsScreen(
             context.getString(R.string.all_times)
         )
     }
+
     val title = remember { context.getString(R.string.select_date_range) }
     var showDatePicker by remember { mutableStateOf(false) }
     var selectedDateRangeString by rememberSaveable { mutableStateOf(options[0]) }
-
     val scrollState = rememberScrollState()
     val longestStreak by viewModel.longestSeries.collectAsState()
-
+    val completedPercentageList = viewModel.completePercentageList.collectAsState()
     LaunchedEffect(selectedDateRangeString) {
         val selectedDateRange = when(selectedDateRangeString){
             options[0] -> LocalDate.now().minusWeeks(1)..LocalDate.now()
@@ -72,9 +77,8 @@ fun StatisticsScreen(
     }
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
-            .padding(bottom = bottomPaddingValue)
             .verticalScroll(scrollState)
     ) {
         DateRangeCard(
@@ -82,27 +86,17 @@ fun StatisticsScreen(
             onDateRangeClick = { showDatePicker = true }
         )
 
-        // Başarı Kartı
         SuccessCard(
-            completedPercentage = (statisticsState.completedPrayers.toFloat() / statisticsState.totalPrayers.toFloat() * 100).toInt(),
+            statisticsState = statisticsState,
             longestStreak = longestStreak // Bu değer viewModel'dan gelmeli
         )
 
         StatisticsSummaryRow(statisticsState = statisticsState)
-        
         Spacer(modifier = Modifier.height(8.dp))
-        
-        // Namaz Vakti Filtreleme
-        PrayerTimeFilterChips()
-        
-        Spacer(modifier = Modifier.height(8.dp))
-        
         StatisticsChart(statistics = statisticsState.statistics)
-        
-        // Detaylı Namaz İstatistikleri
-        DetailedPrayerStatistics()
-        
         StatisticsDetailsCard(statisticsState = statisticsState)
+        DetailedPrayerStatistics(completedPercentageList.value)
+        Spacer(modifier = Modifier.height(8.dp))
     }
 
     if (showDatePicker) {
@@ -157,6 +151,14 @@ fun DateRangeCard(selectedDateRange: String, onDateRangeClick: () -> Unit) {
 fun StatisticsSummaryRow(statisticsState: StatisticsState) {
     val completedText = stringResource(R.string.completed_pray)
     val missedText = stringResource(R.string.missed_pray)
+    val completedPrayer by animateIntAsState(
+        targetValue = statisticsState.completedPrayers,
+        animationSpec = tween(2000)
+    )
+    val missedPrayer by animateIntAsState(
+        targetValue = statisticsState.missedPrayers,
+        animationSpec = tween(2000)
+    )
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -165,12 +167,12 @@ fun StatisticsSummaryRow(statisticsState: StatisticsState) {
     ) {
         StatisticsCard(
             title = completedText,
-            value = statisticsState.completedPrayers.toString(),
+            value =  completedPrayer,
             modifier = Modifier.weight(1f)
         )
         StatisticsCard(
             title = missedText,
-            value = statisticsState.missedPrayers.toString(),
+            value = missedPrayer,
             modifier = Modifier.weight(1f)
         )
     }
@@ -314,13 +316,9 @@ fun StatisticsChart(
                     .fillMaxSize()
                     .horizontalScroll(scrollState)
             ) {
-                val modifier = if (dateList.size > 7) {
-                    Modifier.width((dateList.size * 160).dp)
-                } else {
-                    Modifier.fillMaxWidth(1f)
-                }
+
                 Canvas(
-                    modifier = modifier
+                    modifier = Modifier.width((dateList.size * 85).dp)
                         .fillMaxHeight()
                 ) {
 
@@ -360,7 +358,7 @@ fun StatisticsChart(
                         val x = padding + 40f+ (index * (columnWidth * 2 + spacing))
 
                         // Kılınan namazlar (yeşil)
-                        val completedHeight = chartHeight * (completedPrayerList[index].toFloat() / 5)
+                        val completedHeight = chartHeight * (completedPrayerList[index].toFloat().coerceAtLeast(0.03f) / 5)
                         drawRect(
                             color = primaryColor,
                             topLeft = Offset(x, height - padding - completedHeight),
@@ -368,7 +366,7 @@ fun StatisticsChart(
                         )
 
                         // Kaçırılan namazlar (kırmızı)
-                        val notCompletedHeight = chartHeight * (notCompletedPrayerList[index].toFloat() / 5)
+                        val notCompletedHeight = chartHeight * (notCompletedPrayerList[index].toFloat().coerceAtLeast(0.03f) / 5)
                         drawRect(
                             color = onError,
                             topLeft = Offset(x + columnWidth, height - padding - notCompletedHeight),
@@ -400,10 +398,10 @@ fun StatisticsChart(
                                 }
                             )
                             // Tarih
-                            val dateText = "day"
+                            val dateText = date.substring(0, 5)
                             drawText(
                                 dateText,
-                                x + columnWidth - 25f,
+                                x + columnWidth - 54f,
                                 height - padding + 45f,
                                 android.graphics.Paint().apply {
                                     color = onPrimaryContainer.toArgb()
@@ -502,7 +500,7 @@ fun StatisticsChart(
 @Composable
 fun StatisticsCard(
     title: String,
-    value: String,
+    value: Int,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -525,7 +523,7 @@ fun StatisticsCard(
                 textAlign = TextAlign.Center
             )
             Text(
-                text = value,
+                text = value.toString(),
                 style = MaterialTheme.typography.headlineMedium,
                 color = MaterialTheme.colorScheme.primary,
                 textAlign = TextAlign.Center
@@ -535,7 +533,17 @@ fun StatisticsCard(
 }
 
 @Composable
-fun SuccessCard(completedPercentage: Int, longestStreak: Int) {
+fun SuccessCard(statisticsState: StatisticsState, longestStreak: Int) {
+    val totalPrayer = remember (statisticsState){ statisticsState.totalPrayers }
+    val completedPrayer = remember(statisticsState) { statisticsState.completedPrayers }
+    val totalPercentage = animateFloatAsState(
+        targetValue = if (totalPrayer != 0) {
+            (completedPrayer.toFloat() / totalPrayer.toFloat() * 100).coerceIn(0f, 100f)
+        } else {
+            0f
+        },
+        animationSpec = tween(2000)
+    )
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -549,7 +557,8 @@ fun SuccessCard(completedPercentage: Int, longestStreak: Int) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(16.dp)
+                .animateContentSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
@@ -567,9 +576,9 @@ fun SuccessCard(completedPercentage: Int, longestStreak: Int) {
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "$completedPercentage%",
+                        text = String.format(Locale.getDefault(), "%.1f", totalPercentage.value) + "%",
                         style = MaterialTheme.typography.headlineMedium,
-                        color = MaterialTheme.colorScheme.primary
+                        color = MaterialTheme.colorScheme.primary,
                     )
                     Text(
                         text = "Tamamlama",
@@ -596,7 +605,7 @@ fun SuccessCard(completedPercentage: Int, longestStreak: Int) {
             
             // Motivasyon Mesajı
             Text(
-                text = getMotivationMessage(completedPercentage),
+                text = getMotivationMessage(totalPercentage.value.toInt()),
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onPrimaryContainer,
                 textAlign = TextAlign.Center,
@@ -605,42 +614,14 @@ fun SuccessCard(completedPercentage: Int, longestStreak: Int) {
         }
     }
 }
-
 @Composable
-fun PrayerTimeFilterChips() {
-    val prayerTimes = listOf("Tümü", "Sabah", "Öğle", "İkindi", "Akşam", "Yatsı")
-    var selectedFilter by remember { mutableStateOf("Tümü") }
-    
-    LazyRow(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 8.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-
-        items(prayerTimes) { prayerTime ->
-            FilterChip(
-                selected = selectedFilter == prayerTime,
-                onClick = { selectedFilter = prayerTime },
-                label = { Text(prayerTime) },
-                colors = FilterChipDefaults.filterChipColors(
-                    selectedContainerColor = MaterialTheme.colorScheme.primary,
-                    selectedLabelColor = MaterialTheme.colorScheme.onPrimary
-                )
-            )
-        }
-    }
-}
-
-@Composable
-fun DetailedPrayerStatistics() {
+fun DetailedPrayerStatistics(completedPercentageList : List<Float>) {
     var expandedState by remember { mutableStateOf(false) }
     
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(8.dp)
-            .animateContentSize(),
+            .padding(8.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.primaryContainer
         ),
@@ -651,6 +632,7 @@ fun DetailedPrayerStatistics() {
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp)
+                .animateContentSize()
         ) {
             Row(
                 modifier = Modifier
@@ -660,7 +642,7 @@ fun DetailedPrayerStatistics() {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Detaylı İstatistikler",
+                    text = stringResource(R.string.statistics_detail),
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onPrimaryContainer
                 )
@@ -673,18 +655,18 @@ fun DetailedPrayerStatistics() {
             
             if (expandedState) {
                 Spacer(modifier = Modifier.height(16.dp))
-                DetailedPrayerRow("Sabah", 85)
-                DetailedPrayerRow("Öğle", 90)
-                DetailedPrayerRow("İkindi", 88)
-                DetailedPrayerRow("Akşam", 95)
-                DetailedPrayerRow("Yatsı", 87)
+                DetailedPrayerRow(stringResource(R.string.morning), completedPercentageList.getOrNull(0)?:0f)
+                DetailedPrayerRow(stringResource(R.string.noon), completedPercentageList.getOrNull(1)?:0f)
+                DetailedPrayerRow(stringResource(R.string.afternoon), completedPercentageList.getOrNull(2)?:0f)
+                DetailedPrayerRow(stringResource(R.string.evening), completedPercentageList.getOrNull(3)?:0f)
+                DetailedPrayerRow(stringResource(R.string.night), completedPercentageList.getOrNull(4)?:0f)
             }
         }
     }
 }
 
 @Composable
-fun DetailedPrayerRow(prayerName: String, percentage: Int) {
+fun DetailedPrayerRow(prayerName: String, percentage: Float) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -706,8 +688,19 @@ fun DetailedPrayerRow(prayerName: String, percentage: Int) {
                 color = MaterialTheme.colorScheme.primary
             )
         }
+
         LinearProgressIndicator(
-            progress = percentage / 100f,
+            drawStopIndicator = {
+                drawStopIndicator(drawScope = this,
+                    stopSize = 0.dp,
+                    color = Color.Transparent,
+                    strokeCap = StrokeCap.Round)
+            },
+            gapSize = 0.dp,
+            progress ={
+                if (percentage > 100) 1f
+                else percentage / 100f
+            },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(8.dp)

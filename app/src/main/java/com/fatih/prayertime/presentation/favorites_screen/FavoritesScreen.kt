@@ -18,7 +18,6 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
@@ -35,7 +34,7 @@ import java.nio.charset.StandardCharsets
 
 @Composable
 fun FavoritesScreen(
-    bottomPaddingValue: Dp,
+    modifier: Modifier,
     navController: NavController,
     viewModel: FavoritesViewModel = hiltViewModel()
 ) {
@@ -46,9 +45,7 @@ fun FavoritesScreen(
     var deleteIconRotation by remember { mutableFloatStateOf(0f) }
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(bottom = bottomPaddingValue)
+        modifier = modifier.fillMaxSize()
     ) {
         Row(
             modifier = Modifier

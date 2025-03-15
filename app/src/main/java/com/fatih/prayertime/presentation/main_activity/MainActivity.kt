@@ -80,6 +80,8 @@ import com.fatih.prayertime.presentation.hadith_screens.HadithCollectionScreen
 import com.fatih.prayertime.presentation.hadith_screens.HadithEditionsScreen
 import com.fatih.prayertime.presentation.hadith_screens.HadithSectionDetailScreen
 import com.fatih.prayertime.presentation.hadith_screens.HadithViewModel
+import com.fatih.prayertime.presentation.quran_screen.QuranScreen
+import com.fatih.prayertime.presentation.quran_screen.QuranViewModel
 import com.fatih.prayertime.presentation.settings_screen.SettingsScreen
 import com.fatih.prayertime.presentation.statistics_screen.StatisticsScreen
 import com.fatih.prayertime.presentation.ui.theme.PrayerTimeTheme
@@ -196,14 +198,8 @@ fun MainScreenContent(showBatteryOptimizationDialog: () -> Unit) {
         }
     ) { innerPadding ->
         Box(
-            modifier = Modifier
-                .padding(
-                    15.dp,
-                    top = innerPadding.calculateTopPadding(),
-                    15.dp,
-                    0.dp
-                )
-                .background(MaterialTheme.colorScheme.background),
+            modifier = Modifier.background(MaterialTheme.colorScheme.background)
+                ,
         ) {
             if (powerSavingState == true) {
                 showBatteryOptimizationDialog()
@@ -266,10 +262,15 @@ fun BottomAppBarLayout(navController: NavController) {
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun NavHostLayout(navController: NavHostController, innerPadding: PaddingValues,appViewModel: AppViewModel) {
-    val innerPaddingValue = innerPadding.calculateBottomPadding() - 5.dp
+    val modifier = Modifier.padding(
+        15.dp,
+        innerPadding.calculateTopPadding(),
+        15.dp,
+        innerPadding.calculateBottomPadding()
+    )
     val hadithViewModel : HadithViewModel = hiltViewModel()
     val duaViewModel : DuaViewModel = hiltViewModel()
-
+    val quranViewModel: QuranViewModel = hiltViewModel()
     AnimatedNavHost(
         navController = navController,
         startDestination = screens.first().title.name
@@ -293,33 +294,34 @@ fun NavHostLayout(navController: NavHostController, innerPadding: PaddingValues,
             ) { backStackEntry ->
 
                 when (item.title.name) {
-                    PrayTimesString.Home.name -> MainScreen(appViewModel, innerPaddingValue)
-                    PrayTimesString.Qibla.name -> CompassScreen(innerPaddingValue)
-                    PrayTimesString.Utilities.name -> UtilitiesScreen(innerPaddingValue, navController)
-                    PrayTimesString.Settings.name -> SettingsScreen(innerPaddingValue)
-                    PrayTimesString.ESMAUL_HUSNA.name -> EsmaulHusnaScreen(innerPaddingValue)
-                    PrayTimesString.ISLAMIC_CALENDAR.name -> CalendarScreen(innerPaddingValue)
-                    PrayTimesString.HADITH.name-> HadithEditionsScreen(innerPaddingValue,navController,hadithViewModel)
+                    PrayTimesString.Home.name -> MainScreen(appViewModel, modifier)
+                    PrayTimesString.Qibla.name -> CompassScreen(modifier)
+                    PrayTimesString.Utilities.name -> UtilitiesScreen(modifier, navController)
+                    PrayTimesString.Settings.name -> SettingsScreen(modifier)
+                    PrayTimesString.ESMAUL_HUSNA.name -> EsmaulHusnaScreen(modifier)
+                    PrayTimesString.ISLAMIC_CALENDAR.name -> CalendarScreen(modifier)
+                    PrayTimesString.HADITH.name-> HadithEditionsScreen(modifier,navController,hadithViewModel)
                     PrayTimesString.HADITH_COLLECTION.name -> {
                         val collectionPath = backStackEntry.arguments?.getString("collectionPath") ?: return@composable
-                        HadithCollectionScreen(innerPaddingValue,collectionPath, hadithViewModel = hadithViewModel, navController = navController)
+                        HadithCollectionScreen(modifier,collectionPath, hadithViewModel = hadithViewModel, navController = navController)
                     }
                     PrayTimesString.HADITH_SECTION_DETAILS.name -> {
                         val collectionPath = backStackEntry.arguments?.getString("collectionPath")
                         val hadithSectionIndex = backStackEntry.arguments?.getString("hadithSectionIndex")
                         val hadithIndex = backStackEntry.arguments?.getString("hadithIndex")
-                        HadithSectionDetailScreen(innerPaddingValue, hadithViewModel, hadithSectionIndex?.toIntOrNull(), collectionPath,hadithIndex?.toIntOrNull())
+                        HadithSectionDetailScreen(modifier, hadithViewModel, hadithSectionIndex?.toIntOrNull(), collectionPath,hadithIndex?.toIntOrNull())
                     }
-                    PrayTimesString.PRAYER.name -> DuaCategoriesScreen(innerPaddingValue,navController,duaViewModel)
-                    PrayTimesString.PRAY_CATEGORY_DETAILS.name -> DuaCategoryDetailScreen(innerPaddingValue,navController,duaViewModel)
+                    PrayTimesString.PRAYER.name -> DuaCategoriesScreen(modifier,navController,duaViewModel)
+                    PrayTimesString.PRAY_CATEGORY_DETAILS.name -> DuaCategoryDetailScreen(modifier,navController,duaViewModel)
 
                     PrayTimesString.PRAYER_DETAIL.name -> {
                         val duaId = backStackEntry.arguments?.getString("duaId") ?: return@composable
                         val categoryId = backStackEntry.arguments?.getString("categoryId") ?: return@composable
-                        DuaDetailScreen(innerPaddingValue,duaId.toInt(),categoryId.toInt(),duaViewModel)
+                        DuaDetailScreen(modifier,duaId.toInt(),categoryId.toInt(),duaViewModel)
                     }
-                    PrayTimesString.FAVORITES.name -> FavoritesScreen(innerPaddingValue,navController)
-                    PrayTimesString.STATISTICS.name -> StatisticsScreen(innerPaddingValue)
+                    PrayTimesString.FAVORITES.name -> FavoritesScreen(modifier,navController)
+                    PrayTimesString.STATISTICS.name -> StatisticsScreen(modifier)
+                    PrayTimesString.QURAN.name -> { QuranScreen(modifier,navController,quranViewModel) }
                 }
             }
         }

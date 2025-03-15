@@ -91,7 +91,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -121,7 +120,7 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 @Composable
-fun MainScreen(appViewModel: AppViewModel, bottomPaddingValue : Dp, mainScreenViewModel : MainScreenViewModel = hiltViewModel()) {
+fun MainScreen(appViewModel: AppViewModel, modifier: Modifier, mainScreenViewModel: MainScreenViewModel = hiltViewModel()) {
     var showAlarmDialog by remember { mutableStateOf(false) }
     val scrollState = rememberScrollState()
     var isVisible by remember { mutableStateOf(false) }
@@ -130,7 +129,7 @@ fun MainScreen(appViewModel: AppViewModel, bottomPaddingValue : Dp, mainScreenVi
     LaunchedEffect(Unit){
         isVisible = true
     }
-    Column(modifier = Modifier.verticalScroll(scrollState, enabled = true) ){
+    Column(modifier = modifier.verticalScroll(scrollState, enabled = true) ){
         AddressBar(haptic,mainScreenViewModel)
         PrayerBar(haptic)
         PrayScheduleCompose(haptic)
@@ -139,7 +138,7 @@ fun MainScreen(appViewModel: AppViewModel, bottomPaddingValue : Dp, mainScreenVi
         }
         DailyPrayCompose(haptic)
         Spacer(
-            modifier = Modifier.height(25.dp + bottomPaddingValue)
+            modifier = Modifier.height(35.dp)
         )
     }
     AnimatedVisibility(

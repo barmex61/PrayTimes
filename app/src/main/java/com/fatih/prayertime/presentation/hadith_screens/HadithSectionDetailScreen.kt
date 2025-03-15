@@ -38,7 +38,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.fatih.prayertime.data.remote.dto.hadithdto.Hadith
@@ -47,11 +47,11 @@ import kotlin.random.Random
 
 @Composable
 fun HadithSectionDetailScreen(
-    bottomPaddingValues: Dp,
+    modifier: Modifier,
     hadithViewModel: HadithViewModel,
-    hadithSectionIndex : Int? = null,
-    collectionPath : String? = null,
-    hadithIndex : Int ? = null
+    hadithSectionIndex: Int? = null,
+    collectionPath: String? = null,
+    hadithIndex: Int? = null
 ) {
     var initialSetupDone by rememberSaveable { mutableStateOf(false) }
 
@@ -83,9 +83,8 @@ fun HadithSectionDetailScreen(
     )
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(bottom = bottomPaddingValues, top = 12.dp)
+        modifier = modifier.fillMaxSize()
+
     ) {
         println(selectedHadithSection)
         selectedHadithSection?:return@Box
@@ -323,15 +322,18 @@ fun PageSelectionDropdown(
     expanded: Boolean,
     onExpandedChange: (Boolean) -> Unit,
     changeDirection: (Int) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    text : String? = null,
+    fontSize : TextUnit = 16.sp
 ) {
     ExposedDropdownMenuBox(
         expanded = expanded,
         onExpandedChange = onExpandedChange,
         modifier = modifier
     ) {
+        val text = if (text != null) text + "   ${selectedIndex + 1} / $totalPages" else "${selectedIndex + 1} / $totalPages"
         OutlinedTextField(
-            value = "${selectedIndex + 1} / $totalPages",
+            value = text,
             onValueChange = {},
             readOnly = true,
             modifier = Modifier
@@ -340,7 +342,7 @@ fun PageSelectionDropdown(
                 .height(50.dp)
                 .fillMaxWidth(),
             textStyle = TextStyle(
-                fontSize = 16.sp,
+                fontSize = fontSize,
                 color = MaterialTheme.colorScheme.primary,
                 textAlign = TextAlign.Center
             ),
@@ -358,10 +360,11 @@ fun PageSelectionDropdown(
             modifier = Modifier.background(MaterialTheme.colorScheme.surface, RoundedCornerShape(10.dp))
         ) {
             (0 until totalPages).forEach { index ->
+
                 DropdownMenuItem(
                     text = {
                         Text(
-                            "${index + 1}",
+                            text = "${index + 1}",
                             fontSize = 16.sp,
                             color = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.padding(8.dp)

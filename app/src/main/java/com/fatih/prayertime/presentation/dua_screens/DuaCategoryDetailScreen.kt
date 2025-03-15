@@ -20,7 +20,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 
@@ -29,14 +28,13 @@ import com.fatih.prayertime.util.composables.ErrorView
 import com.fatih.prayertime.util.config.NavigationConfig.screens
 import com.fatih.prayertime.util.config.ThemeConfig.colors
 import com.fatih.prayertime.util.extensions.navigateToScreen
-import com.fatih.prayertime.util.composables.LoadingView
 import com.fatih.prayertime.util.composables.TitleView
 
 import kotlin.random.Random
 
 @Composable
 fun DuaCategoryDetailScreen(
-    bottomPaddingValues: Dp,
+    modifier: Modifier,
     navController: NavController,
     duaViewModel: DuaViewModel
 
@@ -52,7 +50,7 @@ fun DuaCategoryDetailScreen(
     }else{
         Box(modifier = Modifier.fillMaxSize(1f), contentAlignment = Alignment.Center){
             LazyVerticalStaggeredGrid(
-                modifier = Modifier.padding(bottom = bottomPaddingValues),
+                modifier = modifier,
                 columns = StaggeredGridCells.Fixed(2)
             ) {
                 items(duaCategoryDetailList!!){ duaCategoryDetail ->

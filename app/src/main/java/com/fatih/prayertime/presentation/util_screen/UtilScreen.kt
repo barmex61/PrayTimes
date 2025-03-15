@@ -40,7 +40,6 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.fatih.prayertime.domain.model.ScreenData
@@ -49,13 +48,11 @@ import com.fatih.prayertime.util.extensions.navigateToScreen
 import com.fatih.prayertime.util.composables.TitleView
 import kotlin.math.absoluteValue
 @Composable
-fun UtilitiesScreen(bottomPaddingValues: Dp, navController: NavController) {
+fun UtilitiesScreen(modifier: Modifier, navController: NavController) {
     val utilityScreens = remember { screens.drop(8) + screens[1] }
 
     LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(bottom = bottomPaddingValues + 5.dp)
+        modifier = modifier.fillMaxSize()
     ) {
         items(utilityScreens.chunked(2)) { rowItems ->
             UtilitiesRow(rowItems, navController)

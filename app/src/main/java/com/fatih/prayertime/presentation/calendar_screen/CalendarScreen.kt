@@ -12,7 +12,6 @@ import androidx.compose.animation.shrinkOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
-import androidx.compose.animation.with
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -44,7 +43,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.fatih.prayertime.domain.model.IslamicDaysData
@@ -57,13 +55,13 @@ import kotlin.random.Random
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
-fun CalendarScreen(bottomPaddingValues : Dp,calendarScreenViewModel: CalendarScreenViewModel = hiltViewModel()) {
+fun CalendarScreen(modifier: Modifier, calendarScreenViewModel: CalendarScreenViewModel = hiltViewModel()) {
     val selectedLocalDate by calendarScreenViewModel.searchLocalDate.collectAsState()
     val monthlyIslamicCalendar by calendarScreenViewModel.monthlyIslamicCalendar.collectAsState()
     val haptics = LocalHapticFeedback.current
     when(monthlyIslamicCalendar.status){
         Status.SUCCESS , Status.LOADING-> {
-            Column(modifier = Modifier.padding(bottom = bottomPaddingValues)) {
+            Column(modifier = modifier) {
                 MonthNavigation(selectedLocalDate,calendarScreenViewModel,haptics)
                 AnimatedContent(
                     targetState = monthlyIslamicCalendar.data,
