@@ -1,6 +1,5 @@
 package com.fatih.prayertime.presentation.quran_screen
 
-import androidx.compose.animation.*
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -16,7 +15,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontWeight
@@ -25,7 +23,12 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.fatih.prayertime.data.remote.dto.qurandto.SurahInfo
 import com.fatih.prayertime.domain.model.JuzInfo
+import com.fatih.prayertime.util.composables.ErrorView
 import com.fatih.prayertime.util.composables.TitleView
+import com.fatih.prayertime.util.config.NavigationConfig.screens
+import com.fatih.prayertime.util.extensions.navigateToScreen
+import com.fatih.prayertime.util.extensions.toText
+import com.fatih.prayertime.util.model.state.QuranScreenState
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -49,21 +52,37 @@ fun QuranScreen(
                 selectedTabIndex = state.selectedTabIndex,
                 onTabSelected = viewModel::onTabSelected
             )
+            if (state.error == null){
+                Box(modifier = Modifier.weight(1f)) {
+                    var isNavigating = remember { false }
+                    when (state.selectedTabIndex) {
+                        0 -> SurahList (
+                            surahList = state.surahList,
+                            onSurahClick = { surahInfo ->
+                                if (!isNavigating){
+                                    isNavigating = true
+                                    viewModel.getSelectedSurah(surahInfo.number) {
+                                        navController.navigateToScreen(screens[15].route)
+                                        isNavigating = false
+                                    }
+                                }
 
-            Box(modifier = Modifier.weight(1f)) {
-                when (state.selectedTabIndex) {
-                    0 -> SurahList (
-                        surahList = state.surahList,
-                        onSurahClick = { surahName ->
-                            // TODO: Navigate to detail
-                        }
-                    )
-                    1 -> JuzList (
-                        juzInfoList = state.juzList,
-                        onJuzClick = { juz ->
-                            // TODO: Navigate to detail
-                        }
-                    )
+                            }
+                        )
+                        1 -> JuzList (
+                            juzInfoList = state.juzList,
+                            onJuzClick = { juz ->
+                                // TODO: Navigate to detail
+                            }
+                        )
+                    }
+                }
+            }else{
+                ErrorView(state.error?:"Error Occurred") {
+                    viewModel.loadJuzList()
+                    viewModel.loadSurahList()
+                    viewModel.loadTranslationList()
+                    viewModel.loadAudioList()
                 }
             }
         }
@@ -72,7 +91,8 @@ fun QuranScreen(
             modifier = modifier,
             onReciterSelected = viewModel::onReciterSelected,
             onTranslationSelected = viewModel::onTranslationSelected,
-            onPronunciationSelected = viewModel::onPronunciationSelected
+            onPronunciationSelected = viewModel::onPronunciationSelected,
+            state = state
         )
     }
 
@@ -90,7 +110,7 @@ fun SurahList(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         items(surahList) { surah ->
-            SurahCard(surah = surah, onClick = { onSurahClick(surah) })
+            SurahCard(surahInfo = surah, onClick = { onSurahClick(surah) })
         }
     }
 }
@@ -114,7 +134,7 @@ fun JuzList(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SurahCard(
-    surah: SurahInfo,
+    surahInfo: SurahInfo,
     onClick: () -> Unit
 ) {
     Card(
@@ -131,64 +151,54 @@ fun SurahCard(
         Row(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp),
+                .padding(horizontal = 32.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(MaterialTheme.colorScheme.primaryContainer),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = surah.number.toString(),
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-                Column {
-                    Text(
-                        text = surah.name,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text ="surah.arabicName",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
+
+            Text(
+                text = surahInfo.number.toString(),
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                fontWeight = FontWeight.Bold
+            )
+            Column (horizontalAlignment = Alignment.Start){
                 Text(
-                    text = "$ Ayet",
+                    text = surahInfo.name,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = surahInfo.turkishName?:"",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                IconButton(
-                    onClick = { /* Dinleme fonksiyonu */ },
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(MaterialTheme.colorScheme.primaryContainer)
-                ) {
-                    Icon(
-                        Icons.Default.PlayArrow,
-                        contentDescription = "Dinle",
-                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
+            }
+            Column (modifier = Modifier.padding(start = 16.dp), horizontalAlignment = Alignment.CenterHorizontally){
+                Text(
+                    text = "Ayet Sayısı",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = surahInfo.numberOfAyahs.toString(),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            IconButton(
+                onClick = { /* Dinleme fonksiyonu */ },
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(MaterialTheme.colorScheme.primaryContainer)
+            ) {
+                Icon(
+                    Icons.Default.PlayArrow,
+                    contentDescription = "Dinle",
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                    modifier = Modifier.size(20.dp)
+                )
             }
         }
     }
@@ -218,37 +228,20 @@ fun JuzCard(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(56.dp)
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(MaterialTheme.colorScheme.primaryContainer),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = juzInfo.juzName,
-                        style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-                Column {
-                    Text(
-                        text = "${juzInfo.juzNumber}. Cüz",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = juzInfo.verseRange,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
+
+            Text(
+                text = "${juzInfo.juzNumber}.Cüz",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                fontWeight = FontWeight.Bold
+            )
+
+            Text(
+                text = juzInfo.juzName,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+
             IconButton(
                 onClick = { /* Dinleme fonksiyonu */ },
                 modifier = Modifier
@@ -272,8 +265,11 @@ fun JuzCard(
 private fun QuranTopBar(
     scrollBehavior: TopAppBarScrollBehavior
 ) {
-    TopAppBar(
-        title = { Text("Kuran-ı Kerim") },
+
+    CenterAlignedTopAppBar(
+        title = {
+
+        },
         colors = TopAppBarDefaults.largeTopAppBarColors(
             containerColor = MaterialTheme.colorScheme.primaryContainer,
             titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
@@ -327,95 +323,111 @@ private fun BoxScope.QuranFab(
     modifier: Modifier,
     onReciterSelected: (String) -> Unit,
     onTranslationSelected: (String) -> Unit,
-    onPronunciationSelected: (String) -> Unit
+    onPronunciationSelected: (String) -> Unit,
+    state : QuranScreenState
 ) {
-    var openMenu by remember { mutableStateOf(false) }
+    var showBottomSheet by remember { mutableStateOf(false) }
     var expandedReciter by remember { mutableStateOf(false) }
     var expandedTranslation by remember { mutableStateOf(false) }
     var expandedPronunciation by remember { mutableStateOf(false) }
+    val translationList = remember(state) { state.translationList }
+    val reciterList = remember(state) { state.reciterList}
+    val pronunciationList = remember(state) { state.pronunciationList}
+    val selectedTranslation = remember(state) { state.selectedTranslation }
+    val selectedPronunciation = remember(state) { state.selectedPronunciation}
+    val selectedReciter = remember(state) { state.selectedReciter}
     
-    Box (modifier = modifier.align(Alignment.BottomEnd)){
-
+    val rotation by animateFloatAsState(
+        targetValue = if (showBottomSheet) 45f else 0f,
+        animationSpec = tween(300),
+        label = "rotation"
+    )
+    
+    val scale by animateFloatAsState(
+        targetValue = if (showBottomSheet) 1.1f else 1f,
+        animationSpec = tween(300),
+        label = "scale"
+    )
+    
+    Box(modifier = modifier.align(Alignment.BottomEnd)) {
         FloatingActionButton(
-            onClick = {
-                openMenu = !openMenu
-            },
-            containerColor = MaterialTheme.colorScheme.primaryContainer,
-            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+            onClick = { showBottomSheet = true },
+            containerColor = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 1f),
+            contentColor = MaterialTheme.colorScheme.primaryContainer,
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(16.dp)
-
+                .graphicsLayer {
+                    rotationZ = rotation
+                    scaleX = scale
+                    scaleY = scale
+                }
         ) {
             Icon(
-                imageVector = Icons.Default.Menu ,
+                imageVector = Icons.Default.Menu,
                 contentDescription = "Seçenekler"
             )
         }
+    }
 
-        AnimatedVisibility(
-            visible = openMenu,
-            enter = fadeIn() + expandVertically(),
-            exit = fadeOut() + shrinkVertically()
+    if (showBottomSheet) {
+        ModalBottomSheet(
+            onDismissRequest = { showBottomSheet = false },
+            sheetState = rememberModalBottomSheetState(),
+            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+            dragHandle = { BottomSheetDefaults.DragHandle() },
+            tonalElevation = 10.dp,
         ) {
-            Card(
+            Column(
                 modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(bottom = 80.dp, end = 16.dp)
-                    .width(300.dp),
-                elevation = CardDefaults.cardElevation(8.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp, vertical = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    Text(
-                        text = "Ayarlar",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
-                    )
+                Text(
+                    text = "Ayarlar",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
 
-                    // Okuyucu Seçimi
-                    ExposedDropdownMenuBox(
+                // Okuyucu Seçimi
+                ExposedDropdownMenuBox(
+                    expanded = expandedReciter,
+                    onExpandedChange = { expandedReciter = it }
+                ) {
+                    OutlinedTextField(
+                        value = selectedReciter,
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Seslendiren") },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedReciter) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .menuAnchor()
+                    )
+                    ExposedDropdownMenu(
                         expanded = expandedReciter,
-                        onExpandedChange = { expandedReciter = it }
+                        onDismissRequest = { expandedReciter = false }
                     ) {
-                        OutlinedTextField(
-                            value = "Okuyucu Seç",
-                            onValueChange = {},
-                            readOnly = true,
-                            label = { Text("Müezzin") },
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedReciter) },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .menuAnchor()
-                        )
-                        ExposedDropdownMenu(
-                            expanded = expandedReciter,
-                            onDismissRequest = { expandedReciter = false }
-                        ) {
-                            getDummyReciters().forEach { reciter ->
-                                DropdownMenuItem(
-                                    text = { Text(reciter) },
-                                    onClick = {
-                                        onReciterSelected(reciter)
-                                        expandedReciter = false
-                                    }
-                                )
-                            }
+                        reciterList.forEach { reciter ->
+                            DropdownMenuItem(
+                                text = { Text(reciter.toText()) },
+                                onClick = {
+                                    onReciterSelected(reciter.toText())
+                                    expandedReciter = false
+                                }
+                            )
                         }
                     }
-
+                }
                     // Çeviri Seçimi
                     ExposedDropdownMenuBox(
                         expanded = expandedTranslation,
                         onExpandedChange = { expandedTranslation = it }
                     ) {
+
                         OutlinedTextField(
-                            value = "Çeviri Seç",
+                            value = selectedTranslation,
                             onValueChange = {},
                             readOnly = true,
                             label = { Text("Meal Dili") },
@@ -428,71 +440,56 @@ private fun BoxScope.QuranFab(
                             expanded = expandedTranslation,
                             onDismissRequest = { expandedTranslation = false }
                         ) {
-                            getDummyTranslations().forEach { translation ->
+                            translationList.forEach { translation ->
                                 DropdownMenuItem(
-                                    text = { Text(translation) },
+                                    text = { Text(translation.toText()) },
                                     onClick = {
-                                        onTranslationSelected(translation)
+                                        onTranslationSelected(translation.toText())
                                         expandedTranslation = false
                                     }
                                 )
                             }
                         }
+
                     }
 
-                    // Okunuş Seçimi
-                    ExposedDropdownMenuBox(
+
+
+                // Okunuş Seçimi
+                ExposedDropdownMenuBox(
+                    expanded = expandedPronunciation,
+                    onExpandedChange = { expandedPronunciation = it }
+                ) {
+                    OutlinedTextField(
+                        value = selectedPronunciation,
+                        onValueChange = {
+
+                        },
+                        readOnly = true,
+                        label = { Text("Okunuş Dili") },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedPronunciation) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .menuAnchor()
+                    )
+                    ExposedDropdownMenu(
                         expanded = expandedPronunciation,
-                        onExpandedChange = { expandedPronunciation = it }
+                        onDismissRequest = { expandedPronunciation = false }
                     ) {
-                        OutlinedTextField(
-                            value = "Okunuş Seç",
-                            onValueChange = {},
-                            readOnly = true,
-                            label = { Text("Okunuş Dili") },
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedPronunciation) },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .menuAnchor()
-                        )
-                        ExposedDropdownMenu(
-                            expanded = expandedPronunciation,
-                            onDismissRequest = { expandedPronunciation = false }
-                        ) {
-                            getDummyPronunciations().forEach { pronunciation ->
-                                DropdownMenuItem(
-                                    text = { Text(pronunciation) },
-                                    onClick = {
-                                        onPronunciationSelected(pronunciation)
-                                        expandedPronunciation = false
-                                    }
-                                )
-                            }
+
+                        pronunciationList.forEach { pronunciation ->
+                            DropdownMenuItem(
+                                text = { Text(pronunciation) },
+                                onClick = {
+                                    onPronunciationSelected(pronunciation)
+                                    expandedPronunciation = false
+                                }
+                            )
                         }
                     }
                 }
+                Spacer(modifier = Modifier.height(50.dp))
             }
         }
-
     }
 }
-
-private fun getDummyReciters() = listOf(
-    "Abdul Basit",
-    "Mishari Rashid",
-    "Saud Al-Shuraim",
-    "Abdurrahman Al-Sudais"
-)
-
-private fun getDummyTranslations() = listOf(
-    "Diyanet İşleri",
-    "Elmalılı Hamdi Yazır",
-    "Ali Bulaç",
-    "Süleymaniye Vakfı"
-)
-
-private fun getDummyPronunciations() = listOf(
-    "Türkçe",
-    "Arapça",
-    "İngilizce"
-) 

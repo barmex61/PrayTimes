@@ -80,6 +80,7 @@ import com.fatih.prayertime.presentation.hadith_screens.HadithCollectionScreen
 import com.fatih.prayertime.presentation.hadith_screens.HadithEditionsScreen
 import com.fatih.prayertime.presentation.hadith_screens.HadithSectionDetailScreen
 import com.fatih.prayertime.presentation.hadith_screens.HadithViewModel
+import com.fatih.prayertime.presentation.quran_screen.QuranDetailScreen
 import com.fatih.prayertime.presentation.quran_screen.QuranScreen
 import com.fatih.prayertime.presentation.quran_screen.QuranViewModel
 import com.fatih.prayertime.presentation.settings_screen.SettingsScreen
@@ -322,6 +323,7 @@ fun NavHostLayout(navController: NavHostController, innerPadding: PaddingValues,
                     PrayTimesString.FAVORITES.name -> FavoritesScreen(modifier,navController)
                     PrayTimesString.STATISTICS.name -> StatisticsScreen(modifier)
                     PrayTimesString.QURAN.name -> { QuranScreen(modifier,navController,quranViewModel) }
+                    PrayTimesString.QURAN_DETAIL_SCREEN.name -> { QuranDetailScreen(innerPadding.calculateBottomPadding(),quranViewModel) }
                 }
             }
         }

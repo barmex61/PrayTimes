@@ -69,4 +69,5 @@
     <string name="end_date">Bitiş Tarihi</string>
     <string name="total_prayer">Toplam Namaz</string>
     <string name="statistics_detail"> Detaylı İstatistikler</string>
+    <string name="quran_detail">Quran</string>
 </resources>

@@ -46,10 +46,12 @@ import com.fatih.prayertime.domain.use_case.permission_use_case.PermissionsUseCa
 import com.fatih.prayertime.util.config.ApiConfig.ALADHAN_API_BASE_URL
 import com.fatih.prayertime.util.config.ApiConfig.HADITH_API_BASE_URL
 import com.fatih.prayertime.util.config.ApiConfig.QURAN_API_BASE_URL
+import com.fatih.prayertime.util.model.adapter.SajdaTypeAdapter
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
+import com.google.gson.GsonBuilder
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -234,9 +236,12 @@ object Module {
 
     @Provides
     @Singleton
-    fun provideQuranApi(
-        @ApplicationContext context: Context
-    ) : QuranApi = Retrofit.Builder().baseUrl(QURAN_API_BASE_URL).addConverterFactory(GsonConverterFactory.create()).build().create(QuranApi::class.java)
+    fun provideQuranApi() : QuranApi =
+        Retrofit.Builder().baseUrl(QURAN_API_BASE_URL)
+            .addConverterFactory(GsonConverterFactory.create(GsonBuilder()
+                .registerTypeAdapter(Boolean::class.java, SajdaTypeAdapter())
+                .create())).build()
+            .create(QuranApi::class.java)
 
     @Provides
     @Singleton

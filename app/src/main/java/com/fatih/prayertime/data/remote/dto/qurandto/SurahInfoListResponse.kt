@@ -1,7 +1,7 @@
 package com.fatih.prayertime.data.remote.dto.qurandto
 
-data class SurahResponse(
+data class SurahInfoListResponse(
     val code: Int,
-    val data: SurahInfo,
+    val data: List<SurahInfo>,
     val status: String
 )

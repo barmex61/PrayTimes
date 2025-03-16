@@ -103,6 +103,12 @@ object NavigationConfig {
             route = "statistics",
             iconRoute = R.drawable.statistics_icon,
             iconResourceType = ResourceType.VECTOR
+        ),
+        ScreenData(
+            title = PrayTimesString.QURAN_DETAIL_SCREEN,
+            route = "quran_detail",
+            iconRoute = R.drawable.quran,
+            iconResourceType = ResourceType.VECTOR
         )
     )
 } 

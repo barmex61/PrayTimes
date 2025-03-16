@@ -6,6 +6,7 @@ import com.fatih.prayertime.data.remote.dto.islamicdaysdto.IslamicDaysDataDTO
 import com.fatih.prayertime.data.remote.dto.praytimesdto.MonthlyPrayTimesResponseDTO
 import com.fatih.prayertime.data.remote.dto.praytimesdto.PrayDataDTO
 import com.fatih.prayertime.data.remote.dto.praytimesdto.PrayTimesDTO
+import com.fatih.prayertime.data.remote.dto.qurandto.QuranApiData
 import com.fatih.prayertime.domain.model.Address
 import com.fatih.prayertime.domain.model.IslamicDaysData
 import com.fatih.prayertime.domain.model.PrayData
@@ -136,4 +137,6 @@ fun HadithEdition.toList(): List<Edition> = listOf(
     this.nawawi,
     this.qudsi,
     this.dehlawi
-) 
+)
+
+fun QuranApiData.toText(): String = "${this.language.uppercase()} - ${this.englishName}"

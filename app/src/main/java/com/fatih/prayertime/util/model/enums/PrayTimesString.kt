@@ -25,6 +25,7 @@ enum class PrayTimesString(val stringResId: Int) {
     HADITH_COLLECTION(R.string.hadith_collection),
     FAVORITES(R.string.favorites),
     STATISTICS(R.string.statistics),
+    QURAN_DETAIL_SCREEN(R.string.quran_detail),
     HADITH(R.string.hadith);
 
     companion object {

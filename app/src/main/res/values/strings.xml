@@ -68,4 +68,5 @@
     <string name="end_date">End Date</string>
     <string name="total_prayer">Total Prayer</string>
     <string name="statistics_detail">Statistics Detail</string>
+    <string name="quran_detail">Quran</string>
 </resources>
