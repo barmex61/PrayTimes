@@ -269,8 +269,8 @@ object QuranUtils {
         "Mankind" to "İnsanlar"
     )
 
-    fun getPronunciations() = listOf(
-        "Turkish",
-        "English"
+    fun getTransliterations() = mapOf<String, String>(
+        "Turkish" to "tr.transliteration",
+        "English" to "en.transliteration",
     )
 }

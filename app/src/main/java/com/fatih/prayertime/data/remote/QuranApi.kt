@@ -6,6 +6,7 @@ import com.fatih.prayertime.data.remote.dto.qurandto.QuranApiResponse
 import com.fatih.prayertime.data.remote.dto.qurandto.SurahResponse
 import retrofit2.Response
 import retrofit2.http.GET
+import retrofit2.http.Header
 import retrofit2.http.Path
 
 interface QuranApi {
@@ -20,9 +21,11 @@ interface QuranApi {
     ): Response<QuranApiResponse>
     @GET("edition/format/audio")
     suspend fun getAudioList(): Response<QuranApiResponse>
-    @GET("surah/{surahNumber}/{audioPath}")
+    @GET("surah/{surahNumber}/editions/{surahPath}")
     suspend fun getSelectedSurah(
         @Path("surahNumber") surahNumber: Int,
-        @Path("audioPath") audioPath: String
+        @Path("surahPath") surahPath: String,
+        @Header("Accept-Charset") charset: String = "UTF-8"
     ): Response<SurahResponse>
+
 }

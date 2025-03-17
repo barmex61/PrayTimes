@@ -91,7 +91,7 @@ fun QuranScreen(
             modifier = modifier,
             onReciterSelected = viewModel::onReciterSelected,
             onTranslationSelected = viewModel::onTranslationSelected,
-            onPronunciationSelected = viewModel::onPronunciationSelected,
+            onTransliterationSelected = viewModel::onTransliterationSelected,
             state = state
         )
     }
@@ -323,7 +323,7 @@ private fun BoxScope.QuranFab(
     modifier: Modifier,
     onReciterSelected: (String) -> Unit,
     onTranslationSelected: (String) -> Unit,
-    onPronunciationSelected: (String) -> Unit,
+    onTransliterationSelected: (String) -> Unit,
     state : QuranScreenState
 ) {
     var showBottomSheet by remember { mutableStateOf(false) }
@@ -332,9 +332,9 @@ private fun BoxScope.QuranFab(
     var expandedPronunciation by remember { mutableStateOf(false) }
     val translationList = remember(state) { state.translationList }
     val reciterList = remember(state) { state.reciterList}
-    val pronunciationList = remember(state) { state.pronunciationList}
+    val pronunciationList = remember(state) { state.transliterationList}
     val selectedTranslation = remember(state) { state.selectedTranslation }
-    val selectedPronunciation = remember(state) { state.selectedPronunciation}
+    val selectedPronunciation = remember(state) { state.selectedTransliteration}
     val selectedReciter = remember(state) { state.selectedReciter}
     
     val rotation by animateFloatAsState(
@@ -477,11 +477,12 @@ private fun BoxScope.QuranFab(
                         onDismissRequest = { expandedPronunciation = false }
                     ) {
 
-                        pronunciationList.forEach { pronunciation ->
+                        pronunciationList.keys.forEach { transliteration ->
                             DropdownMenuItem(
-                                text = { Text(pronunciation) },
+                                text = { Text(transliteration) },
                                 onClick = {
-                                    onPronunciationSelected(pronunciation)
+                                    println("key $transliteration")
+                                    onTransliterationSelected(transliteration)
                                     expandedPronunciation = false
                                 }
                             )

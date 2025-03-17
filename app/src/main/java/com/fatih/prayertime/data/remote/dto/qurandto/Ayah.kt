@@ -10,6 +10,8 @@ data class Ayah(
     val numberInSurah: Int,
     val page: Int,
     val ruku: Int,
-    val sajda: Boolean ,
-    val text: String
+    val sajda: Boolean,
+    val text: String,
+    var textTransliteration : String? = null,
+    var textTranslation: String? = null
 )

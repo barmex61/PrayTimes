@@ -15,6 +15,7 @@ class MyApplication : Application() ,Configuration.Provider{
 
     override fun onCreate() {
         AndroidThreeTen.init(this)
+        deleteDatabase("prayer_app_db")
         super.onCreate()
     }
 

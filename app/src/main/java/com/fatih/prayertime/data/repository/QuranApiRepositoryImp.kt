@@ -1,9 +1,10 @@
 package com.fatih.prayertime.data.repository
 
+import android.content.Context
 import com.fatih.prayertime.data.remote.QuranApi
+import com.fatih.prayertime.data.remote.dto.qurandto.Ayah
 import com.fatih.prayertime.data.remote.dto.qurandto.SurahInfo
 import com.fatih.prayertime.data.remote.dto.qurandto.QuranApiData
-import com.fatih.prayertime.data.remote.dto.qurandto.QuranApiResponse
 import com.fatih.prayertime.domain.model.JuzInfo
 import com.fatih.prayertime.domain.repository.QuranApiRepository
 import com.fatih.prayertime.util.model.state.Resource
@@ -13,12 +14,16 @@ import com.fatih.prayertime.util.utils.QuranUtils.turkishNames
 import com.fatih.prayertime.util.utils.QuranUtils.turkishTranslations
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
-import kotlinx.coroutines.withTimeout
-import retrofit2.Response
+import java.io.File
+import java.io.FileOutputStream
+import java.net.URL
 import javax.inject.Inject
 
-class QuranApiRepositoryImp @Inject constructor(private val quranApi: QuranApi) : QuranApiRepository {
+class QuranApiRepositoryImp @Inject constructor(private val context : Context,private val quranApi: QuranApi) : QuranApiRepository {
 
 
     override suspend fun getSurahList(): Resource<List<SurahInfo>> = withContext(Dispatchers.IO) {
@@ -118,14 +123,32 @@ class QuranApiRepositoryImp @Inject constructor(private val quranApi: QuranApi) 
         }
     }
 
-    override suspend fun getSelectedSurah(surahNumber : Int,audioPath : String): Resource<SurahInfo> = withContext(Dispatchers.IO) {
+    override suspend fun getSelectedSurah(surahNumber : Int, surahPath : String): Resource<SurahInfo> = withContext(Dispatchers.IO) {
         return@withContext try {
-            val surahResponse = quranApi.getSelectedSurah(surahNumber,audioPath)
+            println(surahPath)
+            val surahResponse = quranApi.getSelectedSurah(surahNumber,surahPath)
             if (surahResponse.isSuccessful){
-                surahResponse.body()?.let {
-                    it.data.turkishName = turkishNames[it.data.englishName] ?: "Bulunamadı"
-                    it.data.turkishNameTranslation= turkishTranslations[it.data.englishName] ?: "Bulunamadı"
-                    Resource.success(it.data)
+                val ayahList = mutableListOf<Ayah>()
+                val transliterationTextList = mutableListOf<String>()
+                val translationText = mutableListOf<String>()
+                surahResponse.body()?.let { surahResponse ->
+                    surahResponse.data.forEachIndexed { index,surahInfo ->
+                        surahInfo.turkishName = turkishNames[surahInfo.englishName] ?: "Bulunamadı"
+                        surahInfo.turkishNameTranslation= turkishTranslations[surahInfo.englishName] ?: "Bulunamadı"
+                        when (index) {
+                            0 -> ayahList.addAll(surahInfo.ayahs!!)
+                            1 -> transliterationTextList.addAll(surahInfo.ayahs!!.map { it.text })
+                            else -> translationText.addAll(surahInfo.ayahs!!.map { it.text })
+                        }
+                    }
+                    ayahList.zip(transliterationTextList).forEach {
+                        it.first.textTransliteration = it.second
+                    }
+                    ayahList.zip(translationText).forEach {
+                        it.first.textTranslation = it.second
+                    }
+                    val returnSurahInfo = surahResponse.data[0].copy(ayahs = ayahList)
+                    Resource.success(returnSurahInfo)
                 }?: Resource.error("An unexpected error occurred ${surahResponse.message()}")
             }else{
                 Resource.error("An unexpected error occurred ${surahResponse.message()}")
@@ -133,6 +156,56 @@ class QuranApiRepositoryImp @Inject constructor(private val quranApi: QuranApi) 
         }catch (e: Exception){
             Resource.error(e.message)
         }
+    }
+
+    override suspend fun downloadAudioFile(audioUrl: String): Flow<Resource<File>> = flow {
+        emit(Resource.loading<File>())
+
+        try {
+            println(audioUrl)
+            val fileName = audioUrl.substringAfterLast("/")
+            val cacheDir = File(context.cacheDir, "quran_audio")
+            if (!cacheDir.exists()) {
+                cacheDir.mkdirs()
+            }
+
+            val outputFile = File(cacheDir, fileName)
+
+            if (outputFile.exists()) {
+                emit(Resource.success(outputFile))
+                return@flow
+            }
+
+            withContext(Dispatchers.IO) {
+                val connection = URL(audioUrl).openConnection()
+                connection.connect()
+
+                val inputStream = connection.getInputStream()
+                val outputStream = FileOutputStream(outputFile)
+
+                val buffer = ByteArray(4096)
+                var bytesRead: Int
+
+                while (inputStream.read(buffer).also { bytesRead = it } != -1) {
+                    outputStream.write(buffer, 0, bytesRead)
+                }
+
+                outputStream.close()
+                inputStream.close()
+            }
+
+            emit(Resource.success(outputFile))
+        } catch (e: Exception) {
+            emit(Resource.error(e.localizedMessage ?: "Ses dosyası indirilemedi"))
+        }
+    }.flowOn(Dispatchers.IO)
+
+    override suspend fun getCachedAudioFile(audioUrl: String): File? {
+        val fileName = audioUrl.substringAfterLast("/")
+        val cacheDir = File(context.cacheDir, "quran_audio")
+        val file = File(cacheDir, fileName)
+
+        return if (file.exists()) file else null
     }
 
 }

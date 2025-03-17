@@ -245,7 +245,7 @@ object Module {
 
     @Provides
     @Singleton
-    fun provideQuranRepository(quranApi: QuranApi) : QuranApiRepository = QuranApiRepositoryImp(quranApi)
+    fun provideQuranRepository(@ApplicationContext context: Context,quranApi: QuranApi) : QuranApiRepository = QuranApiRepositoryImp(context,quranApi)
 
 }
 

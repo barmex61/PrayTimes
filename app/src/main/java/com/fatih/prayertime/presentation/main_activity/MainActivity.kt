@@ -217,7 +217,6 @@ fun BottomAppBarLayout(navController: NavController) {
 
     BottomAppBar(
         containerColor = MaterialTheme.colorScheme.primaryContainer,
-        modifier = Modifier.clip(RoundedCornerShape(30.dp)),
         tonalElevation = 10.dp,
     ) {
         screens.filterIndexed { index, _ -> index <= 3 }.forEachIndexed { index, item ->
@@ -323,7 +322,7 @@ fun NavHostLayout(navController: NavHostController, innerPadding: PaddingValues,
                     PrayTimesString.FAVORITES.name -> FavoritesScreen(modifier,navController)
                     PrayTimesString.STATISTICS.name -> StatisticsScreen(modifier)
                     PrayTimesString.QURAN.name -> { QuranScreen(modifier,navController,quranViewModel) }
-                    PrayTimesString.QURAN_DETAIL_SCREEN.name -> { QuranDetailScreen(innerPadding.calculateBottomPadding(),quranViewModel) }
+                    PrayTimesString.QURAN_DETAIL_SCREEN.name -> { QuranDetailScreen(innerPadding.calculateBottomPadding(),innerPadding.calculateTopPadding(),quranViewModel) }
                 }
             }
         }
