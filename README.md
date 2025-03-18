@@ -14,6 +14,8 @@ Namaz Vakitleri, Müslümanların günlük ibadetlerini kolaylaştırmak için t
 - 🌙 İmsakiye (Ramazan ayında)
 - 🕰️ Widget desteği
 - 🌐 Çevrimdışı çalışabilme
+- 📱 Material You desteği
+- 🌓 Karanlık/Aydınlık mod
 
 ## 🛠️ Kullanılan Teknolojiler
 
@@ -33,6 +35,10 @@ Namaz Vakitleri, Müslümanların günlük ibadetlerini kolaylaştırmak için t
 - Retrofit
 - OneSignal
 
+## 📱 Ekran Görüntüleri
+
+[Ekran görüntüleri yakında eklenecek]
+
 ## 📥 Kurulum
 
 1. Uygulamayı Google Play Store'dan indirin
@@ -45,8 +51,9 @@ Namaz Vakitleri, Müslümanların günlük ibadetlerini kolaylaştırmak için t
 - [ ] Sesli ezan seçenekleri
 - [ ] Tesbih özelliği
 - [ ] Dua kitaplığı
-- [ ] Karanlık mod desteği
 - [ ] Farklı dil seçenekleri
+- [ ] Takvim entegrasyonu
+- [ ] Apple Watch desteği
 
 ## 🤝 Katkıda Bulunma
 
@@ -58,6 +65,10 @@ Projeye katkıda bulunmak isterseniz:
 4. Branch'inizi push edin (`git push origin feature/yeniOzellik`)
 5. Pull Request oluşturun
 
+## 🐛 Hata Bildirimi
+
+Bir hata bulduysanız veya bir öneriniz varsa, lütfen GitHub Issues üzerinden bildirin.
+
 ## 📝 Lisans
 
 Bu proje MIT lisansı altında lisanslanmıştır. Daha fazla bilgi için [LICENSE](LICENSE) dosyasına bakabilirsiniz.
@@ -66,6 +77,10 @@ Bu proje MIT lisansı altında lisanslanmıştır. Daha fazla bilgi için [LICEN
 
 Sorularınız ve önerileriniz için:
 
-- GitHub Issues
+- GitHub Issues üzerinden ticket açabilirsiniz
 - E-posta: [E-posta adresiniz]
 - Twitter: [@TwitterHandle]
+
+## 🌟 Projeyi Beğendiniz mi?
+
+Eğer bu proje size yardımcı olduysa, ⭐️ vermeyi unutmayın!
