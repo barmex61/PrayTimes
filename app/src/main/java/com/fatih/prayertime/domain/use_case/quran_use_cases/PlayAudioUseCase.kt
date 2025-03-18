@@ -11,13 +11,13 @@ import javax.inject.Inject
 class PlayAudioUseCase @Inject constructor(
     private val repository: QuranApiRepository
 ) {
-    suspend operator fun invoke(audioUrl: String): Flow<Resource<File>> {
+    suspend operator fun invoke(audioUrl: String,shouldCacheAudio : Boolean): Flow<Resource<File>> {
         val cachedFile = repository.getCachedAudioFile(audioUrl)
         
         return if (cachedFile != null) {
             flow { emit(Resource.success(cachedFile)) }
         } else {
-            repository.downloadAudioFile(audioUrl)
+            repository.downloadAudioFile(audioUrl,shouldCacheAudio)
         }
     }
 } 

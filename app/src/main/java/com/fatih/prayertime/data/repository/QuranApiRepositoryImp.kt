@@ -158,42 +158,52 @@ class QuranApiRepositoryImp @Inject constructor(private val context : Context,pr
         }
     }
 
-    override suspend fun downloadAudioFile(audioUrl: String): Flow<Resource<File>> = flow {
+    override suspend fun downloadAudioFile(audioUrl: String, shouldCacheAudio: Boolean): Flow<Resource<File>> = flow {
         emit(Resource.loading<File>())
 
         try {
             val lastSlashIndex = audioUrl.lastIndexOf("/")
             val secondLastSlashIndex = audioUrl.lastIndexOf("/", lastSlashIndex - 1)
             val fileName = audioUrl.substring(secondLastSlashIndex + 1).filter { it != '/' }
+
             val cacheDir = File(context.cacheDir, "quran_audio")
-            if (!cacheDir.exists()) {
-                cacheDir.mkdirs()
-            }
+            val cachedFile = File(cacheDir, fileName)
 
-            val outputFile = File(cacheDir, fileName)
-
-            if (outputFile.exists()) {
-                emit(Resource.success(outputFile))
+            if (cachedFile.exists()) {
+                emit(Resource.success(cachedFile))
                 return@flow
             }
 
-            withContext(Dispatchers.IO) {
-                val connection = URL(audioUrl).openConnection()
-                connection.connect()
-
-                val inputStream = connection.getInputStream()
-                val outputStream = FileOutputStream(outputFile)
-
-                val buffer = ByteArray(4096)
-                var bytesRead: Int
-
-                while (inputStream.read(buffer).also { bytesRead = it } != -1) {
-                    outputStream.write(buffer, 0, bytesRead)
+            val outputFile = if (shouldCacheAudio) {
+                if (!cacheDir.exists()) {
+                    cacheDir.mkdirs()
                 }
-
-                outputStream.close()
-                inputStream.close()
+                cachedFile
+            } else {
+                File.createTempFile("quran_audio", ".mp3", context.cacheDir)
             }
+
+            val connection = URL(audioUrl).openConnection()
+            connection.connect()
+
+            val inputStream = connection.getInputStream()
+            val outputStream = FileOutputStream(outputFile)
+
+            val fileSize = connection.contentLength
+            var downloadedSize = 0L
+
+            val buffer = ByteArray(4096)
+            var bytesRead: Int
+
+            while (inputStream.read(buffer).also { bytesRead = it } != -1) {
+                outputStream.write(buffer, 0, bytesRead)
+                downloadedSize += bytesRead
+                val progress = (downloadedSize * 100f / fileSize).toInt()
+                emit(Resource.loading(progress = progress))
+            }
+
+            outputStream.close()
+            inputStream.close()
 
             emit(Resource.success(outputFile))
         } catch (e: Exception) {

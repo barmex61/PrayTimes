@@ -30,6 +30,7 @@ class QuranAudioPlayer @Inject constructor(
     private var completionCallback: (() -> Unit)? = null
     private var errorCallback: ((String) -> Unit)? = null
     private var isPlayingCallback: ((Boolean) -> Unit)? = null
+    private var speed : Float = 1f
 
     init {
         initializeMediaPlayer()
@@ -63,6 +64,7 @@ class QuranAudioPlayer @Inject constructor(
     }
 
     fun playAudio(audioFile: File) {
+        initializeMediaPlayer()
         try {
             // Eğer aynı dosyayı çalıyorsak, baştan başlat
             if (currentAudioFile?.absolutePath == audioFile.absolutePath) {
@@ -85,6 +87,7 @@ class QuranAudioPlayer @Inject constructor(
                     it.start()
                     isPlayingCallback?.invoke(true)
                     startProgressTracking()
+                    it.playbackParams = it.playbackParams.setSpeed(speed)
                 }
                 prepareAsync()
             }
@@ -95,12 +98,14 @@ class QuranAudioPlayer @Inject constructor(
     }
 
     fun pauseAudio() {
-        mediaPlayer?.pause()
+        initializeMediaPlayer()
+        mediaPlayer!!.pause()
         isPlayingCallback?.invoke(false)
         stopProgressTracking()
     }
 
     fun resumeAudio(checkAudioFile : () -> Unit) {
+        initializeMediaPlayer()
         if (currentAudioFile == null) {
             checkAudioFile()
             return
@@ -111,17 +116,30 @@ class QuranAudioPlayer @Inject constructor(
     }
 
     fun stopAudio() {
+        initializeMediaPlayer()
         mediaPlayer?.stop()
         isPlayingCallback?.invoke(false)
         progressCallback?.invoke(0f,0f)
+        currentAudioFile = null
         stopProgressTracking()
     }
 
     fun seekTo(position: Float) {
+        initializeMediaPlayer()
         mediaPlayer?.let { player ->
             val duration = player.duration
             val seekPosition = (duration * position).toInt()
             player.seekTo(seekPosition)
+        }
+    }
+
+    fun setPlaybackSpeed(speed: Float) {
+        this.speed = speed
+        initializeMediaPlayer()
+        mediaPlayer?.let {
+            if (it.isPlaying || it.isLooping) {
+                it.playbackParams = it.playbackParams.setSpeed(speed)
+            }
         }
     }
 

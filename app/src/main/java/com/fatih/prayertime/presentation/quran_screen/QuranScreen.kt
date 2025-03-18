@@ -38,7 +38,7 @@ import com.fatih.prayertime.util.model.state.QuranScreenState
 fun QuranScreen(
     modifier: Modifier,
     navController: NavController,
-    viewModel: QuranViewModel = hiltViewModel()
+    viewModel: QuranViewModel
 ) {
     val state by viewModel.quranScreenState.collectAsStateWithLifecycle()
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
