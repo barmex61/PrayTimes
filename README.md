@@ -1,86 +1,145 @@
-# 🕌 Namaz Vakitleri Uygulaması
+# 🕌 Prayer Times App
 
-## 📱 Uygulama Hakkında
+## 📱 About
 
-Namaz Vakitleri, Müslümanların günlük ibadetlerini kolaylaştırmak için tasarlanmış modern bir Android uygulamasıdır. Kullanıcı dostu arayüzü ve zengin özellikleriyle namaz vakitlerini takip etmeyi ve hatırlatmaları yönetmeyi kolaylaştırır.
+Prayer Times is a modern Android application designed to help Muslims track their daily prayers. Built with Material Design 3 principles and a clean architecture approach, it offers a user-friendly interface and comprehensive features for managing prayer times and religious practices.
 
-## ✨ Özellikler
+## ✨ Features
 
-- 🌍 Konum bazlı namaz vakitleri
-- 🔔 Vakit bildirimleri
-- 📅 Günlük, haftalık ve aylık namaz vakitleri takvimi
-- 🎯 Kıble pusulası
-- 📍 Yakındaki camiler
-- 🌙 İmsakiye (Ramazan ayında)
-- 🕰️ Widget desteği
-- 🌐 Çevrimdışı çalışabilme
-- 📱 Material You desteği
-- 🌓 Karanlık/Aydınlık mod
+### Prayer Time Management
+- 🌍 Location-based prayer times
+- 🔔 Customizable prayer notifications with Adhan
+- 📅 Daily, weekly, and monthly prayer calendar
+- 🕰️ Home screen widget for quick access
+- 🌐 Offline support for prayer times
 
-## 🛠️ Kullanılan Teknolojiler
+### Religious Content
+- 📖 Quran with translations
+- 🤲 Collection of Duas (Prayers)
+- 📚 Daily Hadiths
+- ✨ Asma ul-Husna (99 Names of Allah)
+- ⭐️ Favorites system for Duas and Hadiths
 
-- Kotlin
-- MVVM Mimarisi
-- Jetpack Components
-  - Navigation
-  - Room Database
-  - ViewModel
-  - LiveData
-  - WorkManager
-- Coroutines
-- Flow
-- Dagger Hilt
+### Tools & Utilities
+- 🎯 Qibla compass with gyroscope support
+- 📊 Prayer statistics and tracking
+- 📍 Nearby mosques finder
+- 🌙 Ramadan timetable
+- ⚙️ Customizable settings
+
+### Technical Features
+- 🎨 Material You dynamic theming
+- 🌓 Dark/Light mode support
+- 📱 Modern Jetpack Compose UI
+- 🔄 Background synchronization
+- 🔔 Precise prayer time notifications
+
+## 🛠️ Technology Stack
+
+### Core
+- 100% Kotlin
+- Clean Architecture with MVVM
+- Jetpack Compose for UI
 - Material Design 3
-- Google Maps API
+- Single Activity Architecture
+
+### Android Jetpack
+- Navigation Compose
+- Room Database
+- ViewModel
+- Glance for Widgets
+- WorkManager
+- Hilt for DI
+
+### Asynchronous Operations
+- Coroutines
+- Flow & StateFlow
+- LiveData
+
+### Data & Networking
 - Retrofit
-- OneSignal
+- Gson
+- Kotlinx Serialization
+- Location Services
+- Background Services
 
-## 📱 Ekran Görüntüleri
+### UI & Graphics
+- Custom Compose Animations
+- Vico Charts for Statistics
+- Animated Navigation Bar
+- Custom Widgets
+- Gyroscope Integration
 
-[Ekran görüntüleri yakında eklenecek]
+### Other Libraries
+- ThreeTenABP for Date/Time
+- Accompanist
+- Custom Audio Player
+- Background Location Updates
 
-## 📥 Kurulum
+## 🏗️ Architecture
 
-1. Uygulamayı Google Play Store'dan indirin
-2. Konum izinlerini verin
-3. Bildirim tercihlerinizi ayarlayın
-4. Hazır! Artık namaz vakitlerinizi takip edebilirsiniz
+The app follows Clean Architecture principles with three main layers:
 
-## 🎯 Gelecek Özellikler
+### 🎨 Presentation Layer
+- MVVM Pattern
+- Compose UI Components
+- ViewModels
+- State Management
+- Navigation
 
-- [ ] Sesli ezan seçenekleri
-- [ ] Tesbih özelliği
-- [ ] Dua kitaplığı
-- [ ] Farklı dil seçenekleri
-- [ ] Takvim entegrasyonu
-- [ ] Apple Watch desteği
+### 💼 Domain Layer
+- Use Cases
+- Repository Interfaces
+- Domain Models
+- Business Logic
 
-## 🤝 Katkıda Bulunma
+### 💾 Data Layer
+- Repositories Implementation
+- Local Database
+- Remote Data Source
+- Data Models
+- Background Services
 
-Projeye katkıda bulunmak isterseniz:
+## 🔧 Setup
 
-1. Bu repository'yi fork edin
-2. Yeni bir branch oluşturun (`git checkout -b feature/yeniOzellik`)
-3. Değişikliklerinizi commit edin (`git commit -m 'Yeni özellik eklendi'`)
-4. Branch'inizi push edin (`git push origin feature/yeniOzellik`)
-5. Pull Request oluşturun
+1. Clone the repository
+```bash
+git clone https://github.com/barmex61/PrayTimes.git
+```
 
-## 🐛 Hata Bildirimi
+2. Open in Android Studio
 
-Bir hata bulduysanız veya bir öneriniz varsa, lütfen GitHub Issues üzerinden bildirin.
+3. Add required API keys in local.properties:
+```properties
+MAPS_API_KEY=your_google_maps_api_key
+```
 
-## 📝 Lisans
+4. Build and run the project
 
-Bu proje MIT lisansı altında lisanslanmıştır. Daha fazla bilgi için [LICENSE](LICENSE) dosyasına bakabilirsiniz.
+## 🤝 Contributing
 
-## 📞 İletişim
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-Sorularınız ve önerileriniz için:
+## 🐛 Bug Reports
 
-- GitHub Issues üzerinden ticket açabilirsiniz
-- E-posta: [E-posta adresiniz]
-- Twitter: [@TwitterHandle]
+If you find a bug or have a suggestion, please open an issue on GitHub.
 
-## 🌟 Projeyi Beğendiniz mi?
+## 📝 License
 
-Eğer bu proje size yardımcı olduysa, ⭐️ vermeyi unutmayın!
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 📞 Contact
+
+For questions and feedback:
+
+- GitHub Issues
+- Email: [Your Email]
+- Twitter: [@YourHandle]
+
+## 🌟 Support
+
+If you find this project helpful, please consider giving it a star ⭐️
