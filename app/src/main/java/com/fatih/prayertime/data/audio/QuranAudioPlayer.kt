@@ -10,6 +10,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -74,9 +75,9 @@ class QuranAudioPlayer @Inject constructor(
 
             // Farklı bir dosya çalınacaksa, mevcut çalanı durdur
             stopAudio()
-            
+
             currentAudioFile = audioFile
-            
+
             mediaPlayer?.apply {
                 reset()
                 setDataSource(context, Uri.fromFile(audioFile))
@@ -142,7 +143,7 @@ class QuranAudioPlayer @Inject constructor(
 
     private fun startProgressTracking() {
         progressJob?.cancel()
-        progressJob = CoroutineScope(Dispatchers.Main).launch {
+        progressJob = CoroutineScope(Dispatchers.Default).launch {
             while (isActive && mediaPlayer?.isPlaying == true) {
                 mediaPlayer?.let { player ->
                     if (player.duration > 0) {

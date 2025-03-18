@@ -13,7 +13,6 @@ class GetAllGlobalAlarmsUseCase @Inject constructor(
 ){
     suspend operator fun invoke() : Flow<List<PrayerAlarm>>  {
         val globalAlarms = alarmDatabaseRepository.getAllGlobalAlarms()
-        println(globalAlarms.first())
         if (globalAlarms.first().isEmpty()) {
             val initialAlarms = PrayTimesString.entries.filterIndexed { index, _ ->
                 index <= 4

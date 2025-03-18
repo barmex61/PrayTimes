@@ -67,7 +67,6 @@ fun HadithEditionsScreen(modifier: Modifier, navController: NavController, hadit
             LoadingView()
         }
         Status.SUCCESS -> {
-            println("hadith screen")
             LazyVerticalStaggeredGrid(
                 columns = StaggeredGridCells.Fixed(2),
                 modifier = modifier

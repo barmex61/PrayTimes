@@ -118,8 +118,7 @@ class AppViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO){
             getNetworkStateUseCase().collectLatest {
                 _networkState.value = it
-                println("it $it")
-            }  
+            }
         }
         viewModelScope.launch(Dispatchers.IO) {
             getSettingsUseCase.invoke().distinctUntilChanged()

@@ -48,7 +48,6 @@ fun StatisticsScreen(
     modifier: Modifier,
     viewModel: StatisticsViewModel = hiltViewModel()
 ) {
-    println("statistics screen")
     val statisticsState by viewModel.statisticsState.collectAsState()
     val context = LocalContext.current
     val options = remember {

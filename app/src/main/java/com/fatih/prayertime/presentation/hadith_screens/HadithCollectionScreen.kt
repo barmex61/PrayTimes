@@ -53,7 +53,6 @@ fun HadithCollectionScreen(modifier: Modifier, collectionPath: String, hadithVie
     }
     when(hadithSectionCardDataList.status) {
         Status.SUCCESS -> {
-            println("success")
             HadithCollectionGridView(hadithSectionCardDataList.data!!,hadithViewModel, navController ,modifier)
         }
         Status.LOADING ->{

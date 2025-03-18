@@ -64,18 +64,14 @@ class StatisticsViewModel @Inject constructor(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val statisticsState: StateFlow<StatisticsState> = dateRange.flatMapLatest {
-        val startDate = formattedUseCase.formatOfPatternDDMMYYYY(it.start)
-        val endDate = formattedUseCase.formatOfPatternDDMMYYYY(it.endInclusive)
 
         // Log the input date range
-        println("Fetching statistics from $startDate to $endDate")
         getStatisticsUseCase(
             formattedUseCase.formatLocalDateToLong(it.start),
             formattedUseCase.formatLocalDateToLong(it.endInclusive)
         )
 
     }.mapLatest { stats ->
-        println(stats.size)
         if (stats.isEmpty()) {
             StatisticsState(
                 startDate = "",
@@ -135,7 +131,6 @@ class StatisticsViewModel @Inject constructor(
         }.forEach {
             list.add(String.format("%.1f", (it.value.count { it.isCompleted }.toFloat() / totalPrayers * 100)).toFloat())
         }
-        println(list.size)
         list
     }.stateIn(
         scope = viewModelScope,

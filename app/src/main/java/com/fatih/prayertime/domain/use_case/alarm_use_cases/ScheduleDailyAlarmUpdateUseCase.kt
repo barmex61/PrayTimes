@@ -43,7 +43,6 @@ class ScheduleDailyAlarmUpdateUseCase @Inject constructor() {
         val workManager = WorkManager.getInstance(context)
         workManager.getWorkInfosForUniqueWorkLiveData("StatisticsAlarmWorker").observeForever { workInfos ->
             if (workInfos.isEmpty() || workInfos.any { it.state.isFinished }) {
-                println("yessir")
                 val currentTime = System.currentTimeMillis()
                 val calendar = Calendar.getInstance().apply {
                     timeInMillis = currentTime

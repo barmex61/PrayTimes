@@ -14,14 +14,11 @@ class ConnectivityRepositoryImp @Inject constructor(private val networkConnectiv
 
     override suspend fun getConnectivityStatus(): Flow<NetworkState>  = callbackFlow{
         networkConnectivityManager.observe({
-            println("connected")
             trySend(NetworkState.Connected)
         }){
-            println("disconnected")
             trySend(NetworkState.Disconnected)
         }
         awaitClose {
-            println("close network flow")
             networkConnectivityManager.unObserve()
         }
     }.flowOn(Dispatchers.IO)

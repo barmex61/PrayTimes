@@ -63,7 +63,6 @@ class AlarmScheduler @Inject constructor(
             intent,
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
-        println(alarmTime)
         alarmManager.setExactAndAllowWhileIdle(
             AlarmManager.RTC_WAKEUP,
             alarmTime,
@@ -101,7 +100,6 @@ class AlarmScheduler @Inject constructor(
         val prayTypeList = prayTimes.toPrayTypeList()
         prayTimeList.zip(prayTypeList).forEach { (prayTime,prayType) ->
             scheduleStatisticsAlarm(prayTime,prayTimes.date,prayType)
-            println(prayType)
         }
     }
 

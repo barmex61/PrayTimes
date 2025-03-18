@@ -8,23 +8,18 @@ import com.fatih.prayertime.util.utils.QuranUtils.getTransliterations
 
 data class QuranScreenState(
     val surahList: List<SurahInfo> = emptyList(),
-    val selectedSurah : SurahInfo? = null,
-    val selectedSurahNumber : Int = 1,
-    var currentAyahNumber : Int = 1,
     val juzList: List<JuzInfo> = emptyList(),
     val isLoading: Boolean = false,
     val error: String? = null,
     val selectedReciter: String = "",
     val selectedTranslation: String = "",
+    val selectedTransliteration: String = "Turkish",
     val translationList : List<QuranApiData> = listOf(),
     val reciterList : List<QuranApiData> = listOf(),
     val transliterationList : Map<String, String> = getTransliterations(),
-    val selectedTransliteration: String = "Turkish",
     val selectedTabIndex: Int = 0,
+    val selectedSurah : SurahInfo? = null,
+    val selectedSurahNumber : Int = 1,
+    var currentAyahNumber : Int = 1,
     val selectedJuz: JuzInfo? = null,
-    val isAudioPlaying: Boolean = false,
-    val currentAudioPosition: Float = 0f,
-    val audioDuration: Float = 0f,
-    val isAudioLoading: Boolean = false,
-    val audioError: String? = null
 )

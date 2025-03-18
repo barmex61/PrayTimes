@@ -101,8 +101,6 @@ class PrayAlarmWorker @AssistedInject constructor(
                 val currentTime = System.currentTimeMillis()
                 val alarmTimeInMillis = alarm.alarmTime
                 val prayTime = getDailyPrayTimesWithAddressAndDateUseCase(lastKnownAddress,localDateString) ?: return@map alarm
-                println("alarmTimeInMillis $alarmTimeInMillis")
-                println("prayTimeInMillis $currentTime")
                 if (currentTime > alarmTimeInMillis){
                     //Current time is greater than alarm time
                     Log.d(TAG,"Alarm already passed . New alarm setting for next day")

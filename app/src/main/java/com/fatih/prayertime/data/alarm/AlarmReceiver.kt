@@ -77,7 +77,6 @@ class AlarmReceiver : BroadcastReceiver() {
     }
 
     private fun showNotificationForStatistics(context: Context, prayType: String, alarmDate : String){
-        println("inside $prayType")
         val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         deleteNotificationChannel(context,STATISTICS_CHANNEL_ID)
         val channel = NotificationChannel(
@@ -91,7 +90,6 @@ class AlarmReceiver : BroadcastReceiver() {
         val activityIntent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
-        println("alarmReceiver $notificationId")
         val pendingIntent = PendingIntent.getActivity(context, 0, activityIntent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
 
         val yesIntent = Intent(context, StatisticsReceiver::class.java).apply {

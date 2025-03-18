@@ -250,7 +250,6 @@ fun PrayerNotificationSettings(prayerAlarms: List<PrayerAlarm>, onToggle: (Praye
 @Composable
 fun OffsetMinuteSelectionHeader(selectedPrayerAlarm: PrayerAlarm, closeDialog : () -> Unit) {
 
-    println("recompose")
     Box(modifier = Modifier
         .fillMaxSize(1f)
         .background(

@@ -86,7 +86,6 @@ fun HadithSectionDetailScreen(
         modifier = modifier.fillMaxSize()
 
     ) {
-        println(selectedHadithSection)
         selectedHadithSection?:return@Box
         Column(
             modifier = Modifier

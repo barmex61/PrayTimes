@@ -3,6 +3,7 @@ package com.fatih.prayertime.presentation.quran_screen
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -20,6 +21,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.fatih.prayertime.data.remote.dto.qurandto.SurahInfo
 import com.fatih.prayertime.domain.model.JuzInfo
@@ -38,7 +40,7 @@ fun QuranScreen(
     navController: NavController,
     viewModel: QuranViewModel = hiltViewModel()
 ) {
-    val state by viewModel.state.collectAsState()
+    val state by viewModel.quranScreenState.collectAsStateWithLifecycle()
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     
     Box(
@@ -59,9 +61,11 @@ fun QuranScreen(
                         0 -> SurahList (
                             surahList = state.surahList,
                             onSurahClick = { surahInfo ->
+                                println("onsurahsclick")
                                 if (!isNavigating){
                                     isNavigating = true
                                     viewModel.getSelectedSurah(surahInfo.number) {
+                                        println("naviagete")
                                         navController.navigateToScreen(screens[15].route)
                                         isNavigating = false
                                     }
@@ -336,6 +340,7 @@ private fun BoxScope.QuranFab(
     val selectedTranslation = remember(state) { state.selectedTranslation }
     val selectedPronunciation = remember(state) { state.selectedTransliteration}
     val selectedReciter = remember(state) { state.selectedReciter}
+    println(expandedReciter)
     
     val rotation by animateFloatAsState(
         targetValue = if (showBottomSheet) 45f else 0f,
@@ -392,8 +397,13 @@ private fun BoxScope.QuranFab(
 
                 // Okuyucu Seçimi
                 ExposedDropdownMenuBox(
+                    modifier = Modifier.clickable{
+                        println("click")
+                    },
                     expanded = expandedReciter,
-                    onExpandedChange = { expandedReciter = it }
+                    onExpandedChange = {
+                        println("expand")
+                        expandedReciter = it }
                 ) {
                     OutlinedTextField(
                         value = selectedReciter,
@@ -481,7 +491,6 @@ private fun BoxScope.QuranFab(
                             DropdownMenuItem(
                                 text = { Text(transliteration) },
                                 onClick = {
-                                    println("key $transliteration")
                                     onTransliterationSelected(transliteration)
                                     expandedPronunciation = false
                                 }

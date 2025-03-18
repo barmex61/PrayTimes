@@ -27,7 +27,6 @@ class StatisticsAlarmWorker @AssistedInject constructor(
     override suspend fun doWork(): Result {
         val lastKnownAddress = getLastKnowAddressFromDatabaseUseCase()?:return Result.failure()
         updateStatisticsAlarm(lastKnownAddress)
-        println("Statistics Alarm Worker")
         return Result.success()
     }
 

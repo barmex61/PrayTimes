@@ -12,9 +12,7 @@ import javax.inject.Inject
 class GetStatisticsUseCase @Inject constructor(
     private val repository: PrayerStatisticsRepository,
 ) {
-    suspend operator fun invoke(startDate: Long, endDate: Long): Flow<List<PrayerStatisticsEntity>> {
-        println("startDate $startDate")
-        println("endDate $endDate")
+    operator fun invoke(startDate: Long, endDate: Long): Flow<List<PrayerStatisticsEntity>> {
         return repository.getStatisticsBetweenDates(startDate, endDate)
     }
 } 

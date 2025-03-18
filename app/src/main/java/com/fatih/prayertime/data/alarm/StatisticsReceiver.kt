@@ -45,7 +45,6 @@ class StatisticsReceiver : BroadcastReceiver() {
         val prayType = intent.getStringExtra("PRAY_TYPE") ?: ""
         val alarmDate = intent.getStringExtra("ALARM_DATE") ?: ""
         val notificationId = intent.getIntExtra("NOTIFICATION_ID",-1)
-        println("statisticsReceiver $notificationId")
         val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         val alarmTime = System.currentTimeMillis()
         val prayTimes = runBlocking(Dispatchers.IO) {

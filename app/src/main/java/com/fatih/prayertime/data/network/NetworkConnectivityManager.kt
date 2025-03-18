@@ -19,12 +19,10 @@ class NetworkConnectivityManager(context: Context) {
         if (networkCallback == null){
             networkCallback = object : ConnectivityManager.NetworkCallback() {
                 override fun onAvailable(network: Network) {
-                    println("onAvaible")
                     onNetworkAvailable()
                 }
 
                 override fun onLost(network: Network) {
-                    println("onLost")
                     onNetworkUnavailable()
                 }
             }

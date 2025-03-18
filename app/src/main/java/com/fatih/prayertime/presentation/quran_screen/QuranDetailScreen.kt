@@ -1,7 +1,6 @@
 package com.fatih.prayertime.presentation.quran_screen
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
@@ -9,7 +8,6 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -21,24 +19,18 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.text.InlineTextContent
+import androidx.compose.foundation.text.appendInlineContent
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.Settings
 
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -46,8 +38,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
-import androidx.compose.material3.SliderDefaults
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -62,14 +52,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.Placeholder
+import androidx.compose.ui.text.PlaceholderVerticalAlign
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.fatih.prayertime.R
 import com.fatih.prayertime.data.remote.dto.qurandto.Ayah
 import com.fatih.prayertime.data.remote.dto.qurandto.SurahInfo
@@ -80,8 +72,8 @@ import kotlinx.coroutines.delay
 
 @Composable
 fun QuranDetailScreen(bottomPadding: Dp,topPadding : Dp, viewModel: QuranViewModel) {
-    val state by viewModel.state.collectAsState()
-    val selectedSurah = remember(state) { state.selectedSurah }
+    val quranScreenState by viewModel.quranScreenState.collectAsState()
+    val selectedSurah = remember(quranScreenState) { quranScreenState.selectedSurah }
     var shrinkDelay by remember { mutableLongStateOf(5000L) }
     var showHud by remember { mutableStateOf(true) }
     LaunchedEffect(key1 = showHud, key2 = Unit) {
@@ -93,26 +85,27 @@ fun QuranDetailScreen(bottomPadding: Dp,topPadding : Dp, viewModel: QuranViewMod
     }
 
     when {
-        state.isLoading -> {
-            println("loading")
+        quranScreenState.isLoading -> {
             LoadingView()
         }
-        state.error != null -> {
-            ErrorView(state.error ?: "Unknown error occurred") {
-                viewModel.getSelectedSurah(state.selectedSurahNumber) {}
+        quranScreenState.error != null -> {
+            ErrorView(quranScreenState.error ?: "Unknown error occurred") {
+                viewModel.getSelectedSurah(quranScreenState.selectedSurahNumber) {}
             }
         }
-        state.selectedSurah != null -> {
-            Box( modifier = Modifier.fillMaxSize()
+        quranScreenState.selectedSurah != null -> {
+            Box( modifier = Modifier
+                .fillMaxSize()
                 .clickable {
                     showHud = true
                     shrinkDelay = 5000L
-                }.padding(bottom = bottomPadding, top = topPadding)) {
+                }
+                .padding(bottom = bottomPadding, top = topPadding)) {
 
                 QuranDetailTopBar(modifier = Modifier.align(Alignment.TopCenter),selectedSurah = selectedSurah!!, showHud = showHud)
                 Spacer(modifier = Modifier.height(16.dp))
                 QuranDetailContent(selectedSurah = selectedSurah, modifier = Modifier.fillMaxSize(1f),viewModel)
-                BottomNavigationRow(viewModel,showHud, state)
+                BottomNavigationRow(viewModel,showHud,quranScreenState)
 
             }
         }
@@ -160,10 +153,12 @@ fun AyahCard(ayah: Ayah) {
             .padding(16.dp)
     ) {
         Text(
+
             text = ayah.text,
             modifier = Modifier.fillMaxWidth(),
             textAlign = TextAlign.End,
-            style = MaterialTheme.typography.headlineLarge
+            style = MaterialTheme.typography.headlineLarge,
+
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
@@ -181,13 +176,14 @@ fun AyahCard(ayah: Ayah) {
 fun BoxScope.BottomNavigationRow(
     viewModel: QuranViewModel,
     showHud: Boolean,
-    state: QuranScreenState
+    quranDetailScreenState: QuranScreenState,
 ) {
-    val isPlaying = state.isAudioPlaying
-    val isLoading = state.isAudioLoading
-    val currentAyah = state.currentAyahNumber
-    val selectedSurah = state.selectedSurah
-    val audioProgress = state.currentAudioPosition
+    val audioPlayerState = viewModel.audioPlayerState.collectAsStateWithLifecycle()
+    val isPlaying = remember(audioPlayerState.value.audioPlaying){audioPlayerState.value.audioPlaying}
+    val isLoading = remember(audioPlayerState.value.audioLoading){audioPlayerState.value.audioLoading}
+    val currentAyah = remember(quranDetailScreenState.currentAyahNumber){quranDetailScreenState.currentAyahNumber}
+    val selectedSurah = remember(quranDetailScreenState.selectedSurah){quranDetailScreenState.selectedSurah}
+    val audioProgress = remember(audioPlayerState.value.currentAudioPosition) {audioPlayerState.value.currentAudioPosition}
 
     AnimatedVisibility(
         modifier = Modifier.align(Alignment.BottomCenter),
@@ -228,7 +224,6 @@ fun BoxScope.BottomNavigationRow(
                     // Önceki
                     IconButton(
                         onClick = { viewModel.updateCurrentAyahNumber(-1) },
-                        enabled = selectedSurah != null && currentAyah > 0
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Default.KeyboardArrowLeft,
@@ -269,7 +264,6 @@ fun BoxScope.BottomNavigationRow(
                     // Sonraki
                     IconButton(
                         onClick = { viewModel.updateCurrentAyahNumber(1) },
-                        enabled = selectedSurah != null && currentAyah > 0 && currentAyah < selectedSurah.ayahs!!.size
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Default.KeyboardArrowRight,

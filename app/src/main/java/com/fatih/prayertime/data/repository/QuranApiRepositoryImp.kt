@@ -162,8 +162,9 @@ class QuranApiRepositoryImp @Inject constructor(private val context : Context,pr
         emit(Resource.loading<File>())
 
         try {
-            println(audioUrl)
-            val fileName = audioUrl.substringAfterLast("/")
+            val lastSlashIndex = audioUrl.lastIndexOf("/")
+            val secondLastSlashIndex = audioUrl.lastIndexOf("/", lastSlashIndex - 1)
+            val fileName = audioUrl.substring(secondLastSlashIndex + 1).filter { it != '/' }
             val cacheDir = File(context.cacheDir, "quran_audio")
             if (!cacheDir.exists()) {
                 cacheDir.mkdirs()
@@ -201,7 +202,9 @@ class QuranApiRepositoryImp @Inject constructor(private val context : Context,pr
     }.flowOn(Dispatchers.IO)
 
     override suspend fun getCachedAudioFile(audioUrl: String): File? {
-        val fileName = audioUrl.substringAfterLast("/")
+        val lastSlashIndex = audioUrl.lastIndexOf("/")
+        val secondLastSlashIndex = audioUrl.lastIndexOf("/", lastSlashIndex - 1)
+        val fileName = audioUrl.substring(secondLastSlashIndex + 1).filter { it != '/' }
         val cacheDir = File(context.cacheDir, "quran_audio")
         val file = File(cacheDir, fileName)
 

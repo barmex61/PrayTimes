@@ -232,7 +232,6 @@ fun GetLocationInformation(mainScreenViewModel: MainScreenViewModel, appViewMode
     val permissionGranted by appViewModel.isLocationPermissionGranted.collectAsState()
     val isLocationTracking by mainScreenViewModel.isLocationTracking.collectAsState()
     val networkState by appViewModel.networkState.collectAsState()
-    println(networkState)
     LaunchedEffect (key1 = networkState, key2 = permissionGranted){
         Log.d("MainScreen","isLocationTracking $isLocationTracking")
         Log.d("MainScreen","networkState $networkState permissionGranted $permissionGranted")
@@ -343,7 +342,6 @@ fun PrayNotificationCompose(
     haptic: HapticFeedback,
     onShowAlarmDialog : () -> Unit
 ) {
-    println("notification")
     var rotate by remember { mutableStateOf(false) }
     val rotateX = animateFloatAsState(
         targetValue = if (rotate) 180f else 360f,
@@ -459,7 +457,6 @@ fun PrayNotificationCompose(
                 ) {
 
                     val globalAlarmList by mainScreenViewModel.prayerAlarmList.collectAsState()
-                    println("globalAlarmList ${globalAlarmList?.size}")
                     if (globalAlarmList != null) {
                         globalAlarmList!!.forEachIndexed { index, globalAlarm ->
                             Column (
