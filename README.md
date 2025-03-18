@@ -137,8 +137,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 For questions and feedback:
 
 - GitHub Issues
-- Email: [Your Email]
-- Twitter: [@YourHandle]
+- Email: koc.fatih.tr.61@gmail.com
 
 ## 🌟 Support
 
