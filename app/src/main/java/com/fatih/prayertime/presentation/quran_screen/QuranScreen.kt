@@ -38,7 +38,7 @@ import com.fatih.prayertime.util.model.state.QuranScreenState
 fun QuranScreen(
     modifier: Modifier,
     navController: NavController,
-    viewModel: QuranViewModel
+    viewModel: QuranViewModel = hiltViewModel()
 ) {
     val state by viewModel.quranScreenState.collectAsStateWithLifecycle()
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
@@ -56,21 +56,11 @@ fun QuranScreen(
             )
             if (state.error == null){
                 Box(modifier = Modifier.weight(1f)) {
-                    var isNavigating = remember { false }
                     when (state.selectedTabIndex) {
                         0 -> SurahList (
                             surahList = state.surahList,
                             onSurahClick = { surahInfo ->
-                                println("onsurahsclick")
-                                if (!isNavigating){
-                                    isNavigating = true
-                                    viewModel.getSelectedSurah(surahInfo.number) {
-                                        println("naviagete")
-                                        navController.navigateToScreen(screens[15].route)
-                                        isNavigating = false
-                                    }
-                                }
-
+                                navController.navigateToScreen(screens[15].route)
                             }
                         )
                         1 -> JuzList (
@@ -340,8 +330,7 @@ private fun BoxScope.QuranFab(
     val selectedTranslation = remember(state) { state.selectedTranslation }
     val selectedPronunciation = remember(state) { state.selectedTransliteration}
     val selectedReciter = remember(state) { state.selectedReciter}
-    println(expandedReciter)
-    
+
     val rotation by animateFloatAsState(
         targetValue = if (showBottomSheet) 45f else 0f,
         animationSpec = tween(300),
@@ -398,11 +387,9 @@ private fun BoxScope.QuranFab(
                 // Okuyucu Seçimi
                 ExposedDropdownMenuBox(
                     modifier = Modifier.clickable{
-                        println("click")
                     },
                     expanded = expandedReciter,
                     onExpandedChange = {
-                        println("expand")
                         expandedReciter = it }
                 ) {
                     OutlinedTextField(

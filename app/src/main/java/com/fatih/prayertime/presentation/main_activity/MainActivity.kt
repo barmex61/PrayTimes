@@ -270,7 +270,6 @@ fun NavHostLayout(navController: NavHostController, innerPadding: PaddingValues,
     )
     val hadithViewModel : HadithViewModel = hiltViewModel()
     val duaViewModel : DuaViewModel = hiltViewModel()
-    val quranViewModel: QuranViewModel = hiltViewModel()
     AnimatedNavHost(
         navController = navController,
         startDestination = screens.first().title.name
@@ -321,8 +320,8 @@ fun NavHostLayout(navController: NavHostController, innerPadding: PaddingValues,
                     }
                     PrayTimesString.FAVORITES.name -> FavoritesScreen(modifier,navController)
                     PrayTimesString.STATISTICS.name -> StatisticsScreen(modifier)
-                    PrayTimesString.QURAN.name -> { QuranScreen(modifier,navController,quranViewModel) }
-                    PrayTimesString.QURAN_DETAIL_SCREEN.name -> { QuranDetailScreen(innerPadding.calculateBottomPadding(),innerPadding.calculateTopPadding(),quranViewModel) }
+                    PrayTimesString.QURAN.name -> { QuranScreen(modifier,navController) }
+                    PrayTimesString.QURAN_DETAIL_SCREEN.name -> { QuranDetailScreen(innerPadding.calculateBottomPadding(),innerPadding.calculateTopPadding()) }
                 }
             }
         }

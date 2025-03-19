@@ -14,6 +14,9 @@
     <uses-feature android:name="android.hardware.sensor.gyroscope" android:required="true" />
     <uses-permission android:name="android.permission.VIBRATE"/>
     <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+
 
     <application
         android:name=".MyApplication"
@@ -26,6 +29,12 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.PrayerTime"
         tools:targetApi="31">
+        <service
+            android:name=".data.audio.QuranAudioService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="mediaPlayback" />
+
         <activity
             android:name=".presentation.main_activity.MainActivity"
             android:exported="true"

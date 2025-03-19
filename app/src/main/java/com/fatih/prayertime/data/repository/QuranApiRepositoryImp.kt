@@ -17,6 +17,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
@@ -24,6 +26,10 @@ import java.net.URL
 import javax.inject.Inject
 
 class QuranApiRepositoryImp @Inject constructor(private val context : Context,private val quranApi: QuranApi) : QuranApiRepository {
+
+    private val audioList = mutableListOf<QuranApiData>()
+    private val translationList = mutableListOf<QuranApiData>()
+    private val mutex = Mutex()
 
 
     override suspend fun getSurahList(): Resource<List<SurahInfo>> = withContext(Dispatchers.IO) {
@@ -48,22 +54,29 @@ class QuranApiRepositoryImp @Inject constructor(private val context : Context,pr
     }
 
     override suspend fun getTranslationList(): Resource<List<QuranApiData>> = withContext(Dispatchers.IO) {
+        mutex.withLock {
+            if (translationList.isNotEmpty()) return@withContext Resource.success(translationList)
+        }
+        println("translation is empty")
         return@withContext try {
-            val translationList = mutableListOf<QuranApiData>()
-
+            mutex.withLock {
             val languageListResponse = getLanguageList()
-            if (languageListResponse.status == Status.SUCCESS) {
-                languageListResponse.data!!.forEach { languageCode ->
-                    val result = fetchTranslationListWithRetry(languageCode)
-                    if (result.status == Status.SUCCESS) {
-                        translationList.addAll(result.data ?: emptyList())
-                    } else {
-                        return@withContext Resource.error(result.message ?: "Unknown error while fetching translations for $languageCode")
-                    }
+                if (languageListResponse.status == Status.SUCCESS) {
+                        translationList.clear()
+                        languageListResponse.data!!.forEach { languageCode ->
+                            val result = fetchTranslationListWithRetry(languageCode)
+                            if (result.status == Status.SUCCESS) {
+                                translationList.addAll(result.data ?: emptyList())
+                            } else {
+                                return@withContext Resource.error(result.message ?: "Unknown error while fetching translations for $languageCode")
+                            }
+                        }
+                        Resource.success(translationList)
+
+
+                } else {
+                    Resource.error(languageListResponse.message ?: "Error occurred while fetching language list")
                 }
-                Resource.success(translationList)
-            } else {
-                Resource.error(languageListResponse.message ?: "Error occurred while fetching language list")
             }
         } catch (e: Exception) {
             Resource.error("Exception occurred: ${e.message}")
@@ -85,8 +98,7 @@ class QuranApiRepositoryImp @Inject constructor(private val context : Context,pr
                 } ?: return Resource.error("Translation body is null for language $languageCode")
             } else {
                 lastError = "Attempt $attempt failed for language $languageCode: ${translationResponse.message()}"
-                println(lastError)
-                delay(1000)
+                delay(150)
             }
         }
         return Resource.error(lastError ?: "Unknown error while fetching translations for $languageCode")
@@ -109,11 +121,19 @@ class QuranApiRepositoryImp @Inject constructor(private val context : Context,pr
     }
 
     override suspend fun getAudioList(): Resource<List<QuranApiData>> = withContext(Dispatchers.IO) {
+        synchronized(audioList) {
+            if (audioList.isNotEmpty()) return@withContext Resource.success(audioList)
+        }
+        println("recite is empty")
         return@withContext try {
             val audioResponse = quranApi.getAudioList()
             if (audioResponse.isSuccessful){
                 audioResponse.body()?.let {
-                    Resource.success(it.data.filter { it.language == "ar" })
+                    synchronized(audioList) {
+                        audioList.clear()
+                        audioList.addAll(it.data.filter { it.language == "ar" })
+                    }
+                    Resource.success(audioList)
                 }?: Resource.error("An unexpected error occurred ${audioResponse.message()}")
             }else{
                 Resource.error("An unexpected error occurred ${audioResponse.message()}")
@@ -125,7 +145,6 @@ class QuranApiRepositoryImp @Inject constructor(private val context : Context,pr
 
     override suspend fun getSelectedSurah(surahNumber : Int, surahPath : String): Resource<SurahInfo> = withContext(Dispatchers.IO) {
         return@withContext try {
-            println(surahPath)
             val surahResponse = quranApi.getSelectedSurah(surahNumber,surahPath)
             if (surahResponse.isSuccessful){
                 val ayahList = mutableListOf<Ayah>()
