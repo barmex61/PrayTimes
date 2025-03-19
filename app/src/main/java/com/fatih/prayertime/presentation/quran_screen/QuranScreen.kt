@@ -15,6 +15,7 @@ import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -23,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import com.fatih.prayertime.R
 import com.fatih.prayertime.data.remote.dto.qurandto.SurahInfo
 import com.fatih.prayertime.domain.model.JuzInfo
 import com.fatih.prayertime.util.composables.ErrorView
@@ -170,7 +172,7 @@ fun SurahCard(
             }
             Column (modifier = Modifier.padding(start = 16.dp), horizontalAlignment = Alignment.CenterHorizontally){
                 Text(
-                    text = "Ayet Sayısı",
+                    text = stringResource(R.string.number_of_verses),
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.Bold
                 )
@@ -396,7 +398,7 @@ private fun BoxScope.QuranFab(
                         value = selectedReciter,
                         onValueChange = {},
                         readOnly = true,
-                        label = { Text("Seslendiren") },
+                        label = { Text(stringResource(R.string.reciter)) },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedReciter) },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -463,7 +465,7 @@ private fun BoxScope.QuranFab(
 
                         },
                         readOnly = true,
-                        label = { Text("Okunuş Dili") },
+                        label = { Text(stringResource(R.string.pronunciation_language)) },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedPronunciation) },
                         modifier = Modifier
                             .fillMaxWidth()

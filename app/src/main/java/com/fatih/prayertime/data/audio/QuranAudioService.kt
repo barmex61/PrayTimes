@@ -60,6 +60,7 @@ class QuranAudioService : Service() {
         private const val ACTION_PAUSE = "com.fatih.prayertime.PAUSE"
         private const val ACTION_NEXT = "com.fatih.prayertime.NEXT"
         private const val ACTION_PREVIOUS = "com.fatih.prayertime.PREVIOUS"
+        private const val ACTION_STOP = "com.fatih.prayertime.STOP"
     }
 
     inner class LocalBinder : Binder() {
@@ -76,6 +77,7 @@ class QuranAudioService : Service() {
                 addAction(ACTION_PAUSE)
                 addAction(ACTION_NEXT)
                 addAction(ACTION_PREVIOUS)
+                addAction(ACTION_STOP)
             },RECEIVER_NOT_EXPORTED)
         }else{
             @SuppressLint("UnspecifiedRegisterReceiverFlag")
@@ -84,6 +86,7 @@ class QuranAudioService : Service() {
                 addAction(ACTION_PAUSE)
                 addAction(ACTION_NEXT)
                 addAction(ACTION_PREVIOUS)
+                addAction(ACTION_STOP)
             })
         }
     }
@@ -108,6 +111,9 @@ class QuranAudioService : Service() {
                         getPreviousAudio()
                     }
                 }
+                ACTION_STOP -> {
+                    stopAudio()
+                }
             }
         }
     }
@@ -117,7 +123,7 @@ class QuranAudioService : Service() {
             ayahChangeCallback?.invoke(1)
             return
         }
-        currentAyahNumber++
+        currentAyahNumber = (currentAyahNumber +1).coerceAtMost(6236)
         val nextAudioUrl = "$baseUrl/$currentQuality/$currentReciter/$currentAyahNumber.mp3"
         try {
             getAudioFileUseCase(nextAudioUrl, shouldCacheAudio).collect { resource ->
@@ -128,15 +134,14 @@ class QuranAudioService : Service() {
                         }
                     }
                     Status.ERROR -> {
-                        errorCallback?.invoke(resource.message ?: "Ses dosyası yüklenemedi")
+                        errorCallback?.invoke(resource.message ?: getString(R.string.quran_audio_error_download))
                     }
                     Status.LOADING -> {
                     }
                 }
             }
         } catch (e: Exception) {
-            println(e.message)
-            errorCallback?.invoke(e.message ?: "Bir hata oluştu")
+            errorCallback?.invoke(e.message ?: getString(R.string.quran_audio_error_generic))
         }
     }
 
@@ -157,14 +162,14 @@ class QuranAudioService : Service() {
                             }
                         }
                         Status.ERROR -> {
-                            errorCallback?.invoke(resource.message ?: "Ses dosyası yüklenemedi")
+                            errorCallback?.invoke(resource.message ?: getString(R.string.quran_audio_error_download))
                         }
                         Status.LOADING -> {
                         }
                     }
                 }
             } catch (e: Exception) {
-                errorCallback?.invoke(e.message ?: "Bir hata oluştu")
+                errorCallback?.invoke(e.message ?: getString(R.string.quran_audio_error_generic))
             }
         }
     }
@@ -194,7 +199,7 @@ class QuranAudioService : Service() {
                         }
                     }
                     setOnErrorListener { _, _, _ ->
-                        errorCallback?.invoke("Ses dosyası oynatılamadı")
+                        errorCallback?.invoke(getString(R.string.quran_audio_error_playback))
                         false
                     }
                 }
@@ -206,75 +211,59 @@ class QuranAudioService : Service() {
                     it.start()
                     isPlayingCallback?.invoke(true)
                     startProgressTracking()
-                    it.playbackParams = it.playbackParams.setSpeed(speed)
+                    try {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                            it.playbackParams = it.playbackParams?.setSpeed(speed) ?: return@setOnPreparedListener
+                        }
+                    } catch (e: Exception) {
+                        // Playback params ayarlanamadı, normal hızda devam et
+                    }
                     startForeground(NOTIFICATION_ID, createNotification(true))
                 }
                 prepareAsync()
             }
         } catch (e: Exception) {
-            errorCallback?.invoke(e.message ?: "Ses dosyası oynatılamadı")
+            errorCallback?.invoke(e.message ?: getString(R.string.quran_audio_error_playback))
         }
     }
 
     fun pauseAudio() {
-        try {
-            if (mediaPlayer?.isPlaying == true) {
-                mediaPlayer?.pause()
-                isPlayingCallback?.invoke(false)
-                stopProgressTracking()
-                updateNotification(false)
-            }
-        } catch (e: Exception) {
-            // Hata durumunda sessizce devam et
-        }
+        mediaPlayer?.pause()
+        isPlayingCallback?.invoke(false)
+        stopProgressTracking()
+        updateNotification(false)
     }
 
     fun resumeAudio(checkAudioFile: () -> Unit) {
-        try {
-            if (mediaPlayer == null) {
-                checkAudioFile()
-                return
-            }
-            mediaPlayer?.start()
-            isPlayingCallback?.invoke(true)
-            startProgressTracking()
-            updateNotification(true)
-        } catch (e: Exception) {
+        if (mediaPlayer == null) {
             checkAudioFile()
+            return
         }
+        mediaPlayer?.start()
+        isPlayingCallback?.invoke(true)
+        startProgressTracking()
+        updateNotification(true)
     }
 
     fun stopAudio() {
-        try {
-            mediaPlayer?.stop()
-            mediaPlayer?.release()
-            mediaPlayer = null
-            isPlayingCallback?.invoke(false)
-            stopProgressTracking()
-            stopForeground(STOP_FOREGROUND_REMOVE)
-            stopSelf()
-        } catch (e: Exception) {
-            // Hata durumunda sessizce devam et
-        }
+        mediaPlayer?.stop()
+        mediaPlayer?.release()
+        mediaPlayer = null
+        isPlayingCallback?.invoke(false)
+        stopProgressTracking()
+        stopForeground(STOP_FOREGROUND_REMOVE)
+        stopSelf()
     }
 
     fun seekTo(progress: Float) {
-        try {
-            mediaPlayer?.let {
-                val position = (progress * it.duration).toInt()
-                it.seekTo(position)
-            }
-        } catch (e: Exception) {
-            // Hata durumunda sessizce devam et
+        mediaPlayer?.let {
+            val position = (progress * it.duration).toInt()
+            it.seekTo(position)
         }
     }
 
     fun releaseMediaPlayer() {
         stopAudio()
-        mediaPlayer?.release()
-        mediaPlayer = null
-        stopForeground(STOP_FOREGROUND_REMOVE)
-        stopSelf()
     }
 
     private var progressTracker: Job? = null
@@ -285,17 +274,30 @@ class QuranAudioService : Service() {
             while (isActive) {
                 try {
                     mediaPlayer?.let { player ->
-                        if (player.isPlaying) {
+                        if (player.isPlaying && !isReleased()) {
                             val progress = player.currentPosition.toFloat() / player.duration.toFloat()
                             val duration = player.duration.toFloat()
                             progressCallback?.invoke(progress, duration)
                         }
                     }
+                } catch (e: IllegalStateException) {
+                    stopProgressTracking()
+                    break
                 } catch (e: Exception) {
-                    // MediaPlayer geçersiz durumda olabilir, sessizce devam et
+                    stopProgressTracking()
+                    break
                 }
                 delay(100)
             }
+        }
+    }
+
+    private fun isReleased(): Boolean {
+        return try {
+            mediaPlayer?.duration
+            false
+        } catch (e: IllegalStateException) {
+            true
         }
     }
 
@@ -323,20 +325,25 @@ class QuranAudioService : Service() {
 
     fun setIsPlayingCallback(callback: ((Boolean) -> Unit)?) {
         isPlayingCallback = callback
+        isPlayingCallback?.invoke(mediaPlayer?.isPlaying == true)
     }
 
     fun setPlaybackSpeed(newSpeed: Float) {
         speed = newSpeed
-        mediaPlayer?.playbackParams = mediaPlayer?.playbackParams?.setSpeed(newSpeed) ?: return
+        try {
+            mediaPlayer?.playbackParams = mediaPlayer?.playbackParams?.setSpeed(newSpeed) ?: return
+        } catch (e: Exception) {
+
+        }
     }
 
     private fun createNotificationChannel() {
         val channel = NotificationChannel(
             NOTIFICATION_CHANNEL_ID,
-            "Kuran Sesi",
+            getString(R.string.quran_audio_channel_name),
             NotificationManager.IMPORTANCE_LOW
         ).apply {
-            description = "Kuran ses kontrolleri"
+            description = getString(R.string.quran_audio_channel_description)
             setSound(null, null)
         }
         notificationManager.createNotificationChannel(channel)
@@ -364,34 +371,42 @@ class QuranAudioService : Service() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
+        val deleteIntent = PendingIntent.getBroadcast(
+            this,
+            3,
+            Intent(ACTION_STOP).setPackage(packageName),
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
         return NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
             .setSmallIcon(R.drawable.quran)
-            .setContentTitle("$surahName - Ayet $currentAyahNumber")
+            .setContentTitle("$surahName - ${getString(R.string.quran_audio_verse, currentAyahNumber)}")
             .setContentText(reciterName)
-            .setSubText("Kuran-ı Kerim")
+            .setSubText(getString(R.string.quran_audio_notification_subtext))
             .addAction(
                 R.drawable.previous,
-                "Önceki",
+                getString(R.string.quran_audio_previous),
                 previousIntent
             )
             .addAction(
                 if (isPlaying) R.drawable.pause else R.drawable.play,
-                if (isPlaying) "Duraklat" else "Oynat",
+                if (isPlaying) getString(R.string.quran_audio_pause) else getString(R.string.quran_audio_play),
                 playPauseIntent
             )
             .addAction(
                 R.drawable.next,
-                "Sonraki",
+                getString(R.string.quran_audio_next),
                 nextIntent
             )
             .setStyle(
                 androidx.media.app.NotificationCompat.MediaStyle()
                     .setShowActionsInCompactView(0, 1, 2)
             )
+            .setDeleteIntent(deleteIntent)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setOnlyAlertOnce(true)
-            .setOngoing(true)
+            .setAutoCancel(true)
             .build()
     }
 
@@ -405,7 +420,7 @@ class QuranAudioService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         startForeground(NOTIFICATION_ID, createNotification(mediaPlayer?.isPlaying == true))
-        return START_STICKY
+        return START_NOT_STICKY
     }
 
     override fun onDestroy() {
@@ -415,6 +430,11 @@ class QuranAudioService : Service() {
         }
         unregisterReceiver(broadcastReceiver)
         stopProgressTracking()
+    }
+
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        super.onTaskRemoved(rootIntent)
+        stopAudio()
     }
 
 } 

@@ -57,7 +57,6 @@ class QuranApiRepositoryImp @Inject constructor(private val context : Context,pr
         mutex.withLock {
             if (translationList.isNotEmpty()) return@withContext Resource.success(translationList)
         }
-        println("translation is empty")
         return@withContext try {
             mutex.withLock {
             val languageListResponse = getLanguageList()
@@ -124,7 +123,6 @@ class QuranApiRepositoryImp @Inject constructor(private val context : Context,pr
         synchronized(audioList) {
             if (audioList.isNotEmpty()) return@withContext Resource.success(audioList)
         }
-        println("recite is empty")
         return@withContext try {
             val audioResponse = quranApi.getAudioList()
             if (audioResponse.isSuccessful){

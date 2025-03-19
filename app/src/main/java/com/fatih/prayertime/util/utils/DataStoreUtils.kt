@@ -8,5 +8,6 @@ import androidx.datastore.preferences.preferencesDataStore
 
 object DataStoreUtils {
     val SETTINGS_KEY = stringPreferencesKey("settings_json")
+    val AUDIO_SETTINGS_KEY = stringPreferencesKey("audio_settings_json")
     val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings_prefs")
 } 

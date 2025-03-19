@@ -46,8 +46,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.fatih.prayertime.R
 import kotlinx.coroutines.delay
 import kotlin.math.PI
 import kotlin.math.cos
@@ -143,7 +145,7 @@ fun ErrorView(message: String, onRetry: () -> Unit) {
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Refresh,
-                        contentDescription = "Retry",
+                        contentDescription = stringResource(R.string.retry),
                         tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier
                             .size(64.dp)
@@ -153,7 +155,7 @@ fun ErrorView(message: String, onRetry: () -> Unit) {
                     )
                     Spacer(modifier = Modifier.size(16.dp))
                     Text(
-                        text = "Click to refresh",
+                        text = stringResource(R.string.click_to_refresh),
                         color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.graphicsLayer {
                             scaleX = scale

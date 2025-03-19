@@ -70,4 +70,29 @@
     <string name="total_prayer">Toplam Namaz</string>
     <string name="statistics_detail"> Detaylı İstatistikler</string>
     <string name="quran_detail">Quran</string>
+    <!-- Quran Audio Service Strings -->
+    <string name="quran_audio_channel_name">Kuran Sesi</string>
+    <string name="quran_audio_channel_description">Kuran ses kontrolleri</string>
+    <string name="quran_audio_notification_subtext">Kuran-ı Kerim</string>
+    <string name="quran_audio_verse">Ayet %1$d</string>
+    <string name="quran_audio_previous">Önceki</string>
+    <string name="quran_audio_next">Sonraki</string>
+    <string name="quran_audio_pause">Duraklat</string>
+    <string name="quran_audio_play">Oynat</string>
+    <string name="quran_audio_error_generic">Bir hata oluştu</string>
+    <string name="quran_audio_error_playback">Ses dosyası oynatılamadı</string>
+    <string name="quran_audio_error_download">Ses dosyası yüklenemedi</string>
+    <!-- Common UI Strings -->
+    <string name="click_to_refresh">Yenilemek için tıklayın</string>
+    <string name="retry">Tekrar Dene</string>
+    <string name="continue_reading">Devamını gör...</string>
+    <string name="collapse">Küçült</string>
+    <string name="number_of_verses">Ayet Sayısı</string>
+    <string name="reciter">Seslendiren</string>
+    <string name="pronunciation_language">Okunuş Dili</string>
+    <string name="previous_month">Önceki ay</string>
+    <string name="next_month">Sonraki ay</string>
+    <string name="islamic_day">Hicri gün</string>
+    <string name="islamic_month">Hicri ay</string>
+    <string name="today">Bugün</string>
 </resources>

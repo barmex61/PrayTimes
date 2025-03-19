@@ -69,4 +69,29 @@
     <string name="total_prayer">Total Prayer</string>
     <string name="statistics_detail">Statistics Detail</string>
     <string name="quran_detail">Quran</string>
+    <!-- Quran Audio Service Strings -->
+    <string name="quran_audio_channel_name">Quran Audio</string>
+    <string name="quran_audio_channel_description">Quran audio controls</string>
+    <string name="quran_audio_notification_subtext">Holy Quran</string>
+    <string name="quran_audio_verse">Verse %1$d</string>
+    <string name="quran_audio_previous">Previous</string>
+    <string name="quran_audio_next">Next</string>
+    <string name="quran_audio_pause">Pause</string>
+    <string name="quran_audio_play">Play</string>
+    <string name="quran_audio_error_generic">An error occurred</string>
+    <string name="quran_audio_error_playback">Audio file could not be played</string>
+    <string name="quran_audio_error_download">Audio file could not be downloaded</string>
+    <!-- Common UI Strings -->
+    <string name="click_to_refresh">Click to refresh</string>
+    <string name="retry">Retry</string>
+    <string name="continue_reading">Continue reading...</string>
+    <string name="collapse">Collapse</string>
+    <string name="number_of_verses">Number of verses</string>
+    <string name="reciter">Reciter</string>
+    <string name="pronunciation_language">Pronunciation Language</string>
+    <string name="previous_month">Previous month</string>
+    <string name="next_month">Next month</string>
+    <string name="islamic_day">Islamic day</string>
+    <string name="islamic_month">Islamic month</string>
+    <string name="today">Today</string>
 </resources>

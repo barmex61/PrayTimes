@@ -43,8 +43,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.fatih.prayertime.R
 import com.fatih.prayertime.domain.model.IslamicDaysData
 import com.fatih.prayertime.util.model.state.Status
 import com.fatih.prayertime.util.composables.ErrorView
@@ -100,14 +102,14 @@ fun MonthNavigation(selectedLocalDate: LocalDate, calendarScreenViewModel: Calen
             calendarScreenViewModel.updateSearchMonthAndYear(selectedLocalDate.minusMonths(1))
             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
         }) {
-            Text("<")
+            Text(stringResource(R.string.previous_month))
         }
         Text(text = currentDateString, style = MaterialTheme.typography.titleMedium)
         Button(onClick = {
             calendarScreenViewModel.updateSearchMonthAndYear(selectedLocalDate.plusMonths(1))
             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
         }) {
-            Text(">")
+            Text(stringResource(R.string.next_month))
         }
     }
 }

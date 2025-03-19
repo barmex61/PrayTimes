@@ -29,9 +29,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.fatih.prayertime.R
 import com.fatih.prayertime.domain.model.EsmaulHusna
 import com.fatih.prayertime.util.composables.ErrorView
 import com.fatih.prayertime.util.composables.LoadingView
@@ -126,7 +128,7 @@ fun EsmaulHusnaCard(esmaulHusna: EsmaulHusna) {
             Spacer(modifier = Modifier.height(12.dp))
             Text(
                 textAlign = TextAlign.End,
-                text = if (!expanded) "Devamını gör..." else "Küçült",
+                text = if (!expanded) stringResource(R.string.continue_reading) else stringResource(R.string.collapse),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.fillMaxWidth()

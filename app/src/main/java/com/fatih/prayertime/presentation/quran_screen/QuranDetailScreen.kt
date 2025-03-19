@@ -108,7 +108,6 @@ fun QuranDetailScreen(bottomPadding: Dp,topPadding : Dp, viewModel: QuranDetailS
 
     when {
         quranDetailState.isLoading -> {
-            println("loading")
             LoadingView()
         }
         quranDetailState.isError != null -> {
@@ -529,7 +528,7 @@ fun QuranSettingsBottomSheet(
                         Switch(
                             checked = state.shouldCacheAudio,
                             onCheckedChange = {
-                                onEvent(QuranDetailScreenEvent.SetShouldCacheAudio(!state.shouldCacheAudio))
+                                onEvent(QuranDetailScreenEvent.ToggleCacheInfoDialog)
                             }
                         )
                     }
@@ -569,43 +568,6 @@ fun QuranSettingsBottomSheet(
                                 contentDescription = null
                             )
                         }
-                    }
-                }
-
-                SettingsGroup(title = "Okuyucu Ayarları") {
-                    SettingsRow(
-                        title = "Okuyucu",
-                        subtitle = state.selectedReciter,
-                        onClick = { /* Show reciter selection */ }
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Default.KeyboardArrowRight,
-                            contentDescription = null
-                        )
-                    }
-                }
-
-                SettingsGroup(title = "Metin Ayarları") {
-                    SettingsRow(
-                        title = "Çeviri",
-                        subtitle = state.selectedTranslation,
-                        onClick = { /* Show translation selection */ }
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Default.KeyboardArrowRight,
-                            contentDescription = null
-                        )
-                    }
-
-                    SettingsRow(
-                        title = "Latin harfleri",
-                        subtitle = state.selectedTransliteration,
-                        onClick = { /* Show transliteration selection */ }
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Default.KeyboardArrowRight,
-                            contentDescription = null
-                        )
                     }
                 }
             }

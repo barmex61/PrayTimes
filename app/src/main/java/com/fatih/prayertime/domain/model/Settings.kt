@@ -8,7 +8,6 @@ data class Settings(
     val vibrationEnabled: Boolean = true,
     val prayerAlarms: List<PrayerAlarm> = mutableListOf(),
     val silenceWhenCuma : Boolean = true,
-    val shouldCacheAudio : Boolean = true,
 )
 
 enum class ThemeOption { LIGHT, DARK, SYSTEM_DEFAULT }
