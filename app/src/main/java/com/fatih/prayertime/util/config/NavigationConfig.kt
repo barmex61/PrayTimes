@@ -1,7 +1,5 @@
 package com.fatih.prayertime.util.config
 
-import androidx.navigation.NavType
-import androidx.navigation.navArgument
 import com.fatih.prayertime.R
 import com.fatih.prayertime.domain.model.ScreenData
 import com.fatih.prayertime.util.model.enums.PrayTimesString
@@ -85,7 +83,7 @@ object NavigationConfig {
         ),
         ScreenData(
             title = PrayTimesString.ESMAUL_HUSNA,
-            iconRoute = R.drawable.allah,
+            iconRoute = R.drawable.allah_name,
             route = "esmaul_husna",
             iconResourceType = ResourceType.PAINTER
         ),

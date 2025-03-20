@@ -857,6 +857,7 @@ private fun SelectionDialog(
     onDismiss: () -> Unit
 ) {
     AlertDialog(
+        containerColor = MaterialTheme.colorScheme.secondaryContainer,
         onDismissRequest = onDismiss,
         title = { Text(title) },
         text = {

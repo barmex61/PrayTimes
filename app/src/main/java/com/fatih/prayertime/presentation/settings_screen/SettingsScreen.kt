@@ -27,13 +27,22 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Notifications
+
+import androidx.compose.material.icons.filled.MoreVert
+
+
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Slider
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -46,8 +55,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -61,6 +72,7 @@ import com.fatih.prayertime.presentation.main_activity.AppViewModel
 import com.fatih.prayertime.util.model.enums.PrayTimesString
 import com.fatih.prayertime.util.composables.TitleView
 
+
 @Composable
 fun SettingsScreen(modifier: Modifier, appViewModel: AppViewModel = hiltViewModel()) {
     val showSelectedGlobalAlarmOffsetSelectionDialog = remember { mutableStateOf(false) }
@@ -69,28 +81,95 @@ fun SettingsScreen(modifier: Modifier, appViewModel: AppViewModel = hiltViewMode
     val scrollState = rememberScrollState()
 
     Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Column(modifier = Modifier.verticalScroll(scrollState)) {
-            SettingsHeader()
-            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-            AppearanceSettingsCard(uiSettings.selectedTheme) { appViewModel.updateTheme(it) }
-            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-            NotificationSettingsCard(uiSettings.vibrationEnabled) { appViewModel.toggleVibration() }
-            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-            AlarmSettingsCard(uiSettings.prayerAlarms, appViewModel::togglePrayerNotification) { selectedAlarm ->
-                showSelectedGlobalAlarmOffsetSelectionDialog.value = true
-                selectedPrayerAlarm.value = selectedAlarm
+        Column(
+            modifier = Modifier
+                .verticalScroll(scrollState)
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+        ) {
+            // Header
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.primary)
+                    .padding(24.dp)
+            ) {
+                Text(
+                    text = stringResource(R.string.settings),
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = MaterialTheme.colorScheme.onPrimary
+                )
             }
-            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-            OtherSettingsCard(uiSettings.silenceWhenCuma) { appViewModel.toggleCuma() }
-            Spacer(modifier = Modifier.size(35.dp))
+
+            // Settings Content
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                // Görünüm Ayarları
+                SettingsSection(
+                    title = stringResource(R.string.appearance),
+                    icon = ImageVector.vectorResource(R.drawable.palette)
+                ) {
+                    AppearanceSettingsSection(uiSettings.selectedTheme) { appViewModel.updateTheme(it) }
+                }
+
+                // Bildirim Ayarları
+                SettingsSection(
+                    title = stringResource(R.string.notification),
+                    icon = Icons.Default.Notifications
+                ) {
+                    SettingsSwitchItem(
+                        title = stringResource(R.string.vibration),
+                        subtitle = stringResource(R.string.vibration_description),
+                        isChecked = uiSettings.vibrationEnabled,
+                        onCheckedChange = { appViewModel.toggleVibration() }
+                    )
+                }
+
+                // Alarm Ayarları
+                SettingsSection(
+                    title = stringResource(R.string.alarms),
+                    icon = ImageVector.vectorResource(R.drawable.alarm_icon)
+                ) {
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        prayerAlarms.forEach { alarm ->
+                            AlarmSettingItem(
+                                alarm = alarm,
+                                onToggle = appViewModel::togglePrayerNotification,
+                                onMinuteToggle = { selectedAlarm ->
+                                    showSelectedGlobalAlarmOffsetSelectionDialog.value = true
+                                    selectedPrayerAlarm.value = selectedAlarm
+                                }
+                            )
+                        }
+                    }
+                }
+
+                // Diğer Ayarlar
+                SettingsSection(
+                    title = stringResource(R.string.others),
+                    icon = Icons.Default.MoreVert
+                ) {
+                    SettingsSwitchItem(
+                        title = stringResource(R.string.mute_friday),
+                        subtitle = stringResource(R.string.mute_friday_description),
+                        isChecked = uiSettings.silenceWhenCuma,
+                        onCheckedChange = { appViewModel.toggleCuma() }
+                    )
+                }
+            }
         }
+
         AnimatedVisibility(
             visible = showSelectedGlobalAlarmOffsetSelectionDialog.value,
-            enter = fadeIn(tween(700)) + expandIn(tween(700),expandFrom = Alignment.Center),
-            exit = fadeOut(tween(700)) + shrinkOut(tween(700),shrinkTowards = Alignment.Center),
-            ) {
+            enter = fadeIn(tween(700)) + expandIn(tween(700), expandFrom = Alignment.Center),
+            exit = fadeOut(tween(700)) + shrinkOut(tween(700), shrinkTowards = Alignment.Center)
+        ) {
             selectedPrayerAlarm.value?.let {
-                OffsetMinuteSelectionHeader (it){ showSelectedGlobalAlarmOffsetSelectionDialog.value = false }
+                OffsetMinuteSelectionHeader(it) { showSelectedGlobalAlarmOffsetSelectionDialog.value = false }
             }
         }
     }
@@ -98,151 +177,150 @@ fun SettingsScreen(modifier: Modifier, appViewModel: AppViewModel = hiltViewMode
 }
 
 @Composable
-fun SettingsHeader() {
-    Card(
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
-        elevation = CardDefaults.cardElevation(10.dp),
-        shape = RoundedCornerShape(10.dp),
+private fun SettingsSection(
+    title: String,
+    icon: ImageVector,
+    content: @Composable () -> Unit
+) {
+    Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 7.dp)
+            .clip(RoundedCornerShape(16.dp)),
+        color = MaterialTheme.colorScheme.surface,
+        tonalElevation = 1.dp
     ) {
-        Text(
-            modifier = Modifier.padding(horizontal = 9.dp, vertical = 4.dp),
-            text = stringResource(R.string.settings),
-            style = MaterialTheme.typography.headlineSmall
-        )
-    }
-}
-
-@Composable
-fun AppearanceSettingsCard(selectedTheme: ThemeOption, onThemeSelected: (ThemeOption) -> Unit) {
-    Card(
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
-        elevation = CardDefaults.cardElevation(10.dp),
-        shape = RoundedCornerShape(10.dp),
-    ) {
-        Column {
-            Text(
-                modifier = Modifier.padding(vertical = 3.dp, horizontal = 10.dp),
-                text = stringResource(R.string.appearance),
-                style = MaterialTheme.typography.titleMedium
-            )
-            AppearanceSettingsSection(selectedTheme, onThemeSelected)
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.padding(bottom = 16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(24.dp)
+                )
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+            content()
         }
     }
 }
 
 @Composable
-fun NotificationSettingsCard(vibrationEnabled: Boolean, onToggleVibration: () -> Unit) {
-    Card(
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
-        elevation = CardDefaults.cardElevation(10.dp),
-        shape = RoundedCornerShape(10.dp),
+private fun SettingsSwitchItem(
+    title: String,
+    subtitle: String? = null,
+    isChecked: Boolean,
+    onCheckedChange: () -> Unit
+) {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .clickable { onCheckedChange() },
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
     ) {
-        Column {
-            Text(
-                modifier = Modifier.padding(vertical = 7.dp, horizontal = 10.dp),
-                text = stringResource(R.string.notification),
-                style = MaterialTheme.typography.titleMedium
+        Row(
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                if (subtitle != null) {
+                    Text(
+                        text = subtitle,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+            Switch(
+                checked = isChecked,
+                onCheckedChange = { onCheckedChange() }
             )
-            SwitchSettingItem(stringResource(R.string.vibration), vibrationEnabled, onToggleVibration)
         }
     }
 }
 
 @Composable
-fun AlarmSettingsCard(
-    prayerAlarms: List<PrayerAlarm>,
+private fun AlarmSettingItem(
+    alarm: PrayerAlarm,
     onToggle: (PrayerAlarm) -> Unit,
     onMinuteToggle: (PrayerAlarm) -> Unit
 ) {
-    Card(
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
-        elevation = CardDefaults.cardElevation(10.dp),
-        shape = RoundedCornerShape(10.dp),
+    val alphaValue = if (alarm.isEnabled) 1f else 0.5f
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp)),
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
     ) {
-        Column {
-            Text(
-                modifier = Modifier.padding(vertical = 7.dp, horizontal = 10.dp),
-                text = stringResource(R.string.alarms),
-                style = MaterialTheme.typography.titleMedium
+        Row(
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = stringResource(PrayTimesString.fromString(alarm.alarmType).stringResId),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = alphaValue)
+                )
+                Text(
+                    text = stringResource(R.string.alarm_offset_format, alarm.alarmOffset),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = alphaValue),
+                    modifier = Modifier.clickable { onMinuteToggle(alarm) }
+                )
+            }
+            Switch(
+                checked = alarm.isEnabled,
+                onCheckedChange = { onToggle(alarm.copy(isEnabled = !alarm.isEnabled)) }
             )
-            PrayerNotificationSettings(prayerAlarms, onToggle, onMinuteToggle)
-        }
-    }
-}
-
-@Composable
-fun OtherSettingsCard(silenceWhenCuma: Boolean, onToggleCuma: () -> Unit) {
-    Card(
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
-        elevation = CardDefaults.cardElevation(10.dp),
-        shape = RoundedCornerShape(10.dp),
-    ) {
-        Column {
-            Text(
-                modifier = Modifier.padding(vertical = 7.dp, horizontal = 10.dp),
-                text = stringResource(R.string.others),
-                style = MaterialTheme.typography.titleMedium
-            )
-            SwitchSettingItem(stringResource(R.string.mute_friday), silenceWhenCuma, onToggleCuma)
         }
     }
 }
 
 @Composable
 fun AppearanceSettingsSection(selectedTheme: ThemeOption, onThemeSelected: (ThemeOption) -> Unit) {
-    Column {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
         ThemeOption.entries.forEach { theme ->
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Start,verticalAlignment = Alignment.CenterVertically) {
-                RadioButton(selected = selectedTheme == theme, onClick = { onThemeSelected(theme) })
-                Text(text = stringResource(PrayTimesString.fromString(theme.name).stringResId), modifier = Modifier.padding(start = 8.dp))
-            }
-        }
-    }
-}
-
-@Composable
-fun SwitchSettingItem(label: String, isChecked: Boolean, onCheckedChange: () -> Unit) {
-    Row(modifier = Modifier
-        .fillMaxWidth()
-        .padding(horizontal = 8.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-        Text(text = label)
-        Switch(checked = isChecked, onCheckedChange = { onCheckedChange() })
-    }
-}
-
-@Composable
-fun PrayerNotificationSettings(prayerAlarms: List<PrayerAlarm>, onToggle: (PrayerAlarm) -> Unit, onMinuteToggle : (PrayerAlarm) -> Unit) {
-    Column(modifier = Modifier.padding(8.dp)) {
-        prayerAlarms.forEach { alarm ->
-            val alphaValue = if(alarm.isEnabled) 1f else 0.5f
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(8.dp))
+                    .clickable { onThemeSelected(theme) }
+                    .padding(8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Text(
-                    text = stringResource(PrayTimesString.fromString(alarm.alarmType).stringResId),
-                    modifier = Modifier.weight(2f),
-                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = alphaValue))
-                Text(
-                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = alphaValue),
-                    textAlign = TextAlign.Center,
-                    text = stringResource(R.string.alarm_offset_format, alarm.alarmOffset),
-                    style = MaterialTheme.typography.bodySmall,
-                    textDecoration = TextDecoration.Underline,
-                    modifier = Modifier
-                        .weight(1f)
-                        .clickable {
-                            onMinuteToggle(alarm)
-                        }
+                    text = stringResource(PrayTimesString.fromString(theme.name).stringResId),
+                    style = MaterialTheme.typography.bodyLarge
                 )
-                Switch( checked = alarm.isEnabled,
-                    onCheckedChange = { onToggle(
-                        alarm.copy(isEnabled = !alarm.isEnabled)
-                    )},
-                    modifier = Modifier.weight(1f))
-                Text(color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = alphaValue), textAlign = TextAlign.Center, text = stringResource(R.string.change_sound), modifier = Modifier.weight(1f), textDecoration = TextDecoration.Underline,style = MaterialTheme.typography.bodySmall)
+                RadioButton(
+                    selected = selectedTheme == theme,
+                    onClick = { onThemeSelected(theme) }
+                )
             }
-            Spacer(modifier = Modifier.height(8.dp))
         }
     }
 }

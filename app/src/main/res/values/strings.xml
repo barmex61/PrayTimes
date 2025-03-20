@@ -150,4 +150,12 @@
     <string name="quran_font_size_small">Small</string>
     <string name="quran_font_size_medium">Medium</string>
     <string name="quran_font_size_large">Large</string>
+    <!-- Settings Screen -->
+    <string name="audio_settings">Ses Ayarları</string>
+    <string name="main_volume">Ana Ses Seviyesi</string>
+    <string name="adhan_volume">Ezan Sesi</string>
+    <string name="fade_effect">Fade Efekti</string>
+    <string name="fade_effect_description">Ses geçişlerini yumuşat</string>
+    <string name="vibration_description">Bildirimler için titreşim</string>
+    <string name="mute_friday_description">Cuma günü otomatik sessiz mod</string>
 </resources>
