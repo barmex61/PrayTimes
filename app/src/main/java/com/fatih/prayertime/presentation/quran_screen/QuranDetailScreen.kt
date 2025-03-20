@@ -82,6 +82,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.exyte.animatednavbar.utils.toDp
 import com.fatih.prayertime.R
 import com.fatih.prayertime.data.remote.dto.qurandto.Ayah
 import com.fatih.prayertime.data.remote.dto.qurandto.SurahInfo
@@ -235,12 +236,17 @@ fun AyahCard(ayah: Ayah, state: QuranDetailScreenState, quranSettingsState: Qura
                     append(ayah.text)
                 }
             }
+            val fontSize = MaterialTheme.typography.headlineLarge.fontSize * quranSettingsState.fontSize
+            val letterSpacing = fontSize * 0.15f
+            val lineHeight = fontSize * 1.3f
             Text(
                 text = annotatedString,
+                letterSpacing = letterSpacing,
+                lineHeight = lineHeight,
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = TextAlign.End,
                 style = MaterialTheme.typography.headlineLarge.copy(
-                    fontSize = MaterialTheme.typography.headlineLarge.fontSize * quranSettingsState.fontSize
+                    fontSize = fontSize
                 ),
                 color = ayahColor.value
             )
@@ -248,6 +254,7 @@ fun AyahCard(ayah: Ayah, state: QuranDetailScreenState, quranSettingsState: Qura
             Text(
                 text = ayah.textTransliteration ?: "",
                 modifier = Modifier.fillMaxWidth(),
+                lineHeight = lineHeight * 0.5f,
                 textAlign = TextAlign.Start,
                 style = MaterialTheme.typography.bodyMedium.copy(
                     fontSize = MaterialTheme.typography.bodyMedium.fontSize * quranSettingsState.fontSize
@@ -507,14 +514,14 @@ fun QuranSettingsBottomSheet(
 
                     SettingsRow(
                         title = stringResource(R.string.quran_transliteration_settings),
-                        subtitle = state.transliterationList[state.selectedTransliteration] ?: "",
+                        subtitle = state.selectedTransliteration,
                         onClick = { showTransliterationDialog = true }
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            Text(text = state.transliterationList[state.selectedTransliteration] ?: "")
+                            Text(text = state.selectedTransliteration)
                             Icon(
                                 imageVector = Icons.AutoMirrored.Default.KeyboardArrowRight,
                                 contentDescription = null

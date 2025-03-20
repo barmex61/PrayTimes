@@ -299,7 +299,7 @@ class QuranDetailScreenViewModel @Inject constructor(
                 saveAudioSettingsUseCase(settings.first().copy(selectedReciter = event.reciter, selectedReciterIndex = event.reciterIndex))
             }
             is QuranDetailScreenEvent.SetTransliteration -> {
-                saveAudioSettingsUseCase(settings.first().copy(selectedTranslation = event.transliteration))
+                saveAudioSettingsUseCase(settings.first().copy(selectedTransliteration = event.transliteration))
             }
             is QuranDetailScreenEvent.SetFontSize -> {
                 saveAudioSettingsUseCase(settings.first().copy(fontSize = event.size))
