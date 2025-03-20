@@ -80,97 +80,89 @@ fun SettingsScreen(modifier: Modifier, appViewModel: AppViewModel = hiltViewMode
     val uiSettings by appViewModel.settingsState.collectAsState()
     val scrollState = rememberScrollState()
 
-    Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+    Column(
+        modifier = modifier
+            .verticalScroll(scrollState)
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.primaryContainer,RoundedCornerShape(16.dp))
+                .padding(24.dp)
+        ) {
+            Text(
+                text = stringResource(R.string.settings),
+                style = MaterialTheme.typography.headlineMedium,
+                color = MaterialTheme.colorScheme.onPrimaryContainer
+            )
+        }
+
         Column(
             modifier = Modifier
-                .verticalScroll(scrollState)
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
+                .fillMaxWidth()
+                .padding(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            // Header
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.primary)
-                    .padding(24.dp)
+            SettingsSection(
+                title = stringResource(R.string.appearance),
+                icon = ImageVector.vectorResource(R.drawable.palette)
             ) {
-                Text(
-                    text = stringResource(R.string.settings),
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = MaterialTheme.colorScheme.onPrimary
+                AppearanceSettingsSection(uiSettings.selectedTheme) { appViewModel.updateTheme(it) }
+            }
+
+            SettingsSection(
+                title = stringResource(R.string.notification),
+                icon = Icons.Default.Notifications
+            ) {
+                SettingsSwitchItem(
+                    title = stringResource(R.string.vibration),
+                    subtitle = stringResource(R.string.vibration_description),
+                    isChecked = uiSettings.vibrationEnabled,
+                    onCheckedChange = { appViewModel.toggleVibration() }
                 )
             }
 
-            // Settings Content
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+            SettingsSection(
+                title = stringResource(R.string.alarms),
+                icon = ImageVector.vectorResource(R.drawable.alarm_icon)
             ) {
-                // Görünüm Ayarları
-                SettingsSection(
-                    title = stringResource(R.string.appearance),
-                    icon = ImageVector.vectorResource(R.drawable.palette)
-                ) {
-                    AppearanceSettingsSection(uiSettings.selectedTheme) { appViewModel.updateTheme(it) }
-                }
-
-                // Bildirim Ayarları
-                SettingsSection(
-                    title = stringResource(R.string.notification),
-                    icon = Icons.Default.Notifications
-                ) {
-                    SettingsSwitchItem(
-                        title = stringResource(R.string.vibration),
-                        subtitle = stringResource(R.string.vibration_description),
-                        isChecked = uiSettings.vibrationEnabled,
-                        onCheckedChange = { appViewModel.toggleVibration() }
-                    )
-                }
-
-                // Alarm Ayarları
-                SettingsSection(
-                    title = stringResource(R.string.alarms),
-                    icon = ImageVector.vectorResource(R.drawable.alarm_icon)
-                ) {
-                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        prayerAlarms.forEach { alarm ->
-                            AlarmSettingItem(
-                                alarm = alarm,
-                                onToggle = appViewModel::togglePrayerNotification,
-                                onMinuteToggle = { selectedAlarm ->
-                                    showSelectedGlobalAlarmOffsetSelectionDialog.value = true
-                                    selectedPrayerAlarm.value = selectedAlarm
-                                }
-                            )
-                        }
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    uiSettings.prayerAlarms.forEach { alarm ->
+                        AlarmSettingItem(
+                            alarm = alarm,
+                            onToggle = appViewModel::togglePrayerNotification,
+                            onMinuteToggle = { selectedAlarm ->
+                                showSelectedGlobalAlarmOffsetSelectionDialog.value = true
+                                selectedPrayerAlarm.value = selectedAlarm
+                            }
+                        )
                     }
                 }
+            }
 
-                // Diğer Ayarlar
-                SettingsSection(
-                    title = stringResource(R.string.others),
-                    icon = Icons.Default.MoreVert
-                ) {
-                    SettingsSwitchItem(
-                        title = stringResource(R.string.mute_friday),
-                        subtitle = stringResource(R.string.mute_friday_description),
-                        isChecked = uiSettings.silenceWhenCuma,
-                        onCheckedChange = { appViewModel.toggleCuma() }
-                    )
-                }
+            SettingsSection(
+                title = stringResource(R.string.others),
+                icon = Icons.Default.MoreVert
+            ) {
+                SettingsSwitchItem(
+                    title = stringResource(R.string.mute_friday),
+                    subtitle = stringResource(R.string.mute_friday_description),
+                    isChecked = uiSettings.silenceWhenCuma,
+                    onCheckedChange = { appViewModel.toggleCuma() }
+                )
             }
         }
+    }
 
-        AnimatedVisibility(
-            visible = showSelectedGlobalAlarmOffsetSelectionDialog.value,
-            enter = fadeIn(tween(700)) + expandIn(tween(700), expandFrom = Alignment.Center),
-            exit = fadeOut(tween(700)) + shrinkOut(tween(700), shrinkTowards = Alignment.Center)
-        ) {
-            selectedPrayerAlarm.value?.let {
-                OffsetMinuteSelectionHeader(it) { showSelectedGlobalAlarmOffsetSelectionDialog.value = false }
-            }
+    AnimatedVisibility(
+        visible = showSelectedGlobalAlarmOffsetSelectionDialog.value,
+        enter = fadeIn(tween(700)) + expandIn(tween(700), expandFrom = Alignment.Center),
+        exit = fadeOut(tween(700)) + shrinkOut(tween(700), shrinkTowards = Alignment.Center)
+    ) {
+        selectedPrayerAlarm.value?.let {
+            OffsetMinuteSelectionHeader(it) { showSelectedGlobalAlarmOffsetSelectionDialog.value = false }
         }
     }
     TitleView("Settings")
@@ -186,7 +178,7 @@ private fun SettingsSection(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp)),
-        color = MaterialTheme.colorScheme.surface,
+        color = MaterialTheme.colorScheme.primaryContainer,
         tonalElevation = 1.dp
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -224,7 +216,7 @@ private fun SettingsSwitchItem(
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
             .clickable { onCheckedChange() },
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+        color = MaterialTheme.colorScheme.secondaryContainer
     ) {
         Row(
             modifier = Modifier
@@ -266,7 +258,7 @@ private fun AlarmSettingItem(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp)),
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+        color = MaterialTheme.colorScheme.secondaryContainer
     ) {
         Row(
             modifier = Modifier
@@ -303,24 +295,33 @@ fun AppearanceSettingsSection(selectedTheme: ThemeOption, onThemeSelected: (Them
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         ThemeOption.entries.forEach { theme ->
-            Row(
+            Surface(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(8.dp))
-                    .clickable { onThemeSelected(theme) }
-                    .padding(8.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = stringResource(PrayTimesString.fromString(theme.name).stringResId),
-                    style = MaterialTheme.typography.bodyLarge
-                )
-                RadioButton(
-                    selected = selectedTheme == theme,
-                    onClick = { onThemeSelected(theme) }
-                )
+                    .clip(RoundedCornerShape(12.dp)),
+                color = MaterialTheme.colorScheme.secondaryContainer
+            ){
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(8.dp))
+                        .clickable { onThemeSelected(theme) }
+                        .padding(vertical = 8.dp, horizontal = 12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = stringResource(PrayTimesString.fromString(theme.name).stringResId),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    RadioButton(
+                        selected = selectedTheme == theme,
+                        onClick = { onThemeSelected(theme) }
+                    )
+                }
             }
+
         }
     }
 }
