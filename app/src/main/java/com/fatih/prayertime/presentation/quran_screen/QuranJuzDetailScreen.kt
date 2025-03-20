@@ -149,15 +149,14 @@ fun QuranJuzDetailScreen(
                     }
                 )
                 
-                // Player kontrolleri için bottom bar
                 QuranPlayerBottomBar(
                     showHud = showHud,
-                    isPlaying = false, // TODO: Gerçek değeri ViewModel'den al
-                    currentTime = 0L, // TODO: Gerçek değeri ViewModel'den al
-                    totalDuration = 0L, // TODO: Gerçek değeri ViewModel'den al
-                    audioProgress = 0f, // TODO: Gerçek değeri ViewModel'den al
+                    isPlaying = false,
+                    currentTime = 0L,
+                    totalDuration = 0L,
+                    audioProgress = 0f,
                     onPlayPauseClick = {
-                        // TODO: play/pause mantığı
+
                     },
                     onPreviousClick = {
                         viewModel.updateCurrentAyahNumber(-1)
@@ -587,4 +586,4 @@ fun QuranSettingsBottomSheet(
             }
         }
     }
-}
+} 

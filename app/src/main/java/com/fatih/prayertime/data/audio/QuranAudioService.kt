@@ -358,6 +358,7 @@ class QuranAudioService : Service() {
     }
 
     private fun createNotification(isPlaying: Boolean): Notification {
+        println("create")
         val playPauseIntent = PendingIntent.getBroadcast(
             this,
             0,

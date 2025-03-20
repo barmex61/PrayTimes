@@ -146,7 +146,7 @@
     <string name="quran_cache_audio_save">Save</string>
     <string name="quran_cache_audio_save_alternative">Don\'t Save</string>
     <string name="quran_font_size">Font Size</string>
-    <string name="quran_font_size_description">Adjust text size for better readability</string>
+    <string name="quran_font_size_description">Adjust text size</string>
     <string name="quran_font_size_small">Small</string>
     <string name="quran_font_size_medium">Medium</string>
     <string name="quran_font_size_large">Large</string>

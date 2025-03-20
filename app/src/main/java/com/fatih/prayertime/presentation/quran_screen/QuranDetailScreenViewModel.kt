@@ -242,6 +242,10 @@ class QuranDetailScreenViewModel @Inject constructor(
         quranAudioManager.stopAudio()
     }
 
+    fun setPlaybackSpeed(speed : Float){
+        quranAudioManager.setPlaybackSpeed(speed)
+    }
+
     fun seekTo(position: Float) {
         _audioPlayerState.update { it.copy(currentAudioPosition = position) }
         quranAudioManager.seekTo(position)
@@ -254,7 +258,6 @@ class QuranDetailScreenViewModel @Inject constructor(
 
         quranAudioManager.setAyahChangedCallback { direction ->
             updateCurrentAyahNumber(direction)
-            println("setayahchanged")
         }
 
         quranAudioManager.setErrorCallback { errorMessage ->
@@ -275,6 +278,7 @@ class QuranDetailScreenViewModel @Inject constructor(
             }
             is QuranDetailScreenEvent.SetPlaybackSpeed -> {
                 saveAudioSettingsUseCase(settings.first().copy(playbackSpeed = event.speed))
+                setPlaybackSpeed(event.speed)
             }
             is QuranDetailScreenEvent.TogglePlaybackMode -> {
                 _quranSettingsState.update { it.copy(playByVerse = !it.playByVerse) }

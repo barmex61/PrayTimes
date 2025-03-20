@@ -69,7 +69,8 @@
     <string name="end_date">Bitiş Tarihi</string>
     <string name="total_prayer">Toplam Namaz</string>
     <string name="statistics_detail"> Detaylı İstatistikler</string>
-    <string name="quran_detail">Quran</string>
+    <string name="quran_juz_detail">Kuran Cüz</string>
+    <string name="quran_detail">Kuran</string>
     <!-- Quran Audio Service Strings -->
     <string name="quran_audio_channel_name">Kuran Sesi</string>
     <string name="quran_audio_channel_description">Kuran ses kontrolleri</string>
@@ -146,7 +147,7 @@
     <string name="quran_cache_audio_save">Kaydet</string>
     <string name="quran_cache_audio_save_alternative">Kaydetme</string>
     <string name="quran_font_size">Yazı Boyutu</string>
-    <string name="quran_font_size_description">Daha iyi okunabilirlik için yazı boyutunu ayarlayın</string>
+    <string name="quran_font_size_description">Yazı boyutunu değiştir</string>
     <string name="quran_font_size_small">Küçük</string>
     <string name="quran_font_size_medium">Orta</string>
     <string name="quran_font_size_large">Büyük</string>

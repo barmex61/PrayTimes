@@ -45,12 +45,14 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -460,8 +462,9 @@ fun QuranSettingsBottomSheet(
         ModalBottomSheet(
             onDismissRequest = onDismiss,
             dragHandle = { BottomSheetDefaults.DragHandle() },
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = MaterialTheme.colorScheme.surface,
         ) {
+
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -594,6 +597,11 @@ fun QuranSettingsBottomSheet(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
+                            val textSize = when {
+                                state.fontSize <= 0.9f -> stringResource(R.string.quran_font_size_small)
+                                state.fontSize <= 1.1f -> stringResource(R.string.quran_font_size_medium)
+                                else -> stringResource(R.string.quran_font_size_large)
+                            }
                             IconButton(
                                 onClick = { 
                                     if (state.fontSize > 0.8f) {
@@ -602,22 +610,17 @@ fun QuranSettingsBottomSheet(
                                 },
                                 enabled = state.fontSize > 0.8f
                             ) {
-                                Icon(
-                                    imageVector = Icons.Default.Delete,
-                                    contentDescription = null,
-                                    tint = if (state.fontSize > 0.8f) 
-                                        MaterialTheme.colorScheme.onSurface 
-                                    else 
-                                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                                Text(
+                                    text = "-",
+                                    fontSize = 20.sp,
+                                    color = if (state.fontSize > 0.8f)
+                                        MaterialTheme.colorScheme.onSurface
+                                        else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
                                 )
                             }
                             
                             Text(
-                                text = when {
-                                    state.fontSize <= 0.9f -> stringResource(R.string.quran_font_size_small)
-                                    state.fontSize <= 1.1f -> stringResource(R.string.quran_font_size_medium)
-                                    else -> stringResource(R.string.quran_font_size_large)
-                                },
+                                text = textSize,
                                 style = MaterialTheme.typography.bodyMedium
                             )
                             
@@ -629,10 +632,10 @@ fun QuranSettingsBottomSheet(
                                 },
                                 enabled = state.fontSize < 1.5f
                             ) {
-                                Icon(
-                                    imageVector = Icons.Default.Add,
-                                    contentDescription = null,
-                                    tint = if (state.fontSize < 1.5f) 
+                                Text(
+                                    text = "+",
+                                    fontSize = 20.sp,
+                                    color = if (state.fontSize < 1.5f)
                                         MaterialTheme.colorScheme.onSurface 
                                     else 
                                         MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
