@@ -32,6 +32,8 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BottomSheetDefaults
 
@@ -65,6 +67,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.ParagraphStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -110,12 +113,10 @@ fun QuranDetailScreen(surahNumber : Int,bottomPadding: Dp,topPadding : Dp, viewM
     }
 
     when {
-        quranDetailState.isLoading -> {
-            LoadingView()
-        }
+
         quranDetailState.isError != null -> {
             println("error")
-            ErrorView(quranDetailState.isError?: "Unknown error occurred") {
+            ErrorView(quranDetailState.isError?: stringResource(R.string.quran_unknown_error)) {
                 coroutineScope.launch(Dispatchers.IO) {
                     viewModel.getSelectedSurah()
                 }
@@ -131,7 +132,11 @@ fun QuranDetailScreen(surahNumber : Int,bottomPadding: Dp,topPadding : Dp, viewM
                 .padding(bottom = bottomPadding, top = topPadding)) {
 
                 Spacer(modifier = Modifier.height(16.dp))
-                QuranDetailContent(selectedSurah = selectedSurah!!, modifier = Modifier.fillMaxSize(1f),quranDetailState)
+                QuranDetailContent(selectedSurah = selectedSurah!!, modifier = Modifier.fillMaxSize(1f),quranDetailState,quranSettingsState){ selectedAyahNumber ->
+                    viewModel.updateSelectedAyahNumber(selectedAyahNumber)
+                    showHud = true
+                    shrinkDelay = 5000L
+                }
                 BottomNavigationRow(viewModel,showHud,quranDetailState, quranSettingsState)
 
             }
@@ -140,6 +145,9 @@ fun QuranDetailScreen(surahNumber : Int,bottomPadding: Dp,topPadding : Dp, viewM
                 state = quranSettingsState,
                 onEvent = viewModel::onSettingsEvent
             ) { viewModel.onSettingsEvent(QuranDetailScreenEvent.ToggleSettingsSheet) }
+            if(quranDetailState.isLoading){
+                LoadingView()
+            }
         }
     }
 }
@@ -164,7 +172,7 @@ fun QuranDetailTopBar(selectedSurah: SurahInfo, showHud: Boolean) {
 }
 
 @Composable
-fun QuranDetailContent(selectedSurah: SurahInfo, modifier: Modifier = Modifier,state: QuranDetailScreenState) {
+fun QuranDetailContent(selectedSurah: SurahInfo, modifier: Modifier = Modifier,state: QuranDetailScreenState,quranSettingsState: QuranSettingsState,onAyahClick: (Int) -> Unit) {
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
     val density = LocalDensity.current
@@ -191,20 +199,22 @@ fun QuranDetailContent(selectedSurah: SurahInfo, modifier: Modifier = Modifier,s
             .padding(horizontal = 8.dp)
     ) {
         items(selectedSurah.ayahs!!) { ayah ->
-            AyahCard(ayah, state)
+            AyahCard(ayah, state,quranSettingsState,onAyahClick)
         }
     }
 }
 
 @Composable
-fun AyahCard(ayah: Ayah,state: QuranDetailScreenState) {
+fun AyahCard(ayah: Ayah, state: QuranDetailScreenState, quranSettingsState: QuranSettingsState,onAyahClick: (Int) -> Unit) {
     val currentAyah = remember(state.selectedAyahNumber){state.selectedAyahNumber}
     val ayahNumber = remember{ayah.numberInSurah}
     val ayahColor = animateColorAsState(
         animationSpec = tween(durationMillis = 500),
         targetValue = if (currentAyah == ayahNumber) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onPrimaryContainer
     )
-    Box{
+    Box(modifier = Modifier.clickable{
+        onAyahClick(ayahNumber)
+    }){
         Column(
             Modifier
                 .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(6.dp))
@@ -224,31 +234,32 @@ fun AyahCard(ayah: Ayah,state: QuranDetailScreenState) {
                 }
             }
             Text(
-
                 text = annotatedString,
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = TextAlign.End,
-                style = MaterialTheme.typography.headlineLarge,
+                style = MaterialTheme.typography.headlineLarge.copy(
+                    fontSize = MaterialTheme.typography.headlineLarge.fontSize * quranSettingsState.fontSize
+                ),
                 color = ayahColor.value
-
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = ayah.textTransliteration ?: "",
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = TextAlign.Start,
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    fontSize = MaterialTheme.typography.bodyMedium.fontSize * quranSettingsState.fontSize
+                ),
                 color = ayahColor.value
             )
         }
         Box(modifier = Modifier
             .padding(8.dp)
             .size(32.dp), contentAlignment = Alignment.Center){
-            Icon(painter = painterResource(R.drawable.ayah), contentDescription = "Ayah",tint= Color.Unspecified)
+            Icon(painter = painterResource(R.drawable.ayah), contentDescription = stringResource(R.string.quran_verse_icon),tint= Color.Unspecified)
             Text(text = ayah.numberInSurah.toString(), style = MaterialTheme.typography.bodyMedium,color = Color.Black)
         }
     }
-
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -291,7 +302,7 @@ fun BoxScope.BottomNavigationRow(
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                     Text(
-                        text = "Ayet: $currentAyah",
+                        text = stringResource(R.string.quran_verse, currentAyah),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
                     )
@@ -310,7 +321,7 @@ fun BoxScope.BottomNavigationRow(
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Default.KeyboardArrowLeft,
-                            contentDescription = "Önceki",
+                            contentDescription = stringResource(R.string.quran_previous),
                             tint = if (currentAyah > 1 && !isLoading) 
                                     MaterialTheme.colorScheme.onPrimaryContainer 
                                   else 
@@ -341,20 +352,19 @@ fun BoxScope.BottomNavigationRow(
                         } else {
                             Icon(
                                 imageVector = if (isPlaying) ImageVector.vectorResource(R.drawable.baseline_pause_24) else ImageVector.vectorResource(R.drawable.baseline_play_arrow_24),
-                                contentDescription = if (isPlaying) "Duraklat" else "Oynat",
+                                contentDescription = if (isPlaying) stringResource(R.string.quran_pause) else stringResource(R.string.quran_play),
                                 tint = MaterialTheme.colorScheme.onPrimary
                             )
                         }
                     }
 
-                    // Sonraki
                     IconButton(
                         onClick = { viewModel.updateCurrentAyahNumber(1) },
                         enabled = currentAyah < (selectedSurah?.ayahs?.size ?: 0) && !isLoading
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Default.KeyboardArrowRight,
-                            contentDescription = "Sonraki",
+                            contentDescription = stringResource(R.string.quran_next),
                             tint = if (currentAyah < (selectedSurah?.ayahs?.size ?: 0) && !isLoading)
                                     MaterialTheme.colorScheme.onPrimaryContainer
                                   else
@@ -363,13 +373,12 @@ fun BoxScope.BottomNavigationRow(
                     }
                 }
 
-                // Sağ taraf - Ayarlar
                 IconButton(onClick = {
                     viewModel.onSettingsEvent(QuranDetailScreenEvent.ToggleSettingsSheet)
                 }) {
                     Icon(
                         imageVector = Icons.Default.Settings,
-                        contentDescription = "Ayarlar",
+                        contentDescription = stringResource(R.string.quran_settings),
                         tint = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                 }
@@ -407,10 +416,9 @@ fun QuranSettingsBottomSheet(
     if (state.showCacheInfo) {
         CacheInfoDialog(onEvent)
     }
-    // Translation Selection Dialog
     if (showTranslationDialog) {
         SelectionDialog(
-            title = "Çeviri Seçin",
+            title = stringResource(R.string.quran_select_translation),
             names = state.translationList.map { it.toText() },
             selectedItem = state.selectedTranslation,
             onItemSelected = { selected,index ->
@@ -421,10 +429,9 @@ fun QuranSettingsBottomSheet(
         )
     }
 
-    // Reciter Selection Dialog
     if (showReciterDialog) {
         SelectionDialog(
-            title = "Okuyucu Seçin",
+            title = stringResource(R.string.quran_select_reciter),
             names = state.reciterList.map { it.toText() },
             selectedItem = state.selectedReciter,
             onItemSelected = { selected,index ->
@@ -435,10 +442,9 @@ fun QuranSettingsBottomSheet(
         )
     }
 
-    // Transliteration Selection Dialog
     if (showTransliterationDialog) {
         SelectionDialog(
-            title = "Transliterasyon Seçin",
+            title = stringResource(R.string.quran_select_transliteration),
             names = state.transliterationList.map { it.key },
             selectedItem = state.selectedTransliteration,
             onItemSelected = {  selected,index ->
@@ -461,9 +467,9 @@ fun QuranSettingsBottomSheet(
                     .fillMaxWidth()
                     .padding(vertical = 8.dp)
             ) {
-                SettingsGroup(title = "Dil ve Metin Ayarları") {
+                SettingsGroup(title = stringResource(R.string.quran_language_text_settings)) {
                     SettingsRow(
-                        title = "Okuyucu",
+                        title = stringResource(R.string.quran_reciter_settings),
                         subtitle = state.selectedReciter,
                         onClick = { showReciterDialog = true }
                     ) {
@@ -480,7 +486,7 @@ fun QuranSettingsBottomSheet(
                     }
 
                     SettingsRow(
-                        title = "Çeviri",
+                        title = stringResource(R.string.quran_translation_settings),
                         subtitle = state.selectedTranslation,
                         onClick = { showTranslationDialog = true }
                     ) {
@@ -497,7 +503,7 @@ fun QuranSettingsBottomSheet(
                     }
 
                     SettingsRow(
-                        title = "Transliterasyon",
+                        title = stringResource(R.string.quran_transliteration_settings),
                         subtitle = state.transliterationList[state.selectedTransliteration] ?: "",
                         onClick = { showTransliterationDialog = true }
                     ) {
@@ -513,10 +519,10 @@ fun QuranSettingsBottomSheet(
                         }
                     }
                 }
-                SettingsGroup(title = "Oynatma Ayarları") {
+                SettingsGroup(title = stringResource(R.string.quran_playback_settings)) {
                     SettingsRow(
-                        title = "Otomatik gizle",
-                        subtitle = "Oynatıcı kontrollerini 7 saniye sonra otomatik gizle",
+                        title = stringResource(R.string.quran_auto_hide_player),
+                        subtitle = stringResource(R.string.quran_auto_hide_player_description),
                         onClick = { onEvent(QuranDetailScreenEvent.ToggleAutoHidePlayer) }
                     ) {
                         Checkbox(
@@ -526,11 +532,11 @@ fun QuranSettingsBottomSheet(
                     }
 
                     SettingsRow(
-                        title = "Ses Verilerini Kaydet",
+                        title = stringResource(R.string.quran_cache_audio),
                         subtitle = if (state.shouldCacheAudio)
-                            "Çevrimdışı dinleme için ses verileri kaydediliyor"
+                            stringResource(R.string.quran_cache_audio_enabled)
                         else
-                            "Ses verileri kaydedilmiyor",
+                            stringResource(R.string.quran_cache_audio_disabled),
                         onClick = { onEvent(QuranDetailScreenEvent.ToggleCacheInfoDialog) }
                     ) {
                         Switch(
@@ -542,7 +548,7 @@ fun QuranSettingsBottomSheet(
                     }
 
                     SettingsRow(
-                        title = "Oynatma hızı",
+                        title = stringResource(R.string.quran_playback_speed),
                         subtitle = "${state.playbackSpeed}x",
                         onClick = {showSpeedDialog = true }
                     ) {
@@ -559,8 +565,8 @@ fun QuranSettingsBottomSheet(
                     }
 
                     SettingsRow(
-                        title = "Oynatma modu",
-                        subtitle = if (state.playByVerse) "Ayet ayet" else "Sure sure",
+                        title = stringResource(R.string.quran_playback_mode),
+                        subtitle = if (state.playByVerse) stringResource(R.string.quran_play_by_verse) else stringResource(R.string.quran_play_by_surah),
                         onClick = { onEvent(QuranDetailScreenEvent.TogglePlaybackMode) }
                     ) {
                         Row(
@@ -568,13 +574,70 @@ fun QuranSettingsBottomSheet(
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             Text(
-                                text = if (state.playByVerse) "Ayet ayet" else "Sure sure",
+                                text = if (state.playByVerse) stringResource(R.string.quran_play_by_verse) else stringResource(R.string.quran_play_by_surah),
                                 style = MaterialTheme.typography.bodyMedium
                             )
                             Icon(
                                 imageVector = Icons.AutoMirrored.Default.KeyboardArrowRight,
                                 contentDescription = null
                             )
+                        }
+                    }
+                }
+                SettingsGroup(title = stringResource(R.string.quran_font_size)) {
+                    SettingsRow(
+                        title = stringResource(R.string.quran_font_size),
+                        subtitle = stringResource(R.string.quran_font_size_description),
+                        onClick = {}
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            IconButton(
+                                onClick = { 
+                                    if (state.fontSize > 0.8f) {
+                                        onEvent(QuranDetailScreenEvent.SetFontSize(state.fontSize - 0.1f))
+                                    }
+                                },
+                                enabled = state.fontSize > 0.8f
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Delete,
+                                    contentDescription = null,
+                                    tint = if (state.fontSize > 0.8f) 
+                                        MaterialTheme.colorScheme.onSurface 
+                                    else 
+                                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                                )
+                            }
+                            
+                            Text(
+                                text = when {
+                                    state.fontSize <= 0.9f -> stringResource(R.string.quran_font_size_small)
+                                    state.fontSize <= 1.1f -> stringResource(R.string.quran_font_size_medium)
+                                    else -> stringResource(R.string.quran_font_size_large)
+                                },
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                            
+                            IconButton(
+                                onClick = { 
+                                    if (state.fontSize < 1.5f) {
+                                        onEvent(QuranDetailScreenEvent.SetFontSize(state.fontSize + 0.1f))
+                                    }
+                                },
+                                enabled = state.fontSize < 1.5f
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Add,
+                                    contentDescription = null,
+                                    tint = if (state.fontSize < 1.5f) 
+                                        MaterialTheme.colorScheme.onSurface 
+                                    else 
+                                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                                )
+                            }
                         }
                     }
                 }
@@ -588,29 +651,29 @@ fun CacheInfoDialog(onEvent: (QuranDetailScreenEvent) -> Unit) {
     AlertDialog(
         onDismissRequest = { onEvent(QuranDetailScreenEvent.ToggleCacheInfoDialog) },
         title = {
-            Text("Ses Verilerini Kaydetme")
+            Text(stringResource(R.string.quran_cache_audio))
         },
         text = {
             Column {
                 Text(
-                    "Ses verilerini cihazınıza kaydettiğinizde şu avantajlara sahip olursunuz:",
+                    stringResource(R.string.quran_cache_audio_description),
                     style = MaterialTheme.typography.bodyLarge,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
 
-                BulletPoint("Çevrimdışı dinleme imkanı")
-                BulletPoint("Daha hızlı yükleme süreleri")
-                BulletPoint("Daha az internet kullanımı")
+                BulletPoint(stringResource(R.string.quran_cache_audio_advantage))
+                BulletPoint(stringResource(R.string.quran_cache_audio_advantage_2))
+                BulletPoint(stringResource(R.string.quran_cache_audio_advantage_3))
 
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
-                    "Dezavantajları:",
+                    stringResource(R.string.quran_cache_audio_disadvantage),
                     style = MaterialTheme.typography.bodyLarge,
                     modifier = Modifier.padding(vertical = 8.dp)
                 )
 
-                BulletPoint("Cihazınızda depolama alanı kullanır (Sure başına yaklaşık 1-2 MB)")
+                BulletPoint(stringResource(R.string.quran_cache_audio_disadvantage_1))
             }
         },
         confirmButton = {
@@ -620,7 +683,7 @@ fun CacheInfoDialog(onEvent: (QuranDetailScreenEvent) -> Unit) {
                     onEvent(QuranDetailScreenEvent.ToggleCacheInfoDialog)
                 }
             ) {
-                Text("Kaydet")
+                Text(stringResource(R.string.quran_cache_audio_save))
             }
         },
         dismissButton = {
@@ -630,7 +693,7 @@ fun CacheInfoDialog(onEvent: (QuranDetailScreenEvent) -> Unit) {
                     onEvent(QuranDetailScreenEvent.ToggleCacheInfoDialog)
                 }
             ) {
-                Text("Kaydetme")
+                Text(stringResource(R.string.quran_cache_audio_save_alternative))
             }
         }
     )
@@ -722,7 +785,7 @@ fun PlaybackSpeedDialog(
         containerColor = MaterialTheme.colorScheme.secondaryContainer,
         title = {
             Text(
-                text = "Oynatma hızı",
+                text = stringResource(R.string.quran_playback_speed),
                 style = MaterialTheme.typography.titleLarge,
                 modifier = Modifier.padding(bottom = 16.dp)
             )

@@ -278,7 +278,6 @@ fun NavHostLayout(navController: NavHostController, innerPadding: PaddingValues,
         screens.forEachIndexed { index , item ->
             composable(
                 route = item.route,
-                arguments = item.arguments,
                 enterTransition = {
                     getEnterTransition(index)
                 },

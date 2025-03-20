@@ -46,10 +46,13 @@ import com.fatih.prayertime.domain.model.ScreenData
 import com.fatih.prayertime.util.config.NavigationConfig.screens
 import com.fatih.prayertime.util.extensions.navigateToScreen
 import com.fatih.prayertime.util.composables.TitleView
+import com.fatih.prayertime.util.model.enums.PrayTimesString
 import kotlin.math.absoluteValue
 @Composable
 fun UtilitiesScreen(modifier: Modifier, navController: NavController) {
-    val utilityScreens = remember { screens.drop(8) + screens[1] }
+    val utilityScreens = remember {
+        screens.takeLast(7) + screens[1]
+    }
 
     LazyColumn(
         modifier = modifier.fillMaxSize()

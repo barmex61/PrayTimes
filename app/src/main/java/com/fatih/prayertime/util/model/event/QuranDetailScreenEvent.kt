@@ -14,5 +14,6 @@ sealed class QuranDetailScreenEvent(){
     data class SetTranslation(val translation: String) : QuranDetailScreenEvent()
     data class SetReciter(val reciter: String,val reciterIndex : Int) : QuranDetailScreenEvent()
     data class SetTransliteration(val transliteration: String) : QuranDetailScreenEvent()
+    data class SetFontSize(val size: Float) : QuranDetailScreenEvent()
 }
 

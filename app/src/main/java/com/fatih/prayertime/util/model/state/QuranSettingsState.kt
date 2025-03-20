@@ -21,5 +21,6 @@ data class QuranSettingsState(
     val showSettings : Boolean = false,
     val showCacheInfo : Boolean = false,
     val isError : String? = null,
-    val isLoading : Boolean = false
+    val isLoading : Boolean = false,
+    val fontSize: Float = 1f
 )

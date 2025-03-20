@@ -11,5 +11,6 @@ data class AudioSettings(
     val selectedTransliteration: String = "",
     val playbackSpeed: Float = 1f,
     val autoHidePlayer: Boolean = false,
-    val playByVerse: Boolean = false
+    val playByVerse: Boolean = false,
+    val fontSize: Float = 1f
 ) 

@@ -8,9 +8,7 @@ import com.fatih.prayertime.domain.use_case.quran_use_cases.GetSelectedSurahUseC
 import com.fatih.prayertime.domain.use_case.quran_use_cases.GetTranslationListUseCase
 import com.fatih.prayertime.domain.use_case.quran_use_cases.GetAudioFileUseCase
 import com.fatih.prayertime.domain.use_case.settings_use_cases.GetAudioSettingsUseCase
-import com.fatih.prayertime.domain.use_case.settings_use_cases.GetSettingsUseCase
 import com.fatih.prayertime.domain.use_case.settings_use_cases.SaveAudioSettingsUseCase
-import com.fatih.prayertime.domain.use_case.settings_use_cases.SaveSettingsUseCase
 import com.fatih.prayertime.util.extensions.toText
 import com.fatih.prayertime.util.model.event.QuranDetailScreenEvent
 import com.fatih.prayertime.util.model.state.AudioPlayerState
@@ -20,18 +18,14 @@ import com.fatih.prayertime.util.model.state.Status
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -62,8 +56,6 @@ class QuranDetailScreenViewModel @Inject constructor(
     fun loadAudioList() = viewModelScope.launch(Dispatchers.IO) {
         val audioResponse = getAudioListUseCase()
         _quranSettingsState.value = _quranSettingsState.value.copy(isLoading = true)
-        println("audioResponse ${audioResponse.data?.size}")
-        println("status ${audioResponse.status}")
         when (audioResponse.status) {
             Status.SUCCESS -> {
                 _quranSettingsState.update {
@@ -139,7 +131,6 @@ class QuranDetailScreenViewModel @Inject constructor(
                     selectedAyahNumber = 1
                 )
                 if (_audioPlayerState.value.audioPlaying) {
-                    println("playing")
                     updateCurrentAyahNumber(0)
                 }
 
@@ -168,7 +159,6 @@ class QuranDetailScreenViewModel @Inject constructor(
     }
 
     fun updateCurrentAyahNumber(direction: Int)  {
-        println("ayahchanged")
         pauseAudio()
         val selectedSurah = _quranDetailScreenState.value.selectedSurah ?: return
         val ayahSize = selectedSurah.ayahs?.size ?: return
@@ -182,6 +172,15 @@ class QuranDetailScreenViewModel @Inject constructor(
                 ayahSize
             )
         )
+        playAyahAudio()
+    }
+
+    fun updateSelectedAyahNumber(ayahNumber : Int) = viewModelScope.launch {
+        pauseAudio()
+        _quranDetailScreenState.update {
+            it.copy(selectedAyahNumber = ayahNumber)
+        }
+        println(ayahNumber)
         playAyahAudio()
     }
 
@@ -267,43 +266,41 @@ class QuranDetailScreenViewModel @Inject constructor(
         }
     }
 
-    fun onSettingsEvent(event: QuranDetailScreenEvent) = viewModelScope.launch(Dispatchers.Default){
+    // ... existing code ...
+    fun onSettingsEvent(event: QuranDetailScreenEvent) = viewModelScope.launch {
         when (event) {
             is QuranDetailScreenEvent.ToggleAutoHidePlayer -> {
                 saveAudioSettingsUseCase(settings.first().copy(autoHidePlayer = !settings.first().autoHidePlayer))
+
             }
             is QuranDetailScreenEvent.SetPlaybackSpeed -> {
                 saveAudioSettingsUseCase(settings.first().copy(playbackSpeed = event.speed))
-                quranAudioManager.setPlaybackSpeed(event.speed)
             }
             is QuranDetailScreenEvent.TogglePlaybackMode -> {
                 _quranSettingsState.update { it.copy(playByVerse = !it.playByVerse) }
             }
-
             is QuranDetailScreenEvent.SetShouldCacheAudio -> {
                 saveAudioSettingsUseCase(settings.first().copy(shouldCacheAudio = event.shouldCache))
             }
-
             is QuranDetailScreenEvent.ToggleSettingsSheet -> {
                 _quranSettingsState.update { it.copy(showSettings = !it.showSettings) }
             }
-
             is QuranDetailScreenEvent.ToggleCacheInfoDialog -> {
                 _quranSettingsState.update { it.copy(showCacheInfo = !it.showCacheInfo) }
             }
             is QuranDetailScreenEvent.SetTranslation -> {
                 saveAudioSettingsUseCase(settings.first().copy(selectedTranslation = event.translation))
             }
-
             is QuranDetailScreenEvent.SetReciter -> {
                 saveAudioSettingsUseCase(settings.first().copy(selectedReciter = event.reciter, selectedReciterIndex = event.reciterIndex))
             }
-
             is QuranDetailScreenEvent.SetTransliteration -> {
                 saveAudioSettingsUseCase(settings.first().copy(selectedTranslation = event.transliteration))
             }
-
-            else ->{}
+            is QuranDetailScreenEvent.SetFontSize -> {
+                saveAudioSettingsUseCase(settings.first().copy(fontSize = event.size))
+            }
+            else -> Unit
         }
     }
 
@@ -320,12 +317,12 @@ class QuranDetailScreenViewModel @Inject constructor(
                     selectedTranslation = if (setting.selectedTranslation.isNotEmpty()) setting.selectedTranslation else it.selectedTranslation,
                     autoHidePlayer = setting.autoHidePlayer,
                     playbackSpeed = setting.playbackSpeed,
+                    fontSize = setting.fontSize,
                     selectedTransliteration = if (setting.selectedTransliteration.isNotEmpty()) setting.selectedTransliteration else it.selectedTransliteration
                 ) }
             }
         }
         viewModelScope.launch(Dispatchers.IO) {
-
             _quranSettingsState
                 .filter {
                     it.reciterList.isNotEmpty() && it.transliterationList.isNotEmpty()
