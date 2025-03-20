@@ -18,6 +18,7 @@ import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import com.fatih.prayertime.R
 import com.fatih.prayertime.domain.use_case.quran_use_cases.GetAudioFileUseCase
+import com.fatih.prayertime.presentation.main_activity.MainActivity
 import com.fatih.prayertime.util.model.state.Status
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
@@ -34,7 +35,6 @@ class QuranAudioService : Service() {
 
     private var mediaPlayer: MediaPlayer? = null
     private var progressCallback: ((Float, Float) -> Unit)? = null
-    private var completionCallback: (() -> Unit)? = null
     private var errorCallback: ((String) -> Unit)? = null
     private var isPlayingCallback: ((Boolean) -> Unit)? = null
     private var ayahChangeCallback : ((Int)-> Unit)? = null
@@ -174,11 +174,11 @@ class QuranAudioService : Service() {
         }
     }
 
-    fun setCurrentAudioInfo(surahName : String, ayahNumber: Int, reciter: String, reciterName : String, shouldCacheAudio : Boolean, quality: String = "192") {
+    fun setCurrentAudioInfo(surahName : String, ayahNumber: Int, reciter: String, reciterName : String, shouldCacheAudio : Boolean, speed : Float) {
         this.surahName = surahName
         currentAyahNumber = ayahNumber
         currentReciter = reciter
-        currentQuality = quality
+        this.speed = speed
         this.shouldCacheAudio = shouldCacheAudio
         this.reciterName = reciterName
     }
@@ -212,9 +212,7 @@ class QuranAudioService : Service() {
                     isPlayingCallback?.invoke(true)
                     startProgressTracking()
                     try {
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                            it.playbackParams = it.playbackParams?.setSpeed(speed) ?: return@setOnPreparedListener
-                        }
+                        it.playbackParams = it.playbackParams.setSpeed(speed) ?: return@setOnPreparedListener
                     } catch (e: Exception) {
                         // Playback params ayarlanamadı, normal hızda devam et
                     }
@@ -274,10 +272,14 @@ class QuranAudioService : Service() {
             while (isActive) {
                 try {
                     mediaPlayer?.let { player ->
-                        if (player.isPlaying && !isReleased()) {
+                        if (player.isPlaying) {
+                            println("playing")
                             val progress = player.currentPosition.toFloat() / player.duration.toFloat()
                             val duration = player.duration.toFloat()
-                            progressCallback?.invoke(progress, duration)
+
+                            if (!progress.isNaN() && !duration.isNaN()){
+                                progressCallback?.invoke(progress, duration)
+                            }
                         }
                     }
                 } catch (e: IllegalStateException) {
@@ -292,15 +294,6 @@ class QuranAudioService : Service() {
         }
     }
 
-    private fun isReleased(): Boolean {
-        return try {
-            mediaPlayer?.duration
-            false
-        } catch (e: IllegalStateException) {
-            true
-        }
-    }
-
     private fun stopProgressTracking() {
         progressTracker?.cancel()
         progressTracker = null
@@ -309,10 +302,6 @@ class QuranAudioService : Service() {
     fun setProgressCallback(callback: ((Float, Float) -> Unit)?) {
         progressCallback = callback
 
-    }
-
-    fun setCompletionCallback(callback: (() -> Unit)?) {
-        completionCallback = callback
     }
 
     fun setAyahChangedCallback(callback: ((Int) -> Unit)?) {
@@ -377,6 +366,12 @@ class QuranAudioService : Service() {
             Intent(ACTION_STOP).setPackage(packageName),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
+        val contentIntent = PendingIntent.getActivity(
+            this,
+            0,
+            Intent(this, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        }, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
 
         return NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
             .setSmallIcon(R.drawable.quran)
@@ -407,6 +402,7 @@ class QuranAudioService : Service() {
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setOnlyAlertOnce(true)
             .setAutoCancel(true)
+            .setContentIntent(contentIntent)
             .build()
     }
 

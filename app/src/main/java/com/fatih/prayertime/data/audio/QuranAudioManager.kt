@@ -17,7 +17,6 @@ class QuranAudioManager @Inject constructor(
     private var shouldRebind = false
 
     private var pendingProgressCallback: ((Float, Float) -> Unit)? = null
-    private var pendingCompletionCallback: (() -> Unit)? = null
     private var pendingErrorCallback: ((String) -> Unit)? = null
     private var pendingIsPlayingCallback: ((Boolean) -> Unit)? = null
     private var ayahChangedCallback : ((Int) -> Unit)? = null
@@ -33,9 +32,7 @@ class QuranAudioManager @Inject constructor(
             ayahChangedCallback?.let { callback->
                 audioService?.setAyahChangedCallback(callback)
             }
-            pendingCompletionCallback?.let { callback ->
-                audioService?.setCompletionCallback(callback)
-            }
+
             pendingErrorCallback?.let { callback ->
                 audioService?.setErrorCallback(callback)
             }
@@ -62,8 +59,8 @@ class QuranAudioManager @Inject constructor(
         }
     }
 
-    fun setCurrentAudioInfo(surahName : String,audioNumber: Int, reciter: String,reciterName : String ,shouldCacheAudio: Boolean, quality: String = "192") {
-        audioService?.setCurrentAudioInfo(surahName, audioNumber, reciter,reciterName, shouldCacheAudio,quality)
+    fun setCurrentAudioInfo(surahName : String,audioNumber: Int, reciter: String,reciterName : String ,shouldCacheAudio: Boolean, speed : Float) {
+        audioService?.setCurrentAudioInfo(surahName, audioNumber, reciter,reciterName, shouldCacheAudio,speed)
     }
 
     fun playAudio(audioFile : File){
@@ -91,11 +88,6 @@ class QuranAudioManager @Inject constructor(
         audioService?.setProgressCallback(callback)
     }
 
-    fun setCompletionCallback(callback: (() -> Unit)?) {
-        pendingCompletionCallback = callback
-        audioService?.setCompletionCallback(callback)
-    }
-
     fun setAyahChangedCallback(callback: ((Int) -> Unit)?) {
         ayahChangedCallback = callback
         audioService?.setAyahChangedCallback(callback)
@@ -119,9 +111,7 @@ class QuranAudioManager @Inject constructor(
         audioService?.releaseMediaPlayer()
         context.unbindService(serviceConnection)
         shouldRebind = false
-
         pendingProgressCallback = null
-        pendingCompletionCallback = null
         pendingErrorCallback = null
         pendingIsPlayingCallback = null
     }

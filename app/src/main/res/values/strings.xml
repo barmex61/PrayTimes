@@ -69,6 +69,7 @@
     <string name="total_prayer">Total Prayer</string>
     <string name="statistics_detail">Statistics Detail</string>
     <string name="quran_detail">Quran</string>
+    <string name="quran_juz_detail">Kuran Cüzü</string>
     <!-- Quran Audio Service Strings -->
     <string name="quran_audio_channel_name">Quran Audio</string>
     <string name="quran_audio_channel_description">Quran audio controls</string>
@@ -94,4 +95,14 @@
     <string name="islamic_day">Islamic day</string>
     <string name="islamic_month">Islamic month</string>
     <string name="today">Today</string>
+    <string name="close">Close</string>
+    <string name="listen">Listen</string>
+    <string name="juz_number">Juz %d</string>
+    <string name="alarm_offset_format">%d min. ago</string>
+    <string name="alarm_icon">Alarm icon</string>
+    <string name="location_icon">Location icon</string>
+    <string name="check_icon">Check icon</string>
+    <string name="arrow_icon">Arrow icon</string>
+    <string name="notification_icon">Notification icon</string>
+    <string name="main_view">Main View</string>
 </resources>

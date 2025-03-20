@@ -150,7 +150,7 @@ fun MainScreen(appViewModel: AppViewModel, modifier: Modifier, mainScreenViewMod
             showAlarmDialog = false
         }
     }
-    TitleView("Main View")
+    TitleView(stringResource(R.string.main_view))
 }
 
 @Composable
@@ -220,7 +220,7 @@ fun GlobalAlarmsDialog(mainScreenViewModel: MainScreenViewModel, onDismiss: () -
                     modifier = Modifier.align(Alignment.End),
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                 ) {
-                    Text(text = "Close")
+                    Text(text = stringResource(R.string.close))
                 }
             }
         }
@@ -402,7 +402,7 @@ fun PrayNotificationCompose(
                         rotationY = alarmRotate.value
                     },
                     painter = painterResource(R.drawable.alarm_icon),
-                    contentDescription = "Alarm Icon"
+                    contentDescription = stringResource(R.string.alarm_icon)
                 )
                 Text(
                     modifier = Modifier.padding(start = 5.dp),
@@ -568,7 +568,7 @@ fun AlarmComposable(prayerAlarm: PrayerAlarm) {
                ,
             tint = iconColor.value,
             painter = it,
-            contentDescription = "Check Circle",
+            contentDescription = stringResource(R.string.check_icon),
         )
     }
 
@@ -809,7 +809,7 @@ fun AddressBar(haptic: HapticFeedback,mainScreenViewModel: MainScreenViewModel) 
 
                 Icon(
                     imageVector = Icons.Outlined.LocationOn,
-                    contentDescription = "Location Icon",
+                    contentDescription = stringResource(R.string.location_icon),
                     tint = MaterialTheme.colorScheme.primary
                 )
                 val text by remember {
@@ -850,7 +850,7 @@ fun AddressBar(haptic: HapticFeedback,mainScreenViewModel: MainScreenViewModel) 
         ) {
             Icon(
                 imageVector = Icons.Outlined.Notifications,
-                contentDescription = "Notification Icon",
+                contentDescription = stringResource(R.string.notification_icon),
                 tint = MaterialTheme.colorScheme.primary
             )
         }
@@ -878,7 +878,7 @@ fun PrayerBar(haptic: HapticFeedback) {
             ) {
                 Icon(
                     imageVector = Icons.Outlined.Favorite,
-                    contentDescription = "Location Icon",
+                    contentDescription = stringResource(R.string.location_icon),
                     tint = MaterialTheme.colorScheme.primary
                 )
                 Text(
@@ -898,7 +898,7 @@ fun PrayerBar(haptic: HapticFeedback) {
                         )
                         .size(25.dp),
                     imageVector = Icons.AutoMirrored.Outlined.KeyboardArrowRight,
-                    contentDescription = "Arrow Icon"
+                    contentDescription = stringResource(R.string.arrow_icon)
                 )
             }
 

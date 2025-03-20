@@ -6,6 +6,7 @@ import com.fatih.prayertime.domain.use_case.location_use_cases.GetCurrentLocatio
 import com.fatih.prayertime.domain.use_case.qibla_use_cases.CalculateQiblaDirectionUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
@@ -20,13 +21,29 @@ class CompassScreenViewModel @Inject constructor(
 
     private val _qiblaDirection = MutableStateFlow(0.0)
     val qiblaDirection: StateFlow<Double> = _qiblaDirection
-
+    
+    private var locationJob: Job? = null
 
     init {
-        viewModelScope.launch(Dispatchers.IO){
-            getCurrentLocationUseCase().collectLatest{ location ->
+        startLocationTracking()
+    }
+    
+    fun startLocationTracking() {
+        locationJob?.cancel()
+        locationJob = viewModelScope.launch(Dispatchers.IO) {
+            getCurrentLocationUseCase().collectLatest { location ->
                 _qiblaDirection.emit(calculateQiblaDirectionUseCase(location.latitude, location.longitude))
             }
         }
+    }
+    
+    fun stopLocationTracking() {
+        locationJob?.cancel()
+        locationJob = null
+    }
+    
+    override fun onCleared() {
+        super.onCleared()
+        stopLocationTracking()
     }
 }

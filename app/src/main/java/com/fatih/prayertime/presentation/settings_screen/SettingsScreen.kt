@@ -226,7 +226,7 @@ fun PrayerNotificationSettings(prayerAlarms: List<PrayerAlarm>, onToggle: (Praye
                 Text(
                     color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = alphaValue),
                     textAlign = TextAlign.Center,
-                    text = "${alarm.alarmOffset} " + stringResource(R.string.min_ago),
+                    text = stringResource(R.string.alarm_offset_format, alarm.alarmOffset),
                     style = MaterialTheme.typography.bodySmall,
                     textDecoration = TextDecoration.Underline,
                     modifier = Modifier

@@ -81,6 +81,7 @@ import com.fatih.prayertime.presentation.hadith_screens.HadithEditionsScreen
 import com.fatih.prayertime.presentation.hadith_screens.HadithSectionDetailScreen
 import com.fatih.prayertime.presentation.hadith_screens.HadithViewModel
 import com.fatih.prayertime.presentation.quran_screen.QuranDetailScreen
+import com.fatih.prayertime.presentation.quran_screen.QuranJuzDetailScreen
 import com.fatih.prayertime.presentation.quran_screen.QuranScreen
 import com.fatih.prayertime.presentation.quran_screen.QuranViewModel
 import com.fatih.prayertime.presentation.settings_screen.SettingsScreen
@@ -321,7 +322,10 @@ fun NavHostLayout(navController: NavHostController, innerPadding: PaddingValues,
                     PrayTimesString.FAVORITES.name -> FavoritesScreen(modifier,navController)
                     PrayTimesString.STATISTICS.name -> StatisticsScreen(modifier)
                     PrayTimesString.QURAN.name -> { QuranScreen(modifier,navController) }
-                    PrayTimesString.QURAN_DETAIL_SCREEN.name -> { QuranDetailScreen(innerPadding.calculateBottomPadding(),innerPadding.calculateTopPadding()) }
+                    PrayTimesString.QURAN_DETAIL_SCREEN.name -> {
+                        val surahNumber = backStackEntry.arguments?.getString("surahNumber")?:return@composable
+                        QuranDetailScreen(surahNumber.toInt(),innerPadding.calculateBottomPadding(),innerPadding.calculateTopPadding())
+                    }
                 }
             }
         }

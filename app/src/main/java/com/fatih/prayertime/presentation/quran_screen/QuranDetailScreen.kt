@@ -91,7 +91,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @Composable
-fun QuranDetailScreen(bottomPadding: Dp,topPadding : Dp, viewModel: QuranDetailScreenViewModel = hiltViewModel()) {
+fun QuranDetailScreen(surahNumber : Int,bottomPadding: Dp,topPadding : Dp, viewModel: QuranDetailScreenViewModel = hiltViewModel()) {
     val quranDetailState by viewModel.quranDetailScreenState.collectAsStateWithLifecycle()
     val quranSettingsState by viewModel.quranSettingsState.collectAsStateWithLifecycle()
     val selectedSurah = remember(quranDetailState) { quranDetailState.selectedSurah }
@@ -105,6 +105,9 @@ fun QuranDetailScreen(bottomPadding: Dp,topPadding : Dp, viewModel: QuranDetailS
         }
         if (showHud) showHud = false
     }
+    LaunchedEffect(key1 = surahNumber) {
+        viewModel.updateSurahNumber(surahNumber)
+    }
 
     when {
         quranDetailState.isLoading -> {
@@ -114,7 +117,7 @@ fun QuranDetailScreen(bottomPadding: Dp,topPadding : Dp, viewModel: QuranDetailS
             println("error")
             ErrorView(quranDetailState.isError?: "Unknown error occurred") {
                 coroutineScope.launch(Dispatchers.IO) {
-                    viewModel.getSelectedSurah(quranDetailState.selectedSurahNumber)
+                    viewModel.getSelectedSurah()
                 }
             }
         }
@@ -263,7 +266,7 @@ fun BoxScope.BottomNavigationRow(
     val autoHidePlayer = remember(quranSettingsState.autoHidePlayer) { quranSettingsState.autoHidePlayer }
     val selectedSurah = remember(quranDetailScreenState.selectedSurah){quranDetailScreenState.selectedSurah}
     val audioProgress = remember(audioPlayerState.value.currentAudioPosition) {audioPlayerState.value.currentAudioPosition}
-
+    println("audioProgres $audioProgress")
     AnimatedVisibility(
         modifier = Modifier.align(Alignment.BottomCenter),
         visible = if (autoHidePlayer) showHud else true,
@@ -303,12 +306,15 @@ fun BoxScope.BottomNavigationRow(
                     // Önceki
                     IconButton(
                         onClick = { viewModel.updateCurrentAyahNumber(-1) },
-                        enabled = currentAyah > 1
+                        enabled = currentAyah > 1 && !isLoading
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Default.KeyboardArrowLeft,
                             contentDescription = "Önceki",
-                            tint = MaterialTheme.colorScheme.onPrimaryContainer
+                            tint = if (currentAyah > 1 && !isLoading) 
+                                    MaterialTheme.colorScheme.onPrimaryContainer 
+                                  else 
+                                    MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.5f)
                         )
                     }
 
@@ -343,14 +349,16 @@ fun BoxScope.BottomNavigationRow(
 
                     // Sonraki
                     IconButton(
-                        onClick = {
-                            viewModel.updateCurrentAyahNumber(1) },
-                        enabled = currentAyah < (selectedSurah?.ayahs?.size ?: 0)
+                        onClick = { viewModel.updateCurrentAyahNumber(1) },
+                        enabled = currentAyah < (selectedSurah?.ayahs?.size ?: 0) && !isLoading
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Default.KeyboardArrowRight,
                             contentDescription = "Sonraki",
-                            tint = MaterialTheme.colorScheme.onPrimaryContainer
+                            tint = if (currentAyah < (selectedSurah?.ayahs?.size ?: 0) && !isLoading)
+                                    MaterialTheme.colorScheme.onPrimaryContainer
+                                  else
+                                    MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.5f)
                         )
                     }
                 }

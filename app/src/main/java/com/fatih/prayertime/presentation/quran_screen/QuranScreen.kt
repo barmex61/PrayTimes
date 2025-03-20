@@ -32,6 +32,7 @@ import com.fatih.prayertime.util.composables.TitleView
 import com.fatih.prayertime.util.config.NavigationConfig.screens
 import com.fatih.prayertime.util.extensions.navigateToScreen
 import com.fatih.prayertime.util.extensions.toText
+import com.fatih.prayertime.util.model.enums.PrayTimesString
 import com.fatih.prayertime.util.model.state.QuranScreenState
 
 
@@ -62,13 +63,15 @@ fun QuranScreen(
                         0 -> SurahList (
                             surahList = state.surahList,
                             onSurahClick = { surahInfo ->
-                                navController.navigateToScreen(screens[15].route)
+                                val route = screens.find{it.title == PrayTimesString.QURAN_DETAIL_SCREEN}!!.route.replace("{surahNumber}",surahInfo.number.toString())
+                                navController.navigateToScreen(route)
                             }
                         )
                         1 -> JuzList (
                             juzInfoList = state.juzList,
                             onJuzClick = { juz ->
-                                // TODO: Navigate to detail
+                                val route = screens.find{it.title == PrayTimesString.QURAN_JUZ_DETAIL_SCREEN}!!.route.replace("{juzNumber}", juz.juzNumber.toString())
+                                navController.navigateToScreen(route)
                             }
                         )
                     }
@@ -191,7 +194,7 @@ fun SurahCard(
             ) {
                 Icon(
                     Icons.Default.PlayArrow,
-                    contentDescription = "Dinle",
+                    contentDescription = stringResource(R.string.listen),
                     tint = MaterialTheme.colorScheme.onPrimaryContainer,
                     modifier = Modifier.size(20.dp)
                 )
@@ -226,7 +229,7 @@ fun JuzCard(
         ) {
 
             Text(
-                text = "${juzInfo.juzNumber}.Cüz",
+                text = stringResource(R.string.juz_number, juzInfo.juzNumber),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onPrimaryContainer,
                 fontWeight = FontWeight.Bold
@@ -247,7 +250,7 @@ fun JuzCard(
             ) {
                 Icon(
                     Icons.Default.PlayArrow,
-                    contentDescription = "Dinle",
+                    contentDescription = stringResource(R.string.listen),
                     tint = MaterialTheme.colorScheme.onPrimaryContainer,
                     modifier = Modifier.size(24.dp)
                 )
