@@ -33,7 +33,6 @@ class QuranViewModel @Inject constructor(
         loadJuzList()
         loadTranslationList()
         loadAudioList()
-        println("initquran")
     }
 
 

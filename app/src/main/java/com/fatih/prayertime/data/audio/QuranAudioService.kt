@@ -35,6 +35,7 @@ class QuranAudioService : Service() {
 
     private var mediaPlayer: MediaPlayer? = null
     private var progressCallback: ((Float, Float) -> Unit)? = null
+    private var completionCallback: (() -> Unit)? = null
     private var errorCallback: ((String) -> Unit)? = null
     private var isPlayingCallback: ((Boolean) -> Unit)? = null
     private var ayahChangeCallback : ((Int)-> Unit)? = null
@@ -46,7 +47,7 @@ class QuranAudioService : Service() {
     private var reciterName : String = ""
     private var speed: Float = 1.0f
 
-    @Inject 
+    @Inject
     lateinit var getAudioFileUseCase: GetAudioFileUseCase
 
     private val baseUrl = "https://cdn.islamic.network/quran/audio"
@@ -119,6 +120,7 @@ class QuranAudioService : Service() {
     }
 
     private suspend fun getNextAudio() {
+        println("gonext")
         if (ayahChangeCallback != null) {
             ayahChangeCallback?.invoke(1)
             return
@@ -130,6 +132,7 @@ class QuranAudioService : Service() {
                 when (resource.status) {
                     Status.SUCCESS -> {
                         resource.data?.let { file ->
+                            println("play")
                             playAudio(file)
                         }
                     }
@@ -185,6 +188,7 @@ class QuranAudioService : Service() {
 
     fun playAudio(audioFile: File) {
         try {
+
             if (mediaPlayer == null) {
                 mediaPlayer = MediaPlayer().apply {
                     setAudioAttributes(
@@ -214,13 +218,18 @@ class QuranAudioService : Service() {
                     try {
                         it.playbackParams = it.playbackParams.setSpeed(speed) ?: return@setOnPreparedListener
                     } catch (e: Exception) {
-                        // Playback params ayarlanamadı, normal hızda devam et
+                        println("Playback speed error: ${e.message}")
                     }
                     startForeground(NOTIFICATION_ID, createNotification(true))
                 }
-                prepareAsync()
+                
+                prepare()
+                if (duration > 0) {
+                    progressCallback?.invoke(0f, duration.toFloat())
+                }
             }
         } catch (e: Exception) {
+            println("MediaPlayer error: ${e.message}")
             errorCallback?.invoke(e.message ?: getString(R.string.quran_audio_error_playback))
         }
     }
@@ -269,17 +278,14 @@ class QuranAudioService : Service() {
     private fun startProgressTracking() {
         progressTracker?.cancel()
         progressTracker = CoroutineScope(Dispatchers.Main).launch {
+
             while (isActive) {
                 try {
                     mediaPlayer?.let { player ->
-                        if (player.isPlaying) {
-                            println("playing")
+                        if (player.isPlaying && !isReleased() && !player.currentPosition.toFloat().isNaN() && !player.duration.toFloat().isNaN()) {
                             val progress = player.currentPosition.toFloat() / player.duration.toFloat()
                             val duration = player.duration.toFloat()
-
-                            if (!progress.isNaN() && !duration.isNaN()){
-                                progressCallback?.invoke(progress, duration)
-                            }
+                            progressCallback?.invoke(progress, duration)
                         }
                     }
                 } catch (e: IllegalStateException) {
@@ -294,6 +300,15 @@ class QuranAudioService : Service() {
         }
     }
 
+    private fun isReleased(): Boolean {
+        return try {
+            mediaPlayer?.duration
+            false
+        } catch (e: IllegalStateException) {
+            true
+        }
+    }
+
     private fun stopProgressTracking() {
         progressTracker?.cancel()
         progressTracker = null
@@ -302,6 +317,10 @@ class QuranAudioService : Service() {
     fun setProgressCallback(callback: ((Float, Float) -> Unit)?) {
         progressCallback = callback
 
+    }
+
+    fun setCompletionCallback(callback: (() -> Unit)?) {
+        completionCallback = callback
     }
 
     fun setAyahChangedCallback(callback: ((Int) -> Unit)?) {
@@ -366,12 +385,15 @@ class QuranAudioService : Service() {
             Intent(ACTION_STOP).setPackage(packageName),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
-        val contentIntent = PendingIntent.getActivity(
+
+        val contentIntent =  PendingIntent.getActivity(
             this,
-            0,
+            4,
             Intent(this, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-        }, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            },
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+
 
         return NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
             .setSmallIcon(R.drawable.quran)
@@ -400,9 +422,9 @@ class QuranAudioService : Service() {
             .setDeleteIntent(deleteIntent)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            .setContentIntent(contentIntent)
             .setOnlyAlertOnce(true)
             .setAutoCancel(true)
-            .setContentIntent(contentIntent)
             .build()
     }
 
@@ -431,6 +453,33 @@ class QuranAudioService : Service() {
     override fun onTaskRemoved(rootIntent: Intent?) {
         super.onTaskRemoved(rootIntent)
         stopAudio()
+    }
+
+    private fun releaseResources() {
+        try {
+            mediaPlayer?.reset()
+            mediaPlayer?.release()
+            mediaPlayer = null
+            mediaPlayer = MediaPlayer().apply {
+                setAudioAttributes(
+                    AudioAttributes.Builder()
+                        .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                        .setUsage(AudioAttributes.USAGE_MEDIA)
+                        .build()
+                )
+                setOnCompletionListener {
+                    CoroutineScope(Dispatchers.IO).launch {
+                        getNextAudio()
+                    }
+                }
+                setOnErrorListener { _, _, _ ->
+                    errorCallback?.invoke(getString(R.string.quran_audio_error_playback))
+                    false
+                }
+            }
+        } catch (e: Exception) {
+            println("Error releasing resources: ${e.message}")
+        }
     }
 
 } 
