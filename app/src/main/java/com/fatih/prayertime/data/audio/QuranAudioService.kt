@@ -158,9 +158,7 @@ class QuranAudioService : Service() {
     }
 
     private suspend fun getNextAudio() {
-        println("service $bitrate")
         if (ayahChangeCallback != null) {
-            println("next")
             ayahChangeCallback?.invoke(1)
             return
         }

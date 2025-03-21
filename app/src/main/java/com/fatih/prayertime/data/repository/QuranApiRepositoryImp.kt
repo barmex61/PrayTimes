@@ -231,8 +231,10 @@ class QuranApiRepositoryImp @Inject constructor(
             
             emit(Resource.success(outputFile))
         } catch (e: Exception) {
+            println(e)
             emit(Resource.error(e.localizedMessage ?: "Ses dosyası indirilemedi"))
-            if (!shouldCache && outputFile.exists()) {
+            if (outputFile.exists()) {
+                println("delete")
                 outputFile.delete()
             }
         }

@@ -5,7 +5,7 @@ import android.content.Context
 import androidx.datastore.preferences.core.edit
 
 import com.fatih.prayertime.domain.model.Settings
-import com.fatih.prayertime.domain.model.AudioSettings
+import com.fatih.prayertime.domain.model.QuranMediaSettings
 import com.fatih.prayertime.util.utils.DataStoreUtils.SETTINGS_KEY
 import com.fatih.prayertime.util.utils.DataStoreUtils.AUDIO_SETTINGS_KEY
 import com.fatih.prayertime.util.utils.DataStoreUtils.dataStore
@@ -29,13 +29,13 @@ class SettingsDataStore @Inject constructor(
         }
     }
 
-    val audioSettings: Flow<AudioSettings>
+    val quranMediaSettings: Flow<QuranMediaSettings>
         get() = context.dataStore.data.map { prefs ->
             val jsonString = prefs[AUDIO_SETTINGS_KEY]
             if (jsonString != null) {
-                Json.decodeFromString<AudioSettings>(jsonString)
+                Json.decodeFromString<QuranMediaSettings>(jsonString)
             } else {
-                AudioSettings()
+                QuranMediaSettings()
             }
         }
 
@@ -46,8 +46,8 @@ class SettingsDataStore @Inject constructor(
         }
     }
 
-    suspend fun updateAudioSettings(audioSettings: AudioSettings) {
-        val jsonString = Json.encodeToString(audioSettings)
+    suspend fun updateAudioSettings(quranMediaSettings: QuranMediaSettings) {
+        val jsonString = Json.encodeToString(quranMediaSettings)
         context.dataStore.edit { prefs ->
             prefs[AUDIO_SETTINGS_KEY] = jsonString
         }

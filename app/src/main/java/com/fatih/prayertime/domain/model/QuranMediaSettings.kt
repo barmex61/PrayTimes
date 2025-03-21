@@ -4,7 +4,7 @@ import com.fatih.prayertime.util.model.enums.PlaybackMode
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class AudioSettings(
+data class QuranMediaSettings(
     val shouldCacheAudio: Boolean = false,
     val selectedReciter: String = "",
     val selectedReciterIndex: Int = -1,

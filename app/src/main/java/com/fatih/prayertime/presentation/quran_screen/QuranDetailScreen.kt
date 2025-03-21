@@ -32,8 +32,6 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BottomSheetDefaults
 
@@ -45,18 +43,15 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -84,7 +79,6 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.exyte.animatednavbar.utils.toDp
 import com.fatih.prayertime.R
 import com.fatih.prayertime.data.remote.dto.qurandto.Ayah
 import com.fatih.prayertime.data.remote.dto.qurandto.SurahInfo
@@ -92,13 +86,14 @@ import com.fatih.prayertime.util.composables.ErrorView
 import com.fatih.prayertime.util.composables.LoadingView
 import com.fatih.prayertime.util.extensions.toText
 import com.fatih.prayertime.util.model.event.QuranDetailScreenEvent
-import com.fatih.prayertime.util.model.state.QuranDetailScreenState
-import com.fatih.prayertime.util.model.state.QuranSettingsState
+import com.fatih.prayertime.util.model.state.quran_detail.QuranDetailScreenState
+import com.fatih.prayertime.util.model.state.quran_detail.QuranSettingsState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import com.fatih.prayertime.util.model.enums.PlaybackMode
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.isActive
 import java.util.Locale
@@ -107,6 +102,7 @@ import java.util.Locale
 fun QuranDetailScreen(surahNumber : Int,bottomPadding: Dp,topPadding : Dp, viewModel: QuranDetailScreenViewModel = hiltViewModel()) {
     val quranDetailState by viewModel.quranDetailScreenState.collectAsStateWithLifecycle()
     val quranSettingsState by viewModel.quranSettingsState.collectAsStateWithLifecycle()
+    val audioPlayerState by viewModel.audioPlayerState.collectAsStateWithLifecycle()
     val selectedSurah = remember(quranDetailState) { quranDetailState.selectedSurah }
     val coroutineScope = rememberCoroutineScope()
     var shrinkDelay by remember { mutableLongStateOf(7000L) }
@@ -144,10 +140,22 @@ fun QuranDetailScreen(surahNumber : Int,bottomPadding: Dp,topPadding : Dp, viewM
 
                 Spacer(modifier = Modifier.height(16.dp))
                 QuranDetailContent(selectedSurah = selectedSurah!!, modifier = Modifier.fillMaxSize(1f),quranDetailState,quranSettingsState){ selectedAyahNumber ->
-                    if (selectedAyahNumber != null) viewModel.updateSelectedAyahNumber(selectedAyahNumber)
+                    if (selectedAyahNumber != null) viewModel.updateCurrentAudioNumber(direction = 0, directAudioNumber = selectedAyahNumber)
                     showHud = true
                     shrinkDelay = 5000L
                 }
+                
+                if (audioPlayerState.isLoading && quranSettingsState.playbackMode == PlaybackMode.SURAH) {
+                    AudioLoadingDialog(
+                        modifier = Modifier.align(Alignment.Center),
+                        progress = audioPlayerState.downloadProgress,
+                        downloadedSize = audioPlayerState.downloadedSize,
+                        totalSize = audioPlayerState.totalSize,
+                        surahName = selectedSurah?.turkishName ?: "",
+                        onCancel = { viewModel.cancelAudioDownload() }
+                    )
+                }
+                
                 BottomNavigationRow(viewModel,showHud,quranDetailState, quranSettingsState)
 
             }
@@ -335,12 +343,12 @@ fun BoxScope.BottomNavigationRow(
     quranSettingsState: QuranSettingsState
 ) {
     val audioPlayerState = viewModel.audioPlayerState.collectAsStateWithLifecycle()
-    val isPlaying = remember(audioPlayerState.value.audioPlaying){audioPlayerState.value.audioPlaying}
-    val isLoading = remember(audioPlayerState.value.audioLoading){audioPlayerState.value.audioLoading}
+    val isPlaying = remember(audioPlayerState.value.isPlaying){audioPlayerState.value.isPlaying}
+    val isLoading = remember(audioPlayerState.value.isLoading){audioPlayerState.value.isLoading}
     val currentAyah = remember(quranDetailScreenState.selectedAyahNumber){quranDetailScreenState.selectedAyahNumber}
     val autoHidePlayer = remember(quranSettingsState.autoHidePlayer) { quranSettingsState.autoHidePlayer }
     val selectedSurah = remember(quranDetailScreenState.selectedSurah){quranDetailScreenState.selectedSurah}
-    val audioProgress = remember(audioPlayerState.value.currentAudioPosition) {audioPlayerState.value.currentAudioPosition}
+    val audioProgress = remember(audioPlayerState.value.currentPosition) {audioPlayerState.value.currentPosition}
     AnimatedVisibility(
         modifier = Modifier.align(Alignment.BottomCenter),
         visible = if (autoHidePlayer) showHud else true,
@@ -376,8 +384,8 @@ fun BoxScope.BottomNavigationRow(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     IconButton(
-                        onClick = { viewModel.updateCurrentAyahNumber(-1) },
-                        enabled = currentAyah > 1 && !isLoading
+                        onClick = { viewModel.updateCurrentAudioNumber(-1) },
+                        enabled = currentAyah > 1
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Default.KeyboardArrowLeft,
@@ -418,8 +426,8 @@ fun BoxScope.BottomNavigationRow(
                     }
 
                     IconButton(
-                        onClick = { viewModel.updateCurrentAyahNumber(1) },
-                        enabled = currentAyah < (selectedSurah?.ayahs?.size ?: 0) && !isLoading
+                        onClick = { viewModel.updateCurrentAudioNumber(1) },
+                        enabled = currentAyah < (selectedSurah?.ayahs?.size ?: 0)
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Default.KeyboardArrowRight,
@@ -449,8 +457,8 @@ fun BoxScope.BottomNavigationRow(
                         .padding(horizontal = 16.dp),
                     horizontalArrangement = Arrangement.End
                 ) {
-                    val currentMillis = (audioProgress * audioPlayerState.value.audioDuration).toInt()
-                    val totalMillis = audioPlayerState.value.audioDuration.toInt()
+                    val currentMillis = (audioProgress * audioPlayerState.value.duration).toInt()
+                    val totalMillis = audioPlayerState.value.duration.toInt()
                     
                     val currentMinutes = (currentMillis / 1000) / 60
                     val currentSeconds = (currentMillis / 1000) % 60
@@ -1010,6 +1018,70 @@ private fun SelectionItem(
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.primary
                 )
+            }
+        }
+    }
+}
+
+@Composable
+fun AudioLoadingDialog(
+    modifier: Modifier,
+    progress: Int,
+    downloadedSize: Long,
+    totalSize: Long,
+    surahName: String,
+    onCancel: () -> Unit
+) {
+    Surface(
+        modifier = modifier
+            .fillMaxWidth(0.85f)
+            .padding(16.dp),
+        shape = RoundedCornerShape(16.dp),
+        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.85f),
+        tonalElevation = 8.dp
+    ) {
+        Column(
+            modifier = Modifier
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            CircularProgressIndicator(
+                progress = { progress / 100f },
+                modifier = Modifier.size(64.dp),
+                color = MaterialTheme.colorScheme.primary,
+                strokeWidth = 6.dp,
+                trackColor = MaterialTheme.colorScheme.secondaryContainer,
+                strokeCap = StrokeCap.Round,
+            )
+
+            Text(
+                text = surahName,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+
+            Text(
+                text = "İndiriliyor... %$progress",
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+
+            Text(
+                text = String.format(
+                    Locale.getDefault(),
+                    "%.1f MB / %.1f MB",
+                    downloadedSize / 1024f / 1024f,
+                    totalSize / 1024f / 1024f),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            TextButton(
+                onClick = onCancel,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("İndirmeyi İptal Et")
             }
         }
     }

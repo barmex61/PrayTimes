@@ -108,6 +108,7 @@ class QuranAudioManager @Inject constructor(
         audioService?.setPlaybackSpeed(speed)
     }
 
+
     fun releaseMediaPlayer() {
         audioService?.releaseMediaPlayer()
         context.unbindService(serviceConnection)
