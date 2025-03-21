@@ -389,7 +389,6 @@ private fun BoxScope.QuranFab(
                     fontWeight = FontWeight.Bold
                 )
 
-                // Okuyucu Seçimi
                 ExposedDropdownMenuBox(
                     modifier = Modifier.clickable{
                     },
@@ -422,7 +421,6 @@ private fun BoxScope.QuranFab(
                         }
                     }
                 }
-                    // Çeviri Seçimi
                     ExposedDropdownMenuBox(
                         expanded = expandedTranslation,
                         onExpandedChange = { expandedTranslation = it }

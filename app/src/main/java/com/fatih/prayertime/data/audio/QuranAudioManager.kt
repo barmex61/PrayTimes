@@ -59,8 +59,8 @@ class QuranAudioManager @Inject constructor(
         }
     }
 
-    fun setCurrentAudioInfo(surahName : String,audioNumber: Int, reciter: String,reciterName : String ,shouldCacheAudio: Boolean, speed : Float) {
-        audioService?.setCurrentAudioInfo(surahName, audioNumber, reciter,reciterName, shouldCacheAudio,speed)
+    fun setCurrentAudioInfo(surahName : String,audioNumber: Int, reciter: String,reciterName : String ,shouldCacheAudio: Boolean, speed : Float,bitrate: Int) {
+        audioService?.setCurrentAudioInfo(surahName, audioNumber, reciter,reciterName, shouldCacheAudio,speed,bitrate)
     }
 
     fun playAudio(audioFile : File){

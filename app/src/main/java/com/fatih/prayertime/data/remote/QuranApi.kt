@@ -4,10 +4,12 @@ import com.fatih.prayertime.data.remote.dto.qurandto.LanguageResponse
 import com.fatih.prayertime.data.remote.dto.qurandto.SurahInfoListResponse
 import com.fatih.prayertime.data.remote.dto.qurandto.QuranApiResponse
 import com.fatih.prayertime.data.remote.dto.qurandto.SurahResponse
+import okhttp3.ResponseBody
 import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.Path
+import retrofit2.http.Streaming
 
 interface QuranApi {
 
@@ -27,5 +29,6 @@ interface QuranApi {
         @Path("surahPath") surahPath: String,
         @Header("Accept-Charset") charset: String = "UTF-8"
     ): Response<SurahResponse>
+
 
 }

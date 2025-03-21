@@ -24,6 +24,7 @@ import com.fatih.prayertime.data.audio.QuranAudioService
 import com.fatih.prayertime.data.local.dao.FavoritesDao
 import com.fatih.prayertime.data.local.dao.PrayerStatisticsDao
 import com.fatih.prayertime.data.local.database.AppDatabase
+import com.fatih.prayertime.data.remote.AudioApi
 import com.fatih.prayertime.data.remote.HadithApi
 import com.fatih.prayertime.data.remote.IslamicCalendarApi
 import com.fatih.prayertime.data.remote.QuranApi
@@ -45,6 +46,7 @@ import com.fatih.prayertime.domain.repository.SettingsRepository
 import com.fatih.prayertime.domain.use_case.formatted_use_cases.FormattedUseCase
 import com.fatih.prayertime.domain.use_case.location_use_cases.GetLocationAndAddressUseCase
 import com.fatih.prayertime.domain.use_case.permission_use_case.PermissionsUseCase
+import com.fatih.prayertime.util.config.ApiConfig
 import com.fatih.prayertime.util.config.ApiConfig.ALADHAN_API_BASE_URL
 import com.fatih.prayertime.util.config.ApiConfig.HADITH_API_BASE_URL
 import com.fatih.prayertime.util.config.ApiConfig.QURAN_API_BASE_URL
@@ -247,11 +249,16 @@ object Module {
 
     @Provides
     @Singleton
-    fun provideQuranRepository(@ApplicationContext context: Context,quranApi: QuranApi) : QuranApiRepository = QuranApiRepositoryImp(context,quranApi)
+    fun provideQuranRepository(@ApplicationContext context: Context,quranApi: QuranApi,audioApi: AudioApi) : QuranApiRepository = QuranApiRepositoryImp(context,quranApi,audioApi)
 
     @Provides
     @Singleton
     fun provideQuranAudioManager(@ApplicationContext context: Context) = QuranAudioManager(context)
+
+    @Provides
+    @Singleton
+    fun provideAudioApi(): AudioApi = Retrofit.Builder().baseUrl(ApiConfig.BASE_AUDIO_URL).addConverterFactory(GsonConverterFactory.create()).build().create(
+        AudioApi::class.java)
 }
 
 @Qualifier

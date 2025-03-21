@@ -113,6 +113,10 @@
     <string name="quran_settings">Settings</string>
     <string name="quran_playback_speed">Playback Speed</string>
     <string name="quran_auto_hide_player">Auto Hide Player</string>
+    <string name="quran_move_ayah">Auto Scroll Playing Ayah</string>
+    <string name="quran_move_ayah_desc">Scrolls automatically to ayah which is playing</string>
+    <string name="ayah_with_double_click">Ayah Click</string>
+    <string name="ayah_with_double_click_desc">Plays the verse when double clicked</string>
     <string name="quran_cache_audio">Cache Audio Files</string>
     <string name="quran_cache_info">Cache Information</string>
     <string name="quran_translation">Translation</string>

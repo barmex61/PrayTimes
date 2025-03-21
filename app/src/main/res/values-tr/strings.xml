@@ -131,6 +131,10 @@
     <string name="quran_reciter_settings">Okuyucu</string>
     <string name="quran_translation_settings">Çeviri</string>
     <string name="quran_transliteration_settings">Transliterasyon</string>
+    <string name="quran_move_ayah">Otomatik ayet takibi </string>
+    <string name="ayah_with_double_click">Ayet üzerine tıkla</string>
+    <string name="ayah_with_double_click_desc">Ayet üzerine çift tıklanıldığında oynatır</string>
+    <string name="quran_move_ayah_desc">Oynatılan ayeti otomatik takip eder </string>
     <string name="quran_playback_settings">Oynatma Ayarları</string>
     <string name="quran_auto_hide_player_description">Oynatıcı kontrollerini 7 saniye sonra otomatik gizle</string>
     <string name="quran_cache_audio_enabled">Çevrimdışı dinleme için ses verileri kaydediliyor</string>

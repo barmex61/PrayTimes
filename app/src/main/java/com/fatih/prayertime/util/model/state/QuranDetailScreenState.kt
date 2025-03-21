@@ -6,7 +6,7 @@ data class QuranDetailScreenState(
     val isLoading : Boolean = false,
     val isError : String? = null,
     val selectedSurah : SurahInfo? = null,
-    val selectedSurahNumber : Int = 1,
+    val selectedSurahNumber : Int = 0,
     val selectedAyahNumber : Int = 1,
 
 )

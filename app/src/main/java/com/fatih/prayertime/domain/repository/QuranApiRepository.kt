@@ -14,6 +14,8 @@ interface QuranApiRepository {
     suspend fun getLanguageList() : Resource<List<String>>
     suspend fun getAudioList() : Resource<List<QuranApiData>>
     suspend fun getSelectedSurah(surahNumber : Int, surahPath : String) : Resource<SurahInfo>
-    suspend fun downloadAudioFile(audioUrl: String,shouldCacheAudio : Boolean): Flow<Resource<File>>
-    suspend fun getCachedAudioFile(audioUrl: String): File?
+    suspend fun downloadAudio(  audioPath: String,
+                                reciter: String,
+                                number: String,
+                                shouldCache: Boolean): Flow<Resource<File>>
 }

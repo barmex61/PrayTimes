@@ -13,6 +13,8 @@ data class QuranSettingsState(
     val reciterList : List<QuranApiData> = listOf(),
     val transliterationList : Map<String, String> = getTransliterations(),
     val autoHidePlayer: Boolean = true,
+    val autoScrollAyah : Boolean = true,
+    val playAyahWithDoubleClick : Boolean = true,
     val playbackSpeed: Float = 1f,
     val playByVerse: Boolean = true,
     val shouldCacheAudio: Boolean = true,

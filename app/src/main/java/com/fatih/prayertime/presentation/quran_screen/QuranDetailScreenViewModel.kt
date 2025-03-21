@@ -1,5 +1,6 @@
 package com.fatih.prayertime.presentation.quran_screen
 
+import androidx.compose.ui.graphics.Paint
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fatih.prayertime.data.audio.QuranAudioManager
@@ -10,6 +11,7 @@ import com.fatih.prayertime.domain.use_case.quran_use_cases.GetAudioFileUseCase
 import com.fatih.prayertime.domain.use_case.settings_use_cases.GetAudioSettingsUseCase
 import com.fatih.prayertime.domain.use_case.settings_use_cases.SaveAudioSettingsUseCase
 import com.fatih.prayertime.util.extensions.toText
+import com.fatih.prayertime.util.model.enums.PlaybackMode
 import com.fatih.prayertime.util.model.event.QuranDetailScreenEvent
 import com.fatih.prayertime.util.model.state.AudioPlayerState
 import com.fatih.prayertime.util.model.state.QuranDetailScreenState
@@ -20,14 +22,17 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.collections.first
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
@@ -55,58 +60,54 @@ class QuranDetailScreenViewModel @Inject constructor(
 
     fun loadAudioList() = viewModelScope.launch(Dispatchers.IO) {
         val audioResponse = getAudioListUseCase()
-        _quranSettingsState.value = _quranSettingsState.value.copy(isLoading = true)
-        when (audioResponse.status) {
-            Status.SUCCESS -> {
-                _quranSettingsState.update {
-                    it.copy(
+        _quranSettingsState.update {  it.copy(isLoading = true) }
+        _quranSettingsState.update { state->
+            when (audioResponse.status) {
+                Status.SUCCESS -> {
+                    state.copy(
                         reciterList = audioResponse.data!!,
-                        selectedReciter = audioResponse.data[0].toText(),
+                        selectedReciter =
+                            if (state.selectedReciter.isEmpty()) audioResponse.data.first().toText()
+                            else state.selectedReciter,
                         selectedReciterIndex = 0,
                         isError = null,
                         isLoading = false
                     )
                 }
-            }
-
-            Status.ERROR -> {
-                _quranSettingsState.value = _quranSettingsState.value.copy(
-                    isError = audioResponse.message!!,
-                    isLoading = false
-                )
-            }
-
-            else -> {
-                _quranSettingsState.value = _quranSettingsState.value.copy(
-                    isError = null,
-                    isLoading = true
-                )
+                Status.ERROR -> {
+                    state.copy(
+                        isError = audioResponse.message!!,
+                        isLoading = false
+                    )
+                }
+                else -> {
+                    state.copy(
+                        isError = null,
+                        isLoading = true
+                    )
+                }
             }
         }
     }
 
     fun loadTranslationList() = viewModelScope.launch(Dispatchers.IO) {
         val translationResponse = getTranslationListUseCase()
-        _quranSettingsState.value = _quranSettingsState.value.copy(isLoading = true)
-        when (translationResponse.status) {
-            Status.SUCCESS -> {
-                _quranSettingsState.value = _quranSettingsState.value.copy(
+        _quranSettingsState.update {it.copy(isLoading = true) }
+        quranSettingsState.update { state->
+            when (translationResponse.status) {
+                Status.SUCCESS -> state.copy(
                     translationList = translationResponse.data!!,
-                    selectedTranslation = translationResponse.data[0].toText(),
+                    selectedTranslation =
+                        if (state.selectedTranslation.isEmpty()) translationResponse.data.first().toText()
+                        else state.selectedTranslation,
                     isError = null,
                     isLoading = false
                 )
-            }
-
-            Status.ERROR -> {
-                _quranSettingsState.value = _quranSettingsState.value.copy(
-                    isError = translationResponse.message!!,
+                Status.ERROR -> state.copy(
+                    isError = translationResponse.message,
                     isLoading = false
                 )
-            }
-
-            else -> {
-                _quranSettingsState.value = _quranSettingsState.value.copy(
+                else -> state.copy(
                     isError = null,
                     isLoading = true
                 )
@@ -114,42 +115,45 @@ class QuranDetailScreenViewModel @Inject constructor(
         }
     }
 
-    suspend fun getSelectedSurah() {
+    fun getSelectedSurah() = viewModelScope.launch(Dispatchers.IO) {
         _quranDetailScreenState.update { it.copy(isLoading = true) }
         val quranScreenState = _quranSettingsState.value
         val surahNumber = quranDetailScreenState.value.selectedSurahNumber
-        if (quranScreenState.reciterList.isEmpty() || quranScreenState.transliterationList.isEmpty()) return
+        if (quranScreenState.reciterList.isEmpty() || quranScreenState.transliterationList.isEmpty()) return@launch
         val recitePathIdentifier = _quranSettingsState.value.reciterList[_quranSettingsState.value.selectedReciterIndex].identifier
         val transliterationPath = _quranSettingsState.value.transliterationList[_quranSettingsState.value.selectedTransliteration]
-        val surahResponse = getSelectedSurahUseCase(surahNumber, "$recitePathIdentifier,$transliterationPath")
-        when (surahResponse.status) {
-            Status.SUCCESS -> {
-                _quranDetailScreenState.value = _quranDetailScreenState.value.copy(
-                    selectedSurah = surahResponse.data!!,
-                    isError = null,
-                    isLoading = false,
-                    selectedAyahNumber = 1
-                )
-                if (_audioPlayerState.value.audioPlaying) {
-                    updateCurrentAyahNumber(0)
+        val translationPath = _quranSettingsState.value.translationList.firstOrNull{it.toText() == _quranSettingsState.value.selectedTranslation}?.identifier ?:return@launch
+        val surahResponse = getSelectedSurahUseCase(surahNumber, "$recitePathIdentifier,$transliterationPath,$translationPath")
+        _quranDetailScreenState.value =
+            when (surahResponse.status) {
+                Status.SUCCESS -> {
+                   val state = _quranDetailScreenState.value.copy(
+                        selectedSurah = surahResponse.data!!,
+                        isError = null,
+                        isLoading = false,
+                        selectedAyahNumber = 1
+                    )
+                    _quranDetailScreenState.value = state
+                    if (_audioPlayerState.value.audioPlaying) {
+                        updateCurrentAyahNumber(0)
+                    }
+                    state
                 }
 
-            }
+                Status.ERROR -> {
+                    _quranDetailScreenState.value.copy(
+                        isError = surahResponse.message!!,
+                        isLoading = false
+                    )
+                }
 
-            Status.ERROR -> {
-                _quranDetailScreenState.value = _quranDetailScreenState.value.copy(
-                    isError = surahResponse.message!!,
-                    isLoading = false
-                )
+                else -> {
+                    _quranDetailScreenState.value.copy(
+                        isError = null,
+                        isLoading = true
+                    )
+                }
             }
-
-            else -> {
-                _quranDetailScreenState.value = _quranDetailScreenState.value.copy(
-                    isError = null,
-                    isLoading = true
-                )
-            }
-        }
     }
 
     fun updateSurahNumber(surahNumber : Int) = viewModelScope.launch {
@@ -177,10 +181,8 @@ class QuranDetailScreenViewModel @Inject constructor(
 
     fun updateSelectedAyahNumber(ayahNumber : Int) = viewModelScope.launch {
         pauseAudio()
-        _quranDetailScreenState.update {
-            it.copy(selectedAyahNumber = ayahNumber)
-        }
-        println(ayahNumber)
+        _quranDetailScreenState.value = _quranDetailScreenState.value.copy( selectedAyahNumber = ayahNumber)
+
         playAyahAudio()
     }
 
@@ -189,37 +191,59 @@ class QuranDetailScreenViewModel @Inject constructor(
         val selectedSurah = _quranDetailScreenState.value.selectedSurah ?: return
         val ayah = selectedSurah.ayahs?.get(_quranDetailScreenState.value.selectedAyahNumber - 1) ?: return
         val shouldCacheAudio = _quranSettingsState.value.shouldCacheAudio
-        val audioUrl = ayah.audio
         val reciteLink = _quranSettingsState.value.reciterList[_quranSettingsState.value.selectedReciterIndex].identifier
         val reciteName = _quranSettingsState.value.selectedReciter.substringAfter('-')
-        quranAudioManager.setCurrentAudioInfo(selectedSurah.englishName,ayah.number,reciteLink,reciteName,quranSettingsState.value.shouldCacheAudio,quranSettingsState.value.playbackSpeed)
+        var bitrate = 0
+        val (audioUrl, number) = when (_quranSettingsState.value.playbackMode) {
+            PlaybackMode.VERSE_STREAM -> {
+                val verseUrl = ayah.audio
+                val verseNumber = ayah.number
+                bitrate = verseUrl.substringAfter("audio/").substringBefore('/').toInt()
+                verseUrl to verseNumber
+            }
+            PlaybackMode.SURAH -> {
+                val surahUrl = ayah.audio.replace("/audio/", "/audio-surah/")
+                val surahNumber = selectedSurah.number
+                bitrate = surahUrl.substringAfter("audio-surah/").substringBefore('/').toInt()
+                surahUrl to surahNumber
+            }
+            else -> "" to 1
+        }
+        quranAudioManager.setCurrentAudioInfo(
+            selectedSurah.englishName,
+            number,
+            reciteLink,
+            reciteName,
+            shouldCacheAudio,
+            _quranSettingsState.value.playbackSpeed,
+            bitrate
+        )
         viewModelScope.launch(Dispatchers.IO) {
             _audioPlayerState.update { it.copy(audioLoading = true) }
-
             try {
                 getAudioFileUseCase(audioUrl,shouldCacheAudio).collectLatest { resource ->
-                    when (resource.status) {
-                        Status.LOADING -> {
-                            _audioPlayerState.value = _audioPlayerState.value.copy(audioLoading = true)
-                        }
-                        Status.SUCCESS -> {
-                            resource.data?.let { file ->
-                                quranAudioManager.playAudio(file)
-                                _audioPlayerState.value = _audioPlayerState.value.copy(
+                    _audioPlayerState.value =
+                        when (resource.status) {
+                            Status.LOADING -> {
+                                _audioPlayerState.value.copy(audioLoading = true)
+                            }
+                            Status.SUCCESS -> {
+                                quranAudioManager.playAudio(resource.data!!)
+                                _audioPlayerState.value.copy(
                                     audioPlaying = true,
                                     audioLoading = false
                                 )
                             }
+                            Status.ERROR -> {
+                                _audioPlayerState.value.copy(
+                                    audioLoading = false,
+                                    audioError = resource.message
+                                )
+                            }
                         }
-                        Status.ERROR -> {
-                            _audioPlayerState.value = _audioPlayerState.value.copy(
-                                audioLoading = false,
-                                audioError = resource.message
-                            )
-                        }
-                    }
                 }
             } catch (e: Exception) {
+                println(e)
                 _audioPlayerState.value = _audioPlayerState.value.copy(
                     audioLoading = false,
                     audioError = e.message ?: "Ses dosyası oynatılamadı"
@@ -269,19 +293,20 @@ class QuranDetailScreenViewModel @Inject constructor(
         }
     }
 
-    // ... existing code ...
     fun onSettingsEvent(event: QuranDetailScreenEvent) = viewModelScope.launch {
         when (event) {
             is QuranDetailScreenEvent.ToggleAutoHidePlayer -> {
                 saveAudioSettingsUseCase(settings.first().copy(autoHidePlayer = !settings.first().autoHidePlayer))
-
+            }
+            is QuranDetailScreenEvent.ToggleAutoScrollAyah ->{
+                saveAudioSettingsUseCase(settings.first().copy(autoScrollAyah = !settings.first().autoScrollAyah))
+            }
+            is QuranDetailScreenEvent.PlayAyahWithDoubleClick ->{
+                saveAudioSettingsUseCase(settings.first().copy(playAyahWithDoubleClick = !settings.first().playAyahWithDoubleClick))
             }
             is QuranDetailScreenEvent.SetPlaybackSpeed -> {
                 saveAudioSettingsUseCase(settings.first().copy(playbackSpeed = event.speed))
                 setPlaybackSpeed(event.speed)
-            }
-            is QuranDetailScreenEvent.TogglePlaybackMode -> {
-                _quranSettingsState.update { it.copy(playByVerse = !it.playByVerse) }
             }
             is QuranDetailScreenEvent.SetShouldCacheAudio -> {
                 saveAudioSettingsUseCase(settings.first().copy(shouldCacheAudio = event.shouldCache))
@@ -304,6 +329,9 @@ class QuranDetailScreenViewModel @Inject constructor(
             is QuranDetailScreenEvent.SetFontSize -> {
                 saveAudioSettingsUseCase(settings.first().copy(fontSize = event.size))
             }
+            is QuranDetailScreenEvent.TogglePlaybackMode -> {
+                saveAudioSettingsUseCase(settings.first().copy(playbackMode = if (settings.first().playbackMode == PlaybackMode.VERSE_STREAM) PlaybackMode.SURAH else PlaybackMode.VERSE_STREAM))
+            }
             else -> Unit
         }
     }
@@ -312,44 +340,55 @@ class QuranDetailScreenViewModel @Inject constructor(
         setupAudioPlayerCallbacks()
         loadAudioList()
         loadTranslationList()
-        viewModelScope.launch(Dispatchers.IO){
-            getAudioSettingsUseCase.invoke().collect {setting ->
-                _quranSettingsState.update { it.copy(
-                    shouldCacheAudio = setting.shouldCacheAudio,
-                    selectedReciterIndex = if (setting.selectedReciterIndex != -1) setting.selectedReciterIndex else it.selectedReciterIndex,
-                    selectedReciter = if (setting.selectedReciter.isNotEmpty()) setting.selectedReciter else it.selectedReciter,
-                    selectedTranslation = if (setting.selectedTranslation.isNotEmpty()) setting.selectedTranslation else it.selectedTranslation,
-                    autoHidePlayer = setting.autoHidePlayer,
-                    playbackSpeed = setting.playbackSpeed,
-                    fontSize = setting.fontSize,
-                    selectedTransliteration = if (setting.selectedTransliteration.isNotEmpty()) setting.selectedTransliteration else it.selectedTransliteration
-                ) }
-            }
-        }
         viewModelScope.launch(Dispatchers.IO) {
-            _quranSettingsState
-                .filter {
-                    it.reciterList.isNotEmpty() && it.transliterationList.isNotEmpty()
-                }
-                .map { settings ->
-                    Triple(
-                        settings.selectedTranslation,
-                        settings.selectedTransliteration,
-                        settings.selectedReciter
+            getAudioSettingsUseCase().collect { setting ->
+                _quranSettingsState.update {
+                    it.copy(
+                        shouldCacheAudio = setting.shouldCacheAudio,
+                        selectedReciterIndex = if (setting.selectedReciterIndex != -1) setting.selectedReciterIndex else it.selectedReciterIndex,
+                        selectedReciter = if (setting.selectedReciter.isNotEmpty()) setting.selectedReciter else it.selectedReciter,
+                        selectedTranslation = if (setting.selectedTranslation.isNotEmpty()) setting.selectedTranslation else it.selectedTranslation,
+                        autoHidePlayer = setting.autoHidePlayer,
+                        autoScrollAyah = setting.autoScrollAyah,
+                        playAyahWithDoubleClick = setting.playAyahWithDoubleClick,
+                        playbackSpeed = setting.playbackSpeed,
+                        fontSize = setting.fontSize,
+                        playbackMode = setting.playbackMode,
+                        selectedTransliteration = if (setting.selectedTransliteration.isNotEmpty()) setting.selectedTransliteration else it.selectedTransliteration
                     )
                 }
-                .distinctUntilChanged()
-                .collect { (translation, transliteration, reciter) ->
-
-                    if (transliteration.isNotEmpty() && reciter.isNotEmpty()){
-                        getSelectedSurah()
-                    }
-                }
-        }
-        viewModelScope.launch(Dispatchers.IO) {
-            _quranDetailScreenState.mapLatest { it.selectedSurahNumber }.distinctUntilChanged().collect{
-                getSelectedSurah()
             }
+        }
+        viewModelScope.launch(Dispatchers.IO){
+            _quranSettingsState.combine(_quranDetailScreenState){ settings,detail ->
+                    Pair(settings,detail)
+                }.filter { pair ->
+                    pair.first.reciterList.isNotEmpty() &&
+                    pair.first.transliterationList.isNotEmpty() &&
+                    pair.first.translationList.isNotEmpty() &&
+                    pair.first.selectedTranslation.isNotEmpty() &&
+                    pair.first.selectedTransliteration.isNotEmpty() &&
+                    pair.first.selectedReciter.isNotEmpty() &&
+                    pair.second.selectedSurahNumber != 0
+                }
+                .map { pair ->
+                    FlowData(
+                        pair.first.selectedTranslation,
+                        pair.first.selectedTransliteration,
+                        pair.first.selectedReciter,
+                        pair.second.selectedSurahNumber
+                    )
+                }
+                .distinctUntilChanged{old,new ->
+                    old.first == new.first &&
+                    old.second == new.second &&
+                    old.third == new.third &&
+                    old.fourth == new.fourth
+                }
+                .collectLatest { triple ->
+                    getSelectedSurah()
+                    println("get")
+                }
         }
     }
 
@@ -362,9 +401,17 @@ class QuranDetailScreenViewModel @Inject constructor(
 
     override fun onCleared() {
         super.onCleared()
+        println("hey")
         releaseCallbacks()
         //quranAudioManager.stopAudio()
        // quranAudioManager.releaseMediaPlayer()
     }
+
+    private data class FlowData(
+        val first : String,
+        val second : String,
+        val third : String,
+        val fourth : Int
+    )
 
 }

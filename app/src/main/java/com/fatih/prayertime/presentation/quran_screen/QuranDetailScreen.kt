@@ -56,6 +56,7 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -65,6 +66,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
@@ -95,6 +97,10 @@ import com.fatih.prayertime.util.model.state.QuranSettingsState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.isActive
 
 @Composable
 fun QuranDetailScreen(surahNumber : Int,bottomPadding: Dp,topPadding : Dp, viewModel: QuranDetailScreenViewModel = hiltViewModel()) {
@@ -116,9 +122,10 @@ fun QuranDetailScreen(surahNumber : Int,bottomPadding: Dp,topPadding : Dp, viewM
     }
 
     when {
-
+        quranDetailState.isLoading -> {
+            LoadingView()
+        }
         quranDetailState.isError != null -> {
-            println("error")
             ErrorView(quranDetailState.isError?: stringResource(R.string.quran_unknown_error)) {
                 coroutineScope.launch(Dispatchers.IO) {
                     viewModel.getSelectedSurah()
@@ -136,7 +143,7 @@ fun QuranDetailScreen(surahNumber : Int,bottomPadding: Dp,topPadding : Dp, viewM
 
                 Spacer(modifier = Modifier.height(16.dp))
                 QuranDetailContent(selectedSurah = selectedSurah!!, modifier = Modifier.fillMaxSize(1f),quranDetailState,quranSettingsState){ selectedAyahNumber ->
-                    viewModel.updateSelectedAyahNumber(selectedAyahNumber)
+                    if (selectedAyahNumber != null) viewModel.updateSelectedAyahNumber(selectedAyahNumber)
                     showHud = true
                     shrinkDelay = 5000L
                 }
@@ -148,9 +155,6 @@ fun QuranDetailScreen(surahNumber : Int,bottomPadding: Dp,topPadding : Dp, viewM
                 state = quranSettingsState,
                 onEvent = viewModel::onSettingsEvent
             ) { viewModel.onSettingsEvent(QuranDetailScreenEvent.ToggleSettingsSheet) }
-            if(quranDetailState.isLoading){
-                LoadingView()
-            }
         }
     }
 }
@@ -175,23 +179,26 @@ fun QuranDetailTopBar(selectedSurah: SurahInfo, showHud: Boolean) {
 }
 
 @Composable
-fun QuranDetailContent(selectedSurah: SurahInfo, modifier: Modifier = Modifier,state: QuranDetailScreenState,quranSettingsState: QuranSettingsState,onAyahClick: (Int) -> Unit) {
+fun QuranDetailContent(selectedSurah: SurahInfo, modifier: Modifier = Modifier,state: QuranDetailScreenState,quranSettingsState: QuranSettingsState,onAyahClick: (Int?) -> Unit) {
     val listState = rememberLazyListState()
-    val coroutineScope = rememberCoroutineScope()
-    val density = LocalDensity.current
-    val screenHeight = LocalConfiguration.current.screenHeightDp.dp
 
-    val centerOffset = with(density) {
-        (screenHeight / 4).toPx().toInt()
-    }
+    if (quranSettingsState.autoScrollAyah){
+        val coroutineScope = rememberCoroutineScope()
+        val density = LocalDensity.current
+        val screenHeight = LocalConfiguration.current.screenHeightDp.dp
 
-    LaunchedEffect(state.selectedAyahNumber) {
-        if (state.selectedAyahNumber > 0) {
-            coroutineScope.launch {
-                listState.animateScrollToItem(
-                    index = state.selectedAyahNumber- 1,
-                    scrollOffset = -centerOffset
-                )
+        val centerOffset = with(density) {
+            (screenHeight / 4).toPx().toInt()
+        }
+
+        LaunchedEffect(state.selectedAyahNumber) {
+            if (state.selectedAyahNumber > 0) {
+                coroutineScope.launch {
+                    listState.animateScrollToItem(
+                        index = state.selectedAyahNumber- 1,
+                        scrollOffset = -centerOffset
+                    )
+                }
             }
         }
     }
@@ -208,15 +215,31 @@ fun QuranDetailContent(selectedSurah: SurahInfo, modifier: Modifier = Modifier,s
 }
 
 @Composable
-fun AyahCard(ayah: Ayah, state: QuranDetailScreenState, quranSettingsState: QuranSettingsState,onAyahClick: (Int) -> Unit) {
+fun AyahCard(ayah: Ayah, state: QuranDetailScreenState, quranSettingsState: QuranSettingsState,onAyahClick: (Int?) -> Unit) {
     val currentAyah = remember(state.selectedAyahNumber){state.selectedAyahNumber}
     val ayahNumber = remember{ayah.numberInSurah}
+    var isClicked by remember { mutableStateOf(false) }
+    val clickScope = rememberCoroutineScope()
+    var clickJob by remember { mutableStateOf<Job?>(null) }
     val ayahColor = animateColorAsState(
         animationSpec = tween(durationMillis = 500),
         targetValue = if (currentAyah == ayahNumber) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onPrimaryContainer
     )
     Box(modifier = Modifier.clickable{
-        onAyahClick(ayahNumber)
+        onAyahClick(null)
+        if (!quranSettingsState.playAyahWithDoubleClick) return@clickable
+        if (isClicked) {
+            clickJob?.cancel()
+            isClicked = false
+            onAyahClick(ayahNumber)
+        } else {
+            isClicked = true
+            clickJob = clickScope.launch {
+                if (!isActive) return@launch
+                delay(500L)
+                isClicked = false
+            }
+        }
     }){
         Column(
             Modifier
@@ -239,6 +262,8 @@ fun AyahCard(ayah: Ayah, state: QuranDetailScreenState, quranSettingsState: Qura
             val fontSize = MaterialTheme.typography.headlineLarge.fontSize * quranSettingsState.fontSize
             val letterSpacing = fontSize * 0.15f
             val lineHeight = fontSize * 1.3f
+            
+            // Arapça metin
             Text(
                 text = annotatedString,
                 letterSpacing = letterSpacing,
@@ -246,20 +271,49 @@ fun AyahCard(ayah: Ayah, state: QuranDetailScreenState, quranSettingsState: Qura
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = TextAlign.End,
                 style = MaterialTheme.typography.headlineLarge.copy(
-                    fontSize = fontSize
+                    fontSize = fontSize,
+                    fontWeight = FontWeight.Bold
                 ),
                 color = ayahColor.value
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(12.dp))
+            
+            Text(
+                text = "Okunuş",
+                style = MaterialTheme.typography.labelSmall,
+                color = ayahColor.value.copy(alpha = 0.7f),
+                modifier = Modifier.padding(bottom = 4.dp)
+            )
+            
             Text(
                 text = ayah.textTransliteration ?: "",
                 modifier = Modifier.fillMaxWidth(),
                 lineHeight = lineHeight * 0.5f,
                 textAlign = TextAlign.Start,
                 style = MaterialTheme.typography.bodyMedium.copy(
-                    fontSize = MaterialTheme.typography.bodyMedium.fontSize * quranSettingsState.fontSize
+                    fontSize = MaterialTheme.typography.bodyMedium.fontSize * quranSettingsState.fontSize,
+                    fontStyle = FontStyle.Italic
                 ),
-                color = ayahColor.value
+                color = ayahColor.value.copy(alpha = 0.85f)
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            
+            Text(
+                text = "Meal",
+                style = MaterialTheme.typography.labelSmall,
+                color = ayahColor.value.copy(alpha = 0.7f),
+                modifier = Modifier.padding(bottom = 4.dp)
+            )
+            
+            Text(
+                text = ayah.textTranslation ?: "",
+                modifier = Modifier.fillMaxWidth(),
+                lineHeight = lineHeight * 0.5f,
+                textAlign = TextAlign.Start,
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    fontSize = MaterialTheme.typography.bodyMedium.fontSize * quranSettingsState.fontSize,
+                ),
+                color = ayahColor.value.copy(alpha = 0.95f)
             )
         }
         Box(modifier = Modifier
@@ -286,7 +340,6 @@ fun BoxScope.BottomNavigationRow(
     val autoHidePlayer = remember(quranSettingsState.autoHidePlayer) { quranSettingsState.autoHidePlayer }
     val selectedSurah = remember(quranDetailScreenState.selectedSurah){quranDetailScreenState.selectedSurah}
     val audioProgress = remember(audioPlayerState.value.currentAudioPosition) {audioPlayerState.value.currentAudioPosition}
-    println("audioProgres $audioProgress")
     AnimatedVisibility(
         modifier = Modifier.align(Alignment.BottomCenter),
         visible = if (autoHidePlayer) showHud else true,
@@ -303,7 +356,6 @@ fun BoxScope.BottomNavigationRow(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Sol taraf - Sure bilgisi
                 Column {
                     Text(
                         text = selectedSurah?.englishName ?: "",
@@ -318,12 +370,10 @@ fun BoxScope.BottomNavigationRow(
 
                 }
 
-                // Orta - Kontrol butonları
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Önceki
                     IconButton(
                         onClick = { viewModel.updateCurrentAyahNumber(-1) },
                         enabled = currentAyah > 1 && !isLoading
@@ -338,7 +388,6 @@ fun BoxScope.BottomNavigationRow(
                         )
                     }
 
-                    // Oynat/Duraklat
                     IconButton(
                         onClick = {
                             if (isPlaying) {
@@ -538,6 +587,26 @@ fun QuranSettingsBottomSheet(
                         Checkbox(
                             checked = state.autoHidePlayer,
                             onCheckedChange = { onEvent(QuranDetailScreenEvent.ToggleAutoHidePlayer) }
+                        )
+                    }
+                    SettingsRow(
+                        title = stringResource(R.string.quran_move_ayah),
+                        subtitle = stringResource(R.string.quran_move_ayah_desc),
+                        onClick = { onEvent(QuranDetailScreenEvent.ToggleAutoScrollAyah) }
+                    ) {
+                        Checkbox(
+                            checked = state.autoScrollAyah,
+                            onCheckedChange = { onEvent(QuranDetailScreenEvent.ToggleAutoScrollAyah) }
+                        )
+                    }
+                    SettingsRow(
+                        title = stringResource(R.string.ayah_with_double_click),
+                        subtitle = stringResource(R.string.ayah_with_double_click_desc),
+                        onClick = { onEvent(QuranDetailScreenEvent.ToggleAutoScrollAyah) }
+                    ) {
+                        Checkbox(
+                            checked = state.playAyahWithDoubleClick,
+                            onCheckedChange = { onEvent(QuranDetailScreenEvent.PlayAyahWithDoubleClick) }
                         )
                     }
 

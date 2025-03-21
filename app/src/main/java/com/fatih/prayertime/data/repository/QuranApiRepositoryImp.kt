@@ -1,6 +1,7 @@
 package com.fatih.prayertime.data.repository
 
 import android.content.Context
+import com.fatih.prayertime.data.remote.AudioApi
 import com.fatih.prayertime.data.remote.QuranApi
 import com.fatih.prayertime.data.remote.dto.qurandto.Ayah
 import com.fatih.prayertime.data.remote.dto.qurandto.SurahInfo
@@ -21,11 +22,14 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import java.io.File
-import java.io.FileOutputStream
-import java.net.URL
+import java.io.IOException
 import javax.inject.Inject
 
-class QuranApiRepositoryImp @Inject constructor(private val context : Context,private val quranApi: QuranApi) : QuranApiRepository {
+class QuranApiRepositoryImp @Inject constructor(
+    private val context : Context,
+    private val quranApi: QuranApi,
+    private val audioApi: AudioApi
+) : QuranApiRepository {
 
     private val audioList = mutableListOf<QuranApiData>()
     private val translationList = mutableListOf<QuranApiData>()
@@ -120,17 +124,13 @@ class QuranApiRepositoryImp @Inject constructor(private val context : Context,pr
     }
 
     override suspend fun getAudioList(): Resource<List<QuranApiData>> = withContext(Dispatchers.IO) {
-        synchronized(audioList) {
-            if (audioList.isNotEmpty()) return@withContext Resource.success(audioList)
-        }
+        if (audioList.isNotEmpty()) return@withContext Resource.success(audioList)
         return@withContext try {
             val audioResponse = quranApi.getAudioList()
             if (audioResponse.isSuccessful){
                 audioResponse.body()?.let {
-                    synchronized(audioList) {
-                        audioList.clear()
-                        audioList.addAll(it.data.filter { it.language == "ar" })
-                    }
+                    audioList.clear()
+                    audioList.addAll(it.data.filter { it.language == "ar" })
                     Resource.success(audioList)
                 }?: Resource.error("An unexpected error occurred ${audioResponse.message()}")
             }else{
@@ -175,67 +175,58 @@ class QuranApiRepositoryImp @Inject constructor(private val context : Context,pr
         }
     }
 
-    override suspend fun downloadAudioFile(audioUrl: String, shouldCacheAudio: Boolean): Flow<Resource<File>> = flow {
+    override suspend fun downloadAudio(audioUrl: String, shouldCacheAudio: Boolean): Flow<Resource<File>> = flow {
         emit(Resource.loading<File>())
 
+        val urlParts = audioUrl.split("/")
+        val bitrate = urlParts[urlParts.indexOf("audio") + 1]
+        val edition = urlParts[urlParts.indexOf(bitrate) + 1]
+        val number = urlParts.last().removeSuffix(".mp3")
+
+        val fileName = "$edition-$number.mp3"
+        val cacheDir = File(context.cacheDir, "quran_audio")
+        val cachedFile = File(cacheDir, fileName)
+
+        if (cachedFile.exists()) {
+            emit(Resource.success(cachedFile))
+            return@flow
+        }
+
+        val outputFile = if (shouldCacheAudio) {
+            if (!cacheDir.exists()) {
+                cacheDir.mkdirs()
+            }
+            cachedFile
+        } else {
+            File.createTempFile("quran_audio", ".mp3", context.cacheDir)
+        }
+
         try {
-            val lastSlashIndex = audioUrl.lastIndexOf("/")
-            val secondLastSlashIndex = audioUrl.lastIndexOf("/", lastSlashIndex - 1)
-            val fileName = audioUrl.substring(secondLastSlashIndex + 1).filter { it != '/' }
+            val response = audioApi.downloadAudio(bitrate, edition, number)
 
-            val cacheDir = File(context.cacheDir, "quran_audio")
-            val cachedFile = File(cacheDir, fileName)
+            if (response.isSuccessful) {
+                response.body()?.let { body ->
+                    body.byteStream().use { inputStream ->
+                        outputFile.outputStream().use { outputStream ->
+                            val buffer = ByteArray(8192)
+                            var bytesRead: Int
 
-            if (cachedFile.exists()) {
-                emit(Resource.success(cachedFile))
-                return@flow
-            }
+                            while (inputStream.read(buffer).also { bytesRead = it } != -1) {
+                                outputStream.write(buffer, 0, bytesRead)
+                            }
+                        }
+                    }
 
-            val outputFile = if (shouldCacheAudio) {
-                if (!cacheDir.exists()) {
-                    cacheDir.mkdirs()
-                }
-                cachedFile
+                    emit(Resource.success(outputFile))
+                } ?: throw IOException("Response body is null")
             } else {
-                File.createTempFile("quran_audio", ".mp3", context.cacheDir)
+                throw IOException("Download failed with code: ${response.code()}")
             }
-
-            val connection = URL(audioUrl).openConnection()
-            connection.connect()
-
-            val inputStream = connection.getInputStream()
-            val outputStream = FileOutputStream(outputFile)
-
-            val fileSize = connection.contentLength
-            var downloadedSize = 0L
-
-            val buffer = ByteArray(4096)
-            var bytesRead: Int
-
-            while (inputStream.read(buffer).also { bytesRead = it } != -1) {
-                outputStream.write(buffer, 0, bytesRead)
-                downloadedSize += bytesRead
-                val progress = (downloadedSize * 100f / fileSize).toInt()
-                emit(Resource.loading(progress = progress))
-            }
-
-            outputStream.close()
-            inputStream.close()
-
-            emit(Resource.success(outputFile))
         } catch (e: Exception) {
             emit(Resource.error(e.localizedMessage ?: "Ses dosyası indirilemedi"))
+            if (!shouldCacheAudio && outputFile.exists()) {
+                outputFile.delete()
+            }
         }
     }.flowOn(Dispatchers.IO)
-
-    override suspend fun getCachedAudioFile(audioUrl: String): File? {
-        val lastSlashIndex = audioUrl.lastIndexOf("/")
-        val secondLastSlashIndex = audioUrl.lastIndexOf("/", lastSlashIndex - 1)
-        val fileName = audioUrl.substring(secondLastSlashIndex + 1).filter { it != '/' }
-        val cacheDir = File(context.cacheDir, "quran_audio")
-        val file = File(cacheDir, fileName)
-
-        return if (file.exists()) file else null
-    }
-
 }

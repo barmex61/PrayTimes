@@ -5,9 +5,8 @@ import com.fatih.prayertime.util.model.enums.PlaybackMode
 sealed class QuranDetailScreenEvent(){
     object ToggleAutoHidePlayer : QuranDetailScreenEvent()
     data class SetPlaybackSpeed(val speed: Float) : QuranDetailScreenEvent()
-    object TogglePlaybackMode : QuranDetailScreenEvent()
     data class SetShouldCacheAudio(val shouldCache: Boolean) : QuranDetailScreenEvent()
-    data class SetPlaybackMode(val mode: PlaybackMode) : QuranDetailScreenEvent()
+    object TogglePlaybackMode : QuranDetailScreenEvent()
     data object StartVersePreload : QuranDetailScreenEvent()
     object ToggleSettingsSheet : QuranDetailScreenEvent()
     object ToggleCacheInfoDialog : QuranDetailScreenEvent()
@@ -15,5 +14,8 @@ sealed class QuranDetailScreenEvent(){
     data class SetReciter(val reciter: String,val reciterIndex : Int) : QuranDetailScreenEvent()
     data class SetTransliteration(val transliteration: String) : QuranDetailScreenEvent()
     data class SetFontSize(val size: Float) : QuranDetailScreenEvent()
+    object ToggleAutoScrollAyah : QuranDetailScreenEvent()
+    object PlayAyahWithDoubleClick : QuranDetailScreenEvent()
+
 }
 

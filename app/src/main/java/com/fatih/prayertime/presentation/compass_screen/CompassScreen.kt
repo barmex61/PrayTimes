@@ -13,6 +13,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.with
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -27,7 +28,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -66,8 +70,11 @@ fun CompassScreen(modifier: Modifier, compassScreenViewModel: CompassScreenViewM
             gyroscopeSensor.unregister()
         }
     }
+    
+
     Column(
-        modifier = modifier.fillMaxSize().verticalScroll(scrollBehavior),
+        modifier = modifier
+            .verticalScroll(scrollBehavior),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         CompassContent(
@@ -103,62 +110,83 @@ fun CompassContent(
         label = "",
     )
 
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.padding(top = 15.dp)
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 16.dp),
+        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.primaryContainer
     ) {
-        val icon = if (inRange) R.drawable.check_circle else R.drawable.rotate_arrow_icon
-        Spacer(modifier = Modifier.size(10.dp))
-        Text(
-            text = stringResource(R.string.kaaba_text),
-            textAlign = TextAlign.Center
-        )
-        Spacer(modifier = Modifier.size(20.dp))
-        AnimatedContent(
-            targetState = icon,
-            label = "",
-            transitionSpec = {
-                fadeIn(animationSpec = tween(1000)) with
-                        fadeOut(animationSpec = tween(1000))
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 24.dp)
+        ) {
+            val icon = if (inRange) R.drawable.check_circle else R.drawable.rotate_arrow_icon
+            
+            Text(
+                text = stringResource(R.string.kaaba_text),
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                textAlign = TextAlign.Center
+            )
+            
+            Spacer(modifier = Modifier.size(20.dp))
+            
+            AnimatedContent(
+                targetState = icon,
+                label = "",
+                transitionSpec = {
+                    fadeIn(animationSpec = tween(1000)) with
+                            fadeOut(animationSpec = tween(1000))
+                }
+            ) {
+                Image(
+                    painter = painterResource(id = it),
+                    contentDescription = "Rotate Indicator",
+                    modifier = Modifier
+                        .size(50.dp)
+                        .rotate(animatedRotationValue.value),
+                    colorFilter = ColorFilter.tint(animatedColor.value)
+                )
             }
-        ) {
-            Image(
-                painter = painterResource(id = it),
-                contentDescription = "Rotate Indicator",
+            
+            Row(
                 modifier = Modifier
-                    .size(50.dp)
-                    .rotate(animatedRotationValue.value),
-                colorFilter = ColorFilter.tint(animatedColor.value)
-            )
-        }
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 30.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Image(
-                painter = painterResource(id = R.drawable.cross_icon),
-                contentDescription = "Cross",
-                modifier = Modifier.size(25.dp)
-            )
-            KaabaRepresentation((-25).dp, 0.dp, Color.Red)
-            KaabaRepresentation(0.dp, 0.dp, Color.Green)
-            Image(
-                painter = painterResource(id = R.drawable.check_circle),
-                contentDescription = "Check",
-                modifier = Modifier.size(25.dp)
-            )
+                    .fillMaxWidth()
+                    .padding(top = 30.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.cross_icon),
+                    contentDescription = "Cross",
+                    modifier = Modifier.size(25.dp)
+                )
+                KaabaRepresentation((-25).dp, 0.dp, Color.Red)
+                KaabaRepresentation(0.dp, 0.dp, Color.Green)
+                Image(
+                    painter = painterResource(id = R.drawable.check_circle),
+                    contentDescription = "Check",
+                    modifier = Modifier.size(25.dp)
+                )
+            }
         }
     }
-    CompassGyroscopeContent(
-        gyroscopeSensor = gyroscopeSensor,
-        qiblaDirection = qiblaDirection,
-        inRange = inRange,
-        onRangeChange = { inRange = it }
-    )
-    Spacer(modifier = Modifier.size(35.dp))
+
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 16.dp),
+        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.primaryContainer
+    ) {
+        CompassGyroscopeContent(
+            gyroscopeSensor = gyroscopeSensor,
+            qiblaDirection = qiblaDirection,
+            inRange = inRange,
+            onRangeChange = { inRange = it }
+        )
+    }
 }
 
 @Composable
@@ -172,8 +200,8 @@ fun CompassGyroscopeContent(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Top,
         modifier = Modifier
-            .fillMaxSize()
-            .padding(top = 50.dp)
+            .fillMaxWidth()
+            .padding(24.dp)
     ) {
         Box(
             modifier = Modifier
@@ -184,6 +212,7 @@ fun CompassGyroscopeContent(
                     shape = CircleShape
                 )
         )
+        
         val rotation = gyroscopeSensor.rotation.floatValue
         onRangeChange(rotation - 1f <= qiblaDirection && qiblaDirection <= rotation + 1f)
         var yOffset = 0.dp
@@ -191,18 +220,21 @@ fun CompassGyroscopeContent(
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier
-                .padding(top = 10.dp)
+                .padding(top = 24.dp)
                 .rotate(-gyroscopeSensor.rotation.floatValue)
+                .background(MaterialTheme.colorScheme.secondaryContainer, CircleShape)
+                .padding(16.dp)
         ) {
             Image(
                 painter = painterResource(id = R.drawable.compass_new),
                 contentDescription = "Compass",
                 modifier = Modifier.size(200.dp),
+
             )
             val compassRadius = 100.dp
             val circleRadius = 35.dp
             val kaabaRadius = 25.dp
-            val distanceBetweenCenters = compassRadius + kaabaRadius + 10.dp + circleRadius / 3
+            val distanceBetweenCenters = compassRadius + kaabaRadius + 40.dp + circleRadius / 3
 
             val angleInRadians = Math.toRadians(qiblaDirection.toDouble())
             val xOffset = (distanceBetweenCenters) * kotlin.math.sin(angleInRadians).toFloat()
@@ -217,23 +249,38 @@ fun CompassGyroscopeContent(
                     .rotate(gyroscopeSensor.rotation.floatValue)
             )
         }
-        Spacer(
-            modifier = Modifier.height(-yOffset - 35.dp)
-        )
-        Text(
-            text = stringResource(R.string.kaaba_angle) +" : $qiblaDirection",
-        )
-        Text(
-            text = stringResource(R.string.your_angle)+" : ${gyroscopeSensor.rotation.floatValue}",
-        )
-        Spacer(
-            modifier = Modifier.height(25.dp)
-        )
+        
+        Spacer(modifier = Modifier.height(-yOffset + 10.dp))
+        
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 16.dp),
+            shape = MaterialTheme.shapes.medium,
+            color = MaterialTheme.colorScheme.secondaryContainer
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = stringResource(R.string.kaaba_angle) + " : $qiblaDirection",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = stringResource(R.string.your_angle) + " : ${gyroscopeSensor.rotation.floatValue}",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+            }
+        }
     }
 }
 
 @Composable
-fun KaabaRepresentation(offsetX : Dp, offsetY : Dp, color: Color){
+fun KaabaRepresentation(offsetX: Dp, offsetY: Dp, color: Color) {
     Box(contentAlignment = Alignment.Center) {
         Box(
             modifier = Modifier
@@ -249,7 +296,7 @@ fun KaabaRepresentation(offsetX : Dp, offsetY : Dp, color: Color){
             contentDescription = "Kaaba",
             modifier = Modifier
                 .size(50.dp)
-                .offset(offsetX,offsetY)
+                .offset(offsetX, offsetY)
         )
     }
 }
