@@ -20,6 +20,7 @@ import com.fatih.prayertime.R
 import com.fatih.prayertime.domain.use_case.quran_use_cases.GetAudioFileUseCase
 import com.fatih.prayertime.presentation.main_activity.MainActivity
 import com.fatih.prayertime.util.config.ApiConfig
+import com.fatih.prayertime.util.model.enums.PlaybackMode
 import com.fatih.prayertime.util.model.state.Status
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
@@ -39,11 +40,12 @@ class QuranAudioService : Service() {
     private var errorCallback: ((String) -> Unit)? = null
     private var isPlayingCallback: ((Boolean) -> Unit)? = null
     private var ayahChangeCallback : ((Int)-> Unit)? = null
-    private var currentAyahNumber: Int = 0
+    private var currentAudioNumber: Int = 0
     private var bitrate : Int = 192
     private var surahName : String = ""
     private var currentReciter: String = "ar.abdullahbasfar"
     private var shouldCacheAudio : Boolean = false
+    private var playbackMode : PlaybackMode = PlaybackMode.VERSE_STREAM
     private var reciterName : String = ""
     private var speed: Float = 1.0f
 
@@ -119,18 +121,22 @@ class QuranAudioService : Service() {
         }
     }
 
-    private suspend fun getNextAudio() {
-        println("service $bitrate")
-        if (ayahChangeCallback != null) {
-            println("next")
-            ayahChangeCallback?.invoke(1)
-            return
+    private suspend fun getAndPlayAudioFile(direction : Int){
+        val audioPath : String
+        when(playbackMode){
+            PlaybackMode.SURAH -> {
+                audioPath = "audio-surah"
+                currentAudioNumber = (currentAudioNumber + direction).coerceIn(1,114)
+            }
+            PlaybackMode.VERSE_STREAM -> {
+                audioPath = "audio"
+                currentAudioNumber = (currentAudioNumber + direction).coerceIn(1,6236)
+            }
         }
-        currentAyahNumber = (currentAyahNumber +1).coerceAtMost(6236)
-        val nextAudioUrl = "${ApiConfig.BASE_AUDIO_URL}audio/$bitrate/$currentReciter/$currentAyahNumber.mp3"
-        println(nextAudioUrl)
         try {
-            getAudioFileUseCase(nextAudioUrl, shouldCacheAudio).collect { resource ->
+            getAudioFileUseCase.invoke(
+                audioPath,bitrate,currentReciter,currentAudioNumber,shouldCacheAudio
+            ).collect { resource ->
                 when (resource.status) {
                     Status.SUCCESS -> {
                         resource.data?.let { file ->
@@ -151,43 +157,36 @@ class QuranAudioService : Service() {
         }
     }
 
+    private suspend fun getNextAudio() {
+        println("service $bitrate")
+        if (ayahChangeCallback != null) {
+            println("next")
+            ayahChangeCallback?.invoke(1)
+            return
+        }
+        getAndPlayAudioFile(1)
+
+    }
+
     private suspend fun getPreviousAudio() {
-        if (currentAyahNumber > 1) {
+        if (currentAudioNumber > 1) {
             if (ayahChangeCallback != null) {
                 ayahChangeCallback?.invoke(-1)
                 return
             }
-            currentAyahNumber--
-            val previousAudioUrl = "${ApiConfig.BASE_AUDIO_URL}audio/$bitrate/$currentReciter/$currentAyahNumber.mp3"
-            try {
-                getAudioFileUseCase(previousAudioUrl, shouldCacheAudio).collect { resource ->
-                    when (resource.status) {
-                        Status.SUCCESS -> {
-                            resource.data?.let { file ->
-                                playAudio(file)
-                            }
-                        }
-                        Status.ERROR -> {
-                            errorCallback?.invoke(resource.message ?: getString(R.string.quran_audio_error_download))
-                        }
-                        Status.LOADING -> {
-                        }
-                    }
-                }
-            } catch (e: Exception) {
-                errorCallback?.invoke(e.message ?: getString(R.string.quran_audio_error_generic))
-            }
+            getAndPlayAudioFile(-1)
         }
     }
 
-    fun setCurrentAudioInfo(surahName : String, ayahNumber: Int, reciter: String, reciterName : String, shouldCacheAudio : Boolean, speed : Float,bitrate : Int) {
+    fun setCurrentAudioInfo(surahName : String, ayahNumber: Int, reciter: String, reciterName : String, shouldCacheAudio : Boolean, speed : Float,bitrate : Int,playbackMode: PlaybackMode) {
         this.surahName = surahName
-        currentAyahNumber = ayahNumber
+        currentAudioNumber = ayahNumber
         currentReciter = reciter
         this.speed = speed
         this.shouldCacheAudio = shouldCacheAudio
         this.reciterName = reciterName
         this.bitrate = bitrate
+        this.playbackMode = playbackMode
     }
 
     fun playAudio(audioFile: File) {
@@ -401,7 +400,7 @@ class QuranAudioService : Service() {
 
         return NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
             .setSmallIcon(R.drawable.quran)
-            .setContentTitle("$surahName - ${getString(R.string.quran_audio_verse, currentAyahNumber)}")
+            .setContentTitle("$surahName - ${getString(R.string.quran_audio_verse, currentAudioNumber)}")
             .setContentText(reciterName)
             .setSubText(getString(R.string.quran_audio_notification_subtext))
             .addAction(

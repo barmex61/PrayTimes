@@ -101,6 +101,7 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.isActive
+import java.util.Locale
 
 @Composable
 fun QuranDetailScreen(surahNumber : Int,bottomPadding: Dp,topPadding : Dp, viewModel: QuranDetailScreenViewModel = hiltViewModel()) {
@@ -441,11 +442,41 @@ fun BoxScope.BottomNavigationRow(
                     )
                 }
             }
-            Slider(
-                modifier = Modifier.padding(horizontal = 16.dp),
-                value = audioProgress,
-                onValueChange = { viewModel.seekTo(it) },
-            )
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    val currentMillis = (audioProgress * audioPlayerState.value.audioDuration).toInt()
+                    val totalMillis = audioPlayerState.value.audioDuration.toInt()
+                    
+                    val currentMinutes = (currentMillis / 1000) / 60
+                    val currentSeconds = (currentMillis / 1000) % 60
+                    val totalMinutes = (totalMillis / 1000) / 60
+                    val totalSeconds = (totalMillis / 1000) % 60
+                    
+                    Text(
+                        text = String.format(
+                            Locale.getDefault(),
+                            "%02d:%02d / %02d:%02d",
+                            currentMinutes,
+                            currentSeconds,
+                            totalMinutes,
+                            totalSeconds
+                        ),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                    )
+                }
+                
+                Slider(
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    value = audioProgress,
+                    onValueChange = { viewModel.seekTo(it) },
+                )
+            }
         }
 
     }
@@ -645,7 +676,7 @@ fun QuranSettingsBottomSheet(
 
                     SettingsRow(
                         title = stringResource(R.string.quran_playback_mode),
-                        subtitle = if (state.playByVerse) stringResource(R.string.quran_play_by_verse) else stringResource(R.string.quran_play_by_surah),
+                        subtitle = state.playbackMode.name,
                         onClick = { onEvent(QuranDetailScreenEvent.TogglePlaybackMode) }
                     ) {
                         Row(
@@ -653,7 +684,7 @@ fun QuranSettingsBottomSheet(
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             Text(
-                                text = if (state.playByVerse) stringResource(R.string.quran_play_by_verse) else stringResource(R.string.quran_play_by_surah),
+                                text = state.playbackMode.name,
                                 style = MaterialTheme.typography.bodyMedium
                             )
                             Icon(

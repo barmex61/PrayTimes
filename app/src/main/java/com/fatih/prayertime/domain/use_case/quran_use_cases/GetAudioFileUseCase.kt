@@ -9,8 +9,8 @@ import javax.inject.Inject
 class GetAudioFileUseCase @Inject constructor(
     private val repository: QuranApiRepository
 ) {
-    suspend operator fun invoke(audioUrl: String,shouldCacheAudio : Boolean): Flow<Resource<File>> {
-        return repository.downloadAudio(audioUrl,shouldCacheAudio)
+    suspend operator fun invoke(audioPath : String,bitRate : Int,recite : String,audioNumber: Int,shouldCache : Boolean): Flow<Resource<File>> {
+        return repository.downloadAudio(audioPath,bitRate,recite,audioNumber,shouldCache)
 
     }
 } 

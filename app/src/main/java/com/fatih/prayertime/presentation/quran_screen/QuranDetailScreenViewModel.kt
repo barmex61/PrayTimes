@@ -193,35 +193,33 @@ class QuranDetailScreenViewModel @Inject constructor(
         val shouldCacheAudio = _quranSettingsState.value.shouldCacheAudio
         val reciteLink = _quranSettingsState.value.reciterList[_quranSettingsState.value.selectedReciterIndex].identifier
         val reciteName = _quranSettingsState.value.selectedReciter.substringAfter('-')
+        val playbackMode = _quranSettingsState.value.playbackMode
         var bitrate = 0
-        val (audioUrl, number) = when (_quranSettingsState.value.playbackMode) {
+
+        val (audioPath, audioNumber) = when (playbackMode) {
             PlaybackMode.VERSE_STREAM -> {
-                val verseUrl = ayah.audio
-                val verseNumber = ayah.number
-                bitrate = verseUrl.substringAfter("audio/").substringBefore('/').toInt()
-                verseUrl to verseNumber
+                bitrate = ayah.audio.substringAfter("audio/").substringBefore('/').toInt()
+                "audio" to ayah.number
             }
             PlaybackMode.SURAH -> {
-                val surahUrl = ayah.audio.replace("/audio/", "/audio-surah/")
-                val surahNumber = selectedSurah.number
-                bitrate = surahUrl.substringAfter("audio-surah/").substringBefore('/').toInt()
-                surahUrl to surahNumber
+                bitrate = 128
+                "audio-surah" to selectedSurah.number.toInt()
             }
-            else -> "" to 1
         }
         quranAudioManager.setCurrentAudioInfo(
             selectedSurah.englishName,
-            number,
+            audioNumber,
             reciteLink,
             reciteName,
             shouldCacheAudio,
             _quranSettingsState.value.playbackSpeed,
-            bitrate
+            bitrate,
+            playbackMode
         )
         viewModelScope.launch(Dispatchers.IO) {
             _audioPlayerState.update { it.copy(audioLoading = true) }
             try {
-                getAudioFileUseCase(audioUrl,shouldCacheAudio).collectLatest { resource ->
+                getAudioFileUseCase.invoke(audioPath,bitrate,reciteLink,audioNumber,shouldCacheAudio).collectLatest { resource ->
                     _audioPlayerState.value =
                         when (resource.status) {
                             Status.LOADING -> {
@@ -331,6 +329,7 @@ class QuranDetailScreenViewModel @Inject constructor(
             }
             is QuranDetailScreenEvent.TogglePlaybackMode -> {
                 saveAudioSettingsUseCase(settings.first().copy(playbackMode = if (settings.first().playbackMode == PlaybackMode.VERSE_STREAM) PlaybackMode.SURAH else PlaybackMode.VERSE_STREAM))
+                println(settings.first().playbackMode)
             }
             else -> Unit
         }

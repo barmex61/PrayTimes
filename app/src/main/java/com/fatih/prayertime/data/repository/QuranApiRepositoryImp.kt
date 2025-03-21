@@ -1,6 +1,7 @@
 package com.fatih.prayertime.data.repository
 
 import android.content.Context
+import android.util.Log
 import com.fatih.prayertime.data.remote.AudioApi
 import com.fatih.prayertime.data.remote.QuranApi
 import com.fatih.prayertime.data.remote.dto.qurandto.Ayah
@@ -22,6 +23,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.io.FileOutputStream
 import java.io.IOException
 import javax.inject.Inject
 
@@ -175,15 +177,16 @@ class QuranApiRepositoryImp @Inject constructor(
         }
     }
 
-    override suspend fun downloadAudio(audioUrl: String, shouldCacheAudio: Boolean): Flow<Resource<File>> = flow {
+    override suspend fun downloadAudio(
+        audioPath: String,
+        bitrate : Int,
+        reciter: String,
+        number: Int,
+        shouldCache: Boolean
+    ): Flow<Resource<File>> = flow {
         emit(Resource.loading<File>())
 
-        val urlParts = audioUrl.split("/")
-        val bitrate = urlParts[urlParts.indexOf("audio") + 1]
-        val edition = urlParts[urlParts.indexOf(bitrate) + 1]
-        val number = urlParts.last().removeSuffix(".mp3")
-
-        val fileName = "$edition-$number.mp3"
+        val fileName = "${audioPath}_${reciter}_$number.mp3"
         val cacheDir = File(context.cacheDir, "quran_audio")
         val cachedFile = File(cacheDir, fileName)
 
@@ -192,7 +195,7 @@ class QuranApiRepositoryImp @Inject constructor(
             return@flow
         }
 
-        val outputFile = if (shouldCacheAudio) {
+        val outputFile = if (shouldCache) {
             if (!cacheDir.exists()) {
                 cacheDir.mkdirs()
             }
@@ -202,29 +205,34 @@ class QuranApiRepositoryImp @Inject constructor(
         }
 
         try {
-            val response = audioApi.downloadAudio(bitrate, edition, number)
+            val response = audioApi.downloadAudio(audioPath, bitrate, reciter, number)
+            val responseBody = response.body()
 
-            if (response.isSuccessful) {
-                response.body()?.let { body ->
-                    body.byteStream().use { inputStream ->
-                        outputFile.outputStream().use { outputStream ->
-                            val buffer = ByteArray(8192)
-                            var bytesRead: Int
-
-                            while (inputStream.read(buffer).also { bytesRead = it } != -1) {
-                                outputStream.write(buffer, 0, bytesRead)
-                            }
-                        }
-                    }
-
-                    emit(Resource.success(outputFile))
-                } ?: throw IOException("Response body is null")
-            } else {
-                throw IOException("Download failed with code: ${response.code()}")
+            if (!response.isSuccessful || responseBody == null) {
+                throw IOException("İndirme başarısız oldu, kod: ${response.code()}")
             }
+
+            val totalSize = responseBody.contentLength()
+            var downloadedSize = 0L
+
+            responseBody.byteStream().use { inputStream ->
+                outputFile.outputStream().use { outputStream ->
+                    val buffer = ByteArray(8192)
+                    var bytesRead: Int
+
+                    while (inputStream.read(buffer).also { bytesRead = it } != -1) {
+                        outputStream.write(buffer, 0, bytesRead)
+                        downloadedSize += bytesRead
+                        val progress = (downloadedSize * 100f / totalSize).toInt()
+                        emit(Resource.loading(progress, downloadedSize, totalSize))
+                    }
+                }
+            }
+            
+            emit(Resource.success(outputFile))
         } catch (e: Exception) {
             emit(Resource.error(e.localizedMessage ?: "Ses dosyası indirilemedi"))
-            if (!shouldCacheAudio && outputFile.exists()) {
+            if (!shouldCache && outputFile.exists()) {
                 outputFile.delete()
             }
         }

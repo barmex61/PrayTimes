@@ -61,6 +61,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.Locale
@@ -257,8 +258,23 @@ object Module {
 
     @Provides
     @Singleton
-    fun provideAudioApi(): AudioApi = Retrofit.Builder().baseUrl(ApiConfig.BASE_AUDIO_URL).addConverterFactory(GsonConverterFactory.create()).build().create(
-        AudioApi::class.java)
+    fun provideAudioApi(): AudioApi {
+        val client = OkHttpClient.Builder()
+            .addInterceptor { chain ->
+                val request = chain.request().newBuilder()
+                    .header("Accept-Encoding", "identity")  // Sıkıştırmayı devre dışı bırak
+                    .build()
+                chain.proceed(request)
+            }
+            .build()
+
+        return Retrofit.Builder()
+            .baseUrl(ApiConfig.BASE_AUDIO_URL)
+            .client(client)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+            .create(AudioApi::class.java)
+    }
 }
 
 @Qualifier
