@@ -151,7 +151,7 @@ fun QuranDetailScreen(surahNumber : Int,bottomPadding: Dp,topPadding : Dp, viewM
                         progress = audioPlayerState.downloadProgress,
                         downloadedSize = audioPlayerState.downloadedSize,
                         totalSize = audioPlayerState.totalSize,
-                        surahName = selectedSurah?.turkishName ?: "",
+                        surahName = selectedSurah.turkishName ?: "",
                         onCancel = { viewModel.cancelAudioDownload() }
                     )
                 }

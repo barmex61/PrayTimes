@@ -12,6 +12,7 @@ import com.fatih.prayertime.domain.use_case.settings_use_cases.SaveQuranMediaSet
 import com.fatih.prayertime.util.extensions.toText
 import com.fatih.prayertime.util.model.enums.PlaybackMode
 import com.fatih.prayertime.util.model.event.QuranDetailScreenEvent
+import com.fatih.prayertime.util.model.state.AudioInfo
 import com.fatih.prayertime.util.model.state.AudioPlayerState
 import com.fatih.prayertime.util.model.state.quran_detail.QuranDetailScreenState
 import com.fatih.prayertime.util.model.state.quran_detail.QuranSettingsState
@@ -214,13 +215,13 @@ class QuranDetailScreenViewModel @Inject constructor(
 
     fun downloadAndPlayAudio() {
         audioDownloadJob?.cancel()
-        
         val selectedSurah = _quranDetailScreenState.value.selectedSurah ?: return
         val ayah = selectedSurah.ayahs?.get(_quranDetailScreenState.value.selectedAyahNumber - 1) ?: return
         val shouldCacheAudio = _quranSettingsState.value.shouldCacheAudio
         val reciteLink = _quranSettingsState.value.reciterList[_quranSettingsState.value.selectedReciterIndex].identifier
         val reciteName = _quranSettingsState.value.selectedReciter.substringAfter('-')
         val playbackMode = _quranSettingsState.value.playbackMode
+        val playbackSpeed = _quranSettingsState.value.playbackSpeed
         var bitrate = 0
 
         val (audioPath, audioNumber) = when (playbackMode) {
@@ -237,12 +238,7 @@ class QuranDetailScreenViewModel @Inject constructor(
 
 
         audioDownloadJob = viewModelScope.launch(Dispatchers.IO) {
-            _audioPlayerState.value = _audioPlayerState.value.copy(
-                isLoading = true,
-                downloadProgress = 0,
-                downloadedSize = 0,
-                totalSize = 0
-            )
+
 
             try {
                 println("try")
@@ -263,20 +259,29 @@ class QuranDetailScreenViewModel @Inject constructor(
                             }
                             Status.SUCCESS -> {
                                 println("success")
-
+                                val audioInfo = if (_audioPlayerState.value.currentAudioInfo == null){
+                                    AudioInfo(
+                                        selectedSurah.englishName,audioNumber,reciteLink,reciteName,bitrate,playbackMode,playbackSpeed,shouldCacheAudio
+                                    )
+                                }else {
+                                    _audioPlayerState.value.currentAudioInfo!!.copy(
+                                        surahName = selectedSurah.englishName,
+                                        audioNumber = audioNumber,
+                                        reciter = reciteLink,
+                                        reciterName = reciteName,
+                                        bitrate = bitrate,
+                                        playbackMode = playbackMode,
+                                        playbackSpeed = playbackSpeed,
+                                        shouldCacheAudio = shouldCacheAudio
+                                    )
+                                }
+                                _audioPlayerState.value = _audioPlayerState.value.copy(currentAudioInfo = audioInfo)
                                 quranAudioManager.setCurrentAudioInfo(
-                                    selectedSurah.englishName,
-                                    audioNumber,
-                                    reciteLink,
-                                    reciteName,
-                                    shouldCacheAudio,
-                                    _quranSettingsState.value.playbackSpeed,
-                                    bitrate,
-                                    playbackMode
+                                    _audioPlayerState.value.currentAudioInfo!!
                                 )
                                 quranAudioManager.playAudio(resource.data!!)
                                 _audioPlayerState.value.copy(
-                                    isLoading = true,
+                                    isLoading = false,
                                     error = null,
                                     downloadProgress = 100,
                                     downloadedSize = resource.totalSize,
@@ -309,14 +314,21 @@ class QuranDetailScreenViewModel @Inject constructor(
     }
 
     fun resumeAudio() {
-        _audioPlayerState.value.currentAudioInfo?.let { audioInfo ->
-            val currentAudioNumber = when(audioInfo.playbackMode){
-                PlaybackMode.VERSE_STREAM -> quranDetailScreenState.value.selectedAyahNumber
-                else -> quranDetailScreenState.value.selectedSurahNumber
-            }
-            if (audioInfo.audioNumber == currentAudioNumber){
-                quranAudioManager.resumeAudio { downloadAndPlayAudio() }
-            }else downloadAndPlayAudio()
+        val currentAudioInfo = _audioPlayerState.value.currentAudioInfo
+        if (currentAudioInfo == null) {
+            downloadAndPlayAudio()
+            return
+        }
+
+        val currentNumber = when(currentAudioInfo.playbackMode) {
+            PlaybackMode.VERSE_STREAM -> _quranDetailScreenState.value.selectedAyahNumber
+            PlaybackMode.SURAH -> _quranDetailScreenState.value.selectedSurahNumber
+        }
+
+        if (currentAudioInfo.audioNumber == currentNumber) {
+            quranAudioManager.resumeAudio()
+        } else {
+            downloadAndPlayAudio()
         }
     }
 
@@ -326,6 +338,7 @@ class QuranDetailScreenViewModel @Inject constructor(
 
     fun setPlaybackSpeed(speed : Float){
         quranAudioManager.setPlaybackSpeed(speed)
+        resumeAudio()
     }
 
     fun seekTo(position: Float) {
@@ -347,7 +360,7 @@ class QuranDetailScreenViewModel @Inject constructor(
         }
 
         quranAudioManager.setIsPlayingCallback { isPlaying ->
-            _audioPlayerState.update { it.copy(isLoading = isPlaying)}
+            _audioPlayerState.update { it.copy(isPlaying = isPlaying)}
         }
     }
 
@@ -449,6 +462,7 @@ class QuranDetailScreenViewModel @Inject constructor(
                     println("get")
                 }
         }
+
     }
 
     private fun releaseCallbacks() {

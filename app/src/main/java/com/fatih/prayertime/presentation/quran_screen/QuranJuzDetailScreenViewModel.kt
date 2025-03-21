@@ -209,8 +209,8 @@ class QuranJuzDetailScreenViewModel @Inject constructor(
         quranAudioManager.setProgressCallback { progress, duration ->
             _audioPlayerState.update {
                 it.copy(
-                    audioDuration = duration,
-                    currentAudioPosition = progress
+                    duration = duration,
+                    currentPosition = progress
                 )
             }
         }
@@ -218,8 +218,8 @@ class QuranJuzDetailScreenViewModel @Inject constructor(
         quranAudioManager.setErrorCallback { errorMessage ->
             _audioPlayerState.update {
                 it.copy(
-                    audioError = errorMessage,
-                    audioLoading = false
+                    error = errorMessage,
+                    isLoading = false
                 )
             }
         }
@@ -227,8 +227,8 @@ class QuranJuzDetailScreenViewModel @Inject constructor(
         quranAudioManager.setIsPlayingCallback { isPlaying ->
             _audioPlayerState.update {
                 it.copy(
-                    audioPlaying = isPlaying,
-                    audioLoading = false
+                    isPlaying = isPlaying,
+                    isLoading = false
                 )
             }
         }
@@ -239,9 +239,7 @@ class QuranJuzDetailScreenViewModel @Inject constructor(
     }
 
     fun resumeAudio() {
-        quranAudioManager.resumeAudio{
-            playAyahAudio()
-        }
+        quranAudioManager.resumeAudio()
     }
 
     fun stopAudio() {

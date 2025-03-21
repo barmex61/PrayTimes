@@ -20,13 +20,13 @@ data class AudioPlayerState(
     // Mevcut audio bilgileri
     val currentAudioInfo: AudioInfo? = null
 )
-
 data class AudioInfo(
-    val surahName: String,
-    val audioNumber: Int,
-    val reciter: String,
-    val reciterName: String,
-    val bitrate: Int,
-    val playbackMode: PlaybackMode,
-    val playbackSpeed: Float
+    val surahName: String = "",
+    var audioNumber: Int = 1,
+    val reciter: String = "",
+    val reciterName: String = "",
+    val bitrate: Int = 128,
+    val playbackMode: PlaybackMode = PlaybackMode.VERSE_STREAM,
+    var playbackSpeed: Float = 1f,
+    val shouldCacheAudio : Boolean = true
 )

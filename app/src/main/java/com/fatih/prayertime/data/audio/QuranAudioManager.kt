@@ -7,6 +7,7 @@ import android.content.ServiceConnection
 import android.os.IBinder
 import com.fatih.prayertime.data.audio.QuranAudioService.LocalBinder
 import com.fatih.prayertime.util.model.enums.PlaybackMode
+import com.fatih.prayertime.util.model.state.AudioInfo
 import java.io.File
 import javax.inject.Inject
 
@@ -60,8 +61,8 @@ class QuranAudioManager @Inject constructor(
         }
     }
 
-    fun setCurrentAudioInfo(surahName : String,audioNumber: Int, reciter: String,reciterName : String ,shouldCacheAudio: Boolean, speed : Float,bitrate: Int,playbackMode: PlaybackMode) {
-        audioService?.setCurrentAudioInfo(surahName, audioNumber, reciter,reciterName, shouldCacheAudio,speed,bitrate,playbackMode)
+    fun setCurrentAudioInfo(audioInfo: AudioInfo) {
+        audioService?.setCurrentAudioInfo(audioInfo)
     }
 
     fun playAudio(audioFile : File){
@@ -72,8 +73,8 @@ class QuranAudioManager @Inject constructor(
         audioService?.pauseAudio()
     }
 
-    fun resumeAudio(checkAudioFile :() -> Unit){
-        audioService?.resumeAudio(checkAudioFile)
+    fun resumeAudio(){
+        audioService?.resumeAudio()
     }
 
     fun stopAudio(){

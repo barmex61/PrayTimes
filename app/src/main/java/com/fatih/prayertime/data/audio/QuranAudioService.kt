@@ -21,6 +21,7 @@ import com.fatih.prayertime.domain.use_case.quran_use_cases.GetAudioFileUseCase
 import com.fatih.prayertime.presentation.main_activity.MainActivity
 import com.fatih.prayertime.util.config.ApiConfig
 import com.fatih.prayertime.util.model.enums.PlaybackMode
+import com.fatih.prayertime.util.model.state.AudioInfo
 import com.fatih.prayertime.util.model.state.Status
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
@@ -40,14 +41,8 @@ class QuranAudioService : Service() {
     private var errorCallback: ((String) -> Unit)? = null
     private var isPlayingCallback: ((Boolean) -> Unit)? = null
     private var ayahChangeCallback : ((Int)-> Unit)? = null
-    private var currentAudioNumber: Int = 0
-    private var bitrate : Int = 192
-    private var surahName : String = ""
-    private var currentReciter: String = "ar.abdullahbasfar"
-    private var shouldCacheAudio : Boolean = false
-    private var playbackMode : PlaybackMode = PlaybackMode.VERSE_STREAM
-    private var reciterName : String = ""
-    private var speed: Float = 1.0f
+    private var audioInfo : AudioInfo = AudioInfo()
+
 
     @Inject
     lateinit var getAudioFileUseCase: GetAudioFileUseCase
@@ -101,7 +96,7 @@ class QuranAudioService : Service() {
                     if (mediaPlayer?.isPlaying == true) {
                         pauseAudio()
                     } else {
-                        resumeAudio {}
+                        resumeAudio()
                     }
                 }
                 ACTION_NEXT -> {
@@ -123,19 +118,20 @@ class QuranAudioService : Service() {
 
     private suspend fun getAndPlayAudioFile(direction : Int){
         val audioPath : String
+        val (_,currentAudioNumber,reciter, _,bitrate,playbackMode, _,shouldCacheAudio) = audioInfo!!
         when(playbackMode){
             PlaybackMode.SURAH -> {
                 audioPath = "audio-surah"
-                currentAudioNumber = (currentAudioNumber + direction).coerceIn(1,114)
+                audioInfo.audioNumber  = (currentAudioNumber + direction).coerceIn(1,114)
             }
             PlaybackMode.VERSE_STREAM -> {
                 audioPath = "audio"
-                currentAudioNumber = (currentAudioNumber + direction).coerceIn(1,6236)
+                audioInfo.audioNumber = (currentAudioNumber + direction).coerceIn(1,6236)
             }
         }
         try {
             getAudioFileUseCase.invoke(
-                audioPath,bitrate,currentReciter,currentAudioNumber,shouldCacheAudio
+                audioPath,bitrate,reciter,currentAudioNumber,shouldCacheAudio
             ).collect { resource ->
                 when (resource.status) {
                     Status.SUCCESS -> {
@@ -167,7 +163,7 @@ class QuranAudioService : Service() {
     }
 
     private suspend fun getPreviousAudio() {
-        if (currentAudioNumber > 1) {
+        if (audioInfo!!.audioNumber > 1) {
             if (ayahChangeCallback != null) {
                 ayahChangeCallback?.invoke(-1)
                 return
@@ -176,15 +172,8 @@ class QuranAudioService : Service() {
         }
     }
 
-    fun setCurrentAudioInfo(surahName : String, ayahNumber: Int, reciter: String, reciterName : String, shouldCacheAudio : Boolean, speed : Float,bitrate : Int,playbackMode: PlaybackMode) {
-        this.surahName = surahName
-        currentAudioNumber = ayahNumber
-        currentReciter = reciter
-        this.speed = speed
-        this.shouldCacheAudio = shouldCacheAudio
-        this.reciterName = reciterName
-        this.bitrate = bitrate
-        this.playbackMode = playbackMode
+    fun setCurrentAudioInfo(audioInfo : AudioInfo) {
+        this.audioInfo = audioInfo
     }
 
     fun playAudio(audioFile: File) {
@@ -217,7 +206,7 @@ class QuranAudioService : Service() {
                     isPlayingCallback?.invoke(true)
                     startProgressTracking()
                     try {
-                        it.playbackParams = it.playbackParams.setSpeed(speed) ?: return@setOnPreparedListener
+                        it.playbackParams = it.playbackParams.setSpeed(audioInfo!!.playbackSpeed) ?: return@setOnPreparedListener
                     } catch (e: Exception) {
                         println("Playback speed error: ${e.message}")
                     }
@@ -242,11 +231,7 @@ class QuranAudioService : Service() {
         updateNotification(false)
     }
 
-    fun resumeAudio(checkAudioFile: () -> Unit) {
-        if (mediaPlayer == null) {
-            checkAudioFile()
-            return
-        }
+    fun resumeAudio() {
         mediaPlayer?.start()
         isPlayingCallback?.invoke(true)
         startProgressTracking()
@@ -337,11 +322,11 @@ class QuranAudioService : Service() {
     }
 
     fun setPlaybackSpeed(newSpeed: Float) {
-        speed = newSpeed
+        audioInfo.playbackSpeed = newSpeed
         try {
             mediaPlayer?.playbackParams = mediaPlayer?.playbackParams?.setSpeed(newSpeed) ?: return
         } catch (e: Exception) {
-
+            println(e)
         }
     }
 
@@ -357,8 +342,7 @@ class QuranAudioService : Service() {
         notificationManager.createNotificationChannel(channel)
     }
 
-    private fun createNotification(isPlaying: Boolean): Notification {
-
+    private fun createNotification(isPlaying: Boolean): Notification? {
         val playPauseIntent = PendingIntent.getBroadcast(
             this,
             0,
@@ -395,7 +379,7 @@ class QuranAudioService : Service() {
             },
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
 
-
+        val (surahName,currentAudioNumber, _,reciterName, _, _, _, _) = audioInfo!!
         return NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
             .setSmallIcon(R.drawable.quran)
             .setContentTitle("$surahName - ${getString(R.string.quran_audio_verse, currentAudioNumber)}")
@@ -456,31 +440,5 @@ class QuranAudioService : Service() {
         stopAudio()
     }
 
-    private fun releaseResources() {
-        try {
-            mediaPlayer?.reset()
-            mediaPlayer?.release()
-            mediaPlayer = null
-            mediaPlayer = MediaPlayer().apply {
-                setAudioAttributes(
-                    AudioAttributes.Builder()
-                        .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                        .setUsage(AudioAttributes.USAGE_MEDIA)
-                        .build()
-                )
-                setOnCompletionListener {
-                    CoroutineScope(Dispatchers.IO).launch {
-                        getNextAudio()
-                    }
-                }
-                setOnErrorListener { _, _, _ ->
-                    errorCallback?.invoke(getString(R.string.quran_audio_error_playback))
-                    false
-                }
-            }
-        } catch (e: Exception) {
-            println("Error releasing resources: ${e.message}")
-        }
-    }
 
 } 
