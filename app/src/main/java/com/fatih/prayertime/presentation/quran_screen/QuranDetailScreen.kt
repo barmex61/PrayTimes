@@ -384,8 +384,7 @@ fun BoxScope.BottomNavigationRow(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     IconButton(
-                        onClick = { viewModel.updateCurrentAudioNumber(-1) },
-                        enabled = currentAyah > 1
+                        onClick = { viewModel.updateCurrentAudioNumber(-1) }
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Default.KeyboardArrowLeft,
@@ -401,7 +400,7 @@ fun BoxScope.BottomNavigationRow(
                         onClick = {
                             if (isPlaying) {
                                 viewModel.pauseAudio()
-                            } else {
+                            } else if (!isLoading) {
                                 viewModel.resumeAudio()
                             }
                         },
@@ -426,8 +425,7 @@ fun BoxScope.BottomNavigationRow(
                     }
 
                     IconButton(
-                        onClick = { viewModel.updateCurrentAudioNumber(1) },
-                        enabled = currentAyah < (selectedSurah?.ayahs?.size ?: 0)
+                        onClick = { viewModel.updateCurrentAudioNumber(1) }
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Default.KeyboardArrowRight,

@@ -48,7 +48,6 @@ class QuranJuzDetailScreenViewModel @Inject constructor(
     private var audioDownloadJob: Job? = null
 
     init {
-        setupAudioPlayerCallbacks()
         loadSettings()
     }
 
@@ -203,36 +202,7 @@ class QuranJuzDetailScreenViewModel @Inject constructor(
         }
     }
 
-    private fun setupAudioPlayerCallbacks() {
 
-
-        quranAudioManager.setProgressCallback { progress, duration ->
-            _audioPlayerState.update {
-                it.copy(
-                    duration = duration,
-                    currentPosition = progress
-                )
-            }
-        }
-
-        quranAudioManager.setErrorCallback { errorMessage ->
-            _audioPlayerState.update {
-                it.copy(
-                    error = errorMessage,
-                    isLoading = false
-                )
-            }
-        }
-
-        quranAudioManager.setIsPlayingCallback { isPlaying ->
-            _audioPlayerState.update {
-                it.copy(
-                    isPlaying = isPlaying,
-                    isLoading = false
-                )
-            }
-        }
-    }
 
     fun pauseAudio() {
         quranAudioManager.pauseAudio()
@@ -288,16 +258,8 @@ class QuranJuzDetailScreenViewModel @Inject constructor(
         }
     }
 
-    private fun releaseCallbacks() {
-        quranAudioManager.setProgressCallback(null)
-        quranAudioManager.setAyahChangedCallback(null)
-        quranAudioManager.setIsPlayingCallback(null)
-        quranAudioManager.setErrorCallback(null)
-    }
-
     override fun onCleared() {
         super.onCleared()
-        releaseCallbacks()
         audioDownloadJob?.cancel()
     }
 } 

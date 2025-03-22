@@ -19,6 +19,7 @@ import com.fatih.prayertime.domain.repository.LocationAndAddressRepository
 import com.fatih.prayertime.domain.repository.PrayApiRepository
 import com.fatih.prayertime.domain.repository.PrayDatabaseRepository
 import com.fatih.prayertime.data.alarm.AlarmScheduler
+import com.fatih.prayertime.data.audio.AudioStateManager
 import com.fatih.prayertime.data.audio.QuranAudioManager
 import com.fatih.prayertime.data.audio.QuranAudioService
 import com.fatih.prayertime.data.local.dao.FavoritesDao
@@ -255,6 +256,10 @@ object Module {
     @Provides
     @Singleton
     fun provideQuranAudioManager(@ApplicationContext context: Context) = QuranAudioManager(context)
+
+    @Provides
+    @Singleton
+    fun provideAudioStataManager() : AudioStateManager = AudioStateManager()
 
     @Provides
     @Singleton

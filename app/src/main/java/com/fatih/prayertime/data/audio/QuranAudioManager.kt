@@ -8,6 +8,7 @@ import android.os.IBinder
 import com.fatih.prayertime.data.audio.QuranAudioService.LocalBinder
 import com.fatih.prayertime.util.model.enums.PlaybackMode
 import com.fatih.prayertime.util.model.state.AudioInfo
+import com.fatih.prayertime.util.model.state.AudioPlayerState
 import java.io.File
 import javax.inject.Inject
 
@@ -18,29 +19,11 @@ class QuranAudioManager @Inject constructor(
     private var audioService: QuranAudioService? = null
     private var shouldRebind = false
 
-    private var pendingProgressCallback: ((Float, Float) -> Unit)? = null
-    private var pendingErrorCallback: ((String) -> Unit)? = null
-    private var pendingIsPlayingCallback: ((Boolean) -> Unit)? = null
-    private var ayahChangedCallback : ((Int) -> Unit)? = null
 
     private val serviceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
             val binder = service as LocalBinder
             audioService = binder.getService()
-
-            pendingProgressCallback?.let { callback ->
-                audioService?.setProgressCallback(callback)
-            }
-            ayahChangedCallback?.let { callback->
-                audioService?.setAyahChangedCallback(callback)
-            }
-
-            pendingErrorCallback?.let { callback ->
-                audioService?.setErrorCallback(callback)
-            }
-            pendingIsPlayingCallback?.let { callback ->
-                audioService?.setIsPlayingCallback(callback)
-            }
         }
 
         override fun onServiceDisconnected(name: ComponentName?) {
@@ -61,12 +44,9 @@ class QuranAudioManager @Inject constructor(
         }
     }
 
-    fun setCurrentAudioInfo(audioInfo: AudioInfo) {
-        audioService?.setCurrentAudioInfo(audioInfo)
-    }
-
-    fun playAudio(audioFile : File){
-        audioService?.playAudio(audioFile)
+    fun downloadAndPlayAudio(){
+        println("quranaudiomanager")
+        audioService?.downloadAndPlayAudioFile()
     }
 
     fun pauseAudio(){
@@ -85,40 +65,8 @@ class QuranAudioManager @Inject constructor(
         audioService?.seekTo(progress)
     }
 
-    fun setProgressCallback(callback: ((Float, Float) -> Unit)?) {
-        pendingProgressCallback = callback
-        audioService?.setProgressCallback(callback)
+    fun cancelAudioDownload(){
+        audioService?.cancelAudioDownload()
     }
-
-    fun setAyahChangedCallback(callback: ((Int) -> Unit)?) {
-        ayahChangedCallback = callback
-        audioService?.setAyahChangedCallback(callback)
-    }
-
-    fun setErrorCallback(callback: ((String) -> Unit)?) {
-        pendingErrorCallback = callback
-        audioService?.setErrorCallback(callback)
-    }
-
-    fun setIsPlayingCallback(callback: ((Boolean) -> Unit)?) {
-        pendingIsPlayingCallback = callback
-        audioService?.setIsPlayingCallback(callback)
-    }
-
-    fun setPlaybackSpeed(speed : Float){
-        audioService?.setPlaybackSpeed(speed)
-    }
-
-
-    fun releaseMediaPlayer() {
-        audioService?.releaseMediaPlayer()
-        context.unbindService(serviceConnection)
-        shouldRebind = false
-        pendingProgressCallback = null
-        pendingErrorCallback = null
-        pendingIsPlayingCallback = null
-    }
-
-
 
 }

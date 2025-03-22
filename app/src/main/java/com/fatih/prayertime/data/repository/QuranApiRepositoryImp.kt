@@ -22,6 +22,7 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -185,7 +186,6 @@ class QuranApiRepositoryImp @Inject constructor(
         shouldCache: Boolean
     ): Flow<Resource<File>> = flow {
         emit(Resource.loading<File>())
-
         val fileName = "${audioPath}_${reciter}_$number.mp3"
         val cacheDir = File(context.cacheDir, "quran_audio")
         val cachedFile = File(cacheDir, fileName)
@@ -207,7 +207,10 @@ class QuranApiRepositoryImp @Inject constructor(
         try {
             val response = audioApi.downloadAudio(audioPath, bitrate, reciter, number)
             val responseBody = response.body()
-
+            println(audioPath)
+            println(bitrate)
+            println(reciter)
+            println(number)
             if (!response.isSuccessful || responseBody == null) {
                 throw IOException("İndirme başarısız oldu, kod: ${response.code()}")
             }
