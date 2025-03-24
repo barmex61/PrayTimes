@@ -27,6 +27,7 @@ data class AudioInfo(
     val reciterName: String = "",
     val bitrate: Int = 128,
     val playbackMode: PlaybackMode = PlaybackMode.VERSE_STREAM,
+    val audioPath : String = "audio",
     var playbackSpeed: Float = 1f,
     val shouldCacheAudio : Boolean = true
 )

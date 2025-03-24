@@ -44,8 +44,7 @@ class QuranAudioManager @Inject constructor(
         }
     }
 
-    fun downloadAndPlayAudio(){
-        println("quranaudiomanager")
+    suspend fun downloadAndPlayAudio(){
         audioService?.downloadAndPlayAudioFile()
     }
 

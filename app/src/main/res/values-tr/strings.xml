@@ -80,7 +80,6 @@
     <string name="quran_audio_next">Sonraki</string>
     <string name="quran_audio_pause">Duraklat</string>
     <string name="quran_audio_play">Oynat</string>
-    <string name="quran_audio_error_generic">Bir hata oluştu</string>
     <string name="quran_audio_error_playback">Ses dosyası oynatılamadı</string>
     <string name="quran_audio_error_download">Ses dosyası yüklenemedi</string>
     <!-- Common UI Strings -->
@@ -155,4 +154,10 @@
     <string name="quran_font_size_small">Küçük</string>
     <string name="quran_font_size_medium">Orta</string>
     <string name="quran_font_size_large">Büyük</string>
+    <string name="quran_audio_error_timeout">Bağlantı zaman aşımına uğradı. Lütfen tekrar deneyin.</string>
+    <string name="quran_audio_error_network">İnternet bağlantınızı kontrol edip tekrar deneyin.</string>
+    <string name="quran_audio_error_state">Ses dosyası oynatılırken bir hata oluştu.</string>
+    <string name="quran_audio_error_generic">Beklenmeyen bir hata oluştu. Lütfen tekrar deneyin.</string>
+    <string name="vibration_description">Bildirimler için titreşimi aç-kapat</string>
+    <string name="mute_friday_description">Cuma vakitlerinde sessize al</string>
 </resources>

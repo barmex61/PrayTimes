@@ -207,10 +207,7 @@ class QuranApiRepositoryImp @Inject constructor(
         try {
             val response = audioApi.downloadAudio(audioPath, bitrate, reciter, number)
             val responseBody = response.body()
-            println(audioPath)
-            println(bitrate)
-            println(reciter)
-            println(number)
+
             if (!response.isSuccessful || responseBody == null) {
                 throw IOException("İndirme başarısız oldu, kod: ${response.code()}")
             }

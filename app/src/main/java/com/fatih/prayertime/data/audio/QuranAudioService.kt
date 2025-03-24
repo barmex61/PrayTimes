@@ -11,6 +11,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.media.AudioAttributes
+import android.media.AudioManager
 import android.media.MediaPlayer
 import android.os.Binder
 import android.os.Build
@@ -21,21 +22,41 @@ import com.fatih.prayertime.domain.use_case.quran_use_cases.GetAudioFileUseCase
 import com.fatih.prayertime.presentation.main_activity.MainActivity
 import com.fatih.prayertime.util.model.enums.PlaybackMode
 import com.fatih.prayertime.util.model.state.AudioPlayerState
+import com.fatih.prayertime.util.model.state.DownloadRequest
+import com.fatih.prayertime.util.model.state.Resource
 import com.fatih.prayertime.util.model.state.Status
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.isActive
+import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
 import java.io.File
 import java.io.IOException
 import java.net.SocketTimeoutException
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.coroutines.cancellation.CancellationException
 
 @AndroidEntryPoint
 class QuranAudioService() : Service() {
@@ -44,18 +65,20 @@ class QuranAudioService() : Service() {
     lateinit var audioStateManager: AudioStateManager
 
     private var mediaPlayer: MediaPlayer? = null
-    private val audioState : AudioPlayerState by lazy {
-        audioStateManager.audioState
+    private val audioState : StateFlow<AudioPlayerState> by lazy {
+        audioStateManager.audioPlayerState
     }
 
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-
+    private var currentDownloadJob: Job? = null
+    private val downloadRequests = MutableStateFlow<DownloadRequest?>(null)
 
     @Inject
     lateinit var getAudioFileUseCase: GetAudioFileUseCase
 
     private val notificationManager by lazy { getSystemService(NOTIFICATION_SERVICE) as NotificationManager }
     private val binder = LocalBinder()
+
 
     companion object {
 
@@ -73,8 +96,9 @@ class QuranAudioService() : Service() {
     }
 
     override fun onCreate() {
-
         super.onCreate()
+
+        setupDownloadFlow()
         createNotificationChannel()
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -97,9 +121,134 @@ class QuranAudioService() : Service() {
         }
     }
 
+    @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
+    private fun setupDownloadFlow() {
+
+        serviceScope.launch {
+
+            try {
+                downloadRequests
+                    .filterNotNull()
+                    .distinctUntilChanged()
+                    .onEach { request ->
+                        resetStateForNewDownload()
+                    }
+                    .flatMapLatest { request ->
+                        getAudioFileUseCase.invoke(
+                            request.audioPath,
+                            request.bitrate,
+                            request.reciter ,
+                            request.audioNumber,
+                            request.shouldCache
+                        )
+                    }.catch { exception->
+                        handleException(exception)
+                    }.collect { resource->
+                        handleResource(resource)
+                    }
+            } catch (e: Exception) {
+                println("🚨 EXCEPTION: ${e.message}")
+            }
+        }
+
+    }
+
+    private fun resetStateForNewDownload() {
+        audioStateManager.updateState {
+            copy(
+                isLoading = true,
+                downloadProgress = 0,
+                downloadedSize = 0,
+                totalSize = 0,
+                error = null
+            )
+        }
+    }
+
+    private fun handleResource(resource: Resource<File>) {
+        when (resource.status) {
+            Status.SUCCESS -> {
+                resource.data?.let { file ->
+                    playAudio(file)
+                }
+                handleSuccess()
+            }
+            Status.ERROR -> {
+                handleError(resource)
+            }
+            Status.LOADING -> {
+                handleLoading(resource)
+            }
+        }
+    }
+
+    private fun handleSuccess(){
+        audioStateManager.updateState {
+            copy(
+                isPlaying = true,
+                isLoading = false,
+                error = null
+            )
+        }
+    }
+
+    private fun handleLoading(resource: Resource<File>) {
+
+        audioStateManager.updateState {
+            copy(
+                isLoading = true,
+                downloadProgress = resource.progress,
+                downloadedSize = resource.downloadedSize,
+                totalSize = resource.totalSize,
+                error = null
+            )
+        }
+    }
+
+    private fun handleError(resource: Resource<File>) {
+        updateErrorState(resource.message ?: getString(R.string.quran_audio_error_download))
+    }
+
+    private fun handleException(throwable: Throwable) {
+        val errorMessage = when (throwable) {
+            is CancellationException -> {
+                return
+            }
+            is SocketTimeoutException -> {
+                getString(R.string.quran_audio_error_timeout)
+            }
+            is IOException -> {
+                getString(R.string.quran_audio_error_network)
+            }
+            is IllegalStateException -> {
+                getString(R.string.quran_audio_error_state)
+            }
+            else -> {
+                throwable.message ?: getString(R.string.quran_audio_error_generic)
+            }
+        }
+
+        updateErrorState(errorMessage)
+    }
+
+    private fun updateErrorState(errorMessage: String) {
+        audioStateManager.updateState {
+            copy(
+                duration = 0f,
+                currentPosition = 0f,
+                isPlaying = false,
+                isLoading = false,
+                error = errorMessage,
+                downloadProgress = 0,
+                downloadedSize = 0,
+                totalSize = 0
+            )
+        }
+    }
+
     private val broadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
-            if (audioState.currentAudioInfo == null) return
+            if (audioState.value.currentAudioInfo == null) return
             when (intent?.action) {
                 ACTION_PLAY -> {
                     if (mediaPlayer?.isPlaying == true) {
@@ -110,15 +259,11 @@ class QuranAudioService() : Service() {
                 }
 
                 ACTION_NEXT -> {
-                    CoroutineScope(Dispatchers.IO).launch {
-                        getNextAudio()
-                    }
+                    getNextAudio()
                 }
 
                 ACTION_PREVIOUS -> {
-                    CoroutineScope(Dispatchers.IO).launch {
-                        getPreviousAudio()
-                    }
+                    getPreviousAudio()
                 }
 
                 ACTION_STOP -> {
@@ -128,90 +273,27 @@ class QuranAudioService() : Service() {
         }
     }
 
-    private var audioDownloadJob : Job? = null
 
     fun downloadAndPlayAudioFile() {
-        println("download")
-        if (audioState.currentAudioInfo == null) return
-        val (_, currentAudioNumber, reciter, _, bitrate, playbackMode, _, shouldCacheAudio) = audioState.currentAudioInfo!!
+        val currentState = audioStateManager.audioPlayerState.value
+        if (currentState.currentAudioInfo == null) return
 
-        val audioPath = if (playbackMode == PlaybackMode.SURAH) "audio-surah" else "audio"
-        audioDownloadJob?.cancel()
-        audioDownloadJob = serviceScope.launch {
+        val (_, currentAudioNumber, reciter, _, bitrate, _,audioPath, _, shouldCacheAudio) = currentState.currentAudioInfo
+        val downloadRequest = DownloadRequest(
+            audioPath = audioPath,
+            bitrate = bitrate,
+            reciter = reciter,
+            audioNumber = currentAudioNumber,
+            shouldCache = shouldCacheAudio
+        )
+        downloadRequests.value = downloadRequest
 
-            var currentRetry = 0
-            var lastError: Exception? = null
-            while (currentRetry < 3){
-                if (!isActive) return@launch
-                try {
-                    getAudioFileUseCase.invoke(
-                        audioPath, bitrate, reciter, currentAudioNumber, shouldCacheAudio
-                    ).collect { resource ->
-                        when (resource.status) {
-                            Status.SUCCESS -> {
-                                audioStateManager.updateState {
-                                    copy(
-                                        isLoading = false,
-                                        error = null,
-                                        downloadProgress = 100,
-                                        downloadedSize = resource.totalSize,
-                                        totalSize = resource.totalSize
-                                    )
-                                }
-                                resource.data?.let { file ->
-                                    playAudio(file)
-                                }
-                                break
-                            }
-
-                            Status.ERROR -> {
-                                throw Exception(resource.message)
-                            }
-
-                            Status.LOADING -> {
-                                audioStateManager.updateState {
-                                    copy(
-                                        duration = 0f,
-                                        currentPosition = 0f,
-                                        isPlaying = false,
-                                        isLoading = true,
-                                        error = null,
-                                        downloadProgress = resource.progress,
-                                        downloadedSize = resource.downloadedSize,
-                                        totalSize = resource.totalSize
-                                    )
-                                }
-                            }
-                        }
-                    }
-                } catch (e: Exception) {
-                    lastError = e
-                    currentRetry++
-                    if (currentRetry < 3) {
-                        delay(1000L * (1 shl currentRetry))
-                        continue
-                    }
-                    audioStateManager.updateState {
-                        copy(
-                            error = when (e) {
-                                is SocketTimeoutException -> "Bağlantı zaman aşımına uğradı. Lütfen tekrar deneyin."
-                                is IOException -> "İnternet bağlantınızı kontrol edin."
-                                else -> e.message ?: "Ses dosyası oynatılamadı"
-                            },
-                            isLoading = false,
-                            isPlaying = false,
-                            downloadProgress = 0,
-                            downloadedSize = 0,
-                            totalSize = 0
-                        )
-                    }
-                }
-            }
-        }
+        println("Service - Download request emitted $downloadRequest")
     }
 
+
     private fun getNextAudio() {
-        val currentAudioInfo = audioState.currentAudioInfo
+        val currentAudioInfo = audioState.value.currentAudioInfo
         audioStateManager.updateState {
             copy(
                 currentAudioInfo = currentAudioInfo!!.copy(
@@ -229,8 +311,8 @@ class QuranAudioService() : Service() {
         downloadAndPlayAudioFile()
     }
 
-    private fun getPreviousAudio() {
-        val currentAudioInfo = audioState.currentAudioInfo
+    private  fun getPreviousAudio() {
+        val currentAudioInfo = audioState.value.currentAudioInfo
         audioStateManager.updateState {
             copy(
                 currentAudioInfo = currentAudioInfo!!.copy(
@@ -250,14 +332,16 @@ class QuranAudioService() : Service() {
                     AudioAttributes.Builder()
                         .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
                         .setUsage(AudioAttributes.USAGE_MEDIA)
+                        .setFlags(AudioAttributes.FLAG_AUDIBILITY_ENFORCED)
                         .build()
                 )
 
                 setDataSource(file.path)
-                prepare()
 
+                prepare()
                 setOnCompletionListener {
                     audioStateManager.updateState { copy(isPlaying = false) }
+                    getNextAudio()
                 }
 
                 setOnErrorListener { _, _, _ ->
@@ -269,19 +353,12 @@ class QuranAudioService() : Service() {
                     }
                     true
                 }
-
+                setVolume(1f,1f)
                 start()
             }
-
-            audioStateManager.updateState {
-                copy(
-                    isPlaying = true,
-                    error = null
-                )
-            }
-
             startProgressTracking()
         } catch (e: Exception) {
+            println(e)
             audioStateManager.updateState {
                 copy(
                     error = "Ses dosyası oynatılamadı: ${e.message}",
@@ -317,13 +394,28 @@ class QuranAudioService() : Service() {
     }
 
     fun seekTo(position: Float) {
-        mediaPlayer?.seekTo((position * 1000).toInt())
-        audioStateManager.updateState { copy(currentPosition = position) }
+        if (mediaPlayer == null) return
+        try {
+            val mSec = (mediaPlayer!!.duration * position).coerceAtLeast(0f)
+            println(mSec)
+            mediaPlayer?.seekTo(mSec.toInt())
+        }catch (e: Exception){
+            println(e)
+        }
+
     }
 
-    fun cancelAudioDownload(){
-        audioDownloadJob?.cancel()
-        audioDownloadJob = null
+    fun cancelAudioDownload() {
+
+        audioStateManager.updateState {
+            copy(
+                isLoading = false,
+                downloadProgress = 0,
+                downloadedSize = 0,
+                totalSize = 0,
+                error = null
+            )
+        }
     }
 
     private var progressJob: Job? = null
@@ -332,7 +424,7 @@ class QuranAudioService() : Service() {
         progressJob?.cancel()
         mediaPlayer?.let { player ->
             progressJob = CoroutineScope(Dispatchers.Default).launch {
-                if (player.isPlaying && isActive) {
+                while (isActive ) {
                     val progress = player.currentPosition.toFloat() / player.duration
                     val duration = player.duration.toFloat()
                     if (!progress.isNaN() && !duration.isNaN()) {
@@ -340,6 +432,7 @@ class QuranAudioService() : Service() {
                             copy(currentPosition = progress, duration = duration)
                         }
                     }
+                    delay(100)
                 }
             }
         }
@@ -419,7 +512,7 @@ class QuranAudioService() : Service() {
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
 
-        val (surahName, currentAudioNumber, _, reciterName, _, _, _, _) = audioState.currentAudioInfo!!
+        val (surahName, currentAudioNumber, _, reciterName, _, _, _, _) = audioState.value.currentAudioInfo!!
         return NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
             .setSmallIcon(R.drawable.quran)
             .setContentTitle(
@@ -468,19 +561,12 @@ class QuranAudioService() : Service() {
         return binder
     }
 
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-
-        return START_NOT_STICKY
-    }
-
     override fun onDestroy() {
         super.onDestroy()
         stopAudio()
         serviceScope.cancel()
         progressJob?.cancel()
         progressJob = null
-        audioDownloadJob?.cancel()
-        audioDownloadJob = null
         unregisterReceiver(broadcastReceiver)
     }
 
@@ -488,4 +574,5 @@ class QuranAudioService() : Service() {
         super.onTaskRemoved(rootIntent)
         stopAudio()
     }
+
 }
