@@ -12,7 +12,9 @@ import com.fatih.prayertime.domain.model.IslamicDaysData
 import com.fatih.prayertime.domain.model.PrayData
 import com.fatih.prayertime.domain.model.PrayTimes
 import com.fatih.prayertime.domain.use_case.formatted_use_cases.FormattedUseCase
+import com.fatih.prayertime.util.model.enums.PlaybackMode
 import com.fatih.prayertime.util.model.enums.PrayTimesString
+import com.fatih.prayertime.util.model.state.AudioInfo
 import org.threeten.bp.LocalDateTime
 
 private val formattedUseCase = FormattedUseCase()
@@ -140,3 +142,14 @@ fun HadithEdition.toList(): List<Edition> = listOf(
 )
 
 fun QuranApiData.toText(): String = "${this.language.uppercase()} - ${this.englishName}"
+
+fun AudioInfo.getUpdatedAudioInfo(direction : Int): AudioInfo {
+    return when (playbackMode) {
+        PlaybackMode.VERSE_STREAM -> copy(
+            ayahNumber = (audioNumber + direction).coerceIn(1,maxAudioNumber)
+        )
+        PlaybackMode.SURAH -> copy(
+            surahNumber = (audioNumber + direction).coerceIn(1,maxAudioNumber)
+        )
+    }
+}

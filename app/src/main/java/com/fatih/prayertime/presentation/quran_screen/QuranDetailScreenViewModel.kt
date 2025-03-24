@@ -27,6 +27,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
@@ -218,29 +219,25 @@ class QuranDetailScreenViewModel @Inject constructor(
         val reciteName = _quranSettingsState.value.selectedReciter.substringAfter('-')
         val playbackMode = _quranSettingsState.value.playbackMode
         val playbackSpeed = _quranSettingsState.value.playbackSpeed
+
         var audioPath = ""
-        var (audioNumber,bitRate) = when(playbackMode){
-            PlaybackMode.SURAH -> {
-                val rate = 128
-                audioPath = "audio-surah"
-                selectedSurah.number to rate
-            }
-            PlaybackMode.VERSE_STREAM -> {
-                val rate = ayah.audio.substringAfter("audio/").substringBefore('/').toInt()
-                audioPath = "audio"
-                ayah.number to rate
-            }
+        var bitRate = when(playbackMode) {
+            PlaybackMode.SURAH -> 128
+            PlaybackMode.VERSE_STREAM -> ayah.audio.substringAfter("audio/").substringBefore('/').toInt()
         }
+        audioPath = if(playbackMode == PlaybackMode.SURAH) "audio-surah" else "audio"
+
         val audioInfo = AudioInfo(
             selectedSurah.englishName,
-            audioNumber,
             reciteLink,
             reciteName,
             bitRate,
             playbackMode,
             audioPath,
             playbackSpeed,
-            shouldCacheAudio
+            shouldCacheAudio,
+            selectedSurah.number,
+            ayah.number,
         )
 
         audioStateManager.updateState {
@@ -253,6 +250,7 @@ class QuranDetailScreenViewModel @Inject constructor(
                 error = null
             )
         }
+
         quranAudioManager.downloadAndPlayAudio()
 
     }
@@ -267,8 +265,8 @@ class QuranDetailScreenViewModel @Inject constructor(
         val currentAyahNumber = _quranDetailScreenState.value.selectedAyahNumber
 
         if (currentAudioInfo == null || 
-            (currentAudioInfo.playbackMode == PlaybackMode.VERSE_STREAM && currentAudioInfo.audioNumber != currentAyahNumber) ||
-            (currentAudioInfo.playbackMode == PlaybackMode.SURAH && currentAudioInfo.audioNumber != currentSurahNumber)) {
+            (currentAudioInfo.playbackMode == PlaybackMode.VERSE_STREAM && currentAudioInfo.ayahNumber != currentAyahNumber) ||
+            (currentAudioInfo.playbackMode == PlaybackMode.SURAH && currentAudioInfo.surahNumber != currentSurahNumber)) {
             downloadAndPlayAudio()
             println("downloadAndPlay")
             return
@@ -397,11 +395,14 @@ class QuranDetailScreenViewModel @Inject constructor(
         }
         viewModelScope.launch(Dispatchers.Default){
             audioPlayerState.map {
-                it.currentAudioInfo!!.audioNumber
+                if (it.currentAudioInfo == null) return@map null else {
+                    Pair(it.currentAudioInfo.ayahNumber,it.currentAudioInfo.surahNumber)
+                }
             }
+                .filterNotNull()
                 .distinctUntilChanged()
                 .collect {
-                _quranDetailScreenState.value = _quranDetailScreenState.value.copy(selectedAyahNumber = it)
+                _quranDetailScreenState.value = _quranDetailScreenState.value.copy(selectedAyahNumber = it.first, selectedSurahNumber = it.second)
             }
         }
     }

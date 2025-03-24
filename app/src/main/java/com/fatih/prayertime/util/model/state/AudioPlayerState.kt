@@ -22,12 +22,30 @@ data class AudioPlayerState(
 )
 data class AudioInfo(
     val surahName: String = "",
-    var audioNumber: Int = 1,
     val reciter: String = "",
     val reciterName: String = "",
     val bitrate: Int = 128,
     val playbackMode: PlaybackMode = PlaybackMode.VERSE_STREAM,
     val audioPath : String = "audio",
     var playbackSpeed: Float = 1f,
-    val shouldCacheAudio : Boolean = true
-)
+    val shouldCacheAudio : Boolean = true,
+    val surahNumber: Int = 1,
+    val ayahNumber: Int = 1,
+){
+    val audioNumber: Int
+        get() = when(playbackMode) {
+            PlaybackMode.VERSE_STREAM -> ayahNumber
+            PlaybackMode.SURAH -> surahNumber
+        }
+    val maxAudioNumber: Int
+        get() = when(playbackMode) {
+            PlaybackMode.VERSE_STREAM -> 6236
+            PlaybackMode.SURAH -> 114
+        }
+
+    val displayName: String
+        get() = when(playbackMode) {
+            PlaybackMode.VERSE_STREAM -> "$surahName - Ayet $ayahNumber"
+            PlaybackMode.SURAH -> surahName
+        }
+}

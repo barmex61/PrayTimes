@@ -11,7 +11,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.media.AudioAttributes
-import android.media.AudioManager
 import android.media.MediaPlayer
 import android.os.Binder
 import android.os.Build
@@ -20,6 +19,7 @@ import androidx.core.app.NotificationCompat
 import com.fatih.prayertime.R
 import com.fatih.prayertime.domain.use_case.quran_use_cases.GetAudioFileUseCase
 import com.fatih.prayertime.presentation.main_activity.MainActivity
+import com.fatih.prayertime.util.extensions.getUpdatedAudioInfo
 import com.fatih.prayertime.util.model.enums.PlaybackMode
 import com.fatih.prayertime.util.model.state.AudioPlayerState
 import com.fatih.prayertime.util.model.state.DownloadRequest
@@ -34,28 +34,19 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.isActive
-import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
 import java.io.File
 import java.io.IOException
 import java.net.SocketTimeoutException
 import javax.inject.Inject
-import javax.inject.Singleton
 import kotlin.coroutines.cancellation.CancellationException
 
 @AndroidEntryPoint
@@ -278,14 +269,17 @@ class QuranAudioService() : Service() {
         val currentState = audioStateManager.audioPlayerState.value
         if (currentState.currentAudioInfo == null) return
 
-        val (_, currentAudioNumber, reciter, _, bitrate, _,audioPath, _, shouldCacheAudio) = currentState.currentAudioInfo
+        val (_, reciter, _, bitrate, playbackMode ,audioPath, _, shouldCacheAudio,surahNumber,ayahNumber) = currentState.currentAudioInfo
+        val audioNumber = currentState.currentAudioInfo.audioNumber
+
         val downloadRequest = DownloadRequest(
             audioPath = audioPath,
             bitrate = bitrate,
             reciter = reciter,
-            audioNumber = currentAudioNumber,
+            audioNumber = audioNumber,
             shouldCache = shouldCacheAudio
         )
+
         downloadRequests.value = downloadRequest
 
         println("Service - Download request emitted $downloadRequest")
@@ -293,33 +287,16 @@ class QuranAudioService() : Service() {
 
 
     private fun getNextAudio() {
-        val currentAudioInfo = audioState.value.currentAudioInfo
-        audioStateManager.updateState {
-            copy(
-                currentAudioInfo = currentAudioInfo!!.copy(
-                    audioNumber = when(currentAudioInfo.playbackMode){
-                        PlaybackMode.VERSE_STREAM -> {
-                            (currentAudioInfo.audioNumber + 1).coerceAtMost(6236)
-                        }
-                        PlaybackMode.SURAH -> {
-                            (currentAudioInfo.audioNumber + 1).coerceAtMost(114)
-                        }
-                    }
-                )
-            )
-        }
+        val currentAudioInfo = audioState.value.currentAudioInfo ?: return
+        val updatedAudioInfo = currentAudioInfo.getUpdatedAudioInfo(1)
+        audioStateManager.updateState { copy(currentAudioInfo = updatedAudioInfo) }
         downloadAndPlayAudioFile()
     }
 
     private  fun getPreviousAudio() {
-        val currentAudioInfo = audioState.value.currentAudioInfo
-        audioStateManager.updateState {
-            copy(
-                currentAudioInfo = currentAudioInfo!!.copy(
-                    audioNumber = (currentAudioInfo.audioNumber - 1).coerceAtLeast(1)
-                )
-            )
-        }
+        val currentAudioInfo = audioState.value.currentAudioInfo ?: return
+        val updatedAudioInfo = currentAudioInfo.getUpdatedAudioInfo(-1)
+        audioStateManager.updateState { copy(currentAudioInfo = updatedAudioInfo) }
         downloadAndPlayAudioFile()
     }
 
@@ -394,7 +371,7 @@ class QuranAudioService() : Service() {
     }
 
     fun seekTo(position: Float) {
-        if (mediaPlayer == null) return
+        if (mediaPlayer == null || mediaPlayer?.isPlaying == false) return
         try {
             val mSec = (mediaPlayer!!.duration * position).coerceAtLeast(0f)
             println(mSec)
@@ -424,7 +401,7 @@ class QuranAudioService() : Service() {
         progressJob?.cancel()
         mediaPlayer?.let { player ->
             progressJob = CoroutineScope(Dispatchers.Default).launch {
-                while (isActive ) {
+                while (isActive && player.isPlaying) {
                     val progress = player.currentPosition.toFloat() / player.duration
                     val duration = player.duration.toFloat()
                     if (!progress.isNaN() && !duration.isNaN()) {
@@ -432,7 +409,7 @@ class QuranAudioService() : Service() {
                             copy(currentPosition = progress, duration = duration)
                         }
                     }
-                    delay(100)
+                    delay(50)
                 }
             }
         }
@@ -512,7 +489,8 @@ class QuranAudioService() : Service() {
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
 
-        val (surahName, currentAudioNumber, _, reciterName, _, _, _, _) = audioState.value.currentAudioInfo!!
+        val (surahName, reciter, reciterName, bitrate, playbackMode ,audioPath, _, shouldCacheAudio,surahNumber,ayahNumber) = audioStateManager.audioState.currentAudioInfo!!
+        val currentAudioNumber = audioStateManager.audioState.currentAudioInfo!!.audioNumber
         return NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
             .setSmallIcon(R.drawable.quran)
             .setContentTitle(
