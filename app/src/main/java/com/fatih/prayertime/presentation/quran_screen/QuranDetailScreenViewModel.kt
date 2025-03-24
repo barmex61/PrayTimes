@@ -63,6 +63,7 @@ class QuranDetailScreenViewModel @Inject constructor(
             when (audioResponse.status) {
                 Status.SUCCESS -> {
                     quranSettingsState.copy(
+
                         reciterList = audioResponse.data!!,
                         selectedReciter =
                             if (quranSettingsState.selectedReciter.isEmpty()) audioResponse.data.first().toText()
@@ -140,6 +141,7 @@ class QuranDetailScreenViewModel @Inject constructor(
                             currentAudioInfo = currentAudioInfo.copy(
                             minAyahNumber = minAyahNumber,
                             maxAyahNumber = maxAyahNumber,
+                            surahName = selectedSurah.englishName,
                             surahNumber = selectedSurah.number,
                             ayahNumber = selectedSurah.ayahs.first().number,
                             bitrate = when(quranSettingsState.value.playbackMode) {

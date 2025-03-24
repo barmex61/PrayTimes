@@ -234,15 +234,17 @@ fun AyahCard(ayah: Ayah, state: QuranDetailScreenState, quranSettingsState: Qura
     var clickJob by remember { mutableStateOf<Job?>(null) }
     val ayahColor = animateColorAsState(
         animationSpec = tween(durationMillis = 500),
-        targetValue = if (currentAyah == ayahNumberInSurah) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onPrimaryContainer
+        targetValue =if (quranSettingsState.playbackMode == PlaybackMode.SURAH){MaterialTheme.colorScheme.onPrimaryContainer}
+        else{
+            if (currentAyah == ayahNumberInSurah) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onPrimaryContainer
+        }
     )
     Box(modifier = Modifier.clickable{
         onAyahClick(null)
-        if (!quranSettingsState.playAyahWithDoubleClick) return@clickable
+        if (!quranSettingsState.playAyahWithDoubleClick || quranSettingsState.playbackMode == PlaybackMode.SURAH) return@clickable
         if (isClicked) {
             clickJob?.cancel()
             isClicked = false
-            println("ayahnumber $ayahNumber")
             onAyahClick(ayahNumber)
         } else {
             isClicked = true

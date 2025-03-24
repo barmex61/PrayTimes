@@ -1,5 +1,7 @@
 package com.fatih.prayertime.util.extensions
 
+import androidx.core.content.res.TypedArrayUtils.getString
+import com.fatih.prayertime.R
 import com.fatih.prayertime.data.remote.dto.hadithdto.Edition
 import com.fatih.prayertime.data.remote.dto.hadithdto.HadithEdition
 import com.fatih.prayertime.data.remote.dto.islamicdaysdto.IslamicDaysDataDTO
