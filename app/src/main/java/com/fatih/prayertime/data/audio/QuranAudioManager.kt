@@ -6,10 +6,6 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.os.IBinder
 import com.fatih.prayertime.data.audio.QuranAudioService.LocalBinder
-import com.fatih.prayertime.util.model.enums.PlaybackMode
-import com.fatih.prayertime.util.model.state.AudioInfo
-import com.fatih.prayertime.util.model.state.AudioPlayerState
-import java.io.File
 import javax.inject.Inject
 
 class QuranAudioManager @Inject constructor(
@@ -44,28 +40,47 @@ class QuranAudioManager @Inject constructor(
         }
     }
 
-    suspend fun downloadAndPlayAudio(){
-        audioService?.downloadAndPlayAudioFile()
+    fun getExactAudio(audioNumber : Int){
+        println("audionumber $audioNumber")
+        audioService?.getExactAudio(audioNumber)
     }
 
-    fun pauseAudio(){
+    fun playNext() {
+        audioService?.getNextAudio()
+    }
+
+    fun playPrevious() {
+        audioService?.getPreviousAudio()
+    }
+
+    fun pauseAudio() {
         audioService?.pauseAudio()
     }
 
-    fun resumeAudio(){
+    fun resumeAudio() {
+        println("resume")
         audioService?.resumeAudio()
     }
 
-    fun stopAudio(){
+    fun stopAudio() {
         audioService?.stopAudio()
     }
 
-    fun seekTo(progress : Float){
-        audioService?.seekTo(progress)
+    fun seekTo(position: Float) {
+        audioService?.seekTo(position)
     }
 
-    fun cancelAudioDownload(){
+    fun cancelAudioDownload() {
         audioService?.cancelAudioDownload()
+    }
+
+    fun setPlaybackSpeed(speed : Float){
+        audioService?.setPlaybackSpeed(speed)
+    }
+
+    fun release() {
+        shouldRebind = false
+        context.unbindService(serviceConnection)
     }
 
 }

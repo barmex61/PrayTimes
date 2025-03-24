@@ -143,13 +143,73 @@ fun HadithEdition.toList(): List<Edition> = listOf(
 
 fun QuranApiData.toText(): String = "${this.language.uppercase()} - ${this.englishName}"
 
-fun AudioInfo.getUpdatedAudioInfo(direction : Int): AudioInfo {
+fun AudioInfo.getPreviousAudioInfo(): AudioInfo {
     return when (playbackMode) {
+        PlaybackMode.VERSE_STREAM -> {
+            if (ayahNumber <= minAyahNumber) {
+                if (surahNumber > 1) {
+                    copy(
+                        surahNumber = surahNumber - 1,
+                        ayahNumber = ayahNumber - 1
+                    )
+                } else {
+                    return this
+                }
+            } else {
+                copy(
+                    ayahNumber = ayahNumber - 1
+                )
+            }
+        }
+        PlaybackMode.SURAH -> {
+            if (surahNumber > 1) {
+                copy(
+                    surahNumber = surahNumber - 1
+                )
+            } else {
+                return this
+            }
+        }
+    }
+}
+
+fun AudioInfo.getNextAudioInfo() : AudioInfo{
+    return when (playbackMode) {
+        PlaybackMode.VERSE_STREAM -> {
+            if (ayahNumber >= maxAyahNumber) {
+                if (surahNumber < 114) {
+                    copy(
+                        surahNumber = surahNumber + 1,
+                        ayahNumber = ayahNumber + 1
+                    )
+                } else {
+                    return this
+                }
+            } else {
+                copy(
+                    ayahNumber = ayahNumber + 1
+                )
+            }
+        }
+        PlaybackMode.SURAH -> {
+            if (surahNumber < 114) {
+                copy(
+                    surahNumber = surahNumber + 1
+                )
+            } else {
+                return this
+            }
+        }
+    }
+}
+
+fun AudioInfo.getExactAudioInfo(audioNumber : Int) : AudioInfo{
+    return when(playbackMode){
         PlaybackMode.VERSE_STREAM -> copy(
-            ayahNumber = (audioNumber + direction).coerceIn(1,maxAudioNumber)
+            ayahNumber = audioNumber
         )
         PlaybackMode.SURAH -> copy(
-            surahNumber = (audioNumber + direction).coerceIn(1,maxAudioNumber)
+            surahNumber = audioNumber
         )
     }
 }

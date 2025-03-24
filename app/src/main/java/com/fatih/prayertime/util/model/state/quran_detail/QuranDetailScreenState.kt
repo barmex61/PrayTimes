@@ -6,9 +6,12 @@ data class QuranDetailScreenState(
 
     val selectedSurah : SurahInfo? = null,
     val selectedSurahNumber : Int = 0,
-    val selectedAyahNumber : Int = 1,
+    val selectedAyahNumber : Int = 0,
 
     val isError: String? = null,
     val isLoading: Boolean = false
 
-)
+){
+    val selectedAyahIndex : Int?
+        get() = selectedSurah!!.ayahs?.indexOfFirst { it.number == selectedAyahNumber }?.plus(1)
+}

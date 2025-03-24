@@ -94,6 +94,7 @@ import kotlinx.coroutines.launch
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import com.fatih.prayertime.util.model.enums.PlaybackMode
+import com.fatih.prayertime.util.model.event.AudioPlayerEvent
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.isActive
 import java.util.Locale
@@ -115,7 +116,7 @@ fun QuranDetailScreen(surahNumber : Int,bottomPadding: Dp,topPadding : Dp, viewM
         if (showHud) showHud = false
     }
     LaunchedEffect(key1 = surahNumber) {
-        viewModel.updateSurahNumber(surahNumber)
+        viewModel.initSurahNumber(surahNumber)
     }
 
     when {
@@ -140,7 +141,7 @@ fun QuranDetailScreen(surahNumber : Int,bottomPadding: Dp,topPadding : Dp, viewM
 
                 Spacer(modifier = Modifier.height(16.dp))
                 QuranDetailContent(selectedSurah = selectedSurah!!, modifier = Modifier.fillMaxSize(1f),quranDetailState,quranSettingsState){ selectedAyahNumber ->
-                    if (selectedAyahNumber != null) viewModel.updateCurrentAudioNumber(direction = 0, directAudioNumber = selectedAyahNumber)
+                    if (selectedAyahNumber != null) viewModel.onAudioPlayerEvent(AudioPlayerEvent.PlayExactAudioNumber(selectedAyahNumber))
                     showHud = true
                     shrinkDelay = 5000L
                 }
@@ -152,7 +153,7 @@ fun QuranDetailScreen(surahNumber : Int,bottomPadding: Dp,topPadding : Dp, viewM
                         downloadedSize = audioPlayerState.downloadedSize,
                         totalSize = audioPlayerState.totalSize,
                         surahName = selectedSurah.turkishName ?: "",
-                        onCancel = { viewModel.cancelAudioDownload() }
+                        onCancel = { viewModel.onAudioPlayerEvent(AudioPlayerEvent.CancelAudioDownload) }
                     )
                 }
                 
@@ -197,14 +198,14 @@ fun QuranDetailContent(selectedSurah: SurahInfo, modifier: Modifier = Modifier,s
         val screenHeight = LocalConfiguration.current.screenHeightDp.dp
 
         val centerOffset = with(density) {
-            (screenHeight / 4).toPx().toInt()
+            (screenHeight / 3).toPx().toInt()
         }
 
-        LaunchedEffect(state.selectedAyahNumber) {
-            if (state.selectedAyahNumber > 0) {
+        LaunchedEffect(state.selectedAyahIndex) {
+            if (state.selectedAyahIndex != null && state.selectedAyahIndex!! > 0) {
                 coroutineScope.launch {
                     listState.animateScrollToItem(
-                        index = state.selectedAyahNumber- 1,
+                        index = state.selectedAyahIndex!! -1 ,
                         scrollOffset = -centerOffset
                     )
                 }
@@ -225,14 +226,15 @@ fun QuranDetailContent(selectedSurah: SurahInfo, modifier: Modifier = Modifier,s
 
 @Composable
 fun AyahCard(ayah: Ayah, state: QuranDetailScreenState, quranSettingsState: QuranSettingsState,onAyahClick: (Int?) -> Unit) {
-    val currentAyah = remember(state.selectedAyahNumber){state.selectedAyahNumber}
-    val ayahNumber = remember{ayah.numberInSurah}
+    val currentAyah = remember(state.selectedAyahIndex){state.selectedAyahIndex}
+    val ayahNumberInSurah = remember{ayah.numberInSurah}
+    val ayahNumber = remember { ayah.number }
     var isClicked by remember { mutableStateOf(false) }
     val clickScope = rememberCoroutineScope()
     var clickJob by remember { mutableStateOf<Job?>(null) }
     val ayahColor = animateColorAsState(
         animationSpec = tween(durationMillis = 500),
-        targetValue = if (currentAyah == ayahNumber) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onPrimaryContainer
+        targetValue = if (currentAyah == ayahNumberInSurah) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onPrimaryContainer
     )
     Box(modifier = Modifier.clickable{
         onAyahClick(null)
@@ -240,6 +242,7 @@ fun AyahCard(ayah: Ayah, state: QuranDetailScreenState, quranSettingsState: Qura
         if (isClicked) {
             clickJob?.cancel()
             isClicked = false
+            println("ayahnumber $ayahNumber")
             onAyahClick(ayahNumber)
         } else {
             isClicked = true
@@ -254,7 +257,7 @@ fun AyahCard(ayah: Ayah, state: QuranDetailScreenState, quranSettingsState: Qura
             Modifier
                 .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(6.dp))
                 .background(
-                    color = if (currentAyah == ayahNumber) MaterialTheme.colorScheme.primaryContainer else Color.Transparent,
+                    color = if (currentAyah == ayahNumberInSurah) MaterialTheme.colorScheme.primaryContainer else Color.Transparent,
                 )
                 .padding(16.dp)
 
@@ -345,7 +348,7 @@ fun BoxScope.BottomNavigationRow(
     val audioPlayerState = viewModel.audioPlayerState.collectAsStateWithLifecycle()
     val isPlaying = remember(audioPlayerState.value.isPlaying){audioPlayerState.value.isPlaying}
     val isLoading = remember(audioPlayerState.value.isLoading){audioPlayerState.value.isLoading}
-    val currentAyah = remember(quranDetailScreenState.selectedAyahNumber){quranDetailScreenState.selectedAyahNumber}
+    val currentAyah = remember(quranDetailScreenState.selectedAyahIndex){quranDetailScreenState.selectedAyahIndex ?: 1}
     val autoHidePlayer = remember(quranSettingsState.autoHidePlayer) { quranSettingsState.autoHidePlayer }
     val selectedSurah = remember(quranDetailScreenState.selectedSurah){quranDetailScreenState.selectedSurah}
     val audioProgress = remember(audioPlayerState.value.currentPosition) {audioPlayerState.value.currentPosition}
@@ -384,7 +387,7 @@ fun BoxScope.BottomNavigationRow(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     IconButton(
-                        onClick = { viewModel.updateCurrentAudioNumber(-1) }
+                        onClick = { viewModel.onAudioPlayerEvent(AudioPlayerEvent.PlayPreviousAudio) }
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Default.KeyboardArrowLeft,
@@ -399,9 +402,9 @@ fun BoxScope.BottomNavigationRow(
                     IconButton(
                         onClick = {
                             if (isPlaying) {
-                                viewModel.pauseAudio()
+                                viewModel.onAudioPlayerEvent(AudioPlayerEvent.PauseAudio)
                             } else if (!isLoading) {
-                                viewModel.resumeAudio()
+                                viewModel.onAudioPlayerEvent(AudioPlayerEvent.ResumeAudio)
                             }
                         },
                         modifier = Modifier
@@ -425,7 +428,7 @@ fun BoxScope.BottomNavigationRow(
                     }
 
                     IconButton(
-                        onClick = { viewModel.updateCurrentAudioNumber(1) }
+                        onClick = { viewModel.onAudioPlayerEvent(AudioPlayerEvent.PlayNextAudio) }
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Default.KeyboardArrowRight,
@@ -480,7 +483,7 @@ fun BoxScope.BottomNavigationRow(
                 Slider(
                     modifier = Modifier.padding(horizontal = 16.dp),
                     value = audioProgress,
-                    onValueChange = { viewModel.seekTo(it) },
+                    onValueChange = { viewModel.onAudioPlayerEvent(AudioPlayerEvent.SeekAudio(it)) },
                 )
             }
         }

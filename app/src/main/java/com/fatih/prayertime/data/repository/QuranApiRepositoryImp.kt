@@ -27,6 +27,7 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 import javax.inject.Inject
+import kotlin.text.toInt
 
 class QuranApiRepositoryImp @Inject constructor(
     private val context : Context,
@@ -185,7 +186,6 @@ class QuranApiRepositoryImp @Inject constructor(
         number: Int,
         shouldCache: Boolean
     ): Flow<Resource<File>> = flow {
-        emit(Resource.loading<File>())
         val fileName = "${audioPath}_${reciter}_$number.mp3"
         val cacheDir = File(context.cacheDir, "quran_audio")
         val cachedFile = File(cacheDir, fileName)
@@ -205,15 +205,23 @@ class QuranApiRepositoryImp @Inject constructor(
         }
 
         try {
+            emit(Resource.loading<File>())
+
             val response = audioApi.downloadAudio(audioPath, bitrate, reciter, number)
             val responseBody = response.body()
-
+            println(audioPath)
+            println(bitrate)
+            println(reciter)
+            println(number)
+            println(response.raw())
             if (!response.isSuccessful || responseBody == null) {
                 throw IOException("İndirme başarısız oldu, kod: ${response.code()}")
             }
 
             val totalSize = responseBody.contentLength()
             var downloadedSize = 0L
+
+            emit(Resource.loading(0, 0, totalSize))
 
             responseBody.byteStream().use { inputStream ->
                 outputFile.outputStream().use { outputStream ->
@@ -228,13 +236,11 @@ class QuranApiRepositoryImp @Inject constructor(
                     }
                 }
             }
-            
+
             emit(Resource.success(outputFile))
         } catch (e: Exception) {
-            println(e)
             emit(Resource.error(e.localizedMessage ?: "Ses dosyası indirilemedi"))
             if (outputFile.exists()) {
-                println("delete")
                 outputFile.delete()
             }
         }

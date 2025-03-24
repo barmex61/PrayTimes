@@ -18,7 +18,7 @@ data class AudioPlayerState(
     val totalSize: Long = 0L,
 
     // Mevcut audio bilgileri
-    val currentAudioInfo: AudioInfo? = null
+    val currentAudioInfo: AudioInfo = AudioInfo()
 )
 data class AudioInfo(
     val surahName: String = "",
@@ -31,21 +31,12 @@ data class AudioInfo(
     val shouldCacheAudio : Boolean = true,
     val surahNumber: Int = 1,
     val ayahNumber: Int = 1,
+    val maxAyahNumber : Int =0,
+    val minAyahNumber : Int = 0
 ){
-    val audioNumber: Int
-        get() = when(playbackMode) {
-            PlaybackMode.VERSE_STREAM -> ayahNumber
+    val audioNumber : Int
+        get() = when(playbackMode){
             PlaybackMode.SURAH -> surahNumber
-        }
-    val maxAudioNumber: Int
-        get() = when(playbackMode) {
-            PlaybackMode.VERSE_STREAM -> 6236
-            PlaybackMode.SURAH -> 114
-        }
-
-    val displayName: String
-        get() = when(playbackMode) {
-            PlaybackMode.VERSE_STREAM -> "$surahName - Ayet $ayahNumber"
-            PlaybackMode.SURAH -> surahName
+            PlaybackMode.VERSE_STREAM -> ayahNumber
         }
 }
