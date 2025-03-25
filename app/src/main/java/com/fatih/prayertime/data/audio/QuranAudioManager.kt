@@ -41,9 +41,9 @@ class QuranAudioManager @Inject constructor(
     }
 
     fun getExactAudio(audioNumber : Int){
-        println("audionumber $audioNumber")
         audioService?.getExactAudio(audioNumber)
     }
+
 
     fun playNext() {
         audioService?.getNextAudio()
@@ -58,7 +58,6 @@ class QuranAudioManager @Inject constructor(
     }
 
     fun resumeAudio() {
-        println("resume")
         audioService?.resumeAudio()
     }
 

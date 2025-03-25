@@ -17,6 +17,10 @@ import com.fatih.prayertime.domain.use_case.formatted_use_cases.FormattedUseCase
 import com.fatih.prayertime.util.model.enums.PlaybackMode
 import com.fatih.prayertime.util.model.enums.PrayTimesString
 import com.fatih.prayertime.util.model.state.AudioInfo
+import com.fatih.prayertime.util.utils.QuranUtils.SURAH_VERSE_RANGES
+import com.fatih.prayertime.util.utils.QuranUtils.getMaxVerseNumber
+import com.fatih.prayertime.util.utils.QuranUtils.getMinVerseNumber
+import com.fatih.prayertime.util.utils.QuranUtils.getVerseRange
 import org.threeten.bp.LocalDateTime
 
 private val formattedUseCase = FormattedUseCase()
@@ -145,73 +149,50 @@ fun HadithEdition.toList(): List<Edition> = listOf(
 
 fun QuranApiData.toText(): String = "${this.language.uppercase()} - ${this.englishName}"
 
+fun AudioInfo.getNextAudioInfo(): AudioInfo {
+    return when (playbackMode) {
+        PlaybackMode.VERSE_STREAM -> {
+            val newAyahNumber = (ayahNumber + 1).coerceAtMost(6236)
+            val newSurahNumber = SURAH_VERSE_RANGES.entries.find { (_, range) ->
+                newAyahNumber in range
+            }?.key ?: surahNumber
+            copy(
+                surahNumber = newSurahNumber,
+                ayahNumber = newAyahNumber
+            )
+        }
+        PlaybackMode.SURAH -> copy(surahNumber = (surahNumber + 1).coerceAtMost(114))
+    }
+}
+
 fun AudioInfo.getPreviousAudioInfo(): AudioInfo {
     return when (playbackMode) {
         PlaybackMode.VERSE_STREAM -> {
-            if (ayahNumber <= minAyahNumber) {
-                if (surahNumber > 1) {
-                    copy(
-                        surahNumber = surahNumber - 1,
-                        ayahNumber = ayahNumber - 1
-                    )
-                } else {
-                    return this
-                }
-            } else {
-                copy(
-                    ayahNumber = ayahNumber - 1
-                )
-            }
+            val newAyahNumber = (ayahNumber - 1).coerceAtLeast(1)
+            val newSurahNumber = SURAH_VERSE_RANGES.entries.find { (_, range) ->
+                newAyahNumber in range
+            }?.key ?: surahNumber
+            copy(
+                surahNumber = newSurahNumber,
+                ayahNumber = newAyahNumber
+            )
         }
-        PlaybackMode.SURAH -> {
-            if (surahNumber > 1) {
-                copy(
-                    surahNumber = surahNumber - 1
-                )
-            } else {
-                return this
-            }
-        }
+        PlaybackMode.SURAH -> copy(surahNumber = (surahNumber - 1).coerceAtLeast(1))
     }
 }
 
-fun AudioInfo.getNextAudioInfo() : AudioInfo{
+fun AudioInfo.getExactAudioInfo(number: Int): AudioInfo {
     return when (playbackMode) {
         PlaybackMode.VERSE_STREAM -> {
-            if (ayahNumber >= maxAyahNumber) {
-                if (surahNumber < 114) {
-                    copy(
-                        surahNumber = surahNumber + 1,
-                        ayahNumber = ayahNumber + 1
-                    )
-                } else {
-                    return this
-                }
-            } else {
-                copy(
-                    ayahNumber = ayahNumber + 1
-                )
-            }
+            val newAyahNumber = number.coerceIn(1, 6236)
+            val newSurahNumber = SURAH_VERSE_RANGES.entries.find { (_, range) ->
+                newAyahNumber in range
+            }?.key ?: surahNumber
+            copy(
+                surahNumber = newSurahNumber,
+                ayahNumber = newAyahNumber
+            )
         }
-        PlaybackMode.SURAH -> {
-            if (surahNumber < 114) {
-                copy(
-                    surahNumber = surahNumber + 1
-                )
-            } else {
-                return this
-            }
-        }
-    }
-}
-
-fun AudioInfo.getExactAudioInfo(audioNumber : Int) : AudioInfo{
-    return when(playbackMode){
-        PlaybackMode.VERSE_STREAM -> copy(
-            ayahNumber = audioNumber
-        )
-        PlaybackMode.SURAH -> copy(
-            surahNumber = audioNumber
-        )
+        PlaybackMode.SURAH -> this
     }
 }

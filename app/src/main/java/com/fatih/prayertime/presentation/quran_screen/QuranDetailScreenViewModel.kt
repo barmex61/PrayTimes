@@ -19,10 +19,12 @@ import com.fatih.prayertime.util.model.state.Status
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
@@ -33,7 +35,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.collections.first
 
-@OptIn(ExperimentalCoroutinesApi::class)
+@OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
 @HiltViewModel
 class QuranDetailScreenViewModel @Inject constructor(
     private val getSelectedSurahUseCase: GetSelectedSurahUseCase,
@@ -134,16 +136,14 @@ class QuranDetailScreenViewModel @Inject constructor(
                 Status.SUCCESS -> {
                     val selectedSurah = surahResponse.data!!
                     val minAyahNumber = selectedSurah.ayahs!!.first().number
-                    val maxAyahNumber = selectedSurah.ayahs.last().number
                     val audioPath = selectedSurah.ayahs.first().audio
+
                     audioStateManager.updateState {
                         copy(
                             currentAudioInfo = currentAudioInfo.copy(
-                            minAyahNumber = minAyahNumber,
-                            maxAyahNumber = maxAyahNumber,
                             surahName = selectedSurah.englishName,
                             surahNumber = selectedSurah.number,
-                            ayahNumber = selectedSurah.ayahs.first().number,
+                            ayahNumber = minAyahNumber,
                             bitrate = when(quranSettingsState.value.playbackMode) {
                                 PlaybackMode.SURAH -> 128
                                 PlaybackMode.VERSE_STREAM -> audioPath.substringAfter("audio/").substringBefore('/').toInt()
@@ -151,13 +151,15 @@ class QuranDetailScreenViewModel @Inject constructor(
                         )
                         )
                     }
+                    println(audioPlayerState.value.isPlaying)
+                    if (audioPlayerState.value.isPlaying){
+                        onAudioPlayerEvent(AudioPlayerEvent.PlayExactAudioNumber(minAyahNumber))
+                    }
+
                     _quranDetailScreenState.value.copy(
                         selectedSurah = selectedSurah,
                         isError = null,
                         isLoading = false,
-                        selectedAyahNumber =
-                            if (_quranDetailScreenState.value.selectedAyahNumber == 0) selectedSurah.ayahs.first().number
-                            else _quranDetailScreenState.value.selectedAyahNumber
                     )
                 }
                 Status.ERROR -> {
@@ -177,8 +179,7 @@ class QuranDetailScreenViewModel @Inject constructor(
     }
 
     fun initSurahNumber(surahNumber : Int) = viewModelScope.launch {
-        onAudioPlayerEvent(AudioPlayerEvent.StopAudio)
-        _quranDetailScreenState.value = _quranDetailScreenState.value.copy(selectedSurahNumber = surahNumber)
+        audioStateManager.updateState { copy(currentAudioInfo = currentAudioInfo.copy(surahNumber = surahNumber)) }
     }
 
     fun onAudioPlayerEvent(audioPlayerEvent : AudioPlayerEvent){
@@ -262,40 +263,23 @@ class QuranDetailScreenViewModel @Inject constructor(
             }
         }
         viewModelScope.launch(Dispatchers.IO){
-            _quranSettingsState.combine(_quranDetailScreenState){ settings,detail ->
-                    Pair(settings,detail)
-                }.filter { pair ->
-                    pair.first.reciterList.isNotEmpty() &&
-                    pair.first.transliterationList.isNotEmpty() &&
-                    pair.first.translationList.isNotEmpty() &&
-                    pair.first.selectedTranslation.isNotEmpty() &&
-                    pair.first.selectedTransliteration.isNotEmpty() &&
-                    pair.first.selectedReciter.isNotEmpty() &&
-                    pair.second.selectedSurahNumber != 0
+            _quranSettingsState.filter { settings ->
+                    settings.reciterList.isNotEmpty() &&
+                    settings.transliterationList.isNotEmpty() &&
+                    settings.translationList.isNotEmpty() &&
+                    settings.selectedTranslation.isNotEmpty() &&
+                    settings.selectedTransliteration.isNotEmpty() &&
+                    settings.selectedReciter.isNotEmpty()
                 }
-                .map { pair ->
+                .map { setting ->
                     FlowData(
-                        pair.first.selectedTranslation,
-                        pair.first.selectedTransliteration,
-                        pair.first.selectedReciter,
-                        pair.second.selectedSurahNumber
+                        setting.selectedTranslation,
+                        setting.selectedTransliteration,
+                        setting.selectedReciter
                     )
                 }
-                .distinctUntilChanged{old,new ->
-                    old.first == new.first &&
-                    old.second == new.second &&
-                    old.third == new.third &&
-                    old.fourth == new.fourth
-                }
+                .distinctUntilChanged()
                 .collectLatest { triple ->
-                    audioStateManager.updateState { 
-                        copy(
-                            isLoading = false,
-                            isPlaying = false,
-                            duration = 0f,
-                        )
-                    }
-                    onAudioPlayerEvent(AudioPlayerEvent.StopAudio)
                     getSelectedSurah()
                 }
         }
@@ -329,10 +313,18 @@ class QuranDetailScreenViewModel @Inject constructor(
                 .filterNotNull()
                 .distinctUntilChanged()
                 .collect {
-                    println("Collect Second ${it.second}")
                     _quranDetailScreenState.value = _quranDetailScreenState.value.copy(selectedAyahNumber = it.first, selectedSurahNumber = it.second)
+                }
+        }
+
+        viewModelScope.launch {
+            _quranDetailScreenState.map {
+                it.selectedSurahNumber
+            }.distinctUntilChanged().collectLatest {
+                getSelectedSurah()
             }
         }
+
     }
 
 
@@ -347,7 +339,6 @@ class QuranDetailScreenViewModel @Inject constructor(
         val first : String,
         val second : String,
         val third : String,
-        val fourth : Int
     )
 
 }

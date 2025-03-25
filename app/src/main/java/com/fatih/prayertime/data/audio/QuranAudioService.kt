@@ -125,9 +125,7 @@ class QuranAudioService() : Service() {
             try {
                 downloadRequests
                     .filterNotNull()
-                    .distinctUntilChanged()
                     .onEach { request ->
-                        println("oneach $request")
                         currentDownloadJob?.cancel()
                         stopAudio()
                         resetStateForNewDownload()
@@ -144,7 +142,6 @@ class QuranAudioService() : Service() {
                         println(exception)
                         handleException(exception)
                     }.collect { resource ->
-                        println(resource)
                         handleResource(resource)
                     }
             } catch (e: Exception) {
@@ -287,7 +284,7 @@ class QuranAudioService() : Service() {
     fun downloadAndPlayAudioFile() {
         val currentState = audioStateManager.audioPlayerState.value
 
-        val (_, reciter, _, bitrate, playbackMode ,audioPath, _, shouldCacheAudio,surahNumber) = currentState.currentAudioInfo
+        val (_, reciter, _, bitrate, _,audioPath, _, shouldCacheAudio, _) = currentState.currentAudioInfo
         val audioNumber = currentState.currentAudioInfo.audioNumber
 
         val downloadRequest = DownloadRequest(
@@ -302,16 +299,13 @@ class QuranAudioService() : Service() {
 
     }
 
-
     fun getNextAudio() {
         val currentAudioInfo = audioState.value.currentAudioInfo
         val updatedAudioInfo = currentAudioInfo.getNextAudioInfo()
-        
-        if (updatedAudioInfo.surahNumber != currentAudioInfo.surahNumber) {
+        if (updatedAudioInfo.surahNumber != currentAudioInfo.surahNumber){
             audioStateManager.updateState { copy(currentAudioInfo = updatedAudioInfo) }
             return
         }
-        
         audioStateManager.updateState { copy(currentAudioInfo = updatedAudioInfo) }
         downloadAndPlayAudioFile()
     }
@@ -319,12 +313,10 @@ class QuranAudioService() : Service() {
     fun getPreviousAudio() {
         val currentAudioInfo = audioState.value.currentAudioInfo
         val updatedAudioInfo = currentAudioInfo.getPreviousAudioInfo()
-        
-        if (updatedAudioInfo.surahNumber != currentAudioInfo.surahNumber) {
+        if (updatedAudioInfo.surahNumber != currentAudioInfo.surahNumber){
             audioStateManager.updateState { copy(currentAudioInfo = updatedAudioInfo) }
             return
         }
-        
         audioStateManager.updateState { copy(currentAudioInfo = updatedAudioInfo) }
         downloadAndPlayAudioFile()
     }
@@ -335,6 +327,7 @@ class QuranAudioService() : Service() {
         audioStateManager.updateState { copy(currentAudioInfo = updatedAudioInfo) }
         downloadAndPlayAudioFile()
     }
+
 
     fun playAudio(file: File) {
         try {
@@ -367,7 +360,6 @@ class QuranAudioService() : Service() {
                     true
                 }
                 playbackParams = playbackParams.setSpeed(audioState.value.currentAudioInfo.playbackSpeed)
-                setVolume(1f,1f)
                 start()
             }
             startProgressTracking()
@@ -390,10 +382,8 @@ class QuranAudioService() : Service() {
 
     fun resumeAudio() {
         if (mediaPlayer == null){
-            println("media player null resume")
             downloadAndPlayAudioFile()
         }else{
-            println("media player not null resume")
             mediaPlayer?.start()
             audioStateManager.updateState { copy(isPlaying = true) }
             startProgressTracking()
@@ -446,16 +436,21 @@ class QuranAudioService() : Service() {
         progressJob?.cancel()
         mediaPlayer?.let { player ->
             progressJob = CoroutineScope(Dispatchers.Default).launch {
-                while (isActive && player.isPlaying) {
-                    val progress = player.currentPosition.toFloat() / player.duration
-                    val duration = player.duration.toFloat()
-                    if (!progress.isNaN() && !duration.isNaN()) {
-                        audioStateManager.updateState {
-                            copy(currentPosition = progress, duration = duration)
+                try {
+                    while (isActive && player.isPlaying) {
+                        val progress = player.currentPosition.toFloat() / player.duration
+                        val duration = player.duration.toFloat()
+                        if (!progress.isNaN() && !duration.isNaN()) {
+                            audioStateManager.updateState {
+                                copy(currentPosition = progress, duration = duration)
+                            }
                         }
+                        delay(50)
                     }
-                    delay(50)
+                }catch (e: Exception){
+                    println(e)
                 }
+
             }
         }
     }
@@ -569,7 +564,6 @@ class QuranAudioService() : Service() {
         }
 
         if (!isLoading) {
-            println("isPlaylninin $isPlaying")
             notificationBuilder
                 .addAction(
                     R.drawable.previous,
@@ -613,7 +607,6 @@ class QuranAudioService() : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
-        println("destroy")
         stopAudio()
         serviceScope.cancel()
         progressJob?.cancel()
