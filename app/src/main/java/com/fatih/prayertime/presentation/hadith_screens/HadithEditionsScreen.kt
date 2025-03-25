@@ -39,10 +39,10 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import coil.compose.rememberAsyncImagePainter
 import com.fatih.prayertime.R
 import com.fatih.prayertime.data.remote.dto.hadithdto.Collection
 import com.fatih.prayertime.data.remote.dto.hadithdto.Edition
@@ -167,7 +167,7 @@ fun CardContent(
 @Composable
 fun HadithImage(animatedColor: Color) {
     Image(
-        painter = painterResource(R.drawable.hadith),
+        painter = rememberAsyncImagePainter(R.drawable.hadith),
         contentDescription = "Hadith",
         modifier = Modifier.fillMaxWidth(),
         colorFilter = ColorFilter.lighting(

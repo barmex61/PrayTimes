@@ -12,12 +12,6 @@ data class QuranScreenState(
     val juzList: List<JuzInfo> = emptyList(),
     val isLoading: Boolean = false,
     val error: String? = null,
-    val selectedReciter: String = "",
-    val selectedTranslation: String = "",
-    val selectedTransliteration: String = "Turkish",
-    val translationList : List<QuranApiData> = listOf(),
-    val reciterList : List<QuranApiData> = listOf(),
-    val transliterationList : Map<String, String> = getTransliterations(),
     val selectedTabIndex: Int = 0,
 
 )

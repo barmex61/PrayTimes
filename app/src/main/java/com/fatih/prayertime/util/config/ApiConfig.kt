@@ -5,6 +5,7 @@ object ApiConfig {
     const val HADITH_API_BASE_URL = "https://cdn.jsdelivr.net/gh/fawazahmed0/hadith-api@1/"
     const val QURAN_API_BASE_URL = "https://api.alquran.cloud/v1/"
     const val BASE_AUDIO_URL = "https://cdn.islamic.network/quran/"
+    const val CDN_API_BASE_URL = "https://raw.githubusercontent.com/"
     const val TUNE = "0,-0,-7,7,6,7,7,0,0"
 
     val prayApiMethods = hashMapOf(

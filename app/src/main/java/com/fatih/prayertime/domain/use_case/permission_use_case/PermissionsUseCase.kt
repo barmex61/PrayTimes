@@ -22,8 +22,5 @@ class PermissionsUseCase @Inject constructor(
         ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) == PERMISSION_GRANTED ||
         ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_COARSE_LOCATION) == PERMISSION_GRANTED
 
-    fun showLocationPermissionRationale(activity: Activity) : Boolean =
-        ActivityCompat.shouldShowRequestPermissionRationale(activity, android.Manifest.permission.ACCESS_FINE_LOCATION) ||
-        ActivityCompat.shouldShowRequestPermissionRationale(activity, android.Manifest.permission.ACCESS_COARSE_LOCATION)
 
 }

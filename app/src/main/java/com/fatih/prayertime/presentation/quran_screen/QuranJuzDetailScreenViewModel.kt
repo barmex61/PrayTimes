@@ -158,16 +158,13 @@ class QuranJuzDetailScreenViewModel @Inject constructor(
             return
         }
         
-        // Yeni ayet numarasını hesapla
         _quranJuzDetailScreenState.value = _quranJuzDetailScreenState.value.copy(
             selectedAyahNumber = (_quranJuzDetailScreenState.value.selectedAyahNumber + direction).coerceIn(
                 1, ayahSize
             )
         )
         
-        Log.d(TAG, "Yeni ayet numarası: ${_quranJuzDetailScreenState.value.selectedAyahNumber}")
-        
-        // Yarış koşulunu önlemek için kısa bir gecikme ekle
+
         viewModelScope.launch {
             delay(100)
             playAyahAudio()

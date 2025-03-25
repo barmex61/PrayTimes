@@ -4,12 +4,10 @@ import com.fatih.prayertime.data.remote.dto.qurandto.LanguageResponse
 import com.fatih.prayertime.data.remote.dto.qurandto.SurahInfoListResponse
 import com.fatih.prayertime.data.remote.dto.qurandto.QuranApiResponse
 import com.fatih.prayertime.data.remote.dto.qurandto.SurahResponse
-import okhttp3.ResponseBody
 import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.Path
-import retrofit2.http.Streaming
 
 interface QuranApi {
 
@@ -22,7 +20,7 @@ interface QuranApi {
         @Path("language") language: String
     ): Response<QuranApiResponse>
     @GET("edition/format/audio")
-    suspend fun getAudioList(): Response<QuranApiResponse>
+    suspend fun getVerseByVerseReciters(): Response<QuranApiResponse>
     @GET("surah/{surahNumber}/editions/{surahPath}")
     suspend fun getSelectedSurah(
         @Path("surahNumber") surahNumber: Int,

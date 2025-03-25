@@ -12,7 +12,8 @@ interface QuranApiRepository {
     suspend fun getJuzList() : Resource<List<JuzInfo>>
     suspend fun getTranslationList() : Resource<List<QuranApiData>>
     suspend fun getLanguageList() : Resource<List<String>>
-    suspend fun getAudioList() : Resource<List<QuranApiData>>
+    suspend fun getVerseByVerseReciters() : Resource<List<QuranApiData>>
+    suspend fun getSurahBySurahReciters() : Resource<List<QuranApiData>>
     suspend fun getSelectedSurah(surahNumber : Int, surahPath : String) : Resource<SurahInfo>
     suspend fun downloadAudio(
         audioPath: String,

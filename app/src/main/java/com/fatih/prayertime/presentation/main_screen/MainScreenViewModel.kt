@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fatih.prayertime.data.di.MainScreenLocation
+import com.fatih.prayertime.data.settings.PermissionAndPreferences
 import com.fatih.prayertime.domain.model.PrayerAlarm
 import com.fatih.prayertime.domain.model.Address
 import com.fatih.prayertime.domain.model.PrayTimes
@@ -24,12 +25,15 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import org.threeten.bp.Instant
 import org.threeten.bp.LocalDate
 import org.threeten.bp.LocalDateTime
 import org.threeten.bp.Year
 import org.threeten.bp.YearMonth
+import org.threeten.bp.ZoneId
 import javax.inject.Inject
 
 @HiltViewModel
@@ -43,17 +47,20 @@ class MainScreenViewModel @Inject constructor(
     private val getAllGlobalAlarmsUseCase: GetAllGlobalAlarmsUseCase,
     private val removeLocationCallbackUseCase: RemoveLocationCallbackUseCase,
     private val updateGlobalAlarmUseCase: UpdateGlobalAlarmUseCase,
-    private val updateStatisticsAlarmUseCase: UpdateStatisticsAlarmUseCase
+    private val updateStatisticsAlarmUseCase: UpdateStatisticsAlarmUseCase,
+    val permissionsAndPreferences: PermissionAndPreferences
 ) : ViewModel() {
 
     companion object{
         const val TAG = "MainScreenViewModel"
     }
 
+    val isNotificationPermissionGranted = permissionsAndPreferences.isNotificationPermissionGranted
+
     //Pray - Times
 
     private val _dailyPrayTimes : MutableStateFlow<Resource<PrayTimes>> = MutableStateFlow(Resource.loading())
-    val dailyPrayTimes : StateFlow<Resource<PrayTimes>> = _dailyPrayTimes
+    val dailyPrayTimes = _dailyPrayTimes.asStateFlow()
 
     private val _searchAddress : MutableStateFlow<Address?> = MutableStateFlow(null)
 
@@ -160,6 +167,7 @@ class MainScreenViewModel @Inject constructor(
 
 
     init {
+
         updateFormattedDate()
         updateFormattedTime()
         viewModelScope.launch(Dispatchers.IO){
@@ -189,6 +197,11 @@ class MainScreenViewModel @Inject constructor(
             }
         }
         updateAllGlobalAlarm(false)
+        checkNotificationPermission()
+    }
+
+    fun checkNotificationPermission(){
+        permissionsAndPreferences.checkNotificationPermission()
     }
 
     private fun removeCallbacks(){

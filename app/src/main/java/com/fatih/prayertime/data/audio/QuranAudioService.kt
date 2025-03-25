@@ -15,13 +15,14 @@ import android.media.MediaPlayer
 import android.os.Binder
 import android.os.Build
 import android.os.IBinder
+import androidx.compose.ui.graphics.Paint
 import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
 import com.fatih.prayertime.R
 import com.fatih.prayertime.domain.use_case.quran_use_cases.GetAudioFileUseCase
 import com.fatih.prayertime.presentation.main_activity.MainActivity
 import com.fatih.prayertime.util.extensions.getExactAudioInfo
-import com.fatih.prayertime.util.extensions.getNextAudioInfo
-import com.fatih.prayertime.util.extensions.getPreviousAudioInfo
+import com.fatih.prayertime.util.extensions.getNextOrPreviousAudioInfo
 import com.fatih.prayertime.util.model.enums.PlaybackMode
 import com.fatih.prayertime.util.model.state.AudioPlayerState
 import com.fatih.prayertime.util.model.state.DownloadRequest
@@ -41,6 +42,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
@@ -67,7 +70,6 @@ class QuranAudioService() : Service() {
     }
 
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-    private var currentDownloadJob: Job? = null
     private val downloadRequests = MutableStateFlow<DownloadRequest?>(null)
 
     @Inject
@@ -75,6 +77,7 @@ class QuranAudioService() : Service() {
 
     private val notificationManager by lazy { getSystemService(NOTIFICATION_SERVICE) as NotificationManager }
     private val binder = LocalBinder()
+
 
 
     companion object {
@@ -99,24 +102,20 @@ class QuranAudioService() : Service() {
         setupAudioStateObserver()
         createNotificationChannel()
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            registerReceiver(broadcastReceiver, IntentFilter().apply {
-                addAction(ACTION_PLAY)
-                addAction(ACTION_PAUSE)
-                addAction(ACTION_NEXT)
-                addAction(ACTION_PREVIOUS)
-                addAction(ACTION_STOP)
-            }, RECEIVER_NOT_EXPORTED)
-        } else {
-            @SuppressLint("UnspecifiedRegisterReceiverFlag")
-            registerReceiver(broadcastReceiver, IntentFilter().apply {
-                addAction(ACTION_PLAY)
-                addAction(ACTION_PAUSE)
-                addAction(ACTION_NEXT)
-                addAction(ACTION_PREVIOUS)
-                addAction(ACTION_STOP)
-            })
+        val intentFilter = IntentFilter().apply {
+            addAction(ACTION_PLAY)
+            addAction(ACTION_PAUSE)
+            addAction(ACTION_NEXT)
+            addAction(ACTION_PREVIOUS)
+            addAction(ACTION_STOP)
         }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(broadcastReceiver,intentFilter,RECEIVER_EXPORTED)
+        } else {
+            registerReceiver(broadcastReceiver,intentFilter)
+        }
+
     }
 
     @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
@@ -124,38 +123,53 @@ class QuranAudioService() : Service() {
         serviceScope.launch {
             try {
                 downloadRequests
-                    .filterNotNull()
-                    .onEach { request ->
-                        currentDownloadJob?.cancel()
+                    .onEach {
+                        println("onEach")
                         stopAudio()
-                        resetStateForNewDownload()
+                        if (it != null){
+                            resetStateForNewDownload()
+                        }
                     }
                     .flatMapLatest { request ->
+                        println(request)
+                        if (request == null) {
+                            resetStateForNewDownload()
+                            return@flatMapLatest emptyFlow()
+                        }
                         getAudioFileUseCase.invoke(
                             request.audioPath,
                             request.bitrate,
                             request.reciter,
                             request.audioNumber,
                             request.shouldCache
-                        )
-                    }.catch { exception ->
-                        println(exception)
-                        handleException(exception)
-                    }.collect { resource ->
+                        ).catch { exception ->
+                            println(exception)
+                            handleException(exception)
+                        }
+                    }
+                    .catch {
+                        println(it)
+                    }
+                    .collect { resource->
+                        println("collect")
                         handleResource(resource)
                     }
             } catch (e: Exception) {
                 println(e)
             }
-        }.invokeOnCompletion {
-            println("completed")
         }
     }
 
     @OptIn(FlowPreview::class)
     private fun setupAudioStateObserver() {
         serviceScope.launch {
-            audioState.collect { state ->
+            audioState.debounce(50).onEach {
+                if (it.isLoading && !it.isPlaying){
+                    updateNotification()
+                }
+            }.map {
+                it.isPlaying
+            }.distinctUntilChanged().collect {
                 updateNotification()
             }
         }
@@ -164,7 +178,7 @@ class QuranAudioService() : Service() {
     private fun resetStateForNewDownload() {
         audioStateManager.updateState {
             copy(
-                isLoading = true,
+                isLoading = false,
                 downloadProgress = 0,
                 downloadedSize = 0,
                 totalSize = 0,
@@ -183,6 +197,7 @@ class QuranAudioService() : Service() {
             }
             Status.ERROR -> {
                 handleError(resource)
+                downloadRequests.value = null
             }
             Status.LOADING -> {
                 handleLoading(resource)
@@ -266,6 +281,7 @@ class QuranAudioService() : Service() {
                 }
 
                 ACTION_NEXT -> {
+                    println("next")
                     getNextAudio()
                 }
 
@@ -286,7 +302,6 @@ class QuranAudioService() : Service() {
 
         val (_, reciter, _, bitrate, _,audioPath, _, shouldCacheAudio, _) = currentState.currentAudioInfo
         val audioNumber = currentState.currentAudioInfo.audioNumber
-
         val downloadRequest = DownloadRequest(
             audioPath = audioPath,
             bitrate = bitrate,
@@ -294,29 +309,19 @@ class QuranAudioService() : Service() {
             audioNumber = audioNumber,
             shouldCache = shouldCacheAudio
         )
-        println(downloadRequest)
         downloadRequests.value = downloadRequest
-
     }
 
     fun getNextAudio() {
         val currentAudioInfo = audioState.value.currentAudioInfo
-        val updatedAudioInfo = currentAudioInfo.getNextAudioInfo()
-        if (updatedAudioInfo.surahNumber != currentAudioInfo.surahNumber){
-            audioStateManager.updateState { copy(currentAudioInfo = updatedAudioInfo) }
-            return
-        }
+        val updatedAudioInfo = currentAudioInfo.getNextOrPreviousAudioInfo(1)
         audioStateManager.updateState { copy(currentAudioInfo = updatedAudioInfo) }
         downloadAndPlayAudioFile()
     }
 
     fun getPreviousAudio() {
         val currentAudioInfo = audioState.value.currentAudioInfo
-        val updatedAudioInfo = currentAudioInfo.getPreviousAudioInfo()
-        if (updatedAudioInfo.surahNumber != currentAudioInfo.surahNumber){
-            audioStateManager.updateState { copy(currentAudioInfo = updatedAudioInfo) }
-            return
-        }
+        val updatedAudioInfo = currentAudioInfo.getNextOrPreviousAudioInfo(-1)
         audioStateManager.updateState { copy(currentAudioInfo = updatedAudioInfo) }
         downloadAndPlayAudioFile()
     }
@@ -419,6 +424,8 @@ class QuranAudioService() : Service() {
     }
 
     fun cancelAudioDownload() {
+        downloadRequests.value = null
+        stopAudio()
         audioStateManager.updateState {
             copy(
                 isLoading = false,
@@ -494,39 +501,39 @@ class QuranAudioService() : Service() {
     private fun createNotification(): Notification {
         val playPauseIntent = PendingIntent.getBroadcast(
             this,
-            0,
+            11,
             Intent(ACTION_PLAY).setPackage(packageName),
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            PendingIntent.FLAG_IMMUTABLE
         )
 
         val nextIntent = PendingIntent.getBroadcast(
             this,
-            1,
+            12,
             Intent(ACTION_NEXT).setPackage(packageName),
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            PendingIntent.FLAG_IMMUTABLE
         )
 
         val previousIntent = PendingIntent.getBroadcast(
             this,
-            2,
+            13,
             Intent(ACTION_PREVIOUS).setPackage(packageName),
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            PendingIntent.FLAG_IMMUTABLE
         )
 
         val deleteIntent = PendingIntent.getBroadcast(
             this,
-            3,
+            14,
             Intent(ACTION_STOP).setPackage(packageName),
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            PendingIntent.FLAG_IMMUTABLE
         )
 
         val contentIntent = PendingIntent.getActivity(
             this,
-            4,
+            15,
             Intent(this, MainActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             },
-            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+            PendingIntent.FLAG_MUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
 
         val (surahName, _, reciterName, _, playbackMode , _, _, _, _, _) = audioStateManager.audioState.currentAudioInfo
@@ -616,7 +623,6 @@ class QuranAudioService() : Service() {
 
     override fun onTaskRemoved(rootIntent: Intent?) {
         super.onTaskRemoved(rootIntent)
-        println("taskRemoved")
         stopAudio()
     }
 

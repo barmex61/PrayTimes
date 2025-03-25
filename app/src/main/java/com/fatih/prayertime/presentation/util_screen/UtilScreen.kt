@@ -42,6 +42,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import coil.compose.rememberAsyncImagePainter
 import com.fatih.prayertime.domain.model.ScreenData
 import com.fatih.prayertime.util.config.NavigationConfig.screens
 import com.fatih.prayertime.util.extensions.navigateToScreen
@@ -130,7 +131,7 @@ fun UtilitiesCardContent(screenData: ScreenData, animationProgress: Float, anima
             .padding(16.dp)
     ) {
         Image(
-            painter = painterResource(id = screenData.painterRoute ?: screenData.iconRoute),
+            painter = rememberAsyncImagePainter(screenData.painterRoute ?: screenData.iconRoute),
             contentDescription = screenData.title.name,
             colorFilter = ColorFilter.colorMatrix(
                 ColorMatrix().apply { setToSaturation(animationProgress) }

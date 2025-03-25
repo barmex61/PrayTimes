@@ -1,7 +1,5 @@
 package com.fatih.prayertime.util.extensions
 
-import androidx.core.content.res.TypedArrayUtils.getString
-import com.fatih.prayertime.R
 import com.fatih.prayertime.data.remote.dto.hadithdto.Edition
 import com.fatih.prayertime.data.remote.dto.hadithdto.HadithEdition
 import com.fatih.prayertime.data.remote.dto.islamicdaysdto.IslamicDaysDataDTO
@@ -17,10 +15,8 @@ import com.fatih.prayertime.domain.use_case.formatted_use_cases.FormattedUseCase
 import com.fatih.prayertime.util.model.enums.PlaybackMode
 import com.fatih.prayertime.util.model.enums.PrayTimesString
 import com.fatih.prayertime.util.model.state.AudioInfo
+import com.fatih.prayertime.util.utils.QuranUtils
 import com.fatih.prayertime.util.utils.QuranUtils.SURAH_VERSE_RANGES
-import com.fatih.prayertime.util.utils.QuranUtils.getMaxVerseNumber
-import com.fatih.prayertime.util.utils.QuranUtils.getMinVerseNumber
-import com.fatih.prayertime.util.utils.QuranUtils.getVerseRange
 import org.threeten.bp.LocalDateTime
 
 private val formattedUseCase = FormattedUseCase()
@@ -60,20 +56,12 @@ fun PrayTimes.toList(): List<Pair<String, String>> = listOf(
     Pair(PrayTimesString.Night.name, this.night)
 )
 
-fun PrayTimes.toPrayTypeList(): List<String> = listOf(
-    PrayTimesString.Morning.name,
-    PrayTimesString.Noon.name,
-    PrayTimesString.Afternoon.name,
-    PrayTimesString.Evening.name,
-    PrayTimesString.Night.name
-)
-
-fun PrayTimes.toPrayTimeList(offsetMinutes : Long? = null) : List<Long> = listOf(
-    formattedUseCase.formatHHMMtoLong(this.morning,formattedUseCase.formatDDMMYYYYDateToLocalDate(this.date)) + if (offsetMinutes != null)  offsetMinutes * 1000L * 60L else 0L,
-    formattedUseCase.formatHHMMtoLong(this.noon,formattedUseCase.formatDDMMYYYYDateToLocalDate(this.date))+ if (offsetMinutes != null)  offsetMinutes * 1000L * 60L else 0L,
-    formattedUseCase.formatHHMMtoLong(this.afternoon,formattedUseCase.formatDDMMYYYYDateToLocalDate(this.date))+ if (offsetMinutes != null)  offsetMinutes * 1000L * 60L else 0L,
-    formattedUseCase.formatHHMMtoLong(this.evening,formattedUseCase.formatDDMMYYYYDateToLocalDate(this.date))+ if (offsetMinutes != null)  offsetMinutes * 1000L * 60L else 0L,
-    formattedUseCase.formatHHMMtoLong(this.night,formattedUseCase.formatDDMMYYYYDateToLocalDate(this.date))+ if (offsetMinutes != null)  offsetMinutes * 1000L * 60L else 0L
+fun PrayTimes.toPrayTimePair(offsetMinutes : Long? = null) : List<Pair<String, Long>> = listOf(
+    PrayTimesString.Morning.name to formattedUseCase.formatHHMMtoLong(this.morning,formattedUseCase.formatDDMMYYYYDateToLocalDate(this.date)) + if (offsetMinutes != null)  offsetMinutes * 1000L * 60L else 0L,
+    PrayTimesString.Noon.name to formattedUseCase.formatHHMMtoLong(this.noon,formattedUseCase.formatDDMMYYYYDateToLocalDate(this.date))+ if (offsetMinutes != null)  offsetMinutes * 1000L * 60L else 0L,
+    PrayTimesString.Afternoon.name to formattedUseCase.formatHHMMtoLong(this.afternoon,formattedUseCase.formatDDMMYYYYDateToLocalDate(this.date))+ if (offsetMinutes != null)  offsetMinutes * 1000L * 60L else 0L,
+    PrayTimesString.Evening.name to formattedUseCase.formatHHMMtoLong(this.evening,formattedUseCase.formatDDMMYYYYDateToLocalDate(this.date))+ if (offsetMinutes != null)  offsetMinutes * 1000L * 60L else 0L,
+    PrayTimesString.Night.name to formattedUseCase.formatHHMMtoLong(this.night,formattedUseCase.formatDDMMYYYYDateToLocalDate(this.date))+ if (offsetMinutes != null)  offsetMinutes * 1000L * 60L else 0L
 )
 
 fun PrayTimes.toAddress(): Address = Address(
@@ -147,37 +135,34 @@ fun HadithEdition.toList(): List<Edition> = listOf(
     this.dehlawi
 )
 
-fun QuranApiData.toText(): String = "${this.language.uppercase()} - ${this.englishName}"
+fun QuranApiData.toText(): String = this.englishName
 
-fun AudioInfo.getNextAudioInfo(): AudioInfo {
+fun AudioInfo.getNextOrPreviousAudioInfo(direction: Int): AudioInfo {
     return when (playbackMode) {
         PlaybackMode.VERSE_STREAM -> {
-            val newAyahNumber = (ayahNumber + 1).coerceAtMost(6236)
+            val newAyahNumber = (ayahNumber + direction).coerceIn(1, 6236)
             val newSurahNumber = SURAH_VERSE_RANGES.entries.find { (_, range) ->
                 newAyahNumber in range
             }?.key ?: surahNumber
+            val surahName = QuranUtils.turkishNames.keys.withIndex().find { key ->
+                newSurahNumber == key.index + 1
+            }?.value ?: ""
             copy(
                 surahNumber = newSurahNumber,
-                ayahNumber = newAyahNumber
+                ayahNumber = newAyahNumber,
+                surahName = surahName
             )
         }
-        PlaybackMode.SURAH -> copy(surahNumber = (surahNumber + 1).coerceAtMost(114))
-    }
-}
-
-fun AudioInfo.getPreviousAudioInfo(): AudioInfo {
-    return when (playbackMode) {
-        PlaybackMode.VERSE_STREAM -> {
-            val newAyahNumber = (ayahNumber - 1).coerceAtLeast(1)
-            val newSurahNumber = SURAH_VERSE_RANGES.entries.find { (_, range) ->
-                newAyahNumber in range
-            }?.key ?: surahNumber
+        PlaybackMode.SURAH -> {
+            val newSurahNumber = (surahNumber + direction).coerceIn(1, 114)
+            val surahName = QuranUtils.turkishNames.keys.withIndex().find { key ->
+                newSurahNumber == key.index + 1
+            }?.value ?: ""
             copy(
                 surahNumber = newSurahNumber,
-                ayahNumber = newAyahNumber
+                surahName = surahName
             )
         }
-        PlaybackMode.SURAH -> copy(surahNumber = (surahNumber - 1).coerceAtLeast(1))
     }
 }
 

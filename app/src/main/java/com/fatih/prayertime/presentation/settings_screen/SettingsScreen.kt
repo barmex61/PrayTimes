@@ -68,16 +68,15 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.fatih.prayertime.R
 import com.fatih.prayertime.domain.model.PrayerAlarm
 import com.fatih.prayertime.domain.model.ThemeOption
-import com.fatih.prayertime.presentation.main_activity.AppViewModel
 import com.fatih.prayertime.util.model.enums.PrayTimesString
 import com.fatih.prayertime.util.composables.TitleView
 
 
 @Composable
-fun SettingsScreen(modifier: Modifier, appViewModel: AppViewModel = hiltViewModel()) {
+fun SettingsScreen(modifier: Modifier, settingsScreenViewModel: SettingsScreenViewModel = hiltViewModel()) {
     val showSelectedGlobalAlarmOffsetSelectionDialog = remember { mutableStateOf(false) }
     val selectedPrayerAlarm = remember { mutableStateOf<PrayerAlarm?>(null) }
-    val uiSettings by appViewModel.settingsState.collectAsState()
+    val uiSettings by settingsScreenViewModel.settingsState.collectAsState()
     val scrollState = rememberScrollState()
 
     Column(
@@ -109,7 +108,7 @@ fun SettingsScreen(modifier: Modifier, appViewModel: AppViewModel = hiltViewMode
                 title = stringResource(R.string.appearance),
                 icon = ImageVector.vectorResource(R.drawable.palette)
             ) {
-                AppearanceSettingsSection(uiSettings.selectedTheme) { appViewModel.updateTheme(it) }
+                AppearanceSettingsSection(uiSettings.selectedTheme) { settingsScreenViewModel.updateTheme(it) }
             }
 
             SettingsSection(
@@ -120,7 +119,7 @@ fun SettingsScreen(modifier: Modifier, appViewModel: AppViewModel = hiltViewMode
                     title = stringResource(R.string.vibration),
                     subtitle = stringResource(R.string.vibration_description),
                     isChecked = uiSettings.vibrationEnabled,
-                    onCheckedChange = { appViewModel.toggleVibration() }
+                    onCheckedChange = { settingsScreenViewModel.toggleVibration() }
                 )
             }
 
@@ -132,7 +131,7 @@ fun SettingsScreen(modifier: Modifier, appViewModel: AppViewModel = hiltViewMode
                     uiSettings.prayerAlarms.forEach { alarm ->
                         AlarmSettingItem(
                             alarm = alarm,
-                            onToggle = appViewModel::togglePrayerNotification,
+                            onToggle = settingsScreenViewModel::togglePrayerNotification,
                             onMinuteToggle = { selectedAlarm ->
                                 showSelectedGlobalAlarmOffsetSelectionDialog.value = true
                                 selectedPrayerAlarm.value = selectedAlarm
@@ -150,7 +149,7 @@ fun SettingsScreen(modifier: Modifier, appViewModel: AppViewModel = hiltViewMode
                     title = stringResource(R.string.mute_friday),
                     subtitle = stringResource(R.string.mute_friday_description),
                     isChecked = uiSettings.silenceWhenCuma,
-                    onCheckedChange = { appViewModel.toggleCuma() }
+                    onCheckedChange = { settingsScreenViewModel.toggleCuma() }
                 )
             }
         }

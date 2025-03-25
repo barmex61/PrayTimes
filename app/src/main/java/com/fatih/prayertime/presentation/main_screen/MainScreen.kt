@@ -83,23 +83,25 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil.compose.rememberAsyncImagePainter
 import com.exyte.animatednavbar.utils.noRippleClickable
 import com.fatih.prayertime.R
 import com.fatih.prayertime.domain.model.PrayerAlarm
 import com.fatih.prayertime.domain.model.PrayTimes
-import com.fatih.prayertime.presentation.main_activity.AppViewModel
 import com.fatih.prayertime.util.extensions.convertTimeToSeconds
 import com.fatih.prayertime.util.extensions.localDateTime
 import com.fatih.prayertime.util.extensions.toAddress
@@ -120,12 +122,12 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 @Composable
-fun MainScreen(appViewModel: AppViewModel, modifier: Modifier, mainScreenViewModel: MainScreenViewModel = hiltViewModel()) {
+fun MainScreen( modifier: Modifier, mainScreenViewModel: MainScreenViewModel = hiltViewModel()) {
     var showAlarmDialog by remember { mutableStateOf(false) }
     val scrollState = rememberScrollState()
     var isVisible by remember { mutableStateOf(false) }
     val haptic = LocalHapticFeedback.current
-    GetLocationInformation(mainScreenViewModel,appViewModel)
+    GetLocationInformation(mainScreenViewModel)
     LaunchedEffect(Unit){
         isVisible = true
     }
@@ -133,7 +135,7 @@ fun MainScreen(appViewModel: AppViewModel, modifier: Modifier, mainScreenViewMod
         AddressBar(haptic,mainScreenViewModel)
         PrayerBar(haptic)
         PrayScheduleCompose(haptic)
-        PrayNotificationCompose(mainScreenViewModel,appViewModel,haptic){
+        PrayNotificationCompose(mainScreenViewModel,haptic){
             showAlarmDialog = true
         }
         DailyPrayCompose(haptic)
@@ -228,10 +230,10 @@ fun GlobalAlarmsDialog(mainScreenViewModel: MainScreenViewModel, onDismiss: () -
 }
 
 @Composable
-fun GetLocationInformation(mainScreenViewModel: MainScreenViewModel, appViewModel: AppViewModel){
-    val permissionGranted by appViewModel.isLocationPermissionGranted.collectAsState()
+fun GetLocationInformation(mainScreenViewModel: MainScreenViewModel){
+    val permissionGranted by mainScreenViewModel.permissionsAndPreferences.isLocationPermissionGranted.collectAsState()
     val isLocationTracking by mainScreenViewModel.isLocationTracking.collectAsState()
-    val networkState by appViewModel.networkState.collectAsState()
+    val networkState by mainScreenViewModel.permissionsAndPreferences.networkState.collectAsState()
     LaunchedEffect (key1 = networkState, key2 = permissionGranted){
         Log.d("MainScreen","isLocationTracking $isLocationTracking")
         Log.d("MainScreen","networkState $networkState permissionGranted $permissionGranted")
@@ -338,7 +340,6 @@ fun DailyPrayCompose(haptic: HapticFeedback) {
 @Composable
 fun PrayNotificationCompose(
     mainScreenViewModel: MainScreenViewModel,
-    appViewModel: AppViewModel,
     haptic: HapticFeedback,
     onShowAlarmDialog : () -> Unit
 ) {
@@ -371,7 +372,7 @@ fun PrayNotificationCompose(
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.Start
         ) {
-            val isNotificationPermissionGranted by appViewModel.isNotificationPermissionGranted
+            val isNotificationPermissionGranted by mainScreenViewModel.isNotificationPermissionGranted.collectAsStateWithLifecycle()
             val context = LocalContext.current
             val permissionLauncher = rememberLauncherForActivityResult(
                 contract = ActivityResultContracts.RequestPermission()
@@ -383,7 +384,7 @@ fun PrayNotificationCompose(
                     }
                     context.startActivity(intent)
                 }else{
-                    appViewModel.checkNotificationPermission()
+                    mainScreenViewModel.checkNotificationPermission()
                 }
             }
             Row(
@@ -401,7 +402,7 @@ fun PrayNotificationCompose(
                     modifier = Modifier.graphicsLayer {
                         rotationY = alarmRotate.value
                     },
-                    painter = painterResource(R.drawable.alarm_icon),
+                    imageVector = ImageVector.vectorResource(R.drawable.alarm_icon),
                     contentDescription = stringResource(R.string.alarm_icon)
                 )
                 Text(
@@ -551,7 +552,7 @@ fun AlarmComposable(prayerAlarm: PrayerAlarm) {
         animationSpec = tween(1000), label = ""
     )
     val isChecked = rememberSaveable(prayerAlarm.isEnabled) { prayerAlarm.isEnabled }
-    val iconDrawable = if (isChecked) painterResource(R.drawable.check_circle) else painterResource(R.drawable.cross_icon)
+    val iconDrawable = if (isChecked) ImageVector.vectorResource(R.drawable.check_circle) else ImageVector.vectorResource(R.drawable.cross_icon)
 
     AnimatedContent(
         targetState = iconDrawable,
@@ -567,7 +568,7 @@ fun AlarmComposable(prayerAlarm: PrayerAlarm) {
                 .padding(top = 3.dp)
                ,
             tint = iconColor.value,
-            painter = it,
+            imageVector = it,
             contentDescription = stringResource(R.string.check_icon),
         )
     }
@@ -737,12 +738,12 @@ fun RowScope.PrayTimesRow(prayTime: PrayTimes,index: Int) {
     val prayList = prayTime.toList()
     prayList.forEachIndexed { currentIndex ,prayPair->
         val icon = when(prayPair.first){
-            PrayTimesString.Morning.name -> painterResource(R.drawable.morning)
-            PrayTimesString.Noon.name -> painterResource(R.drawable.noon)
-            PrayTimesString.Afternoon.name -> painterResource(R.drawable.afternoon)
-            PrayTimesString.Evening.name -> painterResource(R.drawable.evening)
-            PrayTimesString.Night.name -> painterResource(R.drawable.night)
-            else -> painterResource(R.drawable.morning)
+            PrayTimesString.Morning.name -> rememberAsyncImagePainter(R.drawable.morning)
+            PrayTimesString.Noon.name -> rememberAsyncImagePainter(R.drawable.noon)
+            PrayTimesString.Afternoon.name -> rememberAsyncImagePainter(R.drawable.afternoon)
+            PrayTimesString.Evening.name -> rememberAsyncImagePainter(R.drawable.evening)
+            PrayTimesString.Night.name -> rememberAsyncImagePainter(R.drawable.night)
+            else -> rememberAsyncImagePainter(R.drawable.morning)
         }
         val color = if (currentIndex == index) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSecondaryContainer
         Column(
@@ -782,11 +783,12 @@ fun RowScope.PrayTimesRow(prayTime: PrayTimes,index: Int) {
 
 @Composable
 fun AddressBar(haptic: HapticFeedback,mainScreenViewModel: MainScreenViewModel) {
-    val prayTime by mainScreenViewModel.dailyPrayTimes.collectAsState()
+    val prayTime by mainScreenViewModel.dailyPrayTimes.collectAsStateWithLifecycle()
     val locationText = stringResource(R.string.location_text)
     val currentAddress by remember(prayTime) {
         derivedStateOf { prayTime.data?.toAddress() }
     }
+    println(prayTime.data?.fullAddress)
     Box (modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterStart) {
         var isExpanded by remember { mutableStateOf(false) }
         Card (

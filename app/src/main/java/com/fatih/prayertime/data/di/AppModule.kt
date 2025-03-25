@@ -26,6 +26,7 @@ import com.fatih.prayertime.data.local.dao.FavoritesDao
 import com.fatih.prayertime.data.local.dao.PrayerStatisticsDao
 import com.fatih.prayertime.data.local.database.AppDatabase
 import com.fatih.prayertime.data.remote.AudioApi
+import com.fatih.prayertime.data.remote.CDNApi
 import com.fatih.prayertime.data.remote.HadithApi
 import com.fatih.prayertime.data.remote.IslamicCalendarApi
 import com.fatih.prayertime.data.remote.QuranApi
@@ -36,6 +37,7 @@ import com.fatih.prayertime.data.repository.LocalDataRepositoryImpl
 import com.fatih.prayertime.data.repository.PrayerStatisticsRepositoryImpl
 import com.fatih.prayertime.data.repository.QuranApiRepositoryImp
 import com.fatih.prayertime.data.repository.SettingsRepositoryImp
+import com.fatih.prayertime.data.settings.PermissionAndPreferences
 import com.fatih.prayertime.data.settings.SettingsDataStore
 import com.fatih.prayertime.domain.repository.FavoritesRepository
 import com.fatih.prayertime.domain.repository.HadithRepository
@@ -46,6 +48,8 @@ import com.fatih.prayertime.domain.repository.QuranApiRepository
 import com.fatih.prayertime.domain.repository.SettingsRepository
 import com.fatih.prayertime.domain.use_case.formatted_use_cases.FormattedUseCase
 import com.fatih.prayertime.domain.use_case.location_use_cases.GetLocationAndAddressUseCase
+import com.fatih.prayertime.domain.use_case.network_state_use_cases.GetNetworkStateUseCase
+import com.fatih.prayertime.domain.use_case.permission_use_case.IsPowerSavingEnabledUseCase
 import com.fatih.prayertime.domain.use_case.permission_use_case.PermissionsUseCase
 import com.fatih.prayertime.util.config.ApiConfig
 import com.fatih.prayertime.util.config.ApiConfig.ALADHAN_API_BASE_URL
@@ -65,6 +69,7 @@ import dagger.hilt.components.SingletonComponent
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import retrofit2.create
 import java.util.Locale
 import javax.inject.Qualifier
 import javax.inject.Singleton
@@ -251,7 +256,7 @@ object Module {
 
     @Provides
     @Singleton
-    fun provideQuranRepository(@ApplicationContext context: Context,quranApi: QuranApi,audioApi: AudioApi) : QuranApiRepository = QuranApiRepositoryImp(context,quranApi,audioApi)
+    fun provideQuranRepository(@ApplicationContext context: Context,quranApi: QuranApi,audioApi: AudioApi,cdnApi: CDNApi) : QuranApiRepository = QuranApiRepositoryImp(context,quranApi,audioApi,cdnApi)
 
     @Provides
     @Singleton
@@ -267,7 +272,7 @@ object Module {
         val client = OkHttpClient.Builder()
             .addInterceptor { chain ->
                 val request = chain.request().newBuilder()
-                    .header("Accept-Encoding", "identity")  // Sıkıştırmayı devre dışı bırak
+                    .header("Accept-Encoding", "identity")
                     .build()
                 chain.proceed(request)
             }
@@ -280,6 +285,18 @@ object Module {
             .build()
             .create(AudioApi::class.java)
     }
+
+    @Singleton
+    @Provides
+    fun provideCDNApi() : CDNApi = Retrofit.Builder().baseUrl(ApiConfig.CDN_API_BASE_URL).addConverterFactory(GsonConverterFactory.create()).build().create(CDNApi::class.java)
+
+    @Provides
+    @Singleton
+    fun providePermissionsAndPreferences(
+        permissionsUseCase: PermissionsUseCase,
+        getNetworkStateUseCase: GetNetworkStateUseCase,
+        isPowerSavingEnabledUseCase: IsPowerSavingEnabledUseCase
+    ) = PermissionAndPreferences(permissionsUseCase, getNetworkStateUseCase, isPowerSavingEnabledUseCase)
 }
 
 @Qualifier

@@ -1,6 +1,7 @@
 package com.fatih.prayertime.presentation.compass_screen
 
 import android.content.pm.ActivityInfo
+import android.graphics.BitmapFactory
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.animateColorAsState
@@ -30,6 +31,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -45,17 +47,22 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import coil.compose.rememberAsyncImagePainter
 import com.fatih.prayertime.R
 import com.fatih.prayertime.data.gyroscope.GyroscopeSensor
 import com.fatih.prayertime.util.composables.LockScreenOrientation
 import com.fatih.prayertime.util.composables.TitleView
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 
 @Composable
@@ -140,13 +147,13 @@ fun CompassContent(
                             fadeOut(animationSpec = tween(1000))
                 }
             ) {
-                Image(
-                    painter = painterResource(id = it),
+                Icon(
+                    imageVector = ImageVector.vectorResource(it),
                     contentDescription = "Rotate Indicator",
                     modifier = Modifier
                         .size(50.dp)
                         .rotate(animatedRotationValue.value),
-                    colorFilter = ColorFilter.tint(animatedColor.value)
+                    tint = animatedColor.value
                 )
             }
             
@@ -157,15 +164,15 @@ fun CompassContent(
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Image(
-                    painter = painterResource(id = R.drawable.cross_icon),
+                Icon(
+                    imageVector = ImageVector.vectorResource(R.drawable.cross_icon),
                     contentDescription = "Cross",
                     modifier = Modifier.size(25.dp)
                 )
                 KaabaRepresentation((-25).dp, 0.dp, Color.Red)
                 KaabaRepresentation(0.dp, 0.dp, Color.Green)
-                Image(
-                    painter = painterResource(id = R.drawable.check_circle),
+                Icon(
+                    imageVector = ImageVector.vectorResource(id = R.drawable.check_circle),
                     contentDescription = "Check",
                     modifier = Modifier.size(25.dp)
                 )
@@ -226,11 +233,11 @@ fun CompassGyroscopeContent(
                 .padding(16.dp)
         ) {
             Image(
-                painter = painterResource(id = R.drawable.compass_new),
+                painter = rememberAsyncImagePainter(R.drawable.compass_new),
                 contentDescription = "Compass",
-                modifier = Modifier.size(200.dp),
-
+                modifier = Modifier.size(200.dp)
             )
+
             val compassRadius = 100.dp
             val circleRadius = 35.dp
             val kaabaRadius = 25.dp
@@ -241,7 +248,7 @@ fun CompassGyroscopeContent(
             yOffset = distanceBetweenCenters * kotlin.math.cos(angleInRadians).toFloat()
 
             Image(
-                painter = painterResource(id = R.drawable.kabe),
+                painter = rememberAsyncImagePainter(R.drawable.kabe),
                 contentDescription = "Kaaba",
                 modifier = Modifier
                     .size(50.dp)
@@ -292,7 +299,7 @@ fun KaabaRepresentation(offsetX: Dp, offsetY: Dp, color: Color) {
                 )
         )
         Image(
-            painter = painterResource(id = R.drawable.kabe),
+            painter = rememberAsyncImagePainter(R.drawable.kabe),
             contentDescription = "Kaaba",
             modifier = Modifier
                 .size(50.dp)

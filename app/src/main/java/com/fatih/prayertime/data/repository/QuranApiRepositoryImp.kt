@@ -1,8 +1,8 @@
 package com.fatih.prayertime.data.repository
 
 import android.content.Context
-import android.util.Log
 import com.fatih.prayertime.data.remote.AudioApi
+import com.fatih.prayertime.data.remote.CDNApi
 import com.fatih.prayertime.data.remote.QuranApi
 import com.fatih.prayertime.data.remote.dto.qurandto.Ayah
 import com.fatih.prayertime.data.remote.dto.qurandto.SurahInfo
@@ -22,20 +22,19 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-import kotlinx.coroutines.withTimeout
 import java.io.File
-import java.io.FileOutputStream
 import java.io.IOException
 import javax.inject.Inject
-import kotlin.text.toInt
 
 class QuranApiRepositoryImp @Inject constructor(
     private val context : Context,
     private val quranApi: QuranApi,
-    private val audioApi: AudioApi
+    private val audioApi: AudioApi,
+    private val cdnApi : CDNApi
 ) : QuranApiRepository {
 
-    private val audioList = mutableListOf<QuranApiData>()
+    private val verseByVerseReciters = mutableListOf<QuranApiData>()
+    private val surahBySurahReciters = mutableListOf<QuranApiData>()
     private val translationList = mutableListOf<QuranApiData>()
     private val mutex = Mutex()
 
@@ -127,15 +126,33 @@ class QuranApiRepositoryImp @Inject constructor(
 
     }
 
-    override suspend fun getAudioList(): Resource<List<QuranApiData>> = withContext(Dispatchers.IO) {
-        if (audioList.isNotEmpty()) return@withContext Resource.success(audioList)
+    override suspend fun getVerseByVerseReciters(): Resource<List<QuranApiData>> = withContext(Dispatchers.IO) {
+        if (verseByVerseReciters.isNotEmpty()) return@withContext Resource.success(verseByVerseReciters)
         return@withContext try {
-            val audioResponse = quranApi.getAudioList()
+            val recitersResponse = quranApi.getVerseByVerseReciters()
+            if (recitersResponse.isSuccessful){
+                recitersResponse.body()?.let {
+                    verseByVerseReciters.clear()
+                    verseByVerseReciters.addAll(it.data.filter { it.language == "ar" })
+                    Resource.success(verseByVerseReciters)
+                }?: Resource.error("An unexpected error occurred ${recitersResponse.message()}")
+            }else{
+                Resource.error("An unexpected error occurred ${recitersResponse.message()}")
+            }
+        }catch (e: Exception){
+            Resource.error(e.message)
+        }
+    }
+
+    override suspend fun getSurahBySurahReciters(): Resource<List<QuranApiData>> = withContext(Dispatchers.IO) {
+        if (surahBySurahReciters.isNotEmpty()) return@withContext Resource.success(surahBySurahReciters)
+        return@withContext try {
+            val audioResponse = cdnApi.getSurahBySurahReciters()
             if (audioResponse.isSuccessful){
                 audioResponse.body()?.let {
-                    audioList.clear()
-                    audioList.addAll(it.data.filter { it.language == "ar" })
-                    Resource.success(audioList)
+                    surahBySurahReciters.clear()
+                    surahBySurahReciters.addAll(it.filter { it.language == "ar" })
+                    Resource.success(surahBySurahReciters)
                 }?: Resource.error("An unexpected error occurred ${audioResponse.message()}")
             }else{
                 Resource.error("An unexpected error occurred ${audioResponse.message()}")
@@ -209,7 +226,7 @@ class QuranApiRepositoryImp @Inject constructor(
 
             val response = audioApi.downloadAudio(audioPath, bitrate, reciter, number)
             val responseBody = response.body()
-
+            println("response ${response.raw()}")
             if (!response.isSuccessful || responseBody == null) {
                 throw IOException("İndirme başarısız oldu, kod: ${response.code()}")
             }
@@ -218,13 +235,16 @@ class QuranApiRepositoryImp @Inject constructor(
             var downloadedSize = 0L
 
             emit(Resource.loading(0, 0, totalSize))
-
+            println("emit first loading")
             responseBody.byteStream().use { inputStream ->
+                println("inputstream")
                 outputFile.outputStream().use { outputStream ->
+                    println("outputstream")
                     val buffer = ByteArray(8192)
                     var bytesRead: Int
 
                     while (inputStream.read(buffer).also { bytesRead = it } != -1) {
+                        println("while loop")
                         outputStream.write(buffer, 0, bytesRead)
                         downloadedSize += bytesRead
                         val progress = (downloadedSize * 100f / totalSize).toInt()

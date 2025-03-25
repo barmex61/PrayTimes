@@ -65,7 +65,6 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.ParagraphStyle
@@ -126,6 +125,7 @@ fun QuranDetailScreen(surahNumber : Int,bottomPadding: Dp,topPadding : Dp, viewM
         quranDetailState.isError != null -> {
             ErrorView(quranDetailState.isError?: stringResource(R.string.quran_unknown_error)) {
                 coroutineScope.launch(Dispatchers.IO) {
+                    println("error")
                     viewModel.getSelectedSurah()
                 }
             }
@@ -333,7 +333,7 @@ fun AyahCard(ayah: Ayah, state: QuranDetailScreenState, quranSettingsState: Qura
         Box(modifier = Modifier
             .padding(8.dp)
             .size(32.dp), contentAlignment = Alignment.Center){
-            Icon(painter = painterResource(R.drawable.ayah), contentDescription = stringResource(R.string.quran_verse_icon),tint= Color.Unspecified)
+            Icon(imageVector = ImageVector.vectorResource(R.drawable.ayah), contentDescription = stringResource(R.string.quran_verse_icon),tint= Color.Unspecified)
             Text(text = ayah.numberInSurah.toString(), style = MaterialTheme.typography.bodyMedium,color = Color.Black)
         }
     }
@@ -977,7 +977,9 @@ private fun SelectionDialog(
                     SelectionItem(
                         text = name,
                         isSelected = name == selectedItem,
-                        onClick = { onItemSelected(name,index) }
+                        onClick = {
+                            println(name)
+                            onItemSelected(name,index) }
                     )
                 }
             }

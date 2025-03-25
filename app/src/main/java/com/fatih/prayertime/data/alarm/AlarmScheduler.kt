@@ -9,8 +9,7 @@ import com.fatih.prayertime.data.settings.SettingsDataStore
 import com.fatih.prayertime.domain.model.PrayerAlarm
 import com.fatih.prayertime.domain.model.PrayTimes
 import com.fatih.prayertime.domain.use_case.formatted_use_cases.FormattedUseCase
-import com.fatih.prayertime.util.extensions.toPrayTimeList
-import com.fatih.prayertime.util.extensions.toPrayTypeList
+import com.fatih.prayertime.util.extensions.toPrayTimePair
 import com.fatih.prayertime.util.model.enums.AlarmType
 import com.fatih.prayertime.util.model.enums.PrayTimesString
 import kotlinx.coroutines.flow.first
@@ -87,18 +86,16 @@ class AlarmScheduler @Inject constructor(
     fun updatePrayAlarm(alarm: PrayerAlarm){
         if(alarm.isEnabled){
             if(alarm.alarmTime > System.currentTimeMillis()){
+                schedulePrayAlarm(alarm)
             }
-            schedulePrayAlarm(alarm)
-
         }else{
             cancel(alarm)
         }
     }
 
     fun updateStatisticsAlarmForPrayTime(prayTimes: PrayTimes){
-        val prayTimeList = prayTimes.toPrayTimeList(30)
-        val prayTypeList = prayTimes.toPrayTypeList()
-        prayTimeList.zip(prayTypeList).forEach { (prayTime,prayType) ->
+        val prayTimePair = prayTimes.toPrayTimePair(30)
+        prayTimePair.forEach { (prayType,prayTime) ->
             scheduleStatisticsAlarm(prayTime,prayTimes.date,prayType)
         }
     }

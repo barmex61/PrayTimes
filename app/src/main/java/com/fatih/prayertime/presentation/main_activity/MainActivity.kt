@@ -33,7 +33,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
@@ -52,7 +51,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
@@ -60,6 +58,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
@@ -81,9 +80,7 @@ import com.fatih.prayertime.presentation.hadith_screens.HadithEditionsScreen
 import com.fatih.prayertime.presentation.hadith_screens.HadithSectionDetailScreen
 import com.fatih.prayertime.presentation.hadith_screens.HadithViewModel
 import com.fatih.prayertime.presentation.quran_screen.QuranDetailScreen
-import com.fatih.prayertime.presentation.quran_screen.QuranJuzDetailScreen
 import com.fatih.prayertime.presentation.quran_screen.QuranScreen
-import com.fatih.prayertime.presentation.quran_screen.QuranViewModel
 import com.fatih.prayertime.presentation.settings_screen.SettingsScreen
 import com.fatih.prayertime.presentation.statistics_screen.StatisticsScreen
 import com.fatih.prayertime.presentation.ui.theme.PrayerTimeTheme
@@ -113,8 +110,8 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
-            val appViewModel: AppViewModel = hiltViewModel()
-            val settings by appViewModel.settingsState.collectAsState()
+            val mainActivityViewModel : MainActivityViewModel = hiltViewModel()
+            val settings by mainActivityViewModel.settingsState.collectAsState()
             val darkTheme = when(settings.selectedTheme){
                 ThemeOption.DARK -> true
                 ThemeOption.LIGHT -> false
@@ -122,7 +119,7 @@ class MainActivity : ComponentActivity() {
             }
             UpdateSystemBars(darkTheme)
             PrayerTimeTheme(darkTheme = darkTheme) {
-                MainScreenContent(::showBatteryOptimizationDialog)
+                MainScreenContent(::showBatteryOptimizationDialog,mainActivityViewModel)
             }
             ScheduleAlarm(scheduleDailyAlarmUpdateUseCase)
         }
@@ -141,45 +138,48 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun MainScreenContent(showBatteryOptimizationDialog: () -> Unit) {
-    val appViewModel: AppViewModel = hiltViewModel()
+fun MainScreenContent(showBatteryOptimizationDialog: () -> Unit,mainActivityViewModel: MainActivityViewModel) {
     val navController = rememberNavController()
     val context = LocalContext.current
 
-    // Local UI state
-    var isCalculating by remember { mutableStateOf(true) }
 
-    val powerSavingState by appViewModel.powerSavingState.collectAsState()
-    val isLocationPermissionGranted by appViewModel.isLocationPermissionGranted.collectAsState()
+    val powerSavingState by mainActivityViewModel.permissionAndPreferences.powerSavingState.collectAsStateWithLifecycle()
+    val isLocationPermissionGranted by mainActivityViewModel.permissionAndPreferences.isLocationPermissionGranted.collectAsStateWithLifecycle()
+    val isNotificationPermissionGranted by mainActivityViewModel.permissionAndPreferences.isNotificationPermissionGranted.collectAsStateWithLifecycle()
 
-    // Permission request launcher
     val permissionLauncher =
         rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
-            appViewModel.onLocationPermissionResult(permissions, context as ComponentActivity)
-            isCalculating = false
+            mainActivityViewModel.permissionAndPreferences.onPermissionResult(permissions)
         }
 
     val resultLauncher =
         rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {
-            appViewModel.checkLocationPermission()
-            appViewModel.checkPowerSavingMode()
+            mainActivityViewModel.permissionAndPreferences.checkLocationPermission()
+            mainActivityViewModel.permissionAndPreferences.checkPowerSavingMode()
+            mainActivityViewModel.permissionAndPreferences.checkNotificationPermission()
         }
 
-    // Request permissions on initial launch
     LaunchedEffect(key1 = Unit) {
-        appViewModel.checkLocationPermission()
-        appViewModel.checkPowerSavingMode()
-        if (!isLocationPermissionGranted) {
-            permissionLauncher.launch(appViewModel.locationPermissions)
-            isCalculating = true
+        mainActivityViewModel.permissionAndPreferences.checkLocationPermission()
+        mainActivityViewModel.permissionAndPreferences.checkPowerSavingMode()
+        mainActivityViewModel.permissionAndPreferences.checkNotificationPermission()
+        if (!isLocationPermissionGranted || !isNotificationPermissionGranted) {
+            val permissionArray = if (mainActivityViewModel.permissionAndPreferences.notificationPermission == null){
+                mainActivityViewModel.permissionAndPreferences.locationPermissions
+            }else{
+                mainActivityViewModel.permissionAndPreferences.locationPermissions.plus(mainActivityViewModel.permissionAndPreferences.notificationPermission)
+            }
+            permissionLauncher.launch(permissionArray)
         }
+
     }
 
-    // Scaffold Layout
     Scaffold(
         snackbarHost = {
-            if (!isLocationPermissionGranted && !isCalculating) {
+            if (!isLocationPermissionGranted || !isNotificationPermissionGranted) {
                 Snackbar(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
                     action = {
                         Button(onClick = {
                             val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
@@ -207,7 +207,7 @@ fun MainScreenContent(showBatteryOptimizationDialog: () -> Unit) {
                 showBatteryOptimizationDialog()
             }
 
-            NavHostLayout(navController, innerPadding,appViewModel)
+            NavHostLayout(navController, innerPadding)
         }
     }
 }
@@ -262,7 +262,7 @@ fun BottomAppBarLayout(navController: NavController) {
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
-fun NavHostLayout(navController: NavHostController, innerPadding: PaddingValues,appViewModel: AppViewModel) {
+fun NavHostLayout(navController: NavHostController, innerPadding: PaddingValues) {
     val modifier = Modifier.padding(
         15.dp,
         innerPadding.calculateTopPadding(),
@@ -293,7 +293,7 @@ fun NavHostLayout(navController: NavHostController, innerPadding: PaddingValues,
             ) { backStackEntry ->
 
                 when (item.title.name) {
-                    PrayTimesString.Home.name -> MainScreen(appViewModel, modifier)
+                    PrayTimesString.Home.name -> MainScreen(modifier)
                     PrayTimesString.Qibla.name -> CompassScreen(modifier)
                     PrayTimesString.Utilities.name -> UtilitiesScreen(modifier, navController)
                     PrayTimesString.Settings.name -> SettingsScreen(modifier)

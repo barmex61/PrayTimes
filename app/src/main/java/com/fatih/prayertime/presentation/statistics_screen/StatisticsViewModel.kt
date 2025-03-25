@@ -23,37 +23,9 @@ import kotlin.text.toFloat
 @HiltViewModel
 class StatisticsViewModel @Inject constructor(
     getStatisticsUseCase: GetStatisticsUseCase,
-    getPrayerCountsUseCase: GetPrayerCountsUseCase,
     private val formattedUseCase: FormattedUseCase,
-    private val insertPlayerStatisticsUseCase: InsertPlayerStatisticsUseCase
 ) : ViewModel() {
 
-    init {
-        insertDummyData()
-    }
-
-    private fun insertDummyData() {
-        viewModelScope.launch {
-            val dummyData = mutableListOf<PrayerStatisticsEntity>()
-            val prayerNames = listOf("Fajr", "Dhuhr", "Asr", "Maghrib", "Isha")
-
-            for (day in 1..31) {
-                val date = String.format("%02d-03-2025", day)
-                prayerNames.forEachIndexed { index, prayerName ->
-                    dummyData.add(
-                        PrayerStatisticsEntity(
-                            id = day * 5 + index,
-                            prayerType = prayerName,
-                            date = date,
-                            isCompleted = listOf(true,false).random(),// Alternate between true and false, ,
-                            dateLong = formattedUseCase.formatDDMMYYYYtoLong(date)
-                        )
-                    )
-                }
-            }
-            dummyData.forEach { insertPlayerStatisticsUseCase(it) }
-        }
-    }
 
     private val _dateRange = MutableStateFlow(LocalDate.now().minusWeeks(1)..LocalDate.now())
     val dateRange = _dateRange
@@ -65,7 +37,6 @@ class StatisticsViewModel @Inject constructor(
     @OptIn(ExperimentalCoroutinesApi::class)
     val statisticsState: StateFlow<StatisticsState> = dateRange.flatMapLatest {
 
-        // Log the input date range
         getStatisticsUseCase(
             formattedUseCase.formatLocalDateToLong(it.start),
             formattedUseCase.formatLocalDateToLong(it.endInclusive)

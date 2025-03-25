@@ -80,19 +80,10 @@ fun QuranScreen(
                 ErrorView(state.error?:"Error Occurred") {
                     viewModel.loadJuzList()
                     viewModel.loadSurahList()
-                    viewModel.loadTranslationList()
-                    viewModel.loadAudioList()
+
                 }
             }
         }
-
-        QuranFab(
-            modifier = modifier,
-            onReciterSelected = viewModel::onReciterSelected,
-            onTranslationSelected = viewModel::onTranslationSelected,
-            onTransliterationSelected = viewModel::onTransliterationSelected,
-            state = state
-        )
     }
 
     TitleView("Kuran-ı Kerim")
@@ -218,7 +209,7 @@ fun JuzCard(
         ),
         shape = RoundedCornerShape(24.dp),
         elevation = CardDefaults.cardElevation(4.dp),
-        onClick = onClick
+        onClick = {}
     ) {
         Row(
             modifier = Modifier
@@ -312,184 +303,6 @@ private fun QuranTabRow(
                     )
                 }
             )
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun BoxScope.QuranFab(
-    modifier: Modifier,
-    onReciterSelected: (String) -> Unit,
-    onTranslationSelected: (String) -> Unit,
-    onTransliterationSelected: (String) -> Unit,
-    state : QuranScreenState
-) {
-    var showBottomSheet by remember { mutableStateOf(false) }
-    var expandedReciter by remember { mutableStateOf(false) }
-    var expandedTranslation by remember { mutableStateOf(false) }
-    var expandedPronunciation by remember { mutableStateOf(false) }
-    val translationList = remember(state) { state.translationList }
-    val reciterList = remember(state) { state.reciterList}
-    val pronunciationList = remember(state) { state.transliterationList}
-    val selectedTranslation = remember(state) { state.selectedTranslation }
-    val selectedPronunciation = remember(state) { state.selectedTransliteration}
-    val selectedReciter = remember(state) { state.selectedReciter}
-
-    val rotation by animateFloatAsState(
-        targetValue = if (showBottomSheet) 45f else 0f,
-        animationSpec = tween(300),
-        label = "rotation"
-    )
-    
-    val scale by animateFloatAsState(
-        targetValue = if (showBottomSheet) 1.1f else 1f,
-        animationSpec = tween(300),
-        label = "scale"
-    )
-    
-    Box(modifier = modifier.align(Alignment.BottomEnd)) {
-        FloatingActionButton(
-            onClick = { showBottomSheet = true },
-            containerColor = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 1f),
-            contentColor = MaterialTheme.colorScheme.primaryContainer,
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(16.dp)
-                .graphicsLayer {
-                    rotationZ = rotation
-                    scaleX = scale
-                    scaleY = scale
-                }
-        ) {
-            Icon(
-                imageVector = Icons.Default.Menu,
-                contentDescription = "Seçenekler"
-            )
-        }
-    }
-
-    if (showBottomSheet) {
-        ModalBottomSheet(
-            onDismissRequest = { showBottomSheet = false },
-            sheetState = rememberModalBottomSheetState(),
-            containerColor = MaterialTheme.colorScheme.secondaryContainer,
-            dragHandle = { BottomSheetDefaults.DragHandle() },
-            tonalElevation = 10.dp,
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp, vertical = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                Text(
-                    text = "Ayarlar",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
-                )
-
-                ExposedDropdownMenuBox(
-                    modifier = Modifier.clickable{
-                    },
-                    expanded = expandedReciter,
-                    onExpandedChange = {
-                        expandedReciter = it }
-                ) {
-                    OutlinedTextField(
-                        value = selectedReciter,
-                        onValueChange = {},
-                        readOnly = true,
-                        label = { Text(stringResource(R.string.reciter)) },
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedReciter) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .menuAnchor()
-                    )
-                    ExposedDropdownMenu(
-                        expanded = expandedReciter,
-                        onDismissRequest = { expandedReciter = false }
-                    ) {
-                        reciterList.forEach { reciter ->
-                            DropdownMenuItem(
-                                text = { Text(reciter.toText()) },
-                                onClick = {
-                                    onReciterSelected(reciter.toText())
-                                    expandedReciter = false
-                                }
-                            )
-                        }
-                    }
-                }
-                    ExposedDropdownMenuBox(
-                        expanded = expandedTranslation,
-                        onExpandedChange = { expandedTranslation = it }
-                    ) {
-
-                        OutlinedTextField(
-                            value = selectedTranslation,
-                            onValueChange = {},
-                            readOnly = true,
-                            label = { Text("Meal Dili") },
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedTranslation) },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .menuAnchor()
-                        )
-                        ExposedDropdownMenu(
-                            expanded = expandedTranslation,
-                            onDismissRequest = { expandedTranslation = false }
-                        ) {
-                            translationList.forEach { translation ->
-                                DropdownMenuItem(
-                                    text = { Text(translation.toText()) },
-                                    onClick = {
-                                        onTranslationSelected(translation.toText())
-                                        expandedTranslation = false
-                                    }
-                                )
-                            }
-                        }
-
-                    }
-
-
-
-                // Okunuş Seçimi
-                ExposedDropdownMenuBox(
-                    expanded = expandedPronunciation,
-                    onExpandedChange = { expandedPronunciation = it }
-                ) {
-                    OutlinedTextField(
-                        value = selectedPronunciation,
-                        onValueChange = {
-
-                        },
-                        readOnly = true,
-                        label = { Text(stringResource(R.string.pronunciation_language)) },
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedPronunciation) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .menuAnchor()
-                    )
-                    ExposedDropdownMenu(
-                        expanded = expandedPronunciation,
-                        onDismissRequest = { expandedPronunciation = false }
-                    ) {
-
-                        pronunciationList.keys.forEach { transliteration ->
-                            DropdownMenuItem(
-                                text = { Text(transliteration) },
-                                onClick = {
-                                    onTransliterationSelected(transliteration)
-                                    expandedPronunciation = false
-                                }
-                            )
-                        }
-                    }
-                }
-                Spacer(modifier = Modifier.height(50.dp))
-            }
         }
     }
 }

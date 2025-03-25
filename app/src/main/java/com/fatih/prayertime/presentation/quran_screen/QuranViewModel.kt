@@ -2,7 +2,7 @@ package com.fatih.prayertime.presentation.quran_screen
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.fatih.prayertime.domain.use_case.quran_use_cases.GetAudioListUseCase
+import com.fatih.prayertime.domain.use_case.quran_use_cases.GetRecitersUseCase
 import com.fatih.prayertime.domain.use_case.quran_use_cases.GetJuzListUseCase
 import com.fatih.prayertime.domain.use_case.quran_use_cases.GetSurahListUseCase
 import com.fatih.prayertime.domain.use_case.quran_use_cases.GetTranslationListUseCase
@@ -22,7 +22,7 @@ class QuranViewModel @Inject constructor(
     private val getSurahListUseCase: GetSurahListUseCase,
     private val getJuzListUseCase: GetJuzListUseCase,
     private val getTranslationListUseCase: GetTranslationListUseCase,
-    private val getAudioListUseCase: GetAudioListUseCase,
+    private val getRecitersUseCase: GetRecitersUseCase,
 ) : ViewModel() {
 
     private val _quranScreenState = MutableStateFlow(QuranScreenState())
@@ -31,68 +31,9 @@ class QuranViewModel @Inject constructor(
     init {
         loadSurahList()
         loadJuzList()
-        loadTranslationList()
-        loadAudioList()
     }
 
 
-    fun loadAudioList() = viewModelScope.launch(Dispatchers.IO) {
-        val audioResponse = getAudioListUseCase()
-        _quranScreenState.value = _quranScreenState.value.copy(isLoading = true)
-        when (audioResponse.status) {
-            Status.SUCCESS -> {
-                _quranScreenState.value = _quranScreenState.value.copy(
-                    reciterList = audioResponse.data!!,
-                    selectedReciter = audioResponse.data[0].toText(),
-                    error = null,
-                    isLoading = false
-                )
-            }
-
-            Status.ERROR -> {
-                _quranScreenState.value = _quranScreenState.value.copy(
-                    error = audioResponse.message!!,
-                    isLoading = false
-                )
-            }
-
-            else -> {
-                _quranScreenState.value = _quranScreenState.value.copy(
-                    error = null,
-                    isLoading = true
-                )
-            }
-        }
-    }
-
-    fun loadTranslationList() = viewModelScope.launch(Dispatchers.IO) {
-        val translationResponse = getTranslationListUseCase()
-        _quranScreenState.value = _quranScreenState.value.copy(isLoading = true)
-        when (translationResponse.status) {
-            Status.SUCCESS -> {
-                _quranScreenState.value = _quranScreenState.value.copy(
-                    translationList = translationResponse.data!!,
-                    selectedTranslation = translationResponse.data[0].toText(),
-                    error = null,
-                    isLoading = false
-                )
-            }
-
-            Status.ERROR -> {
-                _quranScreenState.value = _quranScreenState.value.copy(
-                    error = translationResponse.message!!,
-                    isLoading = false
-                )
-            }
-
-            else -> {
-                _quranScreenState.value = _quranScreenState.value.copy(
-                    error = null,
-                    isLoading = true
-                )
-            }
-        }
-    }
 
     fun loadSurahList() = viewModelScope.launch(Dispatchers.IO) {
         val surahResponse = getSurahListUseCase()
@@ -153,18 +94,5 @@ class QuranViewModel @Inject constructor(
     fun onTabSelected(index: Int) {
         _quranScreenState.value = _quranScreenState.value.copy(selectedTabIndex = index)
     }
-
-    fun onReciterSelected(reciter: String) {
-        _quranScreenState.value = _quranScreenState.value.copy(selectedReciter = reciter)
-    }
-
-    fun onTranslationSelected(translation: String) {
-        _quranScreenState.value = _quranScreenState.value.copy(selectedTranslation = translation)
-    }
-
-    fun onTransliterationSelected(transliteration: String) {
-        _quranScreenState.value = _quranScreenState.value.copy(selectedTransliteration = transliteration)
-    }
-
 }
 
