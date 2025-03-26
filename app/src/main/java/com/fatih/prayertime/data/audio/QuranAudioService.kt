@@ -1,6 +1,5 @@
 package com.fatih.prayertime.data.audio
 
-import android.annotation.SuppressLint
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -10,14 +9,14 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.database.ContentObserver
 import android.media.AudioAttributes
+import android.media.AudioManager
 import android.media.MediaPlayer
 import android.os.Binder
 import android.os.Build
 import android.os.IBinder
-import androidx.compose.ui.graphics.Paint
 import androidx.core.app.NotificationCompat
-import androidx.core.content.ContextCompat
 import com.fatih.prayertime.R
 import com.fatih.prayertime.domain.use_case.quran_use_cases.GetAudioFileUseCase
 import com.fatih.prayertime.presentation.main_activity.MainActivity
@@ -38,14 +37,11 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.emptyFlow
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
@@ -55,9 +51,7 @@ import java.io.File
 import java.io.IOException
 import java.net.SocketTimeoutException
 import javax.inject.Inject
-import kotlin.compareTo
 import kotlin.coroutines.cancellation.CancellationException
-import kotlin.times
 
 @AndroidEntryPoint
 class QuranAudioService() : Service() {
@@ -72,6 +66,10 @@ class QuranAudioService() : Service() {
 
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val downloadRequests = MutableSharedFlow<DownloadRequest?>()
+
+    private lateinit var audioManager : AudioManager
+    var maxVolume = 1
+    var currentVolume = 1
 
     @Inject
     lateinit var getAudioFileUseCase: GetAudioFileUseCase
@@ -96,13 +94,17 @@ class QuranAudioService() : Service() {
         fun getService(): QuranAudioService = this@QuranAudioService
     }
 
+    private var volumeContentObserver: ContentObserver? = null
+
     override fun onCreate() {
         super.onCreate()
         setupDownloadFlow()
         setupAudioStateObserver()
         createNotificationChannel()
+        setContentObserver()
         startForeground(NOTIFICATION_ID,createNotification())
-
+        val filter = IntentFilter("android.media.VOLUME_CHANGED_ACTION")
+        registerReceiver(audioVolumeReceiver, filter)
         val intentFilter = IntentFilter().apply {
             addAction(ACTION_PLAY)
             addAction(ACTION_PAUSE)
@@ -112,11 +114,30 @@ class QuranAudioService() : Service() {
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            registerReceiver(broadcastReceiver,intentFilter,RECEIVER_EXPORTED)
+            registerReceiver(notificationEventReceiver,intentFilter,RECEIVER_EXPORTED)
         } else {
-            registerReceiver(broadcastReceiver,intentFilter)
+            registerReceiver(notificationEventReceiver,intentFilter)
         }
 
+    }
+
+    private fun setContentObserver(){
+        audioManager = getSystemService(AUDIO_SERVICE) as AudioManager
+        maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+        currentVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
+        volumeContentObserver = object : ContentObserver(null) {
+            override fun onChange(selfChange: Boolean) {
+                currentVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
+                val newVolume = currentVolume.toFloat() / maxVolume.toFloat()
+                mediaPlayer?.setVolume(newVolume, newVolume)
+            }
+        }
+
+        contentResolver.registerContentObserver(
+            android.provider.Settings.System.CONTENT_URI,
+            true,
+            volumeContentObserver!!
+        )
     }
 
     @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
@@ -263,7 +284,7 @@ class QuranAudioService() : Service() {
         }
     }
 
-    private val broadcastReceiver = object : BroadcastReceiver() {
+    private val notificationEventReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             when (intent?.action) {
                 ACTION_PLAY -> {
@@ -286,6 +307,21 @@ class QuranAudioService() : Service() {
                 ACTION_STOP -> {
                     stopAudio()
                 }
+            }
+        }
+    }
+
+    private val audioVolumeReceiver = object : BroadcastReceiver() {
+        override fun onReceive(p0: Context?, intent: Intent?) {
+            if (intent?.action == "android.media.VOLUME_CHANGED_ACTION") {
+                try {
+                    currentVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
+                    val newVolume = (currentVolume.toFloat() / maxVolume.toFloat()).coerceAtMost(1f)
+                    mediaPlayer?.setVolume(newVolume, newVolume)
+                }catch (e: Exception){
+                    println(e)
+                }
+
             }
         }
     }
@@ -420,19 +456,24 @@ class QuranAudioService() : Service() {
     }
 
     fun cancelAudioDownload() {
-        stopAudio()
-        serviceScope.launch {
-            downloadRequests.emit(null)
+        try {
+            stopAudio()
+            serviceScope.launch {
+                downloadRequests.emit(null)
+            }
+            audioStateManager.updateState {
+                copy(
+                    isLoading = false,
+                    downloadProgress = 0,
+                    downloadedSize = 0,
+                    totalSize = 0,
+                    error = null
+                )
+            }
+        }catch (e: Exception){
+            println(e)
         }
-        audioStateManager.updateState {
-            copy(
-                isLoading = false,
-                downloadProgress = 0,
-                downloadedSize = 0,
-                totalSize = 0,
-                error = null
-            )
-        }
+
     }
 
     private var progressJob: Job? = null
@@ -616,7 +657,11 @@ class QuranAudioService() : Service() {
         serviceScope.cancel()
         progressJob?.cancel()
         progressJob = null
-        unregisterReceiver(broadcastReceiver)
+        volumeContentObserver?.let {
+            contentResolver.unregisterContentObserver(it)
+            volumeContentObserver = null
+        }
+        unregisterReceiver(notificationEventReceiver)
     }
 
     override fun onTaskRemoved(rootIntent: Intent?) {
