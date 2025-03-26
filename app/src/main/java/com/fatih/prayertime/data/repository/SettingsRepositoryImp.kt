@@ -1,6 +1,8 @@
 package com.fatih.prayertime.data.repository
 
+import com.exyte.animatednavbar.animation.indendshape.shapeCornerRadius
 import com.fatih.prayertime.data.settings.SettingsDataStore
+import com.fatih.prayertime.data.settings.SharedPreferencesManager
 import com.fatih.prayertime.domain.model.Settings
 import com.fatih.prayertime.domain.model.QuranMediaSettings
 import com.fatih.prayertime.domain.repository.SettingsRepository
@@ -8,7 +10,7 @@ import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
 class SettingsRepositoryImp @Inject constructor(
-    private val settingsDataStore: SettingsDataStore
+    private val settingsDataStore: SettingsDataStore,
 ) : SettingsRepository {
 
     override suspend fun saveSettings(settings: Settings) {
@@ -26,4 +28,5 @@ class SettingsRepositoryImp @Inject constructor(
     override fun getAudioSettings(): Flow<QuranMediaSettings> {
         return settingsDataStore.quranMediaSettings
     }
+
 }

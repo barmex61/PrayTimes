@@ -9,4 +9,5 @@ interface SettingsRepository {
     fun getSettings() : Flow<Settings>
     suspend fun saveAudioSettings(quranMediaSettings: QuranMediaSettings)
     fun getAudioSettings(): Flow<QuranMediaSettings>
+
 }

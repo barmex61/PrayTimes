@@ -14,8 +14,9 @@ import kotlinx.coroutines.flow.map
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import javax.inject.Inject
+import javax.inject.Singleton
 
-
+@Singleton
 class SettingsDataStore @Inject constructor(
     private val context: Context,
 ) {
@@ -38,6 +39,7 @@ class SettingsDataStore @Inject constructor(
                 QuranMediaSettings()
             }
         }
+
 
     suspend fun updateSettings(settings: Settings) {
         val jsonString = Json.encodeToString(settings)

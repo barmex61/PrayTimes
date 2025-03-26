@@ -74,7 +74,10 @@ import java.util.Locale
 import javax.inject.Qualifier
 import javax.inject.Singleton
 import com.fatih.prayertime.data.remote.WeatherApi
+import com.fatih.prayertime.data.repository.SharedPrefRepositoryImp
 import com.fatih.prayertime.data.repository.WeatherRepositoryImpl
+import com.fatih.prayertime.data.settings.SharedPreferencesManager
+import com.fatih.prayertime.domain.repository.SharedPrefRepository
 import com.fatih.prayertime.domain.repository.WeatherRepository
 
 @InstallIn(SingletonComponent::class)
@@ -149,8 +152,14 @@ object Module {
     @Provides
     @Singleton
     fun provideSettingsRepository(
-        settingsDataStore: SettingsDataStore
+        settingsDataStore: SettingsDataStore,
     ): SettingsRepository = SettingsRepositoryImp(settingsDataStore)
+
+    @Provides
+    @Singleton
+    fun provideSharedPrefImp(
+        sharedPreferencesManager: SharedPreferencesManager
+    ) : SharedPrefRepository = SharedPrefRepositoryImp(sharedPreferencesManager)
 
     @MainScreenLocation
     @Provides

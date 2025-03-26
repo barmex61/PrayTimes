@@ -19,6 +19,8 @@ import com.fatih.prayertime.domain.use_case.alarm_use_cases.UpdateGlobalAlarmUse
 import com.fatih.prayertime.domain.use_case.alarm_use_cases.UpdateStatisticsAlarmUseCase
 import com.fatih.prayertime.domain.use_case.dua_use_case.GetDuaUseCase
 import com.fatih.prayertime.domain.use_case.location_use_cases.RemoveLocationCallbackUseCase
+import com.fatih.prayertime.domain.use_case.settings_use_cases.GetStatisticSharedPrefUseCase
+import com.fatih.prayertime.domain.use_case.settings_use_cases.InsertStatisticSharedPrefUseCase
 import com.fatih.prayertime.domain.use_case.weather_use_cases.GetWeatherUseCase
 import com.fatih.prayertime.util.model.event.MainScreenEvent
 import com.fatih.prayertime.util.model.state.NetworkState
@@ -40,6 +42,8 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.threeten.bp.LocalDate
@@ -58,8 +62,11 @@ class MainScreenViewModel @Inject constructor(
     private val removeLocationCallbackUseCase: RemoveLocationCallbackUseCase,
     private val updateGlobalAlarmUseCase: UpdateGlobalAlarmUseCase,
     private val updateStatisticsAlarmUseCase: UpdateStatisticsAlarmUseCase,
+    private val getStatisticSharedPrefUseCase: GetStatisticSharedPrefUseCase,
+    private val insertStatisticSharedPrefUseCase: InsertStatisticSharedPrefUseCase,
     private val getWeatherUseCase: GetWeatherUseCase,
     val permissionsAndPreferences: PermissionAndPreferences,
+
     getDuaUseCase: GetDuaUseCase
 ) : ViewModel() {
 
@@ -333,6 +340,26 @@ class MainScreenViewModel @Inject constructor(
                         is MainScreenEvent.HideDuaDialog -> hideDuaDialog()
                     }
                 }
+            }
+            launch {
+                _prayerState
+                    .map { it.prayTimes }
+                    .filterNotNull()
+                    .take(1)
+                    .collect { prayTimes ->
+                        val isStatisticsAlarmInitialized = getStatisticSharedPrefUseCase()
+                        if (!isStatisticsAlarmInitialized) {
+                            try {
+                                updateStatisticsAlarmUseCase.updateStatisticsAlarms(prayTimes)
+                                insertStatisticSharedPrefUseCase()
+                                println("yesinit")
+                            } catch (e: Exception) {
+                                println("Statistics alarm kurulumunda hata: ${e.message}")
+                            }
+                        } else {
+                            println("Statistics alarm zaten kurulmuş")
+                        }
+                    }
             }
         }
     }
