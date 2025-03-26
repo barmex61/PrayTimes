@@ -8,7 +8,6 @@ import com.fatih.prayertime.data.settings.PermissionAndPreferences
 import com.fatih.prayertime.domain.model.PrayerAlarm
 import com.fatih.prayertime.domain.model.Address
 import com.fatih.prayertime.domain.model.PrayTimes
-import com.fatih.prayertime.domain.model.Weather
 import com.fatih.prayertime.domain.use_case.formatted_use_cases.FormattedUseCase
 import com.fatih.prayertime.domain.use_case.alarm_use_cases.GetAllGlobalAlarmsUseCase
 import com.fatih.prayertime.domain.use_case.pray_times_use_cases.GetMonthlyPrayTimesFromApiUseCase
@@ -25,19 +24,21 @@ import com.fatih.prayertime.util.model.event.MainScreenEvent
 import com.fatih.prayertime.util.model.state.Resource
 import com.fatih.prayertime.util.model.state.SelectedDuaState
 import com.fatih.prayertime.util.model.state.Status
+import com.fatih.prayertime.util.model.state.WeatherState
 import com.fatih.prayertime.util.utils.AlarmUtils.getPrayTimeForPrayType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.threeten.bp.LocalDate
 import org.threeten.bp.LocalDateTime
-import org.threeten.bp.Year
-import org.threeten.bp.YearMonth
 import javax.inject.Inject
 
 @HiltViewModel
@@ -48,7 +49,7 @@ class MainScreenViewModel @Inject constructor(
     private val getDailyPrayTimesWithAddressAndDateUseCase: GetDailyPrayTimesWithAddressAndDateUseCase,
     private val insertPrayTimeIntoDbUseCase : InsertPrayTimeIntoDbUseCase,
     private val getLastKnownAddressFromDatabaseUseCase: GetLastKnowAddressFromDatabaseUseCase,
-    private val getAllGlobalAlarmsUseCase: GetAllGlobalAlarmsUseCase,
+     getAllGlobalAlarmsUseCase: GetAllGlobalAlarmsUseCase,
     private val removeLocationCallbackUseCase: RemoveLocationCallbackUseCase,
     private val updateGlobalAlarmUseCase: UpdateGlobalAlarmUseCase,
     private val updateStatisticsAlarmUseCase: UpdateStatisticsAlarmUseCase,
@@ -63,106 +64,115 @@ class MainScreenViewModel @Inject constructor(
 
     val isNotificationPermissionGranted = permissionsAndPreferences.isNotificationPermissionGranted
 
-    // State
-    private val _state = MutableStateFlow(MainScreenState())
-    val state = _state.asStateFlow()
-
-    //Pray - Times
-
-    private val _dailyPrayTimes : MutableStateFlow<Resource<PrayTimes>> = MutableStateFlow(Resource.loading())
-    val dailyPrayTimes = _dailyPrayTimes.asStateFlow()
-
-    private val _searchAddress : MutableStateFlow<Address?> = MutableStateFlow(null)
-
     private val _isLocationTracking : MutableStateFlow<Boolean> = MutableStateFlow(false)
     val isLocationTracking : StateFlow<Boolean> = _isLocationTracking
 
-    private fun updateSearchAddress(address: Address){
-        _searchAddress.value = address
-        _state.value = _state.value.copy(city = address.city ?: "")
-        fetchWeatherByCoordinates(address.latitude, address.longitude)
-    }
+    private val retryTrigger = MutableSharedFlow<Unit>()
 
-    private fun fetchWeather(location: String) {
-        viewModelScope.launch {
-            _state.value = _state.value.copy(isWeatherLoading = true)
-            getWeatherUseCase(location).collect { result ->
-                when(result.status) {
-                    Status.SUCCESS -> {
-                        _state.value = _state.value.copy(
-                            weather = result.data,
-                            isWeatherLoading = false,
-                            weatherError = null
-                        )
-                    }
-                    Status.ERROR -> {
-                        _state.value = _state.value.copy(
-                            isWeatherLoading = false,
-                            weatherError = result.message
-                        )
-                    }
-                    Status.LOADING -> {
-                        _state.value = _state.value.copy(
-                            isWeatherLoading = true
-                        )
-                    }
-                }
+    //Pray - Times
+
+    private val searchAddressState : MutableStateFlow<Address?> = MutableStateFlow(null)
+
+    // State
+
+    private val _weatherState = MutableStateFlow<WeatherState>(WeatherState())
+    val weatherState = _weatherState.asStateFlow()
+
+    private val _prayerState = MutableStateFlow<PrayerState>(PrayerState())
+    val prayerState = _prayerState.asStateFlow()
+
+    init {
+
+        updateFormattedDate()
+        updateFormattedTime()
+
+        viewModelScope.launch(Dispatchers.IO) {
+
+            launch {
+                searchAddressState.emit(getLastKnownAddressFromDatabaseUseCase())
             }
-        }
-    }
-    
-    private fun fetchWeatherByCoordinates(latitude: Double, longitude: Double) {
-        viewModelScope.launch {
-            _state.value = _state.value.copy(isWeatherLoading = true)
-            getWeatherUseCase.getByCoordinates(latitude, longitude).collect { result ->
-                when(result.status) {
-                    Status.SUCCESS -> {
-                        _state.value = _state.value.copy(
-                            weather = result.data,
-                            isWeatherLoading = false,
-                            weatherError = null
-                        )
-                    }
-                    Status.ERROR -> {
-                        _state.value = _state.value.copy(
-                            isWeatherLoading = false,
-                            weatherError = result.message
-                        )
-                    }
-                    Status.LOADING -> {
-                        _state.value = _state.value.copy(
-                            isWeatherLoading = true
-                        )
-                    }
+            launch {
+                searchAddressState.collectLatest { address->
+                    val searchAddress = address?:getLastKnownAddressFromDatabaseUseCase()?:return@collectLatest
+                    fetchPrayTimes(searchAddress)
+                    fetchWeatherByCoordinates(searchAddress.latitude, searchAddress.longitude)
                 }
             }
         }
     }
 
-    fun trackLocationAndUpdatePrayTimes() = viewModelScope.launch(Dispatchers.IO) {
+    fun trackLocation() = viewModelScope.launch(Dispatchers.IO) {
         _isLocationTracking.value = true
-        Log.d(TAG,"trackLocationAndUpdatePrayTimes")
         getLocationAndAddressUseCase().collect { resource ->
             when(resource.status){
                 Status.SUCCESS -> {
-                    Log.d(TAG,"resource ${resource.data}")
-                    getMonthlyPrayTimesFromAPI(Year.now().value, YearMonth.now().monthValue,resource.data!!)
+                    updateSearchAddress(resource.data!!)
                 }
                 else -> Unit
             }
         }
     }
 
-    fun getMonthlyPrayTimesFromAPI(year: Int,month : Int , address: Address?) = viewModelScope.launch(Dispatchers.Default) {
-        val searchAddress = address?:getLastKnownAddressFromDatabaseUseCase()?: return@launch
-        val databaseResponse = getDailyPrayTimesWithAddressAndDateUseCase(searchAddress,formattedDate.value)
-        if (databaseResponse!= null) return@launch
-        val apiResponse = getMonthlyPrayTimesFromApiUseCase(year ,month,searchAddress)
-        if (apiResponse.status == Status.SUCCESS){
+    private fun updateSearchAddress(address: Address){
+        searchAddressState.value = address
+    }
+
+    private suspend fun fetchPrayTimes(address: Address){
+        val prayTimesDb = fetchPrayTimesByDatabase(address)
+        if (prayTimesDb != null){
+            _prayerState.value = _prayerState.value.copy(prayTimes = prayTimesDb)
+            return
+        }
+        val prayTimesApi = fetchPrayTimesByApi(address)
+        if (prayTimesApi != null){
+            _prayerState.value = _prayerState.value.copy(prayTimes = prayTimesApi)
+        }
+        updateAllGlobalAlarm(false)
+    }
+
+    private suspend fun fetchPrayTimesByDatabase(address: Address) : PrayTimes? {
+        return getDailyPrayTimesWithAddressAndDateUseCase(address,formattedDate.value)
+    }
+
+    private suspend fun fetchPrayTimesByApi(address: Address) : PrayTimes? {
+        val year = LocalDateTime.now().year
+        val month = LocalDateTime.now().monthValue
+        val apiResponse = getMonthlyPrayTimesFromApiUseCase(year ,month,address)
+        return if (apiResponse.status == Status.SUCCESS){
             insertPrayTimeIntoDbUseCase.insertPrayTimeList(apiResponse.data!!)
-            updateSearchAddress(searchAddress)
+            apiResponse.data.firstOrNull{it.date == _formattedDate.value}
+        }
+        else null
+    }
+
+    private fun fetchWeatherByCoordinates(latitude: Double, longitude: Double) {
+        viewModelScope.launch {
+            _weatherState.value = _weatherState.value.copy(isWeatherLoading = true)
+            getWeatherUseCase.getByCoordinates(latitude, longitude).collect { result ->
+                when(result.status) {
+                    Status.SUCCESS -> {
+                        _weatherState.value = _weatherState.value.copy(
+                            weather = result.data,
+                            isWeatherLoading = false,
+                            weatherError = null
+                        )
+                    }
+                    Status.ERROR -> {
+                        _weatherState.value = _weatherState.value.copy(
+                            isWeatherLoading = false,
+                            weatherError = result.message
+                        )
+                    }
+                    Status.LOADING -> {
+                        _weatherState.value = _weatherState.value.copy(
+                            isWeatherLoading = true
+                        )
+                    }
+                }
+            }
         }
     }
+
 
     //Date
 
@@ -182,8 +192,8 @@ class MainScreenViewModel @Inject constructor(
 
    // Alarm--
 
-    private val _prayerAlarmList : MutableStateFlow<List<PrayerAlarm>?> = MutableStateFlow(null)
-    val prayerAlarmList : StateFlow<List<PrayerAlarm>?> = _prayerAlarmList
+    private val prayerAlarmList = getAllGlobalAlarmsUseCase()
+        .stateIn(viewModelScope, SharingStarted.Lazily,listOf())
 
     fun updateGlobalAlarm(
         alarmType : String,
@@ -203,8 +213,8 @@ class MainScreenViewModel @Inject constructor(
 
     fun updateAllGlobalAlarm(enableAllGlobalAlarm : Boolean) = viewModelScope.launch(Dispatchers.IO){
         prayerAlarmList.value?.forEach { globalAlarm ->
-            dailyPrayTimes.value.data?:return@launch
-            val prayTime = getPrayTimeForPrayType(dailyPrayTimes.value.data!!,globalAlarm.alarmType,globalAlarm.alarmOffset,formattedUseCase)
+            prayerState.value.prayTimes?:return@launch
+            val prayTime = getPrayTimeForPrayType(prayerState.value.prayTimes!!,globalAlarm.alarmType,globalAlarm.alarmOffset,formattedUseCase)
             val prayTimeLong = formattedUseCase.formatHHMMtoLong(prayTime,formattedUseCase.formatDDMMYYYYDateToLocalDate(dailyPrayTimes.value.data!!.date))
             val prayTimeString = formattedUseCase.formatLongToLocalDateTime(prayTimeLong)
             updateGlobalAlarmUseCase(globalAlarm.copy(isEnabled = if (enableAllGlobalAlarm) true else globalAlarm.isEnabled, alarmTime = prayTimeLong, alarmTimeString = prayTimeString))
@@ -213,9 +223,9 @@ class MainScreenViewModel @Inject constructor(
 
 
     fun getAlarmTime(index: Int) : Pair<Long,String>  {
-
-        _dailyPrayTimes.value.data?:return Pair(0L,"00:00:00")
-        val prayTimes = _dailyPrayTimes.value.data!!
+        val currentPrayTimes = prayerState.value.prayTimes
+        currentPrayTimes?:return Pair(0L,"00:00:00")
+        val prayTimes = currentPrayTimes
         val timeString = when(index){
             0 -> prayTimes.morning
             1 -> prayTimes.noon
@@ -271,38 +281,8 @@ class MainScreenViewModel @Inject constructor(
 
     init {
 
-        updateFormattedDate()
-        updateFormattedTime()
-        viewModelScope.launch(Dispatchers.IO){
-            _searchAddress.emit(getLastKnownAddressFromDatabaseUseCase())
-            _searchAddress.collectLatest {
-                if (it != null){
-                    getDailyPrayTimesWithAddressAndDateUseCase(it,formattedDate.value)?.let { prayTimes ->
-                        _dailyPrayTimes.emit(Resource.success(prayTimes))
-                        _state.value = _state.value.copy(
-                            prayers = listOf(
-                                prayTimes.toMorningPrayer(),
-                                prayTimes.toNoonPrayer(),
-                                prayTimes.toAfternoonPrayer(),
-                                prayTimes.toEveningPrayer(),
-                                prayTimes.toNightPrayer()
-                            ),
-                            isLoading = false,
-                            error = null,
-                            city = it.city ?: ""
-                        )
-                        fetchWeatherByCoordinates(it.latitude, it.longitude)
-                        updateAllGlobalAlarm(false)
-                    }
-                }
-            }
-        }
         viewModelScope.launch {
-            launch {
-                getAllGlobalAlarmsUseCase().collect { globalAlarmList ->
-                    _prayerAlarmList.emit(globalAlarmList)
-                }
-            }
+
             launch {
                 _dailyPrayTimes.collectLatest { resource ->
                     resource.data?.let { prayTimes ->
@@ -334,35 +314,5 @@ class MainScreenViewModel @Inject constructor(
         removeCallbacks()
         super.onCleared()
     }
-    
-    // Prayer extension fonksiyonları
-    private fun PrayTimes.toMorningPrayer() = com.fatih.prayertime.domain.model.Prayer(
-        name = "Sabah",
-        time = morning,
-        type = "MORNING"
-    )
-    
-    private fun PrayTimes.toNoonPrayer() = com.fatih.prayertime.domain.model.Prayer(
-        name = "Öğle",
-        time = noon,
-        type = "NOON"
-    )
-    
-    private fun PrayTimes.toAfternoonPrayer() = com.fatih.prayertime.domain.model.Prayer(
-        name = "İkindi",
-        time = afternoon,
-        type = "AFTERNOON"
-    )
-    
-    private fun PrayTimes.toEveningPrayer() = com.fatih.prayertime.domain.model.Prayer(
-        name = "Akşam",
-        time = evening,
-        type = "EVENING"
-    )
-    
-    private fun PrayTimes.toNightPrayer() = com.fatih.prayertime.domain.model.Prayer(
-        name = "Yatsı",
-        time = night,
-        type = "NIGHT"
-    )
+
 }

@@ -5,7 +5,10 @@ import com.fatih.prayertime.domain.model.PrayerAlarm
 import com.fatih.prayertime.domain.repository.AlarmDatabaseRepository
 import com.fatih.prayertime.data.alarm.AlarmScheduler
 import com.fatih.prayertime.domain.model.PrayTimes
+import com.fatih.prayertime.util.model.enums.PrayTimesString
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
 import javax.inject.Inject
 
 class AlarmDatabaseRepositoryImp @Inject constructor(
@@ -26,8 +29,24 @@ class AlarmDatabaseRepositoryImp @Inject constructor(
         return globalAlarmDao.getGlobalAlarmByType(alarmType)
     }
 
-    override fun getAllGlobalAlarms(): Flow<List<PrayerAlarm>> {
-        return globalAlarmDao.getAllGlobalAlarms()
+    override fun getAllGlobalAlarms(): Flow<List<PrayerAlarm>> = flow{
+        val globalAlarms = globalAlarmDao.getAllGlobalAlarms()
+        if (globalAlarms.first().isEmpty()) {
+            val initialAlarms = PrayTimesString.entries.filterIndexed { index, _ ->
+                index <= 4
+            }.map {
+                PrayerAlarm(
+                    alarmType = it.name,
+                    alarmTime = 0L,
+                    alarmTimeString = "16-01-2025 00:00",
+                    isEnabled = false,
+                    alarmOffset = 0
+                )
+            }
+            initialAlarms.forEach { alarm->
+                insertGlobalAlarmUseCase(alarm)
+            }
+        }
     }
 
     override fun updateStatisticsAlarmForPrayTime(prayTimes: PrayTimes) {
