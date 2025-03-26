@@ -15,7 +15,6 @@ class LocalDataRepositoryImpl @Inject constructor(
 
     private val duaData: Dua? by lazy {
         try {
-            println("lazydua")
             val jsonString = AssetUtils.getJsonFromAssets("dua.json", application)
             AssetUtils.convertJsonToDuaCategory(jsonString)
         }catch (_: Exception){
@@ -26,7 +25,6 @@ class LocalDataRepositoryImpl @Inject constructor(
 
     private val esmaulHusnaData: List<EsmaulHusna>? by lazy {
         try {
-            println("lazyesmaulhusne")
             val jsonString = AssetUtils.getJsonFromAssets("esmaul_husna.json", application)
             AssetUtils.convertJsonToEsmaulHusnaList(jsonString)
         }catch (_: Exception){

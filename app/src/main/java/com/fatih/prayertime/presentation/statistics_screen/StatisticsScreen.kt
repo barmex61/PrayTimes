@@ -250,7 +250,7 @@ fun DateRangePickerDialog(
                                 onOptionSelected(range)
                                 onDateRangeSelected(range)
                             }
-                            .padding(16.dp),
+                            .padding(horizontal = 16.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         RadioButton(
@@ -327,7 +327,6 @@ fun StatisticsChart(
                     val chartWidth = width - (padding * 2)
                     val chartHeight = height - (padding * 2)
                     val arrowOffset = 95f // Okun yukarı kaydırılma miktarı
-                    // Sütunlar ve değerler
                     val columnWidth = 70f
                     val spacing = 80f // Tarihler arası boşluk
 
@@ -337,7 +336,7 @@ fun StatisticsChart(
                         drawLine(
                             color = primaryColor.copy(alpha = 0.3f),
                             start = Offset(padding, y),
-                            end = Offset(width - padding, y),
+                            end = Offset(width , y),
                             strokeWidth = 5f
                         )
                         drawContext.canvas.nativeCanvas.apply {
@@ -435,14 +434,14 @@ fun StatisticsChart(
                     drawLine(
                         color = onPrimaryContainer,
                         start = Offset(padding, height - padding),
-                        end = Offset(width - padding, height - padding),
+                        end = Offset(width + 50f, height - padding),
                         strokeWidth = 5f
                     )
                     // X ekseni oku
                     val xArrowPath = Path().apply {
-                        moveTo(width - padding, height - padding)
-                        lineTo(width - padding - arrowSize, height - padding - arrowSize)
-                        lineTo(width - padding - arrowSize, height - padding + arrowSize)
+                        moveTo(width + 50f, height - padding )
+                        lineTo(width + 50f - arrowSize , height - padding - arrowSize)
+                        lineTo(width + 50f - arrowSize, height - padding + arrowSize)
                         close()
                     }
                     drawPath(

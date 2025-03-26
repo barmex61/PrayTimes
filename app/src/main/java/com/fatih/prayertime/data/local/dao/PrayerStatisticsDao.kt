@@ -21,7 +21,7 @@ interface PrayerStatisticsDao {
     @Query("SELECT COUNT(*) FROM prayer_statistics WHERE isCompleted = 1")
     fun getCompletedPrayersCount(): Flow<Int>
 
-    @Query("SELECT * FROM prayer_statistics WHERE dateLong BETWEEN :startDate AND :endDate")
+    @Query("SELECT * FROM prayer_statistics WHERE dateLong >= :startDate AND dateLong <= :endDate ORDER BY dateLong ASC")
     fun getStatisticsBetweenDates(startDate: Long, endDate: Long): Flow<List<PrayerStatisticsEntity>>
 
     @Query("SELECT COUNT(*) > 0 FROM prayer_statistics WHERE prayerType = :prayerType AND date = :date")

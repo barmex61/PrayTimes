@@ -37,6 +37,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
@@ -70,7 +71,7 @@ class QuranAudioService() : Service() {
     }
 
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-    private val downloadRequests = MutableStateFlow<DownloadRequest?>(null)
+    private val downloadRequests = MutableSharedFlow<DownloadRequest?>()
 
     @Inject
     lateinit var getAudioFileUseCase: GetAudioFileUseCase
@@ -126,16 +127,10 @@ class QuranAudioService() : Service() {
                     .onEach {
                         println("onEach")
                         stopAudio()
-                        if (it != null){
-                            resetStateForNewDownload()
-                        }
+                        resetStateForNewDownload()
                     }
                     .flatMapLatest { request ->
-                        println(request)
-                        if (request == null) {
-                            resetStateForNewDownload()
-                            return@flatMapLatest emptyFlow()
-                        }
+                        if (request == null) return@flatMapLatest emptyFlow()
                         getAudioFileUseCase.invoke(
                             request.audioPath,
                             request.bitrate,
@@ -197,7 +192,6 @@ class QuranAudioService() : Service() {
             }
             Status.ERROR -> {
                 handleError(resource)
-                downloadRequests.value = null
             }
             Status.LOADING -> {
                 handleLoading(resource)
@@ -309,7 +303,9 @@ class QuranAudioService() : Service() {
             audioNumber = audioNumber,
             shouldCache = shouldCacheAudio
         )
-        downloadRequests.value = downloadRequest
+        serviceScope.launch {
+            downloadRequests.emit(downloadRequest)
+        }
     }
 
     fun getNextAudio() {
@@ -424,8 +420,10 @@ class QuranAudioService() : Service() {
     }
 
     fun cancelAudioDownload() {
-        downloadRequests.value = null
         stopAudio()
+        serviceScope.launch {
+            downloadRequests.emit(null)
+        }
         audioStateManager.updateState {
             copy(
                 isLoading = false,

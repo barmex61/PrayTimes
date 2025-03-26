@@ -4,6 +4,7 @@ import com.fatih.prayertime.data.local.dao.PrayerStatisticsDao
 import com.fatih.prayertime.data.local.entity.PrayerStatisticsEntity
 import com.fatih.prayertime.domain.repository.PrayerStatisticsRepository
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.onEach
 import javax.inject.Inject
 
 class PrayerStatisticsRepositoryImpl @Inject constructor(
@@ -29,6 +30,7 @@ class PrayerStatisticsRepositoryImpl @Inject constructor(
         return statisticsDao.getCompletedPrayersCount()
     }
     override fun getStatisticsBetweenDates(startDate: Long, endDate: Long): Flow<List<PrayerStatisticsEntity>> {
+        println("startDate: $startDate, endDate: $endDate")
         return statisticsDao.getStatisticsBetweenDates(startDate, endDate)
     }
 

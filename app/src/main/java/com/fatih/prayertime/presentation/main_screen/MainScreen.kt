@@ -13,11 +13,17 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.animateColor
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.EaseInOutQuad
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.keyframes
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -28,26 +34,38 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.lazy.grid.GridCells.Fixed
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.staggeredgrid.items
+import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Face
 import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material.icons.outlined.LocationOn
@@ -56,6 +74,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Divider
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
@@ -75,10 +94,12 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -90,16 +111,22 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.glance.appwidget.lazy.GridCells
+import androidx.glance.appwidget.lazy.items
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.rememberAsyncImagePainter
 import com.exyte.animatednavbar.utils.noRippleClickable
 import com.fatih.prayertime.R
+import com.fatih.prayertime.data.remote.dto.duadto.DuaCategoryData
+import com.fatih.prayertime.data.remote.dto.duadto.DuaCategoryDetail
 import com.fatih.prayertime.domain.model.PrayerAlarm
 import com.fatih.prayertime.domain.model.PrayTimes
 import com.fatih.prayertime.util.extensions.convertTimeToSeconds
@@ -111,6 +138,7 @@ import com.fatih.prayertime.util.model.state.NetworkState
 import com.fatih.prayertime.util.model.state.Status
 import com.fatih.prayertime.util.composables.ErrorView
 import com.fatih.prayertime.util.composables.LoadingView
+import com.fatih.prayertime.util.model.event.MainScreenEvent
 import kotlinx.coroutines.delay
 import org.threeten.bp.LocalDate
 import org.threeten.bp.LocalDateTime
@@ -119,6 +147,7 @@ import org.threeten.bp.YearMonth
 
 import kotlin.math.PI
 import kotlin.math.cos
+import kotlin.math.roundToInt
 import kotlin.math.sin
 
 @Composable
@@ -127,18 +156,34 @@ fun MainScreen( modifier: Modifier, mainScreenViewModel: MainScreenViewModel = h
     val scrollState = rememberScrollState()
     var isVisible by remember { mutableStateOf(false) }
     val haptic = LocalHapticFeedback.current
+    val selectedDuaState by mainScreenViewModel.selectedDuaState.collectAsStateWithLifecycle()
     GetLocationInformation(mainScreenViewModel)
     LaunchedEffect(Unit){
         isVisible = true
     }
+    AnimatedVisibility(
+        visible = selectedDuaState.isVisible && selectedDuaState.dua != null,
+        enter = fadeIn(tween(1000)) + slideInVertically(),
+        exit = fadeOut(tween(1000)) + slideOutVertically()
+    ) {
+        FancyDuaDialog(
+            duaDetail = selectedDuaState.dua!!,
+            onDismiss = {
+                mainScreenViewModel.onEvent(MainScreenEvent.HideDuaDialog)
+            }
+        )
+    }
+
     Column(modifier = modifier.verticalScroll(scrollState, enabled = true) ){
         AddressBar(haptic,mainScreenViewModel)
-        PrayerBar(haptic)
+        PrayerBar(haptic){
+            mainScreenViewModel.onEvent(MainScreenEvent.ShowDuaDialog)
+        }
         PrayScheduleCompose(haptic)
         PrayNotificationCompose(mainScreenViewModel,haptic){
             showAlarmDialog = true
         }
-        DailyPrayCompose(haptic)
+        DailyPrayCompose(haptic,mainScreenViewModel)
         Spacer(
             modifier = Modifier.height(25.dp)
         )
@@ -247,94 +292,60 @@ fun GetLocationInformation(mainScreenViewModel: MainScreenViewModel){
 }
 
 @Composable
-fun DailyPrayCompose(haptic: HapticFeedback) {
-    Card(
-        modifier = Modifier.padding(top = 20.dp),
-        onClick = {
-            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-        },
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
-        elevation = CardDefaults.cardElevation(10.dp),
-        shape = RoundedCornerShape(10.dp)
-    )  {
-        Column(modifier = Modifier.padding(top = 10.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    modifier = Modifier.padding(start = 10.dp),
-                    text = stringResource(R.string.daily_prayer),
-                    style = MaterialTheme.typography.titleMedium,
-                    maxLines = 1,
-                    softWrap = false,
-                )
-                Spacer(Modifier.weight(1f))
-                Card(
-                    modifier = Modifier
-                        .padding(10.dp)
-                        .height(25.dp),
-                    onClick = {},
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
-                    elevation = CardDefaults.cardElevation(10.dp),
-                    shape = RoundedCornerShape(10.dp)
-                ) {
+fun DailyPrayCompose(haptic: HapticFeedback,mainScreenViewModel: MainScreenViewModel) {
+    val duaCategoryList = mainScreenViewModel.duaCategoryList
+    AnimatedVisibility(
+        visible = duaCategoryList != null && duaCategoryList.isNotEmpty(),
+    ) {
+        Card(
+            modifier = Modifier.padding(top = 20.dp),
+            onClick = {
+                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+            },
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+            elevation = CardDefaults.cardElevation(10.dp),
+            shape = RoundedCornerShape(10.dp)
+        )  {
+            Column(modifier = Modifier.padding(top = 10.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        modifier = Modifier.padding(4.dp),
-                        text = stringResource(R.string.see_all),
-                        style = MaterialTheme.typography.labelMedium,
+                        modifier = Modifier.padding(start = 10.dp),
+                        text = stringResource(R.string.daily_prayer),
+                        style = MaterialTheme.typography.titleMedium,
                         maxLines = 1,
                         softWrap = false,
-                        textAlign = TextAlign.Center,
-                        fontWeight = FontWeight.W600,
                     )
+                    Spacer(Modifier.weight(1f))
+                    Card(
+                        modifier = Modifier
+                            .padding(10.dp)
+                            .height(25.dp),
+                        onClick = {},
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
+                        elevation = CardDefaults.cardElevation(10.dp),
+                        shape = RoundedCornerShape(10.dp)
+                    ) {
+                        Text(
+                            modifier = Modifier.padding(4.dp),
+                            text = stringResource(R.string.see_all),
+                            style = MaterialTheme.typography.labelMedium,
+                            maxLines = 1,
+                            softWrap = false,
+                            textAlign = TextAlign.Center,
+                            fontWeight = FontWeight.W600,
+                        )
+                    }
                 }
-            }
-            (1..2).forEach { i ->
-                Row {
-                    (1..3).forEach { j ->
-                        Card (
-                            modifier = Modifier
-                                .padding(10.dp)
-                                .weight(1f),
-                            onClick = {},
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
-                            elevation = CardDefaults.cardElevation(10.dp),
-                            shape = RoundedCornerShape(10.dp)
-                        ) {
-                            Column(
-                                modifier = Modifier.padding(top = 10.dp, bottom = 10.dp)
-                            ) {
-                                Icon(
-                                    modifier = Modifier.padding(start = 7.dp),
-                                    imageVector = Icons.Outlined.Face,
-                                    contentDescription = "Face Icon",
-                                )
-                                val list = listOf(
-                                    "Prayer for eating",
-                                    "Study prayer",
-                                    "Prayer for sleeping",
-                                    "Prayer for exam",
-                                    "Prayer for work",
-                                    "Prayer for study"
-                                )
-                                Text(
-                                    modifier = Modifier
-                                        .padding(vertical = 7.dp, horizontal = 7.dp)
-                                        .basicMarquee(iterations = Int.MAX_VALUE),
-                                    text = list[if (i == 1) j-1 else j+2],
-                                    style = MaterialTheme.typography.bodySmall,
-                                    maxLines = 1,
-                                    softWrap = false,
-                                    textAlign = TextAlign.Center,
-                                    fontWeight = FontWeight.W600
-                                )
-                            }
-                        }
+                LazyVerticalGrid(
+                    columns = Fixed(2)
+                )  {
+                    items(duaCategoryList!!) { item ->
+                        DuaCategoryCardCompose(item)
                     }
                 }
             }
-
         }
     }
-
 }
 
 @Composable
@@ -861,11 +872,12 @@ fun AddressBar(haptic: HapticFeedback,mainScreenViewModel: MainScreenViewModel) 
 }
 
 @Composable
-fun PrayerBar(haptic: HapticFeedback) {
+fun PrayerBar(haptic: HapticFeedback,onClick : () -> Unit) {
     Box (modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterStart) {
         Card (
             onClick = {
                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                onClick()
             },
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
             elevation = CardDefaults.cardElevation(10.dp),
@@ -1058,4 +1070,159 @@ fun PrayerMethodSelector(
         }
     }
 }
+@Composable
+fun FancyDuaDialog(
+    duaDetail: DuaCategoryDetail,
+    onDismiss: () -> Unit
+) {
 
+    val infiniteTransition = rememberInfiniteTransition(label = "infiniteTransition")
+
+    val gradientColors = listOf(
+        infiniteTransition.animateColor(
+            initialValue = Color(0xFF9C27B0),
+            targetValue = Color(0xFF673AB7),
+            animationSpec = infiniteRepeatable(
+                animation = tween(3000),
+                repeatMode = RepeatMode.Reverse
+            ),
+            label = "colorAnimation1"
+        ).value,
+        infiniteTransition.animateColor(
+            initialValue = Color(0xFF3F51B5),
+            targetValue = Color(0xFF2196F3),
+            animationSpec = infiniteRepeatable(
+                animation = tween(3000),
+                repeatMode = RepeatMode.Reverse
+            ),
+            label = "colorAnimation2"
+        ).value
+    )
+
+    Dialog(
+        onDismissRequest = onDismiss
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth(0.95f)
+                .clip(RoundedCornerShape(20.dp))
+                .background(
+                    brush = Brush.linearGradient(colors = gradientColors)
+                )
+                .padding(4.dp)
+        ) {
+
+            Column(
+                modifier = Modifier
+                    .padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Favorite,
+                    contentDescription = "Dua",
+                    modifier = Modifier
+                        .size(60.dp)
+                        .padding(bottom = 16.dp),
+                    tint = Color.White.copy(alpha = 0.9f)
+                )
+
+                Text(
+                    text = duaDetail.title,
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(bottom = 20.dp)
+                )
+
+                HorizontalDivider(
+                    modifier = Modifier
+                        .fillMaxWidth(0.8f)
+                        .padding(bottom = 20.dp),
+                    thickness = 1.dp,
+                    color = Color.White.copy(alpha = 0.7f)
+                )
+
+                Text(
+                    text = duaDetail.arabic,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = Color.White.copy(alpha = 0.9f),
+                    textAlign = TextAlign.Center,
+                    fontStyle = FontStyle.Italic,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+
+
+                Text(
+                    text = duaDetail.translation,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = Color.White,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(bottom = 20.dp)
+                )
+
+                Text(
+                    text = "Kaynak: ${duaDetail.source}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.White.copy(alpha = 0.8f),
+                    textAlign = TextAlign.End,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp)
+                )
+
+                Button(
+                    onClick = onDismiss,
+                    modifier = Modifier
+                        .fillMaxWidth(0.7f)
+                        .padding(top = 8.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.White.copy(alpha = 0.2f)
+                    ),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text(
+                        text = "Amîn",
+                        color = Color.White,
+                        style = MaterialTheme.typography.labelLarge,
+                        modifier = Modifier.padding(vertical = 4.dp)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun DuaCategoryCardCompose(duaCategoryData: DuaCategoryData){
+    Card (
+        modifier = Modifier
+            .padding(10.dp),
+        onClick = {},
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
+        elevation = CardDefaults.cardElevation(10.dp),
+        shape = RoundedCornerShape(10.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(top = 10.dp, bottom = 10.dp)
+        ) {
+            Icon(
+                modifier = Modifier.padding(start = 7.dp),
+                imageVector = Icons.Outlined.Face,
+                contentDescription = "Face Icon",
+            )
+            Text(
+                modifier = Modifier
+                    .padding(vertical = 7.dp, horizontal = 7.dp)
+                    .basicMarquee(iterations = Int.MAX_VALUE),
+                text = duaCategoryData.name,
+                style = MaterialTheme.typography.bodySmall,
+                maxLines = 1,
+                softWrap = false,
+                textAlign = TextAlign.Center,
+                fontWeight = FontWeight.W600
+            )
+        }
+    }
+
+}

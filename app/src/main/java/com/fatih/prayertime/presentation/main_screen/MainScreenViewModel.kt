@@ -17,23 +17,25 @@ import com.fatih.prayertime.domain.use_case.pray_times_use_cases.GetDailyPrayTim
 import com.fatih.prayertime.domain.use_case.pray_times_use_cases.InsertPrayTimeIntoDbUseCase
 import com.fatih.prayertime.domain.use_case.alarm_use_cases.UpdateGlobalAlarmUseCase
 import com.fatih.prayertime.domain.use_case.alarm_use_cases.UpdateStatisticsAlarmUseCase
+import com.fatih.prayertime.domain.use_case.dua_use_case.GetDuaUseCase
 import com.fatih.prayertime.domain.use_case.location_use_cases.RemoveLocationCallbackUseCase
+import com.fatih.prayertime.util.model.event.MainScreenEvent
 import com.fatih.prayertime.util.model.state.Resource
+import com.fatih.prayertime.util.model.state.SelectedDuaState
 import com.fatih.prayertime.util.model.state.Status
 import com.fatih.prayertime.util.utils.AlarmUtils.getPrayTimeForPrayType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import org.threeten.bp.Instant
 import org.threeten.bp.LocalDate
 import org.threeten.bp.LocalDateTime
 import org.threeten.bp.Year
 import org.threeten.bp.YearMonth
-import org.threeten.bp.ZoneId
 import javax.inject.Inject
 
 @HiltViewModel
@@ -48,7 +50,8 @@ class MainScreenViewModel @Inject constructor(
     private val removeLocationCallbackUseCase: RemoveLocationCallbackUseCase,
     private val updateGlobalAlarmUseCase: UpdateGlobalAlarmUseCase,
     private val updateStatisticsAlarmUseCase: UpdateStatisticsAlarmUseCase,
-    val permissionsAndPreferences: PermissionAndPreferences
+    val permissionsAndPreferences: PermissionAndPreferences,
+    private val getDuaUseCase: GetDuaUseCase
 ) : ViewModel() {
 
     companion object{
@@ -166,6 +169,41 @@ class MainScreenViewModel @Inject constructor(
     }
 
 
+    fun checkNotificationPermission(){
+        permissionsAndPreferences.checkNotificationPermission()
+    }
+
+    private val _duaCategoryList = getDuaUseCase.invoke()?.data
+    val duaCategoryList = _duaCategoryList
+
+    private val _mainScreenEvent = MutableSharedFlow<MainScreenEvent>()
+    val mainScreenEvent = _mainScreenEvent
+
+    private val _selectedDuaState = MutableStateFlow(SelectedDuaState())
+    val selectedDuaState = _selectedDuaState.asStateFlow()
+
+    fun onEvent(event : MainScreenEvent)=viewModelScope.launch{
+        _mainScreenEvent.emit(event)
+    }
+
+    private fun getRandomDua() = viewModelScope.launch {
+        try {
+            if (!duaCategoryList.isNullOrEmpty()) {
+                val selectedDua = duaCategoryList.random().detail.random()
+                _selectedDuaState.value = SelectedDuaState(
+                    dua = selectedDua,
+                    isVisible = true
+                )
+            }
+        } catch (e: Exception) {
+            println("Dua yüklenirken hata: ${e.message}")
+        }
+    }
+
+    private fun hideDuaDialog() {
+        _selectedDuaState.value = _selectedDuaState.value.copy(isVisible = false)
+    }
+
     init {
 
         updateFormattedDate()
@@ -179,7 +217,7 @@ class MainScreenViewModel @Inject constructor(
                         updateAllGlobalAlarm(false)
                     }
                 }
-        }
+            }
         }
         viewModelScope.launch {
             launch {
@@ -195,13 +233,18 @@ class MainScreenViewModel @Inject constructor(
                     }
                 }
             }
+            launch {
+                _mainScreenEvent.collect { event ->
+                    when (event) {
+                        is MainScreenEvent.ShowDuaDialog -> getRandomDua()
+                        is MainScreenEvent.HideDuaDialog -> hideDuaDialog()
+                    }
+                }
+            }
         }
+
         updateAllGlobalAlarm(false)
         checkNotificationPermission()
-    }
-
-    fun checkNotificationPermission(){
-        permissionsAndPreferences.checkNotificationPermission()
     }
 
     private fun removeCallbacks(){
