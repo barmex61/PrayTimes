@@ -8,6 +8,9 @@ object ApiConfig {
     const val CDN_API_BASE_URL = "https://raw.githubusercontent.com/"
     const val TUNE = "0,-0,-7,7,6,7,7,0,0"
 
+    const val WEATHER_API_BASE_URL = "https://api.weatherapi.com/"
+    const val WEATHER_API_KEY = "47949586ec9b4811af5161847222702"
+
     val prayApiMethods = hashMapOf(
         "Jafari / Shia Ithna-Ashari" to 0,
         "University of Islamic Sciences, Karachi" to 1,

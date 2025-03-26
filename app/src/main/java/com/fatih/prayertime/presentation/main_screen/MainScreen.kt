@@ -129,6 +129,7 @@ import com.fatih.prayertime.data.remote.dto.duadto.DuaCategoryData
 import com.fatih.prayertime.data.remote.dto.duadto.DuaCategoryDetail
 import com.fatih.prayertime.domain.model.PrayerAlarm
 import com.fatih.prayertime.domain.model.PrayTimes
+import com.fatih.prayertime.presentation.main_screen.component.WeatherCard
 import com.fatih.prayertime.util.extensions.convertTimeToSeconds
 import com.fatih.prayertime.util.extensions.localDateTime
 import com.fatih.prayertime.util.extensions.toAddress
@@ -157,6 +158,7 @@ fun MainScreen( modifier: Modifier, mainScreenViewModel: MainScreenViewModel = h
     var isVisible by remember { mutableStateOf(false) }
     val haptic = LocalHapticFeedback.current
     val selectedDuaState by mainScreenViewModel.selectedDuaState.collectAsStateWithLifecycle()
+
     GetLocationInformation(mainScreenViewModel)
     LaunchedEffect(Unit){
         isVisible = true
@@ -176,9 +178,14 @@ fun MainScreen( modifier: Modifier, mainScreenViewModel: MainScreenViewModel = h
 
     Column(modifier = modifier.verticalScroll(scrollState, enabled = true) ){
         AddressBar(haptic,mainScreenViewModel)
+
         PrayerBar(haptic){
             mainScreenViewModel.onEvent(MainScreenEvent.ShowDuaDialog)
         }
+
+        WeatherCard(
+            mainScreenViewModel
+        )
         PrayScheduleCompose(haptic)
         PrayNotificationCompose(mainScreenViewModel,haptic){
             showAlarmDialog = true
@@ -337,7 +344,8 @@ fun DailyPrayCompose(haptic: HapticFeedback,mainScreenViewModel: MainScreenViewM
                     }
                 }
                 LazyVerticalGrid(
-                    columns = Fixed(2)
+                    columns = Fixed(3),
+                    modifier = Modifier.height(220.dp)
                 )  {
                     items(duaCategoryList!!) { item ->
                         DuaCategoryCardCompose(item)
@@ -601,7 +609,7 @@ fun PrayScheduleCompose(haptic: HapticFeedback) {
     val dailyPrayTime by mainScreenViewModel.dailyPrayTimes.collectAsState()
 
     Card(
-        modifier = Modifier.padding(top = 20.dp),
+        modifier = Modifier.padding(top = 12.dp),
         onClick = {
             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
         },
@@ -889,10 +897,7 @@ fun PrayerBar(haptic: HapticFeedback,onClick : () -> Unit) {
                     .fillMaxWidth(1f)
                     .padding(start = 15.dp, end = 15.dp, top = 10.dp, bottom = 10.dp)
                     .background(color = Color.Transparent)
-                    .clickable{
-                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
 
-                    }
             ) {
                 Icon(
                     imageVector = Icons.Outlined.Favorite,

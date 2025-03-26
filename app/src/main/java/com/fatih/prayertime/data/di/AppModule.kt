@@ -73,6 +73,9 @@ import retrofit2.create
 import java.util.Locale
 import javax.inject.Qualifier
 import javax.inject.Singleton
+import com.fatih.prayertime.data.remote.WeatherApi
+import com.fatih.prayertime.data.repository.WeatherRepositoryImpl
+import com.fatih.prayertime.domain.repository.WeatherRepository
 
 @InstallIn(SingletonComponent::class)
 @Module
@@ -297,6 +300,22 @@ object Module {
         getNetworkStateUseCase: GetNetworkStateUseCase,
         isPowerSavingEnabledUseCase: IsPowerSavingEnabledUseCase
     ) = PermissionAndPreferences(permissionsUseCase, getNetworkStateUseCase, isPowerSavingEnabledUseCase)
+
+    @Provides
+    @Singleton
+    fun provideWeatherApi(): WeatherApi {
+        return Retrofit.Builder()
+            .baseUrl(ApiConfig.WEATHER_API_BASE_URL)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+            .create(WeatherApi::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideWeatherRepository(weatherApi: WeatherApi): WeatherRepository {
+        return WeatherRepositoryImpl(weatherApi)
+    }
 
 }
 

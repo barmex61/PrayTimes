@@ -8,6 +8,7 @@ import com.fatih.prayertime.data.settings.PermissionAndPreferences
 import com.fatih.prayertime.domain.model.PrayerAlarm
 import com.fatih.prayertime.domain.model.Address
 import com.fatih.prayertime.domain.model.PrayTimes
+import com.fatih.prayertime.domain.model.Weather
 import com.fatih.prayertime.domain.use_case.formatted_use_cases.FormattedUseCase
 import com.fatih.prayertime.domain.use_case.alarm_use_cases.GetAllGlobalAlarmsUseCase
 import com.fatih.prayertime.domain.use_case.pray_times_use_cases.GetMonthlyPrayTimesFromApiUseCase
@@ -19,6 +20,7 @@ import com.fatih.prayertime.domain.use_case.alarm_use_cases.UpdateGlobalAlarmUse
 import com.fatih.prayertime.domain.use_case.alarm_use_cases.UpdateStatisticsAlarmUseCase
 import com.fatih.prayertime.domain.use_case.dua_use_case.GetDuaUseCase
 import com.fatih.prayertime.domain.use_case.location_use_cases.RemoveLocationCallbackUseCase
+import com.fatih.prayertime.domain.use_case.weather_use_cases.GetWeatherUseCase
 import com.fatih.prayertime.util.model.event.MainScreenEvent
 import com.fatih.prayertime.util.model.state.Resource
 import com.fatih.prayertime.util.model.state.SelectedDuaState
@@ -50,8 +52,9 @@ class MainScreenViewModel @Inject constructor(
     private val removeLocationCallbackUseCase: RemoveLocationCallbackUseCase,
     private val updateGlobalAlarmUseCase: UpdateGlobalAlarmUseCase,
     private val updateStatisticsAlarmUseCase: UpdateStatisticsAlarmUseCase,
+    private val getWeatherUseCase: GetWeatherUseCase,
     val permissionsAndPreferences: PermissionAndPreferences,
-    private val getDuaUseCase: GetDuaUseCase
+    getDuaUseCase: GetDuaUseCase
 ) : ViewModel() {
 
     companion object{
@@ -59,6 +62,10 @@ class MainScreenViewModel @Inject constructor(
     }
 
     val isNotificationPermissionGranted = permissionsAndPreferences.isNotificationPermissionGranted
+
+    // State
+    private val _state = MutableStateFlow(MainScreenState())
+    val state = _state.asStateFlow()
 
     //Pray - Times
 
@@ -72,6 +79,64 @@ class MainScreenViewModel @Inject constructor(
 
     private fun updateSearchAddress(address: Address){
         _searchAddress.value = address
+        _state.value = _state.value.copy(city = address.city ?: "")
+        fetchWeatherByCoordinates(address.latitude, address.longitude)
+    }
+
+    private fun fetchWeather(location: String) {
+        viewModelScope.launch {
+            _state.value = _state.value.copy(isWeatherLoading = true)
+            getWeatherUseCase(location).collect { result ->
+                when(result.status) {
+                    Status.SUCCESS -> {
+                        _state.value = _state.value.copy(
+                            weather = result.data,
+                            isWeatherLoading = false,
+                            weatherError = null
+                        )
+                    }
+                    Status.ERROR -> {
+                        _state.value = _state.value.copy(
+                            isWeatherLoading = false,
+                            weatherError = result.message
+                        )
+                    }
+                    Status.LOADING -> {
+                        _state.value = _state.value.copy(
+                            isWeatherLoading = true
+                        )
+                    }
+                }
+            }
+        }
+    }
+    
+    private fun fetchWeatherByCoordinates(latitude: Double, longitude: Double) {
+        viewModelScope.launch {
+            _state.value = _state.value.copy(isWeatherLoading = true)
+            getWeatherUseCase.getByCoordinates(latitude, longitude).collect { result ->
+                when(result.status) {
+                    Status.SUCCESS -> {
+                        _state.value = _state.value.copy(
+                            weather = result.data,
+                            isWeatherLoading = false,
+                            weatherError = null
+                        )
+                    }
+                    Status.ERROR -> {
+                        _state.value = _state.value.copy(
+                            isWeatherLoading = false,
+                            weatherError = result.message
+                        )
+                    }
+                    Status.LOADING -> {
+                        _state.value = _state.value.copy(
+                            isWeatherLoading = true
+                        )
+                    }
+                }
+            }
+        }
     }
 
     fun trackLocationAndUpdatePrayTimes() = viewModelScope.launch(Dispatchers.IO) {
@@ -214,6 +279,19 @@ class MainScreenViewModel @Inject constructor(
                 if (it != null){
                     getDailyPrayTimesWithAddressAndDateUseCase(it,formattedDate.value)?.let { prayTimes ->
                         _dailyPrayTimes.emit(Resource.success(prayTimes))
+                        _state.value = _state.value.copy(
+                            prayers = listOf(
+                                prayTimes.toMorningPrayer(),
+                                prayTimes.toNoonPrayer(),
+                                prayTimes.toAfternoonPrayer(),
+                                prayTimes.toEveningPrayer(),
+                                prayTimes.toNightPrayer()
+                            ),
+                            isLoading = false,
+                            error = null,
+                            city = it.city ?: ""
+                        )
+                        fetchWeatherByCoordinates(it.latitude, it.longitude)
                         updateAllGlobalAlarm(false)
                     }
                 }
@@ -256,4 +334,35 @@ class MainScreenViewModel @Inject constructor(
         removeCallbacks()
         super.onCleared()
     }
+    
+    // Prayer extension fonksiyonları
+    private fun PrayTimes.toMorningPrayer() = com.fatih.prayertime.domain.model.Prayer(
+        name = "Sabah",
+        time = morning,
+        type = "MORNING"
+    )
+    
+    private fun PrayTimes.toNoonPrayer() = com.fatih.prayertime.domain.model.Prayer(
+        name = "Öğle",
+        time = noon,
+        type = "NOON"
+    )
+    
+    private fun PrayTimes.toAfternoonPrayer() = com.fatih.prayertime.domain.model.Prayer(
+        name = "İkindi",
+        time = afternoon,
+        type = "AFTERNOON"
+    )
+    
+    private fun PrayTimes.toEveningPrayer() = com.fatih.prayertime.domain.model.Prayer(
+        name = "Akşam",
+        time = evening,
+        type = "EVENING"
+    )
+    
+    private fun PrayTimes.toNightPrayer() = com.fatih.prayertime.domain.model.Prayer(
+        name = "Yatsı",
+        time = night,
+        type = "NIGHT"
+    )
 }
