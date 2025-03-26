@@ -1,4 +1,4 @@
-package com.fatih.prayertime.util.model.state.quran_detail
+package com.fatih.prayertime.util.model.state
 
 import com.fatih.prayertime.data.remote.dto.qurandto.SurahInfo
 

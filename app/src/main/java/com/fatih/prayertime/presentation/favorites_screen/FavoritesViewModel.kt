@@ -6,6 +6,8 @@ import com.fatih.prayertime.data.local.entity.FavoritesEntity
 import com.fatih.prayertime.domain.use_case.favorites_use_cases.GetAllFavoritesUseCase
 import com.fatih.prayertime.domain.use_case.favorites_use_cases.RemoveFavoriteUseCase
 import com.fatih.prayertime.util.model.enums.FavoritesType
+import com.fatih.prayertime.util.model.event.FavoritesEvent
+import com.fatih.prayertime.util.model.state.FavoritesScreenState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
@@ -18,25 +20,40 @@ class FavoritesViewModel @Inject constructor(
     private val removeFavoriteUseCase: RemoveFavoriteUseCase,
 ) : ViewModel() {
 
-    private val _selectedType = MutableStateFlow(FavoritesType.DUA.name)
-    val selectedType = _selectedType.asStateFlow()
+    private val _favoritesState = MutableStateFlow(FavoritesScreenState())
+    val favoritesState = _favoritesState.asStateFlow()
+
+    private val _favoritesEvent = MutableSharedFlow<FavoritesEvent>()
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val favorites = _selectedType.flatMapLatest { type ->
-        getAllFavoritesUseCase(type)
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = emptyList()
-    )
+    val favorites = _favoritesState.map {
+        it.favoritesType
+    }.distinctUntilChanged().flatMapLatest {
+        getAllFavoritesUseCase(it)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
 
-    fun setType(type: String) {
-        _selectedType.value = type
+    fun onEvent(event: FavoritesEvent) = viewModelScope.launch{
+        _favoritesEvent.emit(event)
     }
 
-    fun removeFromFavorites(favorite: FavoritesEntity) {
+    private fun handleEvent(event: FavoritesEvent){
+        when(event){
+            is FavoritesEvent.SetType -> _favoritesState.value = _favoritesState.value.copy(favoritesType = event.favoritesType)
+            is FavoritesEvent.RemoveFavorite -> {
+                viewModelScope.launch {
+                    removeFavoriteUseCase(event.favorite)
+                    _favoritesEvent.emit(FavoritesEvent.ShowMessage("Favorilerden çıkarıldı"))
+                }
+            }
+            is FavoritesEvent.ShowMessage -> {}
+        }
+    }
+
+    init {
         viewModelScope.launch {
-            removeFavoriteUseCase(favorite)
+            _favoritesEvent.collectLatest { event ->
+                handleEvent(event)
+            }
         }
     }
 

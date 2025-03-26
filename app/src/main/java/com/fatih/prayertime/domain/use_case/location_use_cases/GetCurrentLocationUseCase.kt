@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
 class GetCurrentLocationUseCase @Inject constructor(private val prayDatabaseRepository: PrayDatabaseRepository) {
-    suspend operator fun invoke() : Flow<LocationPair> {
+    operator fun invoke() : Flow<LocationPair> {
        return prayDatabaseRepository.getCurrentLocationPair()
     }
 }

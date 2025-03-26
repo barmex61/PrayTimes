@@ -1,4 +1,4 @@
-package com.fatih.prayertime.presentation.dua_screens
+package com.fatih.prayertime.presentation.dua_screens.dua_detail_screen
 
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -35,8 +35,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.fatih.prayertime.R
 import com.fatih.prayertime.data.remote.dto.duadto.DuaCategoryDetail
+import com.fatih.prayertime.presentation.dua_screens.dua_categories_screen.DuaCategoriesViewModel
 import kotlin.random.Random
 import com.fatih.prayertime.util.extensions.capitalizeFirstLetter
 import com.fatih.prayertime.util.composables.LoadingView
@@ -47,7 +49,7 @@ fun DuaDetailScreen(
     modifier: Modifier,
     duaId: Int,
     categoryId: Int,
-    viewModel: DuaViewModel
+    viewModel: DuaDetailViewModel = hiltViewModel()
 ) {
     val duaDetail by viewModel.duaDetail.collectAsState()
     val isFavorite by viewModel.isFavorite.collectAsState()
@@ -75,7 +77,7 @@ fun DuaDetailScreen(
 }
 
 @Composable
-fun BoxScope.AddFavoriteFab(isFavorite: Boolean,viewModel: DuaViewModel) {
+fun BoxScope.AddFavoriteFab(isFavorite: Boolean,viewModel: DuaDetailViewModel) {
     val infiniteTransition = rememberInfiniteTransition()
 
     val fabButtonTransition = infiniteTransition.animateFloat(

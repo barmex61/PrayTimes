@@ -877,6 +877,10 @@ fun PrayerBar(haptic: HapticFeedback) {
                     .fillMaxWidth(1f)
                     .padding(start = 15.dp, end = 15.dp, top = 10.dp, bottom = 10.dp)
                     .background(color = Color.Transparent)
+                    .clickable{
+                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+
+                    }
             ) {
                 Icon(
                     imageVector = Icons.Outlined.Favorite,

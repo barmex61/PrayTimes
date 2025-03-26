@@ -8,42 +8,22 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class CompassScreenViewModel @Inject constructor(
     private val calculateQiblaDirectionUseCase: CalculateQiblaDirectionUseCase,
-    private val getCurrentLocationUseCase: GetCurrentLocationUseCase
+    getCurrentLocationUseCase: GetCurrentLocationUseCase
 ) : ViewModel() {
 
-    private val _qiblaDirection = MutableStateFlow(0.0)
-    val qiblaDirection: StateFlow<Double> = _qiblaDirection
-    
-    private var locationJob: Job? = null
+    val qiblaDirection = getCurrentLocationUseCase.invoke().map { location ->
+        calculateQiblaDirectionUseCase(location.latitude, location.longitude)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), 0.0)
 
-    init {
-        startLocationTracking()
-    }
-    
-    fun startLocationTracking() {
-        locationJob?.cancel()
-        locationJob = viewModelScope.launch(Dispatchers.IO) {
-            getCurrentLocationUseCase().collectLatest { location ->
-                _qiblaDirection.emit(calculateQiblaDirectionUseCase(location.latitude, location.longitude))
-            }
-        }
-    }
-    
-    fun stopLocationTracking() {
-        locationJob?.cancel()
-        locationJob = null
-    }
-    
-    override fun onCleared() {
-        super.onCleared()
-        stopLocationTracking()
-    }
 }

@@ -28,6 +28,7 @@ import com.fatih.prayertime.util.composables.TitleView
 import com.fatih.prayertime.util.config.NavigationConfig.screens
 import com.fatih.prayertime.util.extensions.navigateToScreen
 import com.fatih.prayertime.util.model.enums.FavoritesType
+import com.fatih.prayertime.util.model.event.FavoritesEvent
 import kotlinx.coroutines.delay
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
@@ -39,7 +40,8 @@ fun FavoritesScreen(
     viewModel: FavoritesViewModel = hiltViewModel()
 ) {
     val favorites by viewModel.favorites.collectAsState()
-    val selectedType by viewModel.selectedType.collectAsState()
+    val favoritesState by viewModel.favoritesState.collectAsState()
+    val selectedType = remember(key1 = favoritesState) { favoritesState.favoritesType }
     var showDeleteDialog by remember { mutableStateOf(false) }
     var favoriteToDelete by remember { mutableStateOf<FavoritesEntity?>(null) }
     var deleteIconRotation by remember { mutableFloatStateOf(0f) }
@@ -55,7 +57,9 @@ fun FavoritesScreen(
         ) {
             AnimatedFilterChips(
                 selectedType = selectedType,
-                onTypeSelected = viewModel::setType
+                onTypeSelected = { type ->
+                    viewModel.onEvent(FavoritesEvent.SetType(type))
+                }
             )
         }
 
@@ -155,7 +159,7 @@ fun FavoritesScreen(
                     LaunchedEffect(isVisible) {
                         if (!isVisible) {
                             delay(500)
-                            viewModel.removeFromFavorites(favorite)
+                            viewModel.onEvent(FavoritesEvent.RemoveFavorite(favorite))
                         }
                     }
                 }
@@ -175,7 +179,7 @@ fun FavoritesScreen(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        favoriteToDelete?.let { viewModel.removeFromFavorites(it) }
+                        favoriteToDelete?.let { viewModel.onEvent(FavoritesEvent.RemoveFavorite(it)) }
                         showDeleteDialog = false
                         favoriteToDelete = null
                     }

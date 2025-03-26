@@ -1,4 +1,4 @@
-package com.fatih.prayertime.presentation.quran_screen
+package com.fatih.prayertime.presentation.quran_juz_detail_screen
 
 import android.content.Context
 import android.util.Log
@@ -12,7 +12,7 @@ import com.fatih.prayertime.domain.use_case.quran_use_cases.GetSurahListUseCase
 import com.fatih.prayertime.util.model.event.QuranJuzDetailScreenEvent
 import com.fatih.prayertime.util.model.state.AudioPlayerState
 import com.fatih.prayertime.util.model.state.QuranJuzDetailScreenState
-import com.fatih.prayertime.util.model.state.quran_detail.QuranSettingsState
+import com.fatih.prayertime.util.model.state.QuranSettingsState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers

@@ -1,4 +1,4 @@
-package com.fatih.prayertime.presentation.quran_screen
+package com.fatih.prayertime.presentation.quran_surah_detail_screen
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
@@ -85,8 +85,8 @@ import com.fatih.prayertime.util.composables.ErrorView
 import com.fatih.prayertime.util.composables.LoadingView
 import com.fatih.prayertime.util.extensions.toText
 import com.fatih.prayertime.util.model.event.QuranDetailScreenEvent
-import com.fatih.prayertime.util.model.state.quran_detail.QuranDetailScreenState
-import com.fatih.prayertime.util.model.state.quran_detail.QuranSettingsState
+import com.fatih.prayertime.util.model.state.QuranDetailScreenState
+import com.fatih.prayertime.util.model.state.QuranSettingsState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -99,7 +99,7 @@ import kotlinx.coroutines.isActive
 import java.util.Locale
 
 @Composable
-fun QuranDetailScreen(surahNumber : Int,bottomPadding: Dp,topPadding : Dp, viewModel: QuranDetailScreenViewModel = hiltViewModel()) {
+fun QuranDetailScreen(surahNumber : Int,bottomPadding: Dp,topPadding : Dp, viewModel: QuranSurahDetailScreenViewModel = hiltViewModel()) {
     val quranDetailState by viewModel.quranDetailScreenState.collectAsStateWithLifecycle()
     val quranSettingsState by viewModel.quranSettingsState.collectAsStateWithLifecycle()
     val audioPlayerState by viewModel.audioPlayerState.collectAsStateWithLifecycle()
@@ -342,7 +342,7 @@ fun AyahCard(ayah: Ayah, state: QuranDetailScreenState, quranSettingsState: Qura
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BoxScope.BottomNavigationRow(
-    viewModel: QuranDetailScreenViewModel,
+    viewModel: QuranSurahDetailScreenViewModel,
     showHud: Boolean,
     quranDetailScreenState: QuranDetailScreenState,
     quranSettingsState: QuranSettingsState

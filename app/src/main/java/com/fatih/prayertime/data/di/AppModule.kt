@@ -297,6 +297,7 @@ object Module {
         getNetworkStateUseCase: GetNetworkStateUseCase,
         isPowerSavingEnabledUseCase: IsPowerSavingEnabledUseCase
     ) = PermissionAndPreferences(permissionsUseCase, getNetworkStateUseCase, isPowerSavingEnabledUseCase)
+
 }
 
 @Qualifier

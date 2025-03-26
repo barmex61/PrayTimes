@@ -17,7 +17,6 @@ import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
 
 import androidx.compose.ui.unit.dp
 
@@ -47,7 +46,6 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -68,10 +66,10 @@ import com.fatih.prayertime.domain.use_case.alarm_use_cases.ScheduleDailyAlarmUp
 import com.fatih.prayertime.domain.use_case.formatted_use_cases.FormattedUseCase
 import com.fatih.prayertime.presentation.calendar_screen.CalendarScreen
 import com.fatih.prayertime.presentation.compass_screen.CompassScreen
-import com.fatih.prayertime.presentation.dua_screens.DuaCategoriesScreen
-import com.fatih.prayertime.presentation.dua_screens.DuaCategoryDetailScreen
-import com.fatih.prayertime.presentation.dua_screens.DuaDetailScreen
-import com.fatih.prayertime.presentation.dua_screens.DuaViewModel
+import com.fatih.prayertime.presentation.dua_screens.dua_categories_screen.DuaCategoriesScreen
+import com.fatih.prayertime.presentation.dua_screens.dua_category_detail_screen.DuaCategoryDetailScreen
+import com.fatih.prayertime.presentation.dua_screens.dua_detail_screen.DuaDetailScreen
+import com.fatih.prayertime.presentation.dua_screens.dua_categories_screen.DuaCategoriesViewModel
 import com.fatih.prayertime.presentation.main_screen.MainScreen
 import com.fatih.prayertime.presentation.esmaul_husna_screen.EsmaulHusnaScreen
 import com.fatih.prayertime.presentation.favorites_screen.FavoritesScreen
@@ -79,7 +77,7 @@ import com.fatih.prayertime.presentation.hadith_screens.HadithCollectionScreen
 import com.fatih.prayertime.presentation.hadith_screens.HadithEditionsScreen
 import com.fatih.prayertime.presentation.hadith_screens.HadithSectionDetailScreen
 import com.fatih.prayertime.presentation.hadith_screens.HadithViewModel
-import com.fatih.prayertime.presentation.quran_screen.QuranDetailScreen
+import com.fatih.prayertime.presentation.quran_surah_detail_screen.QuranDetailScreen
 import com.fatih.prayertime.presentation.quran_screen.QuranScreen
 import com.fatih.prayertime.presentation.settings_screen.SettingsScreen
 import com.fatih.prayertime.presentation.statistics_screen.StatisticsScreen
@@ -270,7 +268,6 @@ fun NavHostLayout(navController: NavHostController, innerPadding: PaddingValues)
         innerPadding.calculateBottomPadding()
     )
     val hadithViewModel : HadithViewModel = hiltViewModel()
-    val duaViewModel : DuaViewModel = hiltViewModel()
     AnimatedNavHost(
         navController = navController,
         startDestination = screens.first().title.name
@@ -310,13 +307,16 @@ fun NavHostLayout(navController: NavHostController, innerPadding: PaddingValues)
                         val hadithIndex = backStackEntry.arguments?.getString("hadithIndex")
                         HadithSectionDetailScreen(modifier, hadithViewModel, hadithSectionIndex?.toIntOrNull(), collectionPath,hadithIndex?.toIntOrNull())
                     }
-                    PrayTimesString.PRAYER.name -> DuaCategoriesScreen(modifier,navController,duaViewModel)
-                    PrayTimesString.PRAY_CATEGORY_DETAILS.name -> DuaCategoryDetailScreen(modifier,navController,duaViewModel)
+                    PrayTimesString.PRAYER.name -> DuaCategoriesScreen(modifier,navController)
+                    PrayTimesString.PRAY_CATEGORY_DETAILS.name -> {
+                        val categoryId = backStackEntry.arguments?.getString("categoryId") ?: return@composable
+                        DuaCategoryDetailScreen(modifier,navController,categoryId.toInt())
+                    }
 
                     PrayTimesString.PRAYER_DETAIL.name -> {
                         val duaId = backStackEntry.arguments?.getString("duaId") ?: return@composable
                         val categoryId = backStackEntry.arguments?.getString("categoryId") ?: return@composable
-                        DuaDetailScreen(modifier,duaId.toInt(),categoryId.toInt(),duaViewModel)
+                        DuaDetailScreen(modifier,duaId.toInt(),categoryId.toInt())
                     }
                     PrayTimesString.FAVORITES.name -> FavoritesScreen(modifier,navController)
                     PrayTimesString.STATISTICS.name -> StatisticsScreen(modifier)

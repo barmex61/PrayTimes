@@ -1,4 +1,4 @@
-package com.fatih.prayertime.presentation.quran_screen
+package com.fatih.prayertime.presentation.quran_surah_detail_screen
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -13,8 +13,8 @@ import com.fatih.prayertime.util.extensions.toText
 import com.fatih.prayertime.util.model.enums.PlaybackMode
 import com.fatih.prayertime.util.model.event.AudioPlayerEvent
 import com.fatih.prayertime.util.model.event.QuranDetailScreenEvent
-import com.fatih.prayertime.util.model.state.quran_detail.QuranDetailScreenState
-import com.fatih.prayertime.util.model.state.quran_detail.QuranSettingsState
+import com.fatih.prayertime.util.model.state.QuranDetailScreenState
+import com.fatih.prayertime.util.model.state.QuranSettingsState
 import com.fatih.prayertime.util.model.state.Status
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -36,7 +36,7 @@ import kotlin.collections.first
 
 @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
 @HiltViewModel
-class QuranDetailScreenViewModel @Inject constructor(
+class QuranSurahDetailScreenViewModel @Inject constructor(
     private val getSelectedSurahUseCase: GetSelectedSurahUseCase,
     private val quranAudioManager: QuranAudioManager,
     private val getQuranMediaSettingsUseCase: GetQuranMediaSettingsUseCase,

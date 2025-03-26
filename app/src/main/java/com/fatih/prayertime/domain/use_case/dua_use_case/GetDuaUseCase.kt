@@ -5,5 +5,5 @@ import javax.inject.Inject
 
 class GetDuaUseCase @Inject constructor(private val localDataRepository : LocalDataRepository){
 
-    suspend operator fun invoke() = localDataRepository.getDua()
+    operator fun invoke() = localDataRepository.getDua()
 }

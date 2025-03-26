@@ -45,7 +45,7 @@ class PrayDatabaseRepositoryImp @Inject constructor(private val prayDao: PrayDao
         }
     }
 
-    override suspend fun getCurrentLocationPair(): Flow<LocationPair> {
+    override fun getCurrentLocationPair(): Flow<LocationPair> {
         return prayDao.getCurrentLocationPair()
     }
 

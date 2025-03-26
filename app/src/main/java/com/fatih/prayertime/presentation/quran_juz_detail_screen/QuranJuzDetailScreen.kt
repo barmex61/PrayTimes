@@ -1,4 +1,4 @@
-package com.fatih.prayertime.presentation.quran_screen
+package com.fatih.prayertime.presentation.quran_juz_detail_screen
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
@@ -62,7 +62,7 @@ import com.fatih.prayertime.util.composables.LoadingView
 import com.fatih.prayertime.util.composables.QuranPlayerBottomBar
 import com.fatih.prayertime.util.model.event.QuranJuzDetailScreenEvent
 import com.fatih.prayertime.util.model.state.QuranJuzDetailScreenState
-import com.fatih.prayertime.util.model.state.quran_detail.QuranSettingsState
+import com.fatih.prayertime.util.model.state.QuranSettingsState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch

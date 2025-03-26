@@ -43,24 +43,16 @@ import kotlin.random.Random
 
 @Composable
 fun EsmaulHusnaScreen(modifier: Modifier, esmaulHusnaViewModel: EsmaulHusnaViewModel = hiltViewModel()) {
-    val esmaulHusnaState by esmaulHusnaViewModel.esmaulHusnaState.collectAsState()
-    when(esmaulHusnaState.status){
-        Status.ERROR ->{
-            ErrorView(esmaulHusnaState.message?:"Error occurred") {
-                esmaulHusnaViewModel.loadEsmaulHusna()
-            }
-        }
-        Status.LOADING ->{
-            LoadingView()
-        }
-        Status.SUCCESS->{
-            LazyVerticalStaggeredGrid(
-                columns = StaggeredGridCells.Fixed(2),
-                modifier = modifier
-            ) {
-                items(esmaulHusnaState.data!!) { esmaulHusna ->
-                    EsmaulHusnaCard(esmaulHusna)
-                }
+    val esmaulHusnaState by esmaulHusnaViewModel.esmaulHusnaState
+    if(esmaulHusnaState == null) {
+        LoadingView()
+    }else{
+        LazyVerticalStaggeredGrid(
+            columns = StaggeredGridCells.Fixed(2),
+            modifier = modifier
+        ) {
+            items(esmaulHusnaState!!) { esmaulHusna ->
+                EsmaulHusnaCard(esmaulHusna)
             }
         }
     }

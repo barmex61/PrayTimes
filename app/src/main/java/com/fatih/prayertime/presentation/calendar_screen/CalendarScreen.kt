@@ -83,7 +83,7 @@ fun CalendarScreen(modifier: Modifier, calendarScreenViewModel: CalendarScreenVi
         }
         Status.ERROR -> {
             ErrorView(message = monthlyIslamicCalendar.message ?: "An unexpected error occurred"){
-                calendarScreenViewModel.getMonthlyIslamicCalendar()
+                calendarScreenViewModel.retryCalendarLoading()
             }
         }
     }

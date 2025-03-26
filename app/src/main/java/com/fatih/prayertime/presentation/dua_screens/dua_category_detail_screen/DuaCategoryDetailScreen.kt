@@ -1,4 +1,5 @@
-package com.fatih.prayertime.presentation.dua_screens
+package com.fatih.prayertime.presentation.dua_screens.dua_category_detail_screen
+
 import androidx.compose.animation.animateColor
 import androidx.compose.animation.core.InfiniteTransition
 import androidx.compose.animation.core.RepeatMode
@@ -10,8 +11,8 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
-import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.items
+import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -21,9 +22,11 @@ import androidx.compose.ui.graphics.graphicsLayer
 
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 
 import com.fatih.prayertime.data.remote.dto.duadto.DuaCategoryDetail
+import com.fatih.prayertime.presentation.dua_screens.dua_categories_screen.DuaCategoriesViewModel
 import com.fatih.prayertime.util.composables.ErrorView
 import com.fatih.prayertime.util.config.NavigationConfig.screens
 import com.fatih.prayertime.util.config.ThemeConfig.colors
@@ -36,16 +39,21 @@ import kotlin.random.Random
 fun DuaCategoryDetailScreen(
     modifier: Modifier,
     navController: NavController,
-    duaViewModel: DuaViewModel
+    categoryId : Int,
+    duaCategoryDetailViewModel: DuaCategoryDetailScreenViewModel = hiltViewModel(),
 
 ) {
     val infiniteTransition = rememberInfiniteTransition()
-    val duaCategoryDetailList by duaViewModel.duaCategoryDetailList.collectAsState()
-    val duaCategoryId by duaViewModel.duaCategoryId.collectAsState()
+    val duaCategoryDetailList by duaCategoryDetailViewModel.duaCategoryDetailList.collectAsState()
+    val duaCategoryId by duaCategoryDetailViewModel.duaCategoryId.collectAsState()
+
+    LaunchedEffect(key1 = categoryId) {
+        duaCategoryDetailViewModel.updateDuaCategoryId(categoryId)
+    }
 
     if (duaCategoryDetailList == null){
         ErrorView("Error occurred") {
-            duaViewModel.getDuaCategoryDetailList()
+            duaCategoryDetailViewModel.retryDuaCategoryDetailLoading()
         }
     }else{
         Box(modifier = Modifier.fillMaxSize(1f), contentAlignment = Alignment.Center){
@@ -53,6 +61,7 @@ fun DuaCategoryDetailScreen(
                 modifier = modifier,
                 columns = StaggeredGridCells.Fixed(2)
             ) {
+
                 items(duaCategoryDetailList!!){ duaCategoryDetail ->
                     DuaCategoryDetailCard(duaCategoryDetail,infiniteTransition ){
                         val subRoute = screens[7].route.replace("{duaId}","${duaCategoryDetail.id}")
