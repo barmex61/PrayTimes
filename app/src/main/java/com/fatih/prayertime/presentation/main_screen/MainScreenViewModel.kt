@@ -21,8 +21,8 @@ import com.fatih.prayertime.domain.use_case.dua_use_case.GetDuaUseCase
 import com.fatih.prayertime.domain.use_case.location_use_cases.RemoveLocationCallbackUseCase
 import com.fatih.prayertime.domain.use_case.weather_use_cases.GetWeatherUseCase
 import com.fatih.prayertime.util.model.event.MainScreenEvent
+import com.fatih.prayertime.util.model.state.NetworkState
 import com.fatih.prayertime.util.model.state.PrayerState
-import com.fatih.prayertime.util.model.state.Resource
 import com.fatih.prayertime.util.model.state.SelectedDuaState
 import com.fatih.prayertime.util.model.state.Status
 import com.fatih.prayertime.util.model.state.WeatherState
@@ -33,7 +33,11 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
@@ -82,76 +86,47 @@ class MainScreenViewModel @Inject constructor(
     private val _prayerState = MutableStateFlow<PrayerState>(PrayerState())
     val prayerState = _prayerState.asStateFlow()
 
-    init {
-
-        updateFormattedDate()
-        updateFormattedTime()
-        updateAllGlobalAlarm(false)
-        checkNotificationPermission()
-
-        viewModelScope.launch(Dispatchers.IO) {
-            launch {
-                getAllGlobalAlarmsUseCase().collect { globalAlarmList ->
-                    _prayerAlarmList.emit(globalAlarmList)
-                }
+    fun trackLocation() = viewModelScope.launch(Dispatchers.IO) {
+        _isLocationTracking.value = true
+        getLocationAndAddressUseCase()
+            .catch{ exception ->
+                _isLocationTracking.value = false
             }
-            launch {
-                prayerState.map { it.prayTimes }.filterNotNull().collectLatest { prayTimes ->
-                    updateStatisticsAlarmUseCase.updateStatisticsAlarms(prayTimes)
-                }
-            }
-            launch {
-                searchAddressState.emit(getLastKnownAddressFromDatabaseUseCase())
-            }
-            launch {
-                searchAddressState.collectLatest { address->
-                    val searchAddress = address?:getLastKnownAddressFromDatabaseUseCase()?:return@collectLatest
-                    fetchPrayTimes(searchAddress)
-                    fetchWeatherByCoordinates(searchAddress.latitude, searchAddress.longitude)
-                }
-            }
-            launch {
-                _mainScreenEvent.collect { event ->
-                    when (event) {
-                        is MainScreenEvent.ShowDuaDialog -> getRandomDua()
-                        is MainScreenEvent.HideDuaDialog -> hideDuaDialog()
+            .collect { resource ->
+                when(resource.status){
+                    Status.SUCCESS ->{
+                        updateSearchAddress(resource.data!!)
+                    }
+                    Status.ERROR ->{
+                        _prayerState.update { it.copy(error = resource.message) }
+                    }
+                    else ->{
+                        _prayerState.update { it.copy(isLoading = true) }
                     }
                 }
             }
-        }
     }
 
-    fun trackLocation() = viewModelScope.launch(Dispatchers.IO) {
-        _isLocationTracking.value = true
-        getLocationAndAddressUseCase().collect { resource ->
-            when(resource.status){
-                Status.SUCCESS -> {
-                    updateSearchAddress(resource.data!!)
-                }
-                else -> Unit
-            }
-        }
-    }
-
-    private fun updateSearchAddress(address: Address){
-        searchAddressState.value = address
+    private fun updateSearchAddress(address: Address) = viewModelScope.launch{
+        searchAddressState.emit(address)
     }
 
     private suspend fun fetchPrayTimes(address: Address){
         val prayTimesDb = fetchPrayTimesByDatabase(address)
         if (prayTimesDb != null){
-            _prayerState.value = _prayerState.value.copy(prayTimes = prayTimesDb)
+            _prayerState.value = _prayerState.value.copy(prayTimes = prayTimesDb, isLoading = false,error = null)
             return
         }
         val prayTimesApi = fetchPrayTimesByApi(address)
         if (prayTimesApi != null){
-            _prayerState.value = _prayerState.value.copy(prayTimes = prayTimesApi)
+            _prayerState.value = _prayerState.value.copy(prayTimes = prayTimesApi,isLoading = false,error = null)
         }
         updateAllGlobalAlarm(false)
     }
 
-    private suspend fun fetchPrayTimesByDatabase(address: Address) : PrayTimes? {
-        return getDailyPrayTimesWithAddressAndDateUseCase(address,formattedDate.value)
+    private suspend fun fetchPrayTimesByDatabase(address: Address?=null) : PrayTimes? {
+        val searchAddress = address?:getLastKnownAddressFromDatabaseUseCase()?:return null
+        return getDailyPrayTimesWithAddressAndDateUseCase(searchAddress,formattedDate.value)
     }
 
     private suspend fun fetchPrayTimesByApi(address: Address) : PrayTimes? {
@@ -167,6 +142,7 @@ class MainScreenViewModel @Inject constructor(
 
     private fun fetchWeatherByCoordinates(latitude: Double, longitude: Double) {
         viewModelScope.launch {
+            println("fetchWeather")
             _weatherState.value = _weatherState.value.copy(isWeatherLoading = true)
             getWeatherUseCase.getByCoordinates(latitude, longitude).collect { result ->
                 when(result.status) {
@@ -273,7 +249,6 @@ class MainScreenViewModel @Inject constructor(
     val duaCategoryList = _duaCategoryList
 
     private val _mainScreenEvent = MutableSharedFlow<MainScreenEvent>()
-    val mainScreenEvent = _mainScreenEvent
 
     private val _selectedDuaState = MutableStateFlow(SelectedDuaState())
     val selectedDuaState = _selectedDuaState.asStateFlow()
@@ -309,5 +284,58 @@ class MainScreenViewModel @Inject constructor(
         removeCallbacks()
         super.onCleared()
     }
+
+
+    init {
+
+        updateFormattedDate()
+        updateFormattedTime()
+        updateAllGlobalAlarm(false)
+        checkNotificationPermission()
+
+        viewModelScope.launch(Dispatchers.IO) {
+            launch {
+                permissionsAndPreferences.networkState.combine(permissionsAndPreferences.isLocationPermissionGranted){networkState,locationPermission->
+                    networkState to locationPermission
+                }.distinctUntilChanged().collect { (networkState,locationPermission)->
+                    if (!isLocationTracking.value && locationPermission && networkState == NetworkState.Connected){
+                        trackLocation()
+                    }
+                    if (locationPermission && prayerState.value.prayTimes == null){
+                        fetchPrayTimesByDatabase(null)
+                    }
+                    if (networkState == NetworkState.Connected && weatherState.value.weather == null && searchAddressState.value != null){
+                        fetchWeatherByCoordinates(searchAddressState.value!!.latitude, searchAddressState.value!!.longitude)
+                    }
+
+                }
+            }
+            launch {
+                getAllGlobalAlarmsUseCase().collect { globalAlarmList ->
+                    _prayerAlarmList.emit(globalAlarmList)
+                }
+            }
+
+            launch {
+                searchAddressState.emit(getLastKnownAddressFromDatabaseUseCase())
+            }
+            launch {
+                searchAddressState.collectLatest { address->
+                    val searchAddress = address?:getLastKnownAddressFromDatabaseUseCase()?:return@collectLatest
+                    fetchPrayTimes(searchAddress)
+                    fetchWeatherByCoordinates(searchAddress.latitude, searchAddress.longitude)
+                }
+            }
+            launch {
+                _mainScreenEvent.collect { event ->
+                    when (event) {
+                        is MainScreenEvent.ShowDuaDialog -> getRandomDua()
+                        is MainScreenEvent.HideDuaDialog -> hideDuaDialog()
+                    }
+                }
+            }
+        }
+    }
+
 
 }

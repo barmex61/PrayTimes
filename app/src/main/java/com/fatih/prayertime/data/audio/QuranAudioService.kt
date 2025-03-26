@@ -98,10 +98,10 @@ class QuranAudioService() : Service() {
 
     override fun onCreate() {
         super.onCreate()
-        startForeground(NOTIFICATION_ID,createNotification())
         setupDownloadFlow()
         setupAudioStateObserver()
         createNotificationChannel()
+        startForeground(NOTIFICATION_ID,createNotification())
 
         val intentFilter = IntentFilter().apply {
             addAction(ACTION_PLAY)

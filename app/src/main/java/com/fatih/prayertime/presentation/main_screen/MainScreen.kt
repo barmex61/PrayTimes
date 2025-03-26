@@ -6,7 +6,6 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
-import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -119,16 +118,12 @@ import com.fatih.prayertime.util.extensions.localDateTime
 import com.fatih.prayertime.util.extensions.toAddress
 import com.fatih.prayertime.util.extensions.toList
 import com.fatih.prayertime.util.model.enums.PrayTimesString
-import com.fatih.prayertime.util.model.state.NetworkState
-import com.fatih.prayertime.util.model.state.Status
 import com.fatih.prayertime.util.composables.ErrorView
 import com.fatih.prayertime.util.composables.LoadingView
 import com.fatih.prayertime.util.model.event.MainScreenEvent
 import kotlinx.coroutines.delay
 import org.threeten.bp.LocalDate
 import org.threeten.bp.LocalDateTime
-import org.threeten.bp.Year
-import org.threeten.bp.YearMonth
 
 import kotlin.math.PI
 import kotlin.math.cos
@@ -142,7 +137,6 @@ fun MainScreen( modifier: Modifier, mainScreenViewModel: MainScreenViewModel = h
     val haptic = LocalHapticFeedback.current
     val selectedDuaState by mainScreenViewModel.selectedDuaState.collectAsStateWithLifecycle()
 
-    GetLocationInformation(mainScreenViewModel)
     LaunchedEffect(Unit){
         isVisible = true
     }
@@ -264,22 +258,6 @@ fun GlobalAlarmsDialog(mainScreenViewModel: MainScreenViewModel, onDismiss: () -
     }
 }
 
-@Composable
-fun GetLocationInformation(mainScreenViewModel: MainScreenViewModel){
-    val permissionGranted by mainScreenViewModel.permissionsAndPreferences.isLocationPermissionGranted.collectAsState()
-    val isLocationTracking by mainScreenViewModel.isLocationTracking.collectAsState()
-    val networkState by mainScreenViewModel.permissionsAndPreferences.networkState.collectAsState()
-    LaunchedEffect (key1 = networkState, key2 = permissionGranted){
-        Log.d("MainScreen","isLocationTracking $isLocationTracking")
-        Log.d("MainScreen","networkState $networkState permissionGranted $permissionGranted")
-        if (!isLocationTracking && permissionGranted && networkState == NetworkState.Connected){
-            mainScreenViewModel.trackLocation()
-        }
-        if (permissionGranted){
-            mainScreenViewModel.getMonthlyPrayTimesFromAPI(Year.now().value, YearMonth.now().monthValue,null)
-        }
-    }
-}
 
 @Composable
 fun DailyPrayCompose(haptic: HapticFeedback,mainScreenViewModel: MainScreenViewModel) {
@@ -589,7 +567,7 @@ fun AlarmComposable(prayerAlarm: PrayerAlarm) {
 @Composable
 fun PrayScheduleCompose(haptic: HapticFeedback) {
     val mainScreenViewModel : MainScreenViewModel = hiltViewModel()
-    val dailyPrayTime by mainScreenViewModel.dailyPrayTimes.collectAsState()
+    val prayerState by mainScreenViewModel.prayerState.collectAsStateWithLifecycle()
 
     Card(
         modifier = Modifier.padding(top = 12.dp),
@@ -603,16 +581,16 @@ fun PrayScheduleCompose(haptic: HapticFeedback) {
         shape = RoundedCornerShape(10.dp)
     ) {
         Column {
-            TimerRow(mainScreenViewModel,dailyPrayTime.data)
+            TimerRow(mainScreenViewModel,prayerState.prayTimes)
             HorizontalDivider(Modifier.padding(15.dp))
-            when(dailyPrayTime.status){
-                Status.SUCCESS->{
-                    PrayTimesRowHeader(dailyPrayTime.data)
+            when{
+                prayerState.prayTimes != null->{
+                    PrayTimesRowHeader(prayerState.prayTimes)
                 }
-                Status.ERROR -> {
-                   ErrorView(dailyPrayTime.message?:"Error occurred while fetching pray times"){}
+                prayerState.error != null -> {
+                   ErrorView(prayerState.error?:"Error occurred while fetching pray times"){}
                 }
-                Status.LOADING -> {
+                prayerState.isLoading -> {
                    LoadingView()
                 }
             }
@@ -785,12 +763,12 @@ fun RowScope.PrayTimesRow(prayTime: PrayTimes,index: Int) {
 
 @Composable
 fun AddressBar(haptic: HapticFeedback,mainScreenViewModel: MainScreenViewModel) {
-    val prayTime by mainScreenViewModel.dailyPrayTimes.collectAsStateWithLifecycle()
+    val prayerState by mainScreenViewModel.prayerState.collectAsStateWithLifecycle()
     val locationText = stringResource(R.string.location_text)
-    val currentAddress by remember(prayTime) {
-        derivedStateOf { prayTime.data?.toAddress() }
+    val currentAddress by remember(prayerState) {
+        derivedStateOf { prayerState.prayTimes?.toAddress() }
     }
-    println(prayTime.data?.fullAddress)
+    println(prayerState.prayTimes?.fullAddress)
     Box (modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterStart) {
         var isExpanded by remember { mutableStateOf(false) }
         Card (

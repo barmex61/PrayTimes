@@ -35,10 +35,10 @@ import com.fatih.prayertime.presentation.main_screen.MainScreenViewModel
 fun WeatherCard(
     mainScreenViewModel: MainScreenViewModel
 ) {
-    val state by mainScreenViewModel.prayerState.collectAsStateWithLifecycle()
-    val isLoading = remember(key1 = state) {state.isLoading  }
-    val weather = remember(key1=state) { state.weather }
-    val error = remember(key1 = state) { state.error }
+    val weatherState by mainScreenViewModel.weatherState.collectAsStateWithLifecycle()
+    val isLoading = remember(key1 = weatherState) {weatherState.isWeatherLoading  }
+    val weather = remember(key1=weatherState) { weatherState.weather }
+    val error = remember(key1 = weatherState) { weatherState.weatherError }
     Card(
         modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
         elevation = CardDefaults.cardElevation(10.dp),

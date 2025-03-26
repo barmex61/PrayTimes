@@ -36,5 +36,6 @@ class StatisticsAlarmWorker @AssistedInject constructor(
         val localDateString = formattedUseCase.formatOfPatternDDMMYYYY(localDateNow)
         val prayTimes = getDailyPrayTimesWithAddressAndDateUseCase(lastKnownAddress,localDateString)?:return
         updateStatisticsAlarmUseCase.updateStatisticsAlarms(prayTimes)
+        println("statistic worker alarm")
     }
 }
