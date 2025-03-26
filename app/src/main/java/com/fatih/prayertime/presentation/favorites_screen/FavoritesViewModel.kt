@@ -7,6 +7,7 @@ import com.fatih.prayertime.domain.use_case.favorites_use_cases.GetAllFavoritesU
 import com.fatih.prayertime.domain.use_case.favorites_use_cases.RemoveFavoriteUseCase
 import com.fatih.prayertime.util.model.enums.FavoritesType
 import com.fatih.prayertime.util.model.event.FavoritesEvent
+import com.fatih.prayertime.util.model.event.UiEvent
 import com.fatih.prayertime.util.model.state.FavoritesScreenState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -22,6 +23,9 @@ class FavoritesViewModel @Inject constructor(
 
     private val _favoritesState = MutableStateFlow(FavoritesScreenState())
     val favoritesState = _favoritesState.asStateFlow()
+
+    private val _uiEvent = MutableSharedFlow<UiEvent>()
+    val uiEvent = _uiEvent.asSharedFlow().shareIn(viewModelScope, SharingStarted.WhileSubscribed())
 
     private val _favoritesEvent = MutableSharedFlow<FavoritesEvent>()
 
@@ -42,10 +46,9 @@ class FavoritesViewModel @Inject constructor(
             is FavoritesEvent.RemoveFavorite -> {
                 viewModelScope.launch {
                     removeFavoriteUseCase(event.favorite)
-                    _favoritesEvent.emit(FavoritesEvent.ShowMessage("Favorilerden çıkarıldı"))
+                    _uiEvent.emit(UiEvent.ShowToast("Favorilerden çıkarıldı"))
                 }
             }
-            is FavoritesEvent.ShowMessage -> {}
         }
     }
 

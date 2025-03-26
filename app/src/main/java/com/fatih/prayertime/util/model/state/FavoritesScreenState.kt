@@ -1,6 +1,5 @@
 package com.fatih.prayertime.util.model.state
 
-import com.fatih.prayertime.data.local.entity.FavoritesEntity
 import com.fatih.prayertime.util.model.enums.FavoritesType
 
 data class FavoritesScreenState(

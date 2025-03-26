@@ -1,7 +1,9 @@
 package com.fatih.prayertime.util.composables
 
 import android.app.Activity
+import android.content.Context
 import android.content.pm.ActivityInfo
+import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
@@ -67,10 +69,35 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.fatih.prayertime.R
+import com.fatih.prayertime.util.model.event.UiEvent
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
+
+@Composable
+fun UiEventComposable(
+    uiEvent : SharedFlow<UiEvent>,
+    context : Context = LocalContext.current
+){
+    LaunchedEffect(key1 = Unit) {
+        println("sdasd")
+        uiEvent.collect { event ->
+            when(event){
+                is UiEvent.Navigate -> {}
+                is UiEvent.ShowToast -> {
+                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+}
+
+
 
 @Composable
 fun LockScreenOrientation(orientation: Int) {

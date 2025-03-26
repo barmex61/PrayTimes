@@ -20,11 +20,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.exyte.animatednavbar.utils.toPxf
 import com.fatih.prayertime.R
 import com.fatih.prayertime.data.local.entity.FavoritesEntity
 import com.fatih.prayertime.util.composables.TitleView
+import com.fatih.prayertime.util.composables.UiEventComposable
 import com.fatih.prayertime.util.config.NavigationConfig.screens
 import com.fatih.prayertime.util.extensions.navigateToScreen
 import com.fatih.prayertime.util.model.enums.FavoritesType
@@ -45,6 +47,8 @@ fun FavoritesScreen(
     var showDeleteDialog by remember { mutableStateOf(false) }
     var favoriteToDelete by remember { mutableStateOf<FavoritesEntity?>(null) }
     var deleteIconRotation by remember { mutableFloatStateOf(0f) }
+
+    UiEventComposable(viewModel.uiEvent)
 
     Column(
         modifier = modifier.fillMaxSize()
