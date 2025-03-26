@@ -21,6 +21,7 @@ import com.fatih.prayertime.domain.use_case.dua_use_case.GetDuaUseCase
 import com.fatih.prayertime.domain.use_case.location_use_cases.RemoveLocationCallbackUseCase
 import com.fatih.prayertime.domain.use_case.weather_use_cases.GetWeatherUseCase
 import com.fatih.prayertime.util.model.event.MainScreenEvent
+import com.fatih.prayertime.util.model.state.PrayerState
 import com.fatih.prayertime.util.model.state.Resource
 import com.fatih.prayertime.util.model.state.SelectedDuaState
 import com.fatih.prayertime.util.model.state.Status
@@ -30,11 +31,11 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.threeten.bp.LocalDate
@@ -49,7 +50,7 @@ class MainScreenViewModel @Inject constructor(
     private val getDailyPrayTimesWithAddressAndDateUseCase: GetDailyPrayTimesWithAddressAndDateUseCase,
     private val insertPrayTimeIntoDbUseCase : InsertPrayTimeIntoDbUseCase,
     private val getLastKnownAddressFromDatabaseUseCase: GetLastKnowAddressFromDatabaseUseCase,
-     getAllGlobalAlarmsUseCase: GetAllGlobalAlarmsUseCase,
+    private val getAllGlobalAlarmsUseCase: GetAllGlobalAlarmsUseCase,
     private val removeLocationCallbackUseCase: RemoveLocationCallbackUseCase,
     private val updateGlobalAlarmUseCase: UpdateGlobalAlarmUseCase,
     private val updateStatisticsAlarmUseCase: UpdateStatisticsAlarmUseCase,
@@ -85,9 +86,20 @@ class MainScreenViewModel @Inject constructor(
 
         updateFormattedDate()
         updateFormattedTime()
+        updateAllGlobalAlarm(false)
+        checkNotificationPermission()
 
         viewModelScope.launch(Dispatchers.IO) {
-
+            launch {
+                getAllGlobalAlarmsUseCase().collect { globalAlarmList ->
+                    _prayerAlarmList.emit(globalAlarmList)
+                }
+            }
+            launch {
+                prayerState.map { it.prayTimes }.filterNotNull().collectLatest { prayTimes ->
+                    updateStatisticsAlarmUseCase.updateStatisticsAlarms(prayTimes)
+                }
+            }
             launch {
                 searchAddressState.emit(getLastKnownAddressFromDatabaseUseCase())
             }
@@ -96,6 +108,14 @@ class MainScreenViewModel @Inject constructor(
                     val searchAddress = address?:getLastKnownAddressFromDatabaseUseCase()?:return@collectLatest
                     fetchPrayTimes(searchAddress)
                     fetchWeatherByCoordinates(searchAddress.latitude, searchAddress.longitude)
+                }
+            }
+            launch {
+                _mainScreenEvent.collect { event ->
+                    when (event) {
+                        is MainScreenEvent.ShowDuaDialog -> getRandomDua()
+                        is MainScreenEvent.HideDuaDialog -> hideDuaDialog()
+                    }
                 }
             }
         }
@@ -192,8 +212,8 @@ class MainScreenViewModel @Inject constructor(
 
    // Alarm--
 
-    private val prayerAlarmList = getAllGlobalAlarmsUseCase()
-        .stateIn(viewModelScope, SharingStarted.Lazily,listOf())
+    private val _prayerAlarmList : MutableStateFlow<List<PrayerAlarm>?> = MutableStateFlow(null)
+    val prayerAlarmList : StateFlow<List<PrayerAlarm>?> = _prayerAlarmList
 
     fun updateGlobalAlarm(
         alarmType : String,
@@ -213,9 +233,10 @@ class MainScreenViewModel @Inject constructor(
 
     fun updateAllGlobalAlarm(enableAllGlobalAlarm : Boolean) = viewModelScope.launch(Dispatchers.IO){
         prayerAlarmList.value?.forEach { globalAlarm ->
-            prayerState.value.prayTimes?:return@launch
+            val dailyPrayTimes = prayerState.value.prayTimes
+            dailyPrayTimes?:return@launch
             val prayTime = getPrayTimeForPrayType(prayerState.value.prayTimes!!,globalAlarm.alarmType,globalAlarm.alarmOffset,formattedUseCase)
-            val prayTimeLong = formattedUseCase.formatHHMMtoLong(prayTime,formattedUseCase.formatDDMMYYYYDateToLocalDate(dailyPrayTimes.value.data!!.date))
+            val prayTimeLong = formattedUseCase.formatHHMMtoLong(prayTime,formattedUseCase.formatDDMMYYYYDateToLocalDate(dailyPrayTimes.date))
             val prayTimeString = formattedUseCase.formatLongToLocalDateTime(prayTimeLong)
             updateGlobalAlarmUseCase(globalAlarm.copy(isEnabled = if (enableAllGlobalAlarm) true else globalAlarm.isEnabled, alarmTime = prayTimeLong, alarmTimeString = prayTimeString))
         }
@@ -277,32 +298,6 @@ class MainScreenViewModel @Inject constructor(
 
     private fun hideDuaDialog() {
         _selectedDuaState.value = _selectedDuaState.value.copy(isVisible = false)
-    }
-
-    init {
-
-        viewModelScope.launch {
-
-            launch {
-                _dailyPrayTimes.collectLatest { resource ->
-                    resource.data?.let { prayTimes ->
-                        updateStatisticsAlarmUseCase.updateStatisticsAlarms(prayTimes)
-
-                    }
-                }
-            }
-            launch {
-                _mainScreenEvent.collect { event ->
-                    when (event) {
-                        is MainScreenEvent.ShowDuaDialog -> getRandomDua()
-                        is MainScreenEvent.HideDuaDialog -> hideDuaDialog()
-                    }
-                }
-            }
-        }
-
-        updateAllGlobalAlarm(false)
-        checkNotificationPermission()
     }
 
     private fun removeCallbacks(){
