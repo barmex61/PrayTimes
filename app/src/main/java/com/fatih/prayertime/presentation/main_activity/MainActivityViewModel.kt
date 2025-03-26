@@ -12,7 +12,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MainActivityViewModel @Inject constructor(
-    private val getSettingsUseCase: GetSettingsUseCase,
+    getSettingsUseCase: GetSettingsUseCase,
     val permissionAndPreferences: PermissionAndPreferences
 ): ViewModel(){
 

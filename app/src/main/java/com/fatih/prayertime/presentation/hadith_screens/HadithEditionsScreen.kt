@@ -12,9 +12,11 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -41,6 +43,7 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
@@ -61,7 +64,7 @@ import java.nio.charset.StandardCharsets
 import kotlin.random.Random
 
 @Composable
-fun HadithEditionsScreen(modifier: Modifier, navController: NavController, hadithEditionsViewModel: HadithEditionsViewModel) {
+fun HadithEditionsScreen(modifier: Modifier, navController: NavController, hadithEditionsViewModel: HadithEditionsViewModel = hiltViewModel()) {
     val hadithEdition by hadithEditionsViewModel.hadithEditions.collectAsState(Resource.loading())
 
     when(hadithEdition.status){
@@ -71,7 +74,7 @@ fun HadithEditionsScreen(modifier: Modifier, navController: NavController, hadit
         Status.SUCCESS -> {
             LazyVerticalStaggeredGrid(
                 columns = StaggeredGridCells.Fixed(2),
-                modifier = modifier
+                modifier = modifier.fillMaxSize(1f)
             ) {
                 val hadithEditionsList = hadithEdition.data!!.toList()
                 items(hadithEditionsList) { hadithEdition ->
@@ -171,7 +174,7 @@ fun HadithImage(animatedColor: Color) {
     Image(
         painter = rememberAsyncImagePainter(R.drawable.hadith),
         contentDescription = "Hadith",
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.size(150.dp),
         colorFilter = ColorFilter.lighting(
             multiply = animatedColor,
             add = Color.Black

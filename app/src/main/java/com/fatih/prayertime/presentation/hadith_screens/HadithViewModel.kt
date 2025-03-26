@@ -71,7 +71,6 @@ class HadithViewModel @Inject constructor(
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = null
     )
-
     val selectedHadith = _selectedHadith
 
     private val _isFavorite = _selectedHadith.withRetry(favoriteRetryTrigger).map {
@@ -97,10 +96,6 @@ class HadithViewModel @Inject constructor(
         _selectedHadithIndex.emit(0)
     }
 
-    private fun updateSelectedHadithSection(index:Int) = viewModelScope.launch(Dispatchers.Default){
-        _selectedHadithSection.emit(hadithSectionCardDataList.value.data?.get(index))
-    }
-
     fun updateSelectedHadithSectionIndex(index: Int) = viewModelScope.launch(Dispatchers.Default){
         selectedHadithSectionIndex.emit(index)
     }
@@ -108,7 +103,6 @@ class HadithViewModel @Inject constructor(
     fun updateSelectedHadithIndex(hadithIndex : Int) = viewModelScope.launch(Dispatchers.Default){
         _selectedHadithIndex.emit(hadithIndex)
     }
-
 
     fun toggleFavorite(hadith: Hadith) = viewModelScope.launch(Dispatchers.IO){
         val id = generateFavoriteItemId(FavoritesType.HADIS.name, hadith.text, hadithCollectionPath.value, selectedHadithSectionIndex.value, selectedHadithIndex.value)
@@ -142,5 +136,8 @@ class HadithViewModel @Inject constructor(
         favoriteRetryTrigger.emit(Unit)
     }
 
+    fun triggerHadithRetry() = viewModelScope.launch {
+        hadithSectionRetryTrigger.emit(Unit)
+    }
 
 }

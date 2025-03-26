@@ -60,7 +60,7 @@ fun HadithCollectionScreen(modifier: Modifier, collectionPath: String, hadithVie
         }
         Status.ERROR ->{
             ErrorView(message = hadithSectionCardDataList.message.toString()){
-                hadithViewModel.getHadithCollection()
+                hadithViewModel.triggerHadithRetry()
             }
         }
     }

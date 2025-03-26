@@ -20,6 +20,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -67,14 +68,14 @@ class QuranJuzDetailScreenViewModel @Inject constructor(
         
         // Juz detaylarını al
         val juzNumber = quranJuzDetailScreenState.value.selectedJuzNumber
-        val juzResponse = getJuzListUseCase()
+        val juzResponse = getJuzListUseCase().first()
         
         if (juzResponse.data != null) {
             val selectedJuz = juzResponse.data.firstOrNull { it.juzNumber == juzNumber }
             
             if (selectedJuz != null) {
                 // Juz'a ait sûreleri al
-                val surahListResponse = getSurahListUseCase()
+                val surahListResponse = getSurahListUseCase().first()
                 
                 if (surahListResponse.data != null) {
                     val surahList = surahListResponse.data

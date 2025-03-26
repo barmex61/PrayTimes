@@ -41,6 +41,7 @@ class QuranApiRepositoryImp @Inject constructor(
 
     override suspend fun getSurahList(): Resource<List<SurahInfo>> = withContext(Dispatchers.IO) {
         return@withContext try {
+            println("getsurahlist")
             val response = quranApi.getSurahList()
             if (response.isSuccessful) {
                 response.body()?.let {

@@ -29,6 +29,7 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -48,6 +49,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -198,8 +200,8 @@ fun MainScreenContent(showBatteryOptimizationDialog: () -> Unit,mainActivityView
         }
     ) { innerPadding ->
         Box(
-            modifier = Modifier.background(MaterialTheme.colorScheme.background)
-                ,
+            modifier = Modifier.background(MaterialTheme.colorScheme.background) ,
+
         ) {
             if (powerSavingState == true) {
                 showBatteryOptimizationDialog()
@@ -296,7 +298,7 @@ fun NavHostLayout(navController: NavHostController, innerPadding: PaddingValues)
                     PrayTimesString.Settings.name -> SettingsScreen(modifier)
                     PrayTimesString.ESMAUL_HUSNA.name -> EsmaulHusnaScreen(modifier)
                     PrayTimesString.ISLAMIC_CALENDAR.name -> CalendarScreen(modifier)
-                    PrayTimesString.HADITH.name-> HadithEditionsScreen(modifier,navController,hadithViewModel)
+                    PrayTimesString.HADITH.name-> HadithEditionsScreen(modifier,navController)
                     PrayTimesString.HADITH_COLLECTION.name -> {
                         val collectionPath = backStackEntry.arguments?.getString("collectionPath") ?: return@composable
                         HadithCollectionScreen(modifier,collectionPath, hadithViewModel = hadithViewModel, navController = navController)

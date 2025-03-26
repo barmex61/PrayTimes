@@ -78,9 +78,7 @@ fun QuranScreen(
                 }
             }else{
                 ErrorView(state.error?:"Error Occurred") {
-                    viewModel.loadJuzList()
-                    viewModel.loadSurahList()
-
+                    viewModel.retry()
                 }
             }
         }
