@@ -6,19 +6,35 @@ import com.fatih.prayertime.data.remote.dto.hadithdto.HadithSections
 import com.fatih.prayertime.data.remote.dto.hadithdto.Sections
 import com.fatih.prayertime.domain.model.HadithSectionData
 import com.fatih.prayertime.util.model.enums.FavoritesType
+import com.fatih.prayertime.util.model.state.Resource
+import com.fatih.prayertime.util.model.state.Status
 import kotlin.reflect.KProperty1
 
 object HadithUtils {
-    fun combineSectionsAndDetails(hadithCollection: HadithCollection): List<HadithSectionData> {
-        val sectionList = hadithCollection.metadata.sections.toList()
-        val detailsList = hadithCollection.metadata.section_details.toList()
-        return sectionList.zip(detailsList) { section, details ->
-            val subHadithList = hadithCollection.hadiths.subList(
-                details?.hadithnumber_first.anyToInt()!! - 1,
-                details?.hadithnumber_last.anyToInt()!!
-            )
-            HadithSectionData(section, details, subHadithList, subHadithList.size)
+    fun combineSectionsAndDetails(hadithCollection: Resource<HadithCollection>): Resource<List<HadithSectionData>> {
+        return when(hadithCollection.status){
+            Status.LOADING -> {
+                Resource.loading()
+            }
+            Status.ERROR -> {
+                Resource.error(hadithCollection.message?:"")
+            }
+            Status.SUCCESS -> {
+                val data = hadithCollection.data!!
+                val sectionList = data.metadata.sections.toList()
+                val detailsList = data.metadata.section_details.toList()
+                Resource.success(
+                    sectionList.zip(detailsList) { section, details ->
+                        val subHadithList = data.hadiths.subList(
+                            details?.hadithnumber_first.anyToInt()!! - 1,
+                            details?.hadithnumber_last.anyToInt()!!
+                        )
+                        HadithSectionData(section, details, subHadithList, subHadithList.size)
+                    }
+                )
+            }
         }
+
     }
 
     private fun Sections.toList(): List<String?> {

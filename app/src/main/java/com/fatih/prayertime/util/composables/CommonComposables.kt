@@ -85,7 +85,6 @@ fun UiEventComposable(
     context : Context = LocalContext.current
 ){
     LaunchedEffect(key1 = Unit) {
-        println("sdasd")
         uiEvent.collect { event ->
             when(event){
                 is UiEvent.Navigate -> {}

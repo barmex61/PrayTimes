@@ -9,7 +9,7 @@ data class Resource<out T>(
     val totalSize: Long = 0L
 ) {
     companion object {
-        fun <T> success(data: T?): Resource<T> {
+        fun <T> success(data: T): Resource<T> {
             return Resource(Status.SUCCESS, data, null)
         }
 

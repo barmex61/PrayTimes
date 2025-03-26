@@ -4,5 +4,5 @@ import com.fatih.prayertime.domain.repository.HadithRepository
 import javax.inject.Inject
 
 class GetHadithCollectionsUseCase @Inject constructor(private val hadithRepository: HadithRepository) {
-    suspend operator fun invoke(collectionPath : String) = hadithRepository.getHadithCollections(collectionPath)
+    operator fun invoke(collectionPath : String) = hadithRepository.getHadithCollections(collectionPath)
 }

@@ -41,6 +41,7 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.fatih.prayertime.R
@@ -53,14 +54,15 @@ import com.fatih.prayertime.util.config.NavigationConfig.screens
 import com.fatih.prayertime.util.config.ThemeConfig.colors
 import com.fatih.prayertime.util.extensions.navigateToScreen
 import com.fatih.prayertime.util.extensions.toList
+import com.fatih.prayertime.util.model.state.Resource
 import com.fatih.prayertime.util.model.state.Status
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 import kotlin.random.Random
 
 @Composable
-fun HadithEditionsScreen(modifier: Modifier, navController: NavController, hadithViewModel: HadithViewModel) {
-    val hadithEdition by hadithViewModel.hadithEditions.collectAsState()
+fun HadithEditionsScreen(modifier: Modifier, navController: NavController, hadithEditionsViewModel: HadithEditionsViewModel) {
+    val hadithEdition by hadithEditionsViewModel.hadithEditions.collectAsState(Resource.loading())
 
     when(hadithEdition.status){
         Status.LOADING -> {
@@ -79,7 +81,7 @@ fun HadithEditionsScreen(modifier: Modifier, navController: NavController, hadit
         }
         Status.ERROR -> {
             ErrorView(hadithEdition.message?:"Unknown Error"){
-                hadithViewModel.getHadithEditions()
+                hadithEditionsViewModel.triggerRetry()
             }
         }
     }
