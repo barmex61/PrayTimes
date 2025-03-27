@@ -68,8 +68,8 @@ class QuranAudioService() : Service() {
     private val downloadRequests = MutableSharedFlow<DownloadRequest?>()
 
     private lateinit var audioManager : AudioManager
-    var maxVolume = 1
-    var currentVolume = 1
+    var maxVolume = 1f
+    var currentVolume = 1f
 
     @Inject
     lateinit var getAudioFileUseCase: GetAudioFileUseCase
@@ -103,8 +103,6 @@ class QuranAudioService() : Service() {
         createNotificationChannel()
         setContentObserver()
         startForeground(NOTIFICATION_ID,createNotification())
-        val filter = IntentFilter("android.media.VOLUME_CHANGED_ACTION")
-        registerReceiver(audioVolumeReceiver, filter)
         val intentFilter = IntentFilter().apply {
             addAction(ACTION_PLAY)
             addAction(ACTION_PAUSE)
@@ -123,13 +121,13 @@ class QuranAudioService() : Service() {
 
     private fun setContentObserver(){
         audioManager = getSystemService(AUDIO_SERVICE) as AudioManager
-        maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
-        currentVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
+        maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC).toFloat()
+        currentVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC).toFloat()
         volumeContentObserver = object : ContentObserver(null) {
             override fun onChange(selfChange: Boolean) {
-                currentVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
-                val newVolume = currentVolume.toFloat() / maxVolume.toFloat()
-                mediaPlayer?.setVolume(newVolume, newVolume)
+                val volume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
+                currentVolume = (volume.toFloat() / maxVolume.toFloat()).coerceAtMost(1f)
+                mediaPlayer?.setVolume(currentVolume,currentVolume)
             }
         }
 
@@ -311,22 +309,6 @@ class QuranAudioService() : Service() {
         }
     }
 
-    private val audioVolumeReceiver = object : BroadcastReceiver() {
-        override fun onReceive(p0: Context?, intent: Intent?) {
-            if (intent?.action == "android.media.VOLUME_CHANGED_ACTION") {
-                try {
-                    currentVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
-                    val newVolume = (currentVolume.toFloat() / maxVolume.toFloat()).coerceAtMost(1f)
-                    mediaPlayer?.setVolume(newVolume, newVolume)
-                }catch (e: Exception){
-                    println(e)
-                }
-
-            }
-        }
-    }
-
-
     fun downloadAndPlayAudioFile() {
         val currentState = audioStateManager.audioPlayerState.value
 
@@ -380,7 +362,7 @@ class QuranAudioService() : Service() {
                 )
 
                 setDataSource(file.path)
-
+                setVolume(currentVolume,currentVolume)
                 prepare()
                 setOnCompletionListener {
                     audioStateManager.updateState { copy(isPlaying = false) }

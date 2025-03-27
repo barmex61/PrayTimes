@@ -17,6 +17,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import org.threeten.bp.LocalDate
+import java.util.Locale
 import javax.inject.Inject
 import kotlin.text.toFloat
 
@@ -102,8 +103,9 @@ class StatisticsViewModel @Inject constructor(
         statState.statistics.groupBy {
             it.prayerType
         }.forEach {
-            list.add(String.format("%.1f", (it.value.count { it.isCompleted }.toFloat() / totalPrayers * 100)).toFloat())
+            list.add(String.format(Locale.US,"%.1f", (it.value.count { it.isCompleted }.toFloat() / totalPrayers * 100)).toFloat())
         }
+        println(list.toString())
         list
     }.stateIn(
         scope = viewModelScope,
