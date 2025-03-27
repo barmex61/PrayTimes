@@ -12,7 +12,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -44,7 +43,6 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.fatih.prayertime.R
@@ -56,7 +54,7 @@ import com.fatih.prayertime.util.composables.TitleView
 import com.fatih.prayertime.util.config.NavigationConfig.screens
 import com.fatih.prayertime.util.config.ThemeConfig.colors
 import com.fatih.prayertime.util.extensions.navigateToScreen
-import com.fatih.prayertime.util.extensions.toList
+import com.fatih.prayertime.util.extensions.toNameAndTimePair
 import com.fatih.prayertime.util.model.state.Resource
 import com.fatih.prayertime.util.model.state.Status
 import java.net.URLEncoder
@@ -76,7 +74,7 @@ fun HadithEditionsScreen(modifier: Modifier, navController: NavController, hadit
                 columns = StaggeredGridCells.Fixed(2),
                 modifier = modifier.fillMaxSize(1f)
             ) {
-                val hadithEditionsList = hadithEdition.data!!.toList()
+                val hadithEditionsList = hadithEdition.data!!.toNameAndTimePair()
                 items(hadithEditionsList) { hadithEdition ->
                     HadithEditionCard(hadithEdition,navController)
                 }

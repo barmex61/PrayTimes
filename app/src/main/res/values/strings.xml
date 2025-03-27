@@ -161,4 +161,17 @@
     <string name="quran_audio_error_state">An error occurred while playing the audio file.</string>
     <string name="quran_audio_error_generic">An unexpected error occurred. Please try again.</string>
     <string name="quran_audio_error_download">An error occurred while downloading the audio file.</string>
+    
+    <!-- MainScreen Strings -->
+    <string name="notification_permission_denied">Notification permission denied. Please enable notification permissions in settings.</string>
+    <string name="amen">Amin</string>
+    <string name="source">Source: %s</string>
+    <string name="select_prayer_calculation_method">Select Prayer Time Calculation Method</string>
+    <string name="face_icon">Face Icon</string>
+    
+    <!-- Weather Card Strings -->
+    <string name="weather_data_unavailable">Weather information could not be retrieved.</string>
+    <string name="weather_data_not_available">Weather information is not available.</string>
+    <string name="wind_speed_unit">km/h</string>
+    <string name="weather_icon">Weather icon</string>
 </resources>

@@ -160,4 +160,17 @@
     <string name="quran_audio_error_generic">Beklenmeyen bir hata oluştu. Lütfen tekrar deneyin.</string>
     <string name="vibration_description">Bildirimler için titreşimi aç-kapat</string>
     <string name="mute_friday_description">Cuma vakitlerinde sessize al</string>
+    
+    <!-- MainScreen Strings -->
+    <string name="notification_permission_denied">Bildirim izni reddedildi. Ayarlardan bildirim izinlerini açın</string>
+    <string name="amen">Amîn</string>
+    <string name="source">Kaynak: %s</string>
+    <string name="select_prayer_calculation_method">Namaz Vakti Hesaplama Metodunu Seçin</string>
+    <string name="face_icon">Yüz İkonu</string>
+    
+    <!-- Weather Card Strings -->
+    <string name="weather_data_unavailable">Hava durumu bilgisi alınamadı.</string>
+    <string name="weather_data_not_available">Hava durumu bilgisi mevcut değil.</string>
+    <string name="wind_speed_unit">km/s</string>
+    <string name="weather_icon">Hava durumu ikonu</string>
 </resources>

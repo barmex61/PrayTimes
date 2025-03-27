@@ -22,6 +22,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -70,7 +71,7 @@ fun WeatherCard(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "Hava durumu bilgisi alınamadı.",
+                        text = stringResource(R.string.weather_data_unavailable),
                         color = MaterialTheme.colorScheme.error,
                         textAlign = TextAlign.Center
                     )
@@ -105,7 +106,7 @@ fun WeatherCard(
                         
                         AsyncImage(
                             model = weather.conditionIcon,
-                            contentDescription = weather.condition,
+                            contentDescription = stringResource(R.string.weather_icon),
                             modifier = Modifier.size(60.dp)
                         )
                     }
@@ -130,7 +131,7 @@ fun WeatherCard(
                         
                         WeatherInfoItem(
                             iconRes = R.drawable.ic_wind,
-                            label = "${weather.windSpeed} km/s",
+                            label = "${weather.windSpeed} ${stringResource(R.string.wind_speed_unit)}",
                             modifier = Modifier.weight(1f)
                         )
                     }
@@ -144,7 +145,7 @@ fun WeatherCard(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "Hava durumu bilgisi mevcut değil.",
+                        text = stringResource(R.string.weather_data_not_available),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center
                     )

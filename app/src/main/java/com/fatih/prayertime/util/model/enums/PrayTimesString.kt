@@ -29,6 +29,7 @@ enum class PrayTimesString(val stringResId: Int) {
     QURAN_JUZ_DETAIL_SCREEN(R.string.quran_juz_detail),
     HADITH(R.string.hadith);
 
+
     companion object {
         fun fromString(str: String): PrayTimesString {
             return try {

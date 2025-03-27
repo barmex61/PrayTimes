@@ -13,7 +13,8 @@ import com.fatih.prayertime.domain.use_case.formatted_use_cases.FormattedUseCase
 import com.fatih.prayertime.domain.use_case.location_use_cases.GetLastKnowAddressFromDatabaseUseCase
 import com.fatih.prayertime.domain.use_case.pray_times_use_cases.GetDailyPrayTimesWithAddressAndDateUseCase
 import com.fatih.prayertime.util.extensions.convertTimeToSeconds
-import com.fatih.prayertime.util.extensions.toList
+import com.fatih.prayertime.util.extensions.toNameAndTimePair
+import com.fatih.prayertime.util.extensions.toTimeList
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -76,7 +77,7 @@ class MyWidgetProvider() : AppWidgetProvider() {
 
         val address = getLastKnowAddressFromDatabaseUseCase()
         val prayTimes = if (address != null) getDailyPrayTimesWithAddressAndDateUseCase(address, searchDateString) else null
-        val prayTimesList = prayTimes?.toList()?.map { it.second } ?: listOf()
+        val prayTimesList = prayTimes?.toTimeList()?:listOf()
         val nextPrayTime = prayTimesList.firstOrNull { it.convertTimeToSeconds() > formattedTimeString.convertTimeToSeconds() }
         val timeDifference = nextPrayTime?.convertTimeToSeconds()?.minus(formattedTimeString.convertTimeToSeconds()) ?: 0
         val timeDiffAtMinute = timeDifference / 60

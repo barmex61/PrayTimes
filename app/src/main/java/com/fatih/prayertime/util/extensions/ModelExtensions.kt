@@ -1,5 +1,6 @@
 package com.fatih.prayertime.util.extensions
 
+import com.fatih.prayertime.R
 import com.fatih.prayertime.data.remote.dto.hadithdto.Edition
 import com.fatih.prayertime.data.remote.dto.hadithdto.HadithEdition
 import com.fatih.prayertime.data.remote.dto.islamicdaysdto.IslamicDaysDataDTO
@@ -48,12 +49,27 @@ fun PrayTimesDTO.toPrayTimes(date: String, address: Address): PrayTimes = PrayTi
     fullAddress = address.fullAddress,
 )
 
-fun PrayTimes.toList(): List<Pair<String, String>> = listOf(
-    Pair(PrayTimesString.Morning.name, this.morning),
-    Pair(PrayTimesString.Noon.name, this.noon),
-    Pair(PrayTimesString.Afternoon.name, this.afternoon),
-    Pair(PrayTimesString.Evening.name, this.evening),
-    Pair(PrayTimesString.Night.name, this.night)
+fun PrayTimes.toPrayTimeInfoList(): List<PrayTimesInfo> = listOf(
+    PrayTimesInfo(R.drawable.morning, PrayTimesString.Morning.stringResId, this.morning),
+    PrayTimesInfo(R.drawable.noon, PrayTimesString.Noon.stringResId, this.noon),
+    PrayTimesInfo(R.drawable.afternoon, PrayTimesString.Afternoon.stringResId, this.afternoon),
+    PrayTimesInfo(R.drawable.evening, PrayTimesString.Evening.stringResId, this.evening),
+    PrayTimesInfo(R.drawable.night, PrayTimesString.Night.stringResId, this.night),
+
+)
+
+data class PrayTimesInfo(
+    val drawable : Int,
+    val stringRes : Int,
+    val time : String
+)
+
+fun PrayTimes.toTimeList() : List<String> = listOf(
+    this.morning,
+    this.noon,
+    this.afternoon,
+    this.evening,
+    this.night
 )
 
 fun PrayTimes.toPrayTimePair(offsetMinutes : Long? = null) : List<Pair<String, Long>> = listOf(
@@ -122,7 +138,7 @@ fun IslamicDaysDataDTO.toIslamicDaysData(): IslamicDaysData = IslamicDaysData(
     islamicMonth = hijri.month.en
 )
 
-fun HadithEdition.toList(): List<Edition> = listOf(
+fun HadithEdition.toNameAndTimePair(): List<Edition> = listOf(
     this.abudawud,
     this.bukhari,
     this.ibnmajah,

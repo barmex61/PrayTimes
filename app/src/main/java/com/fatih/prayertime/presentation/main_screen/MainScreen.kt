@@ -116,10 +116,12 @@ import com.fatih.prayertime.presentation.main_screen.component.WeatherCard
 import com.fatih.prayertime.util.extensions.convertTimeToSeconds
 import com.fatih.prayertime.util.extensions.localDateTime
 import com.fatih.prayertime.util.extensions.toAddress
-import com.fatih.prayertime.util.extensions.toList
+import com.fatih.prayertime.util.extensions.toNameAndTimePair
 import com.fatih.prayertime.util.model.enums.PrayTimesString
 import com.fatih.prayertime.util.composables.ErrorView
 import com.fatih.prayertime.util.composables.LoadingView
+import com.fatih.prayertime.util.extensions.toPrayTimeInfoList
+import com.fatih.prayertime.util.extensions.toTimeList
 import com.fatih.prayertime.util.model.event.MainScreenEvent
 import kotlinx.coroutines.delay
 import org.threeten.bp.LocalDate
@@ -354,11 +356,12 @@ fun PrayNotificationCompose(
         ) {
             val isNotificationPermissionGranted by mainScreenViewModel.isNotificationPermissionGranted.collectAsStateWithLifecycle()
             val context = LocalContext.current
+            val notificationStr = stringResource(R.string.notification_permission_denied)
             val permissionLauncher = rememberLauncherForActivityResult(
                 contract = ActivityResultContracts.RequestPermission()
             ) { isGranted ->
                 if (!isGranted) {
-                    Toast.makeText(context, "Bildirim izni reddedildi.Ayarlardan bildirim izinlerini açın", Toast.LENGTH_LONG).show()
+                    Toast.makeText(context, notificationStr , Toast.LENGTH_LONG).show()
                     val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
                         data = Uri.fromParts("package", context.packageName, null)
                     }
@@ -715,16 +718,9 @@ fun PrayTimesRowHeader(dailyPrayTime : PrayTimes?) {
 
 @Composable
 fun RowScope.PrayTimesRow(prayTime: PrayTimes,index: Int) {
-    val prayList = prayTime.toList()
-    prayList.forEachIndexed { currentIndex ,prayPair->
-        val icon = when(prayPair.first){
-            PrayTimesString.Morning.name -> rememberAsyncImagePainter(R.drawable.morning)
-            PrayTimesString.Noon.name -> rememberAsyncImagePainter(R.drawable.noon)
-            PrayTimesString.Afternoon.name -> rememberAsyncImagePainter(R.drawable.afternoon)
-            PrayTimesString.Evening.name -> rememberAsyncImagePainter(R.drawable.evening)
-            PrayTimesString.Night.name -> rememberAsyncImagePainter(R.drawable.night)
-            else -> rememberAsyncImagePainter(R.drawable.morning)
-        }
+    val prayTimeInfoList = prayTime.toPrayTimeInfoList()
+    prayTimeInfoList.forEachIndexed { currentIndex ,prayTimeInfo->
+
         val color = if (currentIndex == index) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSecondaryContainer
         Column(
             verticalArrangement = Arrangement.Center,
@@ -732,7 +728,7 @@ fun RowScope.PrayTimesRow(prayTime: PrayTimes,index: Int) {
             modifier = Modifier.weight(1f)
         ) {
             Text(
-                text = prayPair.first,
+                text = stringResource(prayTimeInfo.stringRes),
                 style = MaterialTheme.typography.bodySmall,
                 maxLines = 1,
                 softWrap = false,
@@ -743,12 +739,14 @@ fun RowScope.PrayTimesRow(prayTime: PrayTimes,index: Int) {
             Icon(
                 modifier = Modifier
                     .padding(top = 5.dp)
-                    .size(35.dp), painter = icon,contentDescription = prayPair.first,
+                    .size(35.dp),
+                painter = rememberAsyncImagePainter(prayTimeInfo.drawable),
+                contentDescription = stringResource(prayTimeInfo.stringRes),
                 tint = color
             )
             Text(
                 modifier = Modifier.padding(top = 5.dp, bottom = 8.dp),
-                text = prayPair.second,
+                text = prayTimeInfo.time,
                 style = MaterialTheme.typography.bodyMedium,
                 maxLines = 1,
                 softWrap = false,
@@ -913,7 +911,7 @@ fun TimeCounter(modifier: Modifier = Modifier, currentTime: String, prayTime: Pr
         label = ""
     )
 
-    val prayTimeList = prayTime.toList().map { it.second }
+    val prayTimeList = prayTime.toTimeList()
     val currentSeconds = currentTime.convertTimeToSeconds()
 
     val nextTimeIndex = prayTimeList.indexOfFirst { it.convertTimeToSeconds() > currentSeconds }.takeIf { it != -1 } ?: 0
@@ -1012,7 +1010,7 @@ fun PrayerMethodSelector(
         .fillMaxWidth()
         .padding(16.dp)) {
         Text(
-            text = "Select Prayer Time Calculation Method",
+            text = stringResource(R.string.select_prayer_calculation_method),
             modifier = Modifier.clickable { expanded.value = true }
         )
         Text(text = selectedMethod.value, modifier = Modifier.padding(top = 8.dp))
@@ -1128,7 +1126,7 @@ fun FancyDuaDialog(
                 )
 
                 Text(
-                    text = "Kaynak: ${duaDetail.source}",
+                    text = stringResource(R.string.source, duaDetail.source),
                     style = MaterialTheme.typography.bodySmall,
                     color = Color.White.copy(alpha = 0.8f),
                     textAlign = TextAlign.End,
@@ -1148,7 +1146,7 @@ fun FancyDuaDialog(
                     shape = RoundedCornerShape(8.dp)
                 ) {
                     Text(
-                        text = "Amîn",
+                        text = stringResource(R.string.amen),
                         color = Color.White,
                         style = MaterialTheme.typography.labelLarge,
                         modifier = Modifier.padding(vertical = 4.dp)
@@ -1175,7 +1173,7 @@ fun DuaCategoryCardCompose(duaCategoryData: DuaCategoryData){
             Icon(
                 modifier = Modifier.padding(start = 7.dp),
                 imageVector = Icons.Outlined.Face,
-                contentDescription = "Face Icon",
+                contentDescription = stringResource(R.string.face_icon),
             )
             Text(
                 modifier = Modifier
