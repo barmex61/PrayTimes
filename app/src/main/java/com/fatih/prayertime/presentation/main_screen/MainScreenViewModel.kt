@@ -1,6 +1,9 @@
 package com.fatih.prayertime.presentation.main_screen
 
 import android.util.Log
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fatih.prayertime.data.di.MainScreenLocation
@@ -8,6 +11,7 @@ import com.fatih.prayertime.data.settings.PermissionAndPreferences
 import com.fatih.prayertime.domain.model.PrayerAlarm
 import com.fatih.prayertime.domain.model.Address
 import com.fatih.prayertime.domain.model.PrayTimes
+import com.fatih.prayertime.domain.model.Weather
 import com.fatih.prayertime.domain.use_case.formatted_use_cases.FormattedUseCase
 import com.fatih.prayertime.domain.use_case.alarm_use_cases.GetAllGlobalAlarmsUseCase
 import com.fatih.prayertime.domain.use_case.pray_times_use_cases.GetMonthlyPrayTimesFromApiUseCase
@@ -22,6 +26,7 @@ import com.fatih.prayertime.domain.use_case.location_use_cases.RemoveLocationCal
 import com.fatih.prayertime.domain.use_case.settings_use_cases.GetStatisticSharedPrefUseCase
 import com.fatih.prayertime.domain.use_case.settings_use_cases.InsertStatisticSharedPrefUseCase
 import com.fatih.prayertime.domain.use_case.weather_use_cases.GetWeatherUseCase
+import com.fatih.prayertime.domain.use_case.settings_use_cases.GetSettingsUseCase
 import com.fatih.prayertime.util.model.event.MainScreenEvent
 import com.fatih.prayertime.util.model.state.NetworkState
 import com.fatih.prayertime.util.model.state.PrayerState
@@ -29,6 +34,8 @@ import com.fatih.prayertime.util.model.state.SelectedDuaState
 import com.fatih.prayertime.util.model.state.Status
 import com.fatih.prayertime.util.model.state.WeatherState
 import com.fatih.prayertime.util.utils.AlarmUtils.getPrayTimeForPrayType
+import com.fatih.prayertime.util.model.AladhanApiOffsets
+import com.fatih.prayertime.util.utils.LocationUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -39,10 +46,9 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -65,13 +71,14 @@ class MainScreenViewModel @Inject constructor(
     private val getStatisticSharedPrefUseCase: GetStatisticSharedPrefUseCase,
     private val insertStatisticSharedPrefUseCase: InsertStatisticSharedPrefUseCase,
     private val getWeatherUseCase: GetWeatherUseCase,
+    private val getSettingsUseCase: GetSettingsUseCase,
     val permissionsAndPreferences: PermissionAndPreferences,
-
+    private val mainScreenStateManager: MainScreenStateManager,
     getDuaUseCase: GetDuaUseCase
 ) : ViewModel() {
 
     companion object{
-        const val TAG = "MainScreenViewModel"
+        private const val TAG = "MainScreenViewModel"
     }
 
     val isNotificationPermissionGranted = permissionsAndPreferences.isNotificationPermissionGranted
@@ -81,17 +88,14 @@ class MainScreenViewModel @Inject constructor(
 
     private val retryTrigger = MutableSharedFlow<Unit>()
 
-    //Pray - Times
+    private val _prayerUiState = MutableStateFlow<PrayerState>(PrayerState())
+    val prayerUiState = _prayerUiState.asStateFlow()
 
-    private val searchAddressState : MutableStateFlow<Address?> = MutableStateFlow(null)
+    private val _weatherUiState = MutableStateFlow<WeatherState>(WeatherState())
+    val weatherUiState = _weatherUiState.asStateFlow()
 
-    // State
-
-    private val _weatherState = MutableStateFlow<WeatherState>(WeatherState())
-    val weatherState = _weatherState.asStateFlow()
-
-    private val _prayerState = MutableStateFlow<PrayerState>(PrayerState())
-    val prayerState = _prayerState.asStateFlow()
+    private var currentMethodId: Int = 13 // Varsayılan metod ID'si
+    private var currentTuneValues: Map<String, Int> = emptyMap()
 
     fun trackLocation() = viewModelScope.launch(Dispatchers.IO) {
         _isLocationTracking.value = true
@@ -102,31 +106,29 @@ class MainScreenViewModel @Inject constructor(
             .collect { resource ->
                 when(resource.status){
                     Status.SUCCESS ->{
-                        updateSearchAddress(resource.data!!)
+                        mainScreenStateManager.updateAddress(resource.data!!)
                     }
                     Status.ERROR ->{
-                        _prayerState.update { it.copy(error = resource.message) }
+                        _prayerUiState.update { it.copy(error = resource.message) }
                     }
                     else ->{
-                        _prayerState.update { it.copy(isLoading = true) }
+                        _prayerUiState.update { it.copy(isLoading = true) }
                     }
                 }
             }
     }
 
-    private fun updateSearchAddress(address: Address) = viewModelScope.launch{
-        searchAddressState.emit(address)
-    }
-
     private suspend fun fetchPrayTimes(address: Address){
         val prayTimesDb = fetchPrayTimesByDatabase(address)
         if (prayTimesDb != null){
-            _prayerState.value = _prayerState.value.copy(prayTimes = prayTimesDb, isLoading = false,error = null)
+            mainScreenStateManager.updatePrayTimes(prayTimesDb)
+            _prayerUiState.value = _prayerUiState.value.copy(prayTimes = prayTimesDb, isLoading = false, error = null)
             return
         }
         val prayTimesApi = fetchPrayTimesByApi(address)
         if (prayTimesApi != null){
-            _prayerState.value = _prayerState.value.copy(prayTimes = prayTimesApi,isLoading = false,error = null)
+            mainScreenStateManager.updatePrayTimes(prayTimesApi)
+            _prayerUiState.value = _prayerUiState.value.copy(prayTimes = prayTimesApi, isLoading = false, error = null)
         }
         updateAllGlobalAlarm(false)
     }
@@ -139,7 +141,36 @@ class MainScreenViewModel @Inject constructor(
     private suspend fun fetchPrayTimesByApi(address: Address) : PrayTimes? {
         val year = LocalDateTime.now().year
         val month = LocalDateTime.now().monthValue
-        val apiResponse = getMonthlyPrayTimesFromApiUseCase(year ,month,address)
+        
+        val settings = getSettingsUseCase.invoke().first()
+        
+        val defaultOffsets = AladhanApiOffsets.getDefaultOffsets(settings.prayerCalculationMethod)
+        val customOffsets = settings.prayerTimeTuneValues
+        val combinedOffsets = defaultOffsets.toMutableMap()
+        
+        customOffsets.forEach { (key, value) ->
+            if (combinedOffsets.containsKey(key)) {
+                combinedOffsets[key] = combinedOffsets[key]!! + value
+            }
+        }
+        
+        val tuneString = AladhanApiOffsets.formatTuneString(combinedOffsets)
+        
+        Log.d(TAG, "Hesaplama Metodu: ${settings.prayerCalculationMethod} - ${getCalculationMethodName(settings.prayerCalculationMethod)}")
+        Log.d(TAG, "Varsayılan offset değerleri: $defaultOffsets")
+        Log.d(TAG, "Kullanıcı offset değerleri: $customOffsets")
+        Log.d(TAG, "Birleştirilmiş offset değerleri: $combinedOffsets")
+        Log.d(TAG, "API'ye gönderilen tune değeri: $tuneString")
+        
+        val apiResponse = getMonthlyPrayTimesFromApiUseCase(
+            year = year,
+            month = month, 
+            address = address,
+            method = settings.prayerCalculationMethod,
+            tuneString = tuneString,
+            school = 0
+        )
+        
         return if (apiResponse.status == Status.SUCCESS){
             insertPrayTimeIntoDbUseCase.insertPrayTimeList(apiResponse.data!!)
             apiResponse.data.firstOrNull{it.date == _formattedDate.value}
@@ -149,25 +180,29 @@ class MainScreenViewModel @Inject constructor(
 
     private fun fetchWeatherByCoordinates(latitude: Double, longitude: Double) {
         viewModelScope.launch {
-            println("fetchWeather")
-            _weatherState.value = _weatherState.value.copy(isWeatherLoading = true)
+            _weatherUiState.value = _weatherUiState.value.copy(isWeatherLoading = true)
             getWeatherUseCase.getByCoordinates(latitude, longitude).collect { result ->
                 when(result.status) {
                     Status.SUCCESS -> {
-                        _weatherState.value = _weatherState.value.copy(
+
+                        mainScreenStateManager.updateWeather(result.data)
+                        _weatherUiState.value = _weatherUiState.value.copy(
                             weather = result.data,
                             isWeatherLoading = false,
                             weatherError = null
                         )
+                        
+                        Log.d(TAG, "Hava durumu güncellendi: ${result.data?.locationName}")
                     }
                     Status.ERROR -> {
-                        _weatherState.value = _weatherState.value.copy(
+                        _weatherUiState.value = _weatherUiState.value.copy(
                             isWeatherLoading = false,
                             weatherError = result.message
                         )
+                        Log.e(TAG, "Hava durumu güncellenirken hata: ${result.message}")
                     }
                     Status.LOADING -> {
-                        _weatherState.value = _weatherState.value.copy(
+                        _weatherUiState.value = _weatherUiState.value.copy(
                             isWeatherLoading = true
                         )
                     }
@@ -176,6 +211,35 @@ class MainScreenViewModel @Inject constructor(
         }
     }
 
+    private fun updateWeatherIfNeeded(address: Address) {
+        val currentWeather = mainScreenStateManager.weatherState.value
+        
+        if (currentWeather == null) {
+            Log.d(TAG, "İlk hava durumu verisi yükleniyor")
+            fetchWeatherByCoordinates(address.latitude, address.longitude)
+            return
+        }
+        
+        val isSignificantChange = LocationUtils.isSignificantLocationChange(
+            currentWeather.latitude, currentWeather.longitude,
+            address.latitude, address.longitude,
+            5.0
+        )
+        
+        if (isSignificantChange) {
+            Log.d(TAG, "Önemli konum değişikliği tespit edildi: ${calculateDistance(currentWeather, address)} km. Hava durumu güncelleniyor.")
+            fetchWeatherByCoordinates(address.latitude, address.longitude)
+        } else {
+            Log.d(TAG, "Konum değişikliği çok az: ${calculateDistance(currentWeather, address)} km. Hava durumu güncellenmeyecek.")
+        }
+    }
+
+    private fun calculateDistance(weather: Weather, address: Address): Double {
+        return LocationUtils.calculateDistance(
+            weather.latitude, weather.longitude,
+            address.latitude, address.longitude
+        )
+    }
 
     //Date
 
@@ -216,9 +280,9 @@ class MainScreenViewModel @Inject constructor(
 
     fun updateAllGlobalAlarm(enableAllGlobalAlarm : Boolean) = viewModelScope.launch(Dispatchers.IO){
         prayerAlarmList.value?.forEach { globalAlarm ->
-            val dailyPrayTimes = prayerState.value.prayTimes
+            val dailyPrayTimes = prayerUiState.value.prayTimes
             dailyPrayTimes?:return@launch
-            val prayTime = getPrayTimeForPrayType(prayerState.value.prayTimes!!,globalAlarm.alarmType,globalAlarm.alarmOffset,formattedUseCase)
+            val prayTime = getPrayTimeForPrayType(prayerUiState.value.prayTimes!!,globalAlarm.alarmType,globalAlarm.alarmOffset,formattedUseCase)
             val prayTimeLong = formattedUseCase.formatHHMMtoLong(prayTime,formattedUseCase.formatDDMMYYYYDateToLocalDate(dailyPrayTimes.date))
             val prayTimeString = formattedUseCase.formatLongToLocalDateTime(prayTimeLong)
             updateGlobalAlarmUseCase(globalAlarm.copy(isEnabled = if (enableAllGlobalAlarm) true else globalAlarm.isEnabled, alarmTime = prayTimeLong, alarmTimeString = prayTimeString))
@@ -227,7 +291,7 @@ class MainScreenViewModel @Inject constructor(
 
 
     fun getAlarmTime(index: Int) : Pair<Long,String>  {
-        val currentPrayTimes = prayerState.value.prayTimes
+        val currentPrayTimes = prayerUiState.value.prayTimes
         currentPrayTimes?:return Pair(0L,"00:00:00")
         val prayTimes = currentPrayTimes
         val timeString = when(index){
@@ -293,14 +357,83 @@ class MainScreenViewModel @Inject constructor(
     }
 
 
-    init {
+    private fun getCalculationMethodName(methodId: Int): String {
+        return when (methodId) {
+            0 -> "Shia Ithna-Ashari"
+            1 -> "University of Islamic Sciences, Karachi"
+            2 -> "Islamic Society of North America"
+            3 -> "Muslim World League"
+            4 -> "Umm Al-Qura University, Makkah"
+            5 -> "Egyptian General Authority of Survey"
+            7 -> "Institute of Geophysics, University of Tehran"
+            8 -> "Gulf Region"
+            9 -> "Kuwait"
+            10 -> "Qatar"
+            11 -> "Majlis Ugama Islam Singapura"
+            12 -> "Union Organization Islamic de France"
+            13 -> "Diyanet İşleri Başkanlığı"
+            14 -> "Algeria"
+            15 -> "Türkiye Takvimi"
+            16 -> "Russia"
+            17 -> "Moonsighting Committee Worldwide (Moonsighting.com)"
+            18 -> "Dubai"
+            19 -> "United Arab Emirates"
+            20 -> "Jakim, Malaysia"
+            21 -> "Tunisia"
+            22 -> "Afghanistan"
+            23 -> "Bosnia and Herzegovina"
+            else -> "Bilinmeyen Metod"
+        }
+    }
 
+    private fun refreshPrayTimesForSettings(address: Address) = viewModelScope.launch {
+        _prayerUiState.update { it.copy(isLoading = true) }
+        
+        val prayTimesApi = fetchPrayTimesByApi(address)
+        
+        if (prayTimesApi != null) {
+            mainScreenStateManager.updatePrayTimes(prayTimesApi)
+            _prayerUiState.update { it.copy(prayTimes = prayTimesApi, isLoading = false, error = null) }
+            updateAllGlobalAlarm(false)
+        } else {
+            _prayerUiState.update { it.copy(isLoading = false, error = "Namaz vakitleri güncellenemedi") }
+        }
+    }
+
+    init {
         updateFormattedDate()
         updateFormattedTime()
         updateAllGlobalAlarm(false)
         checkNotificationPermission()
 
         viewModelScope.launch(Dispatchers.IO) {
+
+            if (mainScreenStateManager.addressState.value == null) {
+                mainScreenStateManager.updateAddress(getLastKnownAddressFromDatabaseUseCase())
+            }
+
+            launch {
+                val initialSettings = getSettingsUseCase.invoke().first()
+                currentMethodId = initialSettings.prayerCalculationMethod
+                currentTuneValues = initialSettings.prayerTimeTuneValues
+            }
+
+            launch {
+                mainScreenStateManager.prayTimesState
+                    .filterNotNull()
+                    .collect { prayTimes ->
+                        _prayerUiState.update { it.copy(prayTimes = prayTimes, isLoading = false, error = null) }
+                    }
+            }
+            
+            launch {
+                mainScreenStateManager.weatherState
+                    .filterNotNull()
+                    .collect { weather ->
+                        _weatherUiState.update { it.copy(weather = weather, isWeatherLoading = false, weatherError = null) }
+                    }
+            }
+            
             launch {
                 permissionsAndPreferences.networkState.combine(permissionsAndPreferences.isLocationPermissionGranted){networkState,locationPermission->
                     networkState to locationPermission
@@ -308,31 +441,31 @@ class MainScreenViewModel @Inject constructor(
                     if (!isLocationTracking.value && locationPermission && networkState == NetworkState.Connected){
                         trackLocation()
                     }
-                    if (locationPermission && prayerState.value.prayTimes == null){
+                    if (locationPermission && prayerUiState.value.prayTimes == null){
                         fetchPrayTimesByDatabase(null)
                     }
-                    if (networkState == NetworkState.Connected && weatherState.value.weather == null && searchAddressState.value != null){
-                        fetchWeatherByCoordinates(searchAddressState.value!!.latitude, searchAddressState.value!!.longitude)
-                    }
-
                 }
             }
+            
             launch {
                 getAllGlobalAlarmsUseCase().collect { globalAlarmList ->
                     _prayerAlarmList.emit(globalAlarmList)
                 }
             }
 
+            
             launch {
-                searchAddressState.emit(getLastKnownAddressFromDatabaseUseCase())
+                mainScreenStateManager.addressState
+                    .filterNotNull()
+                    .distinctUntilChanged()
+                    .collectLatest { address ->
+                        fetchPrayTimes(address)
+                        println("district ${address.district}")
+                        println(address)
+                        updateWeatherIfNeeded(address)
+                    }
             }
-            launch {
-                searchAddressState.collectLatest { address->
-                    val searchAddress = address?:getLastKnownAddressFromDatabaseUseCase()?:return@collectLatest
-                    fetchPrayTimes(searchAddress)
-                    fetchWeatherByCoordinates(searchAddress.latitude, searchAddress.longitude)
-                }
-            }
+            
             launch {
                 _mainScreenEvent.collect { event ->
                     when (event) {
@@ -341,8 +474,9 @@ class MainScreenViewModel @Inject constructor(
                     }
                 }
             }
+            
             launch {
-                _prayerState
+                _prayerUiState
                     .map { it.prayTimes }
                     .filterNotNull()
                     .take(1)
@@ -352,7 +486,6 @@ class MainScreenViewModel @Inject constructor(
                             try {
                                 updateStatisticsAlarmUseCase.updateStatisticsAlarms(prayTimes)
                                 insertStatisticSharedPrefUseCase()
-                                println("yesinit")
                             } catch (e: Exception) {
                                 println("Statistics alarm kurulumunda hata: ${e.message}")
                             }
@@ -361,8 +494,30 @@ class MainScreenViewModel @Inject constructor(
                         }
                     }
             }
+            launch {
+                getSettingsUseCase.invoke()
+                    .distinctUntilChanged { old, new ->
+                        val methodUnchanged = old.prayerCalculationMethod == new.prayerCalculationMethod
+                        val tuneValuesUnchanged = old.prayerTimeTuneValues == new.prayerTimeTuneValues
+                        methodUnchanged && tuneValuesUnchanged
+                    }
+                    .collect { settings ->
+                        val methodChanged = currentMethodId != settings.prayerCalculationMethod
+                        val tuneValuesChanged = currentTuneValues != settings.prayerTimeTuneValues
+
+                        if (methodChanged || tuneValuesChanged) {
+                            currentMethodId = settings.prayerCalculationMethod
+                            currentTuneValues = settings.prayerTimeTuneValues
+
+                            Log.d(TAG, "Ayarlar değişti. Yeni hesaplama metodu: $currentMethodId, yeni offset değerleri: $currentTuneValues")
+
+                            mainScreenStateManager.addressState.value?.let { address ->
+                                refreshPrayTimesForSettings(address)
+                            }
+                        }
+                    }
+            }
         }
+
     }
-
-
 }

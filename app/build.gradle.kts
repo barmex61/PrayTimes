@@ -57,6 +57,8 @@ dependencies {
     implementation (libs.material)
     implementation(libs.androidx.glance.appwidget)
     implementation(libs.androidx.leanback)
+    // Splash Screen API
+    implementation("androidx.core:core-splashscreen:1.0.1")
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

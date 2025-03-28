@@ -30,7 +30,6 @@ class PrayerStatisticsRepositoryImpl @Inject constructor(
         return statisticsDao.getCompletedPrayersCount()
     }
     override fun getStatisticsBetweenDates(startDate: Long, endDate: Long): Flow<List<PrayerStatisticsEntity>> {
-        println("startDate: $startDate, endDate: $endDate")
         return statisticsDao.getStatisticsBetweenDates(startDate, endDate)
     }
 

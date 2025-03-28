@@ -65,6 +65,16 @@ class SettingsScreenViewModel @Inject constructor(
         saveSettingsUseCase(updatedSettings)
     }
 
+    fun updatePrayerCalculationMethod(method: Int) = viewModelScope.launch {
+        val updatedSettings = _settingsState.value.copy(prayerCalculationMethod = method)
+        saveSettingsUseCase(updatedSettings)
+    }
+
+    fun updatePrayerTimeTuneValues(tuneValues: Map<String, Int>) = viewModelScope.launch {
+        val updatedSettings = _settingsState.value.copy(prayerTimeTuneValues = tuneValues)
+        saveSettingsUseCase(updatedSettings)
+    }
+
     fun togglePrayerNotification(prayerAlarm : PrayerAlarm) = viewModelScope.launch {
         updateGlobalAlarmUseCase(prayerAlarm)
     }

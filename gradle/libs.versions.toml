@@ -1,6 +1,6 @@
 [versions]
 accompanistSwiperefreshVersion = "0.32.0"
-agp = "8.9.0"
+agp = "8.9.1"
 animatedNavigationBar = "1.0.0"
 animationGraphics = "1.7.6"
 constraintlayout = "2.2.0"

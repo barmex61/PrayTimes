@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Prayer Time</string>
+    <string name="app_name">Prayer Times Pro: Quran, Qibla, Adhan</string>
     <string name="location_text">Location</string>
     <string name="prayer_bar_text">Start your day with these prayers</string>
     <string name="remaining_time_text">Remaining time to next prayer</string>
@@ -168,6 +168,14 @@
     <string name="source">Source: %s</string>
     <string name="select_prayer_calculation_method">Select Prayer Time Calculation Method</string>
     <string name="face_icon">Face Icon</string>
+    
+    <!-- Prayer Time Calculation Settings -->
+    <string name="prayer_time_calculation">Prayer Time Calculation</string>
+    <string name="calculation_method">Calculation Method</string>
+    <string name="prayer_time_adjustments">Prayer Time Adjustments</string>
+    <string name="prayer_time_adjustments_description">Fine-tune prayer times for your location</string>
+    <string name="prayer_time_adjustments_tune_description">Adjust each prayer time in minutes. Positive values will delay the prayer time, negative values will advance it.</string>
+    <string name="apply">Apply</string>
     
     <!-- Weather Card Strings -->
     <string name="weather_data_unavailable">Weather information could not be retrieved.</string>

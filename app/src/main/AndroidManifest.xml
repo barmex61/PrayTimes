@@ -11,6 +11,10 @@
 
     <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
+    <!-- Android 14 için gerekli -->
+    <uses-permission android:name="android.permission.ALARM_MANAGER_USE_EXACT" />
+    <!-- Hatırlatıcılar için -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <uses-feature android:name="android.hardware.sensor.gyroscope" android:required="true" />
     <uses-permission android:name="android.permission.VIBRATE"/>
@@ -46,7 +50,7 @@
         <activity
             android:name=".presentation.main_activity.MainActivity"
             android:exported="true"
-            android:theme="@style/Theme.PrayerTime"
+            android:theme="@style/Theme.PrayerTime.SplashScreen"
             tools:ignore="LockedOrientationActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

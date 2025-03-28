@@ -9,11 +9,7 @@ import javax.inject.Inject
 class GetWeatherUseCase @Inject constructor(
     private val weatherRepository: WeatherRepository
 ) {
-    suspend operator fun invoke(location: String): Flow<Resource<Weather>> {
-        return weatherRepository.getCurrentWeather(location)
-    }
-    
     suspend fun getByCoordinates(latitude: Double, longitude: Double): Flow<Resource<Weather>> {
-        return weatherRepository.getCurrentWeatherByCoordinates(latitude, longitude)
+        return weatherRepository.getWeatherByCoordinates(latitude, longitude)
     }
 } 

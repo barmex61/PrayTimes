@@ -16,10 +16,30 @@ import javax.inject.Inject
 
 class PrayApiRepositoryImp @Inject constructor(private val prayApi : PrayApi) : PrayApiRepository {
 
-    override suspend fun getMonthlyPrayTimes(year : Int,month: Int, latitude : Double, longitude : Double): Resource<MonthlyPrayTimesResponseDTO> = withContext(Dispatchers.IO) {
+    override suspend fun getMonthlyPrayTimes(
+        year: Int, 
+        month: Int, 
+        latitude: Double, 
+        longitude: Double,
+        method: Int,
+        adjustments: String?,
+        tuneString: String?,
+        school: Int,
+        midnightMode: Int
+    ): Resource<MonthlyPrayTimesResponseDTO> = withContext(Dispatchers.IO) {
         return@withContext try {
             withTimeout(4000L){
-                val response = prayApi.getMonthlyPrayTimes(year, month, latitude, longitude)
+                val response = prayApi.getMonthlyPrayTimes(
+                    year, 
+                    month, 
+                    latitude, 
+                    longitude,
+                    method,
+                    adjustments,
+                    tuneString,
+                    school,
+                    midnightMode
+                )
                 if (response.isSuccessful) {
                     response.body()?.let {
                         Log.d("PrayApiRepository", "Response body: $it")
@@ -32,7 +52,7 @@ class PrayApiRepositoryImp @Inject constructor(private val prayApi : PrayApi) : 
         } catch (e: HttpException) {
             Resource.error("HTTP error: ${e.code()} - ${e.message()}")
         } catch (e: Exception) {
-            Resource.error("An unexpected error ss occurred: ${e.message}")
+            Resource.error("An unexpected error occurred: ${e.message}")
         }catch (e: TimeoutCancellationException){
             Resource.error("Timeout error: ${e.message}")
         }

@@ -13,5 +13,7 @@ data class Weather(
     val locationName: String,
     val region: String,
     val country: String,
-    val localTime: String
+    val localTime: String,
+    val latitude: Double = 0.0,
+    val longitude: Double = 0.0
 ) 

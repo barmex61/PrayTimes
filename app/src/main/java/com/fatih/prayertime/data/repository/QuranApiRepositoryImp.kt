@@ -41,7 +41,6 @@ class QuranApiRepositoryImp @Inject constructor(
 
     override suspend fun getSurahList(): Resource<List<SurahInfo>> = withContext(Dispatchers.IO) {
         return@withContext try {
-            println("getsurahlist")
             val response = quranApi.getSurahList()
             if (response.isSuccessful) {
                 response.body()?.let {
@@ -227,7 +226,6 @@ class QuranApiRepositoryImp @Inject constructor(
 
             val response = audioApi.downloadAudio(audioPath, bitrate, reciter, number)
             val responseBody = response.body()
-            println("response ${response.raw()}")
             if (!response.isSuccessful || responseBody == null) {
                 throw IOException("İndirme başarısız oldu, kod: ${response.code()}")
             }
@@ -236,16 +234,12 @@ class QuranApiRepositoryImp @Inject constructor(
             var downloadedSize = 0L
 
             emit(Resource.loading(0, 0, totalSize))
-            println("emit first loading")
             responseBody.byteStream().use { inputStream ->
-                println("inputstream")
                 outputFile.outputStream().use { outputStream ->
-                    println("outputstream")
                     val buffer = ByteArray(8192)
                     var bytesRead: Int
 
                     while (inputStream.read(buffer).also { bytesRead = it } != -1) {
-                        println("while loop")
                         outputStream.write(buffer, 0, bytesRead)
                         downloadedSize += bytesRead
                         val progress = (downloadedSize * 100f / totalSize).toInt()

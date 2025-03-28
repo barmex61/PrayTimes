@@ -116,7 +116,6 @@ import com.fatih.prayertime.presentation.main_screen.component.WeatherCard
 import com.fatih.prayertime.util.extensions.convertTimeToSeconds
 import com.fatih.prayertime.util.extensions.localDateTime
 import com.fatih.prayertime.util.extensions.toAddress
-import com.fatih.prayertime.util.extensions.toNameAndTimePair
 import com.fatih.prayertime.util.model.enums.PrayTimesString
 import com.fatih.prayertime.util.composables.ErrorView
 import com.fatih.prayertime.util.composables.LoadingView
@@ -126,6 +125,7 @@ import com.fatih.prayertime.util.model.event.MainScreenEvent
 import kotlinx.coroutines.delay
 import org.threeten.bp.LocalDate
 import org.threeten.bp.LocalDateTime
+import java.util.Locale
 
 import kotlin.math.PI
 import kotlin.math.cos
@@ -570,7 +570,7 @@ fun AlarmComposable(prayerAlarm: PrayerAlarm) {
 @Composable
 fun PrayScheduleCompose(haptic: HapticFeedback) {
     val mainScreenViewModel : MainScreenViewModel = hiltViewModel()
-    val prayerState by mainScreenViewModel.prayerState.collectAsStateWithLifecycle()
+    val prayerState by mainScreenViewModel.prayerUiState.collectAsStateWithLifecycle()
 
     Card(
         modifier = Modifier.padding(top = 12.dp),
@@ -707,7 +707,7 @@ fun PrayTimesRowHeader(dailyPrayTime : PrayTimes?) {
                     localDateTimeNow.isBefore(dailyPrayTime.localDateTime(dailyPrayTime.afternoon)) -> 1
                     localDateTimeNow.isBefore(dailyPrayTime.localDateTime(dailyPrayTime.evening)) -> 2
                     localDateTimeNow.isBefore(dailyPrayTime.localDateTime(dailyPrayTime.night)) -> 3
-                    else -> 0
+                    else -> 4
                 }
                 PrayTimesRow(dailyPrayTime, index)
 
@@ -761,7 +761,7 @@ fun RowScope.PrayTimesRow(prayTime: PrayTimes,index: Int) {
 
 @Composable
 fun AddressBar(haptic: HapticFeedback,mainScreenViewModel: MainScreenViewModel) {
-    val prayerState by mainScreenViewModel.prayerState.collectAsStateWithLifecycle()
+    val prayerState by mainScreenViewModel.prayerUiState.collectAsStateWithLifecycle()
     val locationText = stringResource(R.string.location_text)
     val currentAddress by remember(prayerState) {
         derivedStateOf { prayerState.prayTimes?.toAddress() }
@@ -1066,6 +1066,7 @@ fun FancyDuaDialog(
     Dialog(
         onDismissRequest = onDismiss
     ) {
+        val scrollState = rememberScrollState()
         Box(
             modifier = Modifier
                 .fillMaxWidth(0.95f)
@@ -1074,6 +1075,7 @@ fun FancyDuaDialog(
                     brush = Brush.linearGradient(colors = gradientColors)
                 )
                 .padding(4.dp)
+                .verticalScroll(scrollState)
         ) {
 
             Column(
@@ -1092,7 +1094,7 @@ fun FancyDuaDialog(
 
                 Text(
                     text = duaDetail.title,
-                    style = MaterialTheme.typography.headlineSmall,
+                    style = MaterialTheme.typography.titleLarge,
                     color = Color.White,
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center,
@@ -1109,16 +1111,30 @@ fun FancyDuaDialog(
 
                 Text(
                     text = duaDetail.arabic,
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.titleLarge,
                     color = Color.White.copy(alpha = 0.9f),
                     textAlign = TextAlign.Center,
                     fontStyle = FontStyle.Italic,
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
 
+                val currentLocale = Locale.getDefault()
+                val translationText = if (currentLocale.language == "tr") {
+                    duaDetail.translationTr
+                } else {
+                    duaDetail.translation
+                }
 
                 Text(
-                    text = duaDetail.translation,
+                    text = duaDetail.latin,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.White,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(bottom = 20.dp)
+                )
+
+                Text(
+                    text = translationText,
                     style = MaterialTheme.typography.bodyLarge,
                     color = Color.White,
                     textAlign = TextAlign.Center,

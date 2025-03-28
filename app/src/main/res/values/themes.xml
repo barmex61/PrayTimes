@@ -1,5 +1,20 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <style name="Theme.PrayerTime" parent="Theme.Material3.Light.NoActionBar">
+        <!-- Base application theme -->
+    </style>
 
+    <!-- Splash Screen tema stili -->
+    <style name="Theme.PrayerTime.SplashScreen" parent="Theme.SplashScreen">
+        <!-- Arka plan rengi -->
+        <item name="windowSplashScreenBackground">@color/splash_background</item>
+        
+        <!-- Splash ekranında gösterilecek logo -->
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>
+        
+        <!-- Animasyon süresi -->
+        <item name="windowSplashScreenAnimationDuration">300</item>
+        
+        <!-- Splash sonrası normal tema -->
+        <item name="postSplashScreenTheme">@style/Theme.PrayerTime</item>
     </style>
 </resources>

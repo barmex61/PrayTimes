@@ -131,7 +131,6 @@ fun DuaCategoryCard(duaCategoryData :DuaCategoryData, onCategoryClick : (Int) ->
             ,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
         onClick ={
-            println("onclick")
             onCategoryClick(duaCategoryData.id)
         }
     ) {

@@ -36,7 +36,7 @@ import com.fatih.prayertime.presentation.main_screen.MainScreenViewModel
 fun WeatherCard(
     mainScreenViewModel: MainScreenViewModel
 ) {
-    val weatherState by mainScreenViewModel.weatherState.collectAsStateWithLifecycle()
+    val weatherState by mainScreenViewModel.weatherUiState.collectAsStateWithLifecycle()
     val isLoading = remember(key1 = weatherState) {weatherState.isWeatherLoading  }
     val weather = remember(key1=weatherState) { weatherState.weather }
     val error = remember(key1 = weatherState) { weatherState.weatherError }
@@ -71,7 +71,7 @@ fun WeatherCard(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = stringResource(R.string.weather_data_unavailable),
+                        text = error,
                         color = MaterialTheme.colorScheme.error,
                         textAlign = TextAlign.Center
                     )

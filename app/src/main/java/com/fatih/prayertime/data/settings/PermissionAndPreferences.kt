@@ -41,8 +41,21 @@ class PermissionAndPreferences @Inject constructor(
 
     fun checkNotificationPermission() {
         _isNotificationPermissionGranted.value = permissionUseCase.checkNotificationPermission()
+
     }
 
+    val alarmPermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+        Manifest.permission.USE_EXACT_ALARM
+    } else {
+        null
+    }
+
+    private val _isAlarmPermissionGranted : MutableStateFlow<Boolean> = MutableStateFlow(permissionUseCase.checkAlarmPermission())
+    val isAlarmPermissionGranted : StateFlow<Boolean> = _isAlarmPermissionGranted
+
+    fun checkAlarmPermission() {
+        _isAlarmPermissionGranted.value = permissionUseCase.checkAlarmPermission()
+    }
 
 
     // ----NETWORK STATE----
@@ -80,12 +93,14 @@ class PermissionAndPreferences @Inject constructor(
         val result = permissionResult.values.all { it }
         _isLocationPermissionGranted.value = result
         _isNotificationPermissionGranted.value = result
+        _isAlarmPermissionGranted.value = result
     }
 
 
     init {
         checkNotificationPermission()
         checkPowerSavingMode()
+        checkAlarmPermission()
         scope.launch {
             launch {
                 getNetworkStateUseCase().collectLatest {

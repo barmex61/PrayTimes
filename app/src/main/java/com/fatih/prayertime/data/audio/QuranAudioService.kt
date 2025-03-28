@@ -144,7 +144,6 @@ class QuranAudioService() : Service() {
             try {
                 downloadRequests
                     .onEach {
-                        println("onEach")
                         stopAudio()
                         resetStateForNewDownload()
                     }
@@ -165,7 +164,6 @@ class QuranAudioService() : Service() {
                         println(it)
                     }
                     .collect { resource->
-                        println("collect")
                         handleResource(resource)
                     }
             } catch (e: Exception) {
@@ -294,7 +292,6 @@ class QuranAudioService() : Service() {
                 }
 
                 ACTION_NEXT -> {
-                    println("next")
                     getNextAudio()
                 }
 

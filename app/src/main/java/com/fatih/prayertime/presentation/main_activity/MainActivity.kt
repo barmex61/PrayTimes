@@ -17,6 +17,7 @@ import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.LaunchedEffect
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 
 import androidx.compose.ui.unit.dp
 
@@ -107,6 +108,11 @@ class MainActivity : ComponentActivity() {
 
     @SuppressLint("RestrictedApi")
     override fun onCreate(savedInstanceState: Bundle?) {
+        val splashScreen = installSplashScreen()
+        
+        var isAppReady = false
+        splashScreen.setKeepOnScreenCondition { !isAppReady }
+        
         super.onCreate(savedInstanceState)
 
         setContent {
@@ -122,6 +128,8 @@ class MainActivity : ComponentActivity() {
                 MainScreenContent(::showBatteryOptimizationDialog,mainActivityViewModel)
             }
             ScheduleAlarm(scheduleDailyAlarmUpdateUseCase)
+            
+            isAppReady = true
         }
     }
     private fun showBatteryOptimizationDialog() {
@@ -146,6 +154,7 @@ fun MainScreenContent(showBatteryOptimizationDialog: () -> Unit,mainActivityView
     val powerSavingState by mainActivityViewModel.permissionAndPreferences.powerSavingState.collectAsStateWithLifecycle()
     val isLocationPermissionGranted by mainActivityViewModel.permissionAndPreferences.isLocationPermissionGranted.collectAsStateWithLifecycle()
     val isNotificationPermissionGranted by mainActivityViewModel.permissionAndPreferences.isNotificationPermissionGranted.collectAsStateWithLifecycle()
+    val isAlarmPermissionGranted by mainActivityViewModel.permissionAndPreferences.isAlarmPermissionGranted.collectAsStateWithLifecycle()
 
     val permissionLauncher =
         rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
@@ -157,26 +166,35 @@ fun MainScreenContent(showBatteryOptimizationDialog: () -> Unit,mainActivityView
             mainActivityViewModel.permissionAndPreferences.checkLocationPermission()
             mainActivityViewModel.permissionAndPreferences.checkPowerSavingMode()
             mainActivityViewModel.permissionAndPreferences.checkNotificationPermission()
+            mainActivityViewModel.permissionAndPreferences.checkAlarmPermission()
         }
 
     LaunchedEffect(key1 = Unit) {
         mainActivityViewModel.permissionAndPreferences.checkLocationPermission()
         mainActivityViewModel.permissionAndPreferences.checkPowerSavingMode()
         mainActivityViewModel.permissionAndPreferences.checkNotificationPermission()
-        if (!isLocationPermissionGranted || !isNotificationPermissionGranted) {
-            val permissionArray = if (mainActivityViewModel.permissionAndPreferences.notificationPermission == null){
-                mainActivityViewModel.permissionAndPreferences.locationPermissions
-            }else{
-                mainActivityViewModel.permissionAndPreferences.locationPermissions.plus(mainActivityViewModel.permissionAndPreferences.notificationPermission)
+        mainActivityViewModel.permissionAndPreferences.checkAlarmPermission()
+        
+        if (!isLocationPermissionGranted || !isNotificationPermissionGranted || !isAlarmPermissionGranted) {
+            val permissionList = mutableListOf<String>()
+            
+            permissionList.addAll(mainActivityViewModel.permissionAndPreferences.locationPermissions)
+            
+            mainActivityViewModel.permissionAndPreferences.notificationPermission?.let {
+                permissionList.add(it)
             }
-            permissionLauncher.launch(permissionArray)
+            
+            mainActivityViewModel.permissionAndPreferences.alarmPermission?.let {
+                permissionList.add(it)
+            }
+            
+            permissionLauncher.launch(permissionList.toTypedArray())
         }
-
     }
 
     Scaffold(
         snackbarHost = {
-            if (!isLocationPermissionGranted || !isNotificationPermissionGranted) {
+            if (!isLocationPermissionGranted || !isNotificationPermissionGranted || !isAlarmPermissionGranted) {
                 Snackbar(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                     contentColor = MaterialTheme.colorScheme.onPrimaryContainer,

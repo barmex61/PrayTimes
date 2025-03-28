@@ -256,9 +256,9 @@ fun CompassGyroscopeContent(
                     .rotate(gyroscopeSensor.rotation.floatValue)
             )
         }
-        
-        Spacer(modifier = Modifier.height(-yOffset + 10.dp))
-        
+
+        Spacer(modifier = Modifier.height(-yOffset  ))
+
         Surface(
             modifier = Modifier
                 .fillMaxWidth()

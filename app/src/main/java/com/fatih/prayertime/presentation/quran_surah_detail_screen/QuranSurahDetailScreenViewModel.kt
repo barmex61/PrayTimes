@@ -123,7 +123,6 @@ class QuranSurahDetailScreenViewModel @Inject constructor(
     }
 
     fun getSelectedSurah() = viewModelScope.launch(Dispatchers.IO) {
-        println("getselectedsurad")
         _quranDetailScreenState.update { it.copy(isLoading = true) }
         val surahNumber = _quranDetailScreenState.value.selectedSurahNumber
         val surahPath = getSurahPath() ?: return@launch
@@ -310,9 +309,7 @@ class QuranSurahDetailScreenViewModel @Inject constructor(
                 }
             }
             launch {
-                audioPlayerState.onEach {
-                    println(it.currentAudioInfo)
-                }.map {
+                audioPlayerState.map {
                     Pair(it.currentAudioInfo.ayahNumber,it.currentAudioInfo.surahNumber)
                 }
                     .distinctUntilChanged()

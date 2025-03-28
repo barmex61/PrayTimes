@@ -79,6 +79,7 @@ import com.fatih.prayertime.data.repository.WeatherRepositoryImpl
 import com.fatih.prayertime.data.settings.SharedPreferencesManager
 import com.fatih.prayertime.domain.repository.SharedPrefRepository
 import com.fatih.prayertime.domain.repository.WeatherRepository
+import com.fatih.prayertime.presentation.main_screen.MainScreenStateManager
 
 @InstallIn(SingletonComponent::class)
 @Module
@@ -325,6 +326,10 @@ object Module {
     fun provideWeatherRepository(weatherApi: WeatherApi): WeatherRepository {
         return WeatherRepositoryImpl(weatherApi)
     }
+
+    @Provides
+    @Singleton
+    fun provideAddressManager() = MainScreenStateManager()
 
 }
 
