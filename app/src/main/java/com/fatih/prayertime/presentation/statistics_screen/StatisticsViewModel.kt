@@ -1,21 +1,14 @@
 package com.fatih.prayertime.presentation.statistics_screen
 
 import android.annotation.SuppressLint
-import android.app.Application
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.fatih.prayertime.R
-import com.fatih.prayertime.data.local.entity.PrayerStatisticsEntity
 import com.fatih.prayertime.domain.use_case.formatted_use_cases.FormattedUseCase
-import com.fatih.prayertime.domain.use_case.statistics_use_cases.GetPrayerCountsUseCase
 import com.fatih.prayertime.domain.use_case.statistics_use_cases.GetStatisticsUseCase
-import com.fatih.prayertime.domain.use_case.statistics_use_cases.InsertPlayerStatisticsUseCase
 import com.fatih.prayertime.util.model.state.StatisticsState
-import dagger.hilt.android.internal.Contexts.getApplication
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
 import org.threeten.bp.LocalDate
 import java.util.Locale
 import javax.inject.Inject
@@ -42,6 +35,12 @@ class StatisticsViewModel @Inject constructor(
             formattedUseCase.formatLocalDateToLong(it.endInclusive)
         )
 
+    }.onEach {
+        it.forEach {
+            println("Type ${it.prayerType}")
+            println("Date ${it.date}")
+            println("IsCompleted ${it.isCompleted}")
+        }
     }.mapLatest { stats ->
         if (stats.isEmpty()) {
             StatisticsState(
@@ -84,7 +83,7 @@ class StatisticsViewModel @Inject constructor(
                     currentStreak = 0
                 }
             }
-
+        println("maxStreak $maxStreak")
         maxStreak
     }.stateIn(
         scope = viewModelScope,
@@ -94,19 +93,18 @@ class StatisticsViewModel @Inject constructor(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     @SuppressLint("DefaultLocale")
-    val completePercentageList: StateFlow<List<Float>> = statisticsState.mapLatest { statState ->
-        val list = mutableListOf<Float>()
-        val totalPrayers = statState.totalPrayers.toFloat()
+    val completePercentageMap: StateFlow<Map<String, Float>> = statisticsState.mapLatest { statState ->
+        val map = mutableMapOf<String, Float>()
         statState.statistics.groupBy {
             it.prayerType
         }.forEach {
-            list.add(String.format(Locale.US,"%.1f", (it.value.count { it.isCompleted }.toFloat() / totalPrayers * 100)).toFloat())
+            map[it.key] = String.format(Locale.US,"%.1f", (it.value.count { it.isCompleted }.toFloat() / it.value.size * 100)).toFloat()
         }
-        list
+        map
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
-        initialValue = mutableListOf()
+        initialValue = mutableMapOf()
     )
 
 }

@@ -64,7 +64,7 @@ fun StatisticsScreen(
     var selectedDateRangeString by rememberSaveable { mutableStateOf(options[0]) }
     val scrollState = rememberScrollState()
     val longestStreak by viewModel.longestSeries.collectAsState()
-    val completedPercentageList = viewModel.completePercentageList.collectAsState()
+    val completedPercentageList = viewModel.completePercentageMap.collectAsState()
     LaunchedEffect(selectedDateRangeString) {
         val selectedDateRange = when(selectedDateRangeString){
             options[0] -> LocalDate.now().minusWeeks(1)..LocalDate.now()
@@ -291,13 +291,15 @@ fun StatisticsChart(
     val dailyPrayerPairs = remember(statistics) {
         statistics.groupBy { it.date }
             .map { (date, prayerStatistics) ->
-                date to prayerStatistics.count { it.isCompleted }
+                val completedCountAtDate = prayerStatistics.count { it.isCompleted }
+                val missedCountAtDate = prayerStatistics.size - completedCountAtDate
+                date to Pair(prayerStatistics.count { it.isCompleted },missedCountAtDate)
             }
             .sortedBy { it.first }
     }
     val dateList = dailyPrayerPairs.map { it.first }
-    val completedPrayerList: List<Number> = dailyPrayerPairs.map { it.second }
-    val notCompletedPrayerList: List<Int> = completedPrayerList.map { 5 - it.toInt() }
+    val completedPrayerList: List<Number> = dailyPrayerPairs.map { it.second.first }
+    val missedPrayerList: List<Int> = dailyPrayerPairs.map { it.second.second }
 
     Card(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
@@ -336,7 +338,7 @@ fun StatisticsChart(
                         drawLine(
                             color = primaryColor.copy(alpha = 0.3f),
                             start = Offset(padding, y),
-                            end = Offset(width , y),
+                            end = Offset(width + 100f , y),
                             strokeWidth = 5f
                         )
                         drawContext.canvas.nativeCanvas.apply {
@@ -364,7 +366,7 @@ fun StatisticsChart(
                         )
 
                         // Kaçırılan namazlar (kırmızı)
-                        val notCompletedHeight = chartHeight * (notCompletedPrayerList[index].toFloat().coerceAtLeast(0.03f) / 5)
+                        val notCompletedHeight = chartHeight * (missedPrayerList[index].toFloat().coerceAtLeast(0.03f) / 5)
                         drawRect(
                             color = onError,
                             topLeft = Offset(x + columnWidth, height - padding - notCompletedHeight),
@@ -386,7 +388,7 @@ fun StatisticsChart(
                             )
                             // Kaçırılan namaz sayısı
                             drawText(
-                                notCompletedPrayerList[index].toString(),
+                                missedPrayerList[index].toString(),
                                 x + columnWidth * 1.5f - 12f,
                                 height - padding - notCompletedHeight - 16f,
                                 android.graphics.Paint().apply {
@@ -434,14 +436,14 @@ fun StatisticsChart(
                     drawLine(
                         color = onPrimaryContainer,
                         start = Offset(padding, height - padding),
-                        end = Offset(width + 50f, height - padding),
+                        end = Offset(width + 100f, height - padding),
                         strokeWidth = 5f
                     )
                     // X ekseni oku
                     val xArrowPath = Path().apply {
-                        moveTo(width + 50f, height - padding )
-                        lineTo(width + 50f - arrowSize , height - padding - arrowSize)
-                        lineTo(width + 50f - arrowSize, height - padding + arrowSize)
+                        moveTo(width + 100f, height - padding )
+                        lineTo(width + 100f - arrowSize , height - padding - arrowSize)
+                        lineTo(width + 100f - arrowSize, height - padding + arrowSize)
                         close()
                     }
                     drawPath(
@@ -613,7 +615,7 @@ fun SuccessCard(statisticsState: StatisticsState, longestStreak: Int) {
     }
 }
 @Composable
-fun DetailedPrayerStatistics(completedPercentageList : List<Float>) {
+fun DetailedPrayerStatistics(completedPercentageMap : Map<String, Float>) {
     var expandedState by remember { mutableStateOf(false) }
     
     Card(
@@ -653,11 +655,9 @@ fun DetailedPrayerStatistics(completedPercentageList : List<Float>) {
             
             if (expandedState) {
                 Spacer(modifier = Modifier.height(16.dp))
-                DetailedPrayerRow(stringResource(R.string.morning), completedPercentageList.getOrNull(0)?:0f)
-                DetailedPrayerRow(stringResource(R.string.noon), completedPercentageList.getOrNull(1)?:0f)
-                DetailedPrayerRow(stringResource(R.string.afternoon), completedPercentageList.getOrNull(2)?:0f)
-                DetailedPrayerRow(stringResource(R.string.evening), completedPercentageList.getOrNull(3)?:0f)
-                DetailedPrayerRow(stringResource(R.string.night), completedPercentageList.getOrNull(4)?:0f)
+                completedPercentageMap.keys.forEach{ key ->
+                    DetailedPrayerRow(key, completedPercentageMap.getOrDefault(key,0f))
+                }
             }
         }
     }
