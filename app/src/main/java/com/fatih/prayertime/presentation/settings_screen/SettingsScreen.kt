@@ -37,9 +37,8 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Notifications
-
 import androidx.compose.material.icons.filled.MoreVert
-
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -52,6 +51,7 @@ import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.AlertDialog
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -94,7 +94,7 @@ fun SettingsScreen(modifier: Modifier, settingsScreenViewModel: SettingsScreenVi
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.primaryContainer,RoundedCornerShape(16.dp))
+                .background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(16.dp))
                 .padding(24.dp)
         ) {
             Text(
@@ -121,24 +121,38 @@ fun SettingsScreen(modifier: Modifier, settingsScreenViewModel: SettingsScreenVi
                 title = stringResource(R.string.prayer_time_calculation),
                 icon = ImageVector.vectorResource(R.drawable.morning)
             ) {
-                PrayerTimeCalculationSection(
-                    selectedMethod = uiSettings.prayerCalculationMethod?:1,
-                    onMethodChange = { settingsScreenViewModel.updatePrayerCalculationMethod(it) },
-                    onTuneValuesChange = { settingsScreenViewModel.updatePrayerTimeTuneValues(it) },
-                    tuneValues = uiSettings.prayerTimeTuneValues,
-                )
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+
+                    PrayerTimeMethodSection(
+                        selectedMethod = uiSettings.prayerCalculationMethod?:1,
+                        onMethodChange = { settingsScreenViewModel.updatePrayerCalculationMethod(it) },)
+
+                    PrayerTimeTuneSection(
+                        onTuneValuesChange = { settingsScreenViewModel.updatePrayerTimeTuneValues(it) },
+                        tuneValues = uiSettings.prayerTimeTuneValues,
+                    )
+                }
+
             }
 
             SettingsSection(
                 title = stringResource(R.string.notification),
                 icon = Icons.Default.Notifications
             ) {
-                SettingsSwitchItem(
-                    title = stringResource(R.string.vibration),
-                    subtitle = stringResource(R.string.vibration_description),
-                    isChecked = uiSettings.vibrationEnabled,
-                    onCheckedChange = { settingsScreenViewModel.toggleVibration() }
-                )
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    SettingsSwitchItem(
+                        title = stringResource(R.string.vibration),
+                        subtitle = stringResource(R.string.vibration_description),
+                        isChecked = uiSettings.vibrationEnabled,
+                        onCheckedChange = { settingsScreenViewModel.toggleVibration() }
+                    )
+
+                    NotificationDismissTimeSelector(
+                        currentDismissTime = uiSettings.notificationDismissTime,
+                        onDismissTimeSelected = { settingsScreenViewModel.updateNotificationDismissTime(it) }
+                    )
+                }
+
             }
 
             SettingsSection(
@@ -438,14 +452,71 @@ fun OffsetMinuteSelectionCompose(selectedPrayerAlarm: PrayerAlarm, closeDialog: 
 }
 
 @Composable
-fun PrayerTimeCalculationSection(
-    selectedMethod: Int,
-    onMethodChange: (Int) -> Unit,
-    tuneValues: Map<String, Int>,
-    onTuneValuesChange: (Map<String, Int>) -> Unit
+fun PrayerTimeMethodSection(selectedMethod: Int,onMethodChange: (Int) -> Unit) {
 
-) {
     var showMethodDialog by remember { mutableStateOf(false) }
+
+    Surface(
+
+        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)),
+        color = MaterialTheme.colorScheme.secondaryContainer
+    ) {
+        Row(
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth()
+                .clickable { showMethodDialog = !showMethodDialog }
+            ,
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column {
+                Text(
+                    text = stringResource(R.string.calculation_method),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = getCalculationMethodName(selectedMethod),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            val methodDialogArrow =
+                if (showMethodDialog) ImageVector.vectorResource(R.drawable.arrow_down) else ImageVector.vectorResource(
+                    R.drawable.arrow_right
+                )
+            AnimatedContent(
+                targetState = methodDialogArrow
+            ) {
+                Icon(
+                    modifier = Modifier.animateContentSize(),
+                    imageVector = it,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+
+        AnimatedVisibility(
+            visible = showMethodDialog,
+            enter = fadeIn(tween(400)) + slideInVertically(),
+            exit = fadeOut(tween(400)) + slideOutVertically()
+        ) {
+            PrayerCalculationMethodDialog(
+                selectedMethod = selectedMethod,
+                onMethodSelect = {
+                    onMethodChange(it)
+                    showMethodDialog = false
+                }
+            )
+        }
+    }
+}
+
+@Composable
+fun PrayerTimeTuneSection(tuneValues: Map<String, Int>,onTuneValuesChange: (Map<String, Int>) -> Unit) {
+
     var showTuneDialog by remember { mutableStateOf(false) }
 
     Surface(
@@ -453,112 +524,55 @@ fun PrayerTimeCalculationSection(
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp)),
         color = MaterialTheme.colorScheme.secondaryContainer
-    ) {
-        Column(
-            modifier = Modifier.fillMaxWidth().padding(12.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+    )  {
+        Row(
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth()
+                .clickable { showTuneDialog = !showTuneDialog }
+                ,
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { showMethodDialog = !showMethodDialog }
-                    .padding(vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Column {
-                    Text(
-                        text = stringResource(R.string.calculation_method),
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Text(
-                        text = getCalculationMethodName(selectedMethod),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-                val methodDialogArrow =
-                    if (showMethodDialog) ImageVector.vectorResource(R.drawable.arrow_down) else ImageVector.vectorResource(
-                        R.drawable.arrow_right
-                    )
-                AnimatedContent(
-                    targetState = methodDialogArrow
-                ) {
-                    Icon(
-                        modifier = Modifier.animateContentSize(),
-                        imageVector = it,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-
-            AnimatedVisibility(
-                visible = showMethodDialog,
-                enter = fadeIn(tween(400)) + slideInVertically(),
-                exit = fadeOut(tween(400)) + slideOutVertically()
-            ) {
-                PrayerCalculationMethodDialog(
-                    selectedMethod = selectedMethod,
-                    onMethodSelect = {
-                        onMethodChange(it)
-                        showMethodDialog = false
-                    }
+            Column {
+                Text(
+                    text = stringResource(R.string.prayer_time_adjustments),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = stringResource(R.string.prayer_time_adjustments_description),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-
-
-            HorizontalDivider()
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { showTuneDialog = !showTuneDialog }
-                    .padding(vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+            val tuneDialogArrow = if (showTuneDialog)  ImageVector.vectorResource(R.drawable.arrow_down) else ImageVector.vectorResource(R.drawable.arrow_right)
+            AnimatedContent(
+                targetState = tuneDialogArrow
             ) {
-                Column {
-                    Text(
-                        text = stringResource(R.string.prayer_time_adjustments),
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Text(
-                        text = stringResource(R.string.prayer_time_adjustments_description),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-                val tuneDialogArrow = if (showTuneDialog)  ImageVector.vectorResource(R.drawable.arrow_down) else ImageVector.vectorResource(R.drawable.arrow_right)
-                AnimatedContent(
-                    targetState = tuneDialogArrow
-                ) {
-                    Icon(
-                        modifier = Modifier.animateContentSize(),
-                        imageVector = it,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-            AnimatedVisibility(
-                visible = showTuneDialog,
-                enter = fadeIn(tween(400)) + slideInVertically(),
-                exit = fadeOut(tween(400)) + slideOutVertically()
-            ) {
-                PrayerTimeTuneDialog(
-                    currentTuneValues = tuneValues,
-                    onTuneValuesChange = {
-                        onTuneValuesChange(it)
-                        showTuneDialog = false
-                    },
-                    onDismiss = { showTuneDialog = false }
+                Icon(
+                    modifier = Modifier.animateContentSize(),
+                    imageVector = it,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-
         }
+        AnimatedVisibility(
+            visible = showTuneDialog,
+            enter = fadeIn(tween(400)) + slideInVertically(),
+            exit = fadeOut(tween(400)) + slideOutVertically()
+        ) {
+            PrayerTimeTuneDialog(
+                currentTuneValues = tuneValues,
+                onTuneValuesChange = {
+                    onTuneValuesChange(it)
+                    showTuneDialog = false
+                },
+                onDismiss = { showTuneDialog = false }
+            )
+        }
+
     }
 }
 
@@ -771,13 +785,13 @@ fun PrayerTimeTuneItem(
                     .width(50.dp)
                     .height(32.dp)
                     .background(
-                        MaterialTheme.colorScheme.surfaceVariant,
+                        MaterialTheme.colorScheme.primaryContainer,
                         RoundedCornerShape(4.dp)
                     )
                     .padding(horizontal = 8.dp, vertical = 4.dp),
                 textStyle = MaterialTheme.typography.bodyMedium.copy(
                     textAlign = TextAlign.Center,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
                 )
             )
             
@@ -836,5 +850,99 @@ fun getCalculationMethodName(method: Int): String {
         22 -> "Comunidade Islamica de Lisboa"
         23 -> "Ministry of Awqaf, Islamic Affairs and Holy Places, Jordan"
         else -> "Islamic Society of North America (ISNA)"
+    }
+}
+
+@Composable
+fun NotificationDismissTimeSelector(
+    currentDismissTime: Long,
+    onDismissTimeSelected: (Long) -> Unit
+) {
+    val dismissTimeOptions = remember {
+        mapOf(
+            5000L to "5 saniye",
+            10000L to "10 saniye",
+            15000L to "15 saniye",
+            30000L to "30 saniye",
+            60000L to "1 dakika"
+        )
+    }
+    
+    var showDialog by remember { mutableStateOf(false) }
+    
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .clickable { showDialog = true },
+        color = MaterialTheme.colorScheme.secondaryContainer
+    ) {
+        Row(
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = stringResource(R.string.notification_dismiss_time),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+                Text(
+                    text = dismissTimeOptions[currentDismissTime] ?: "${currentDismissTime/1000} saniye",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            }
+            Icon(
+                imageVector = ImageVector.vectorResource(R.drawable.arrow_right),
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+    
+    if (showDialog) {
+        AlertDialog(
+            containerColor = MaterialTheme.colorScheme.primaryContainer,
+            onDismissRequest = { showDialog = false },
+            title = { Text(stringResource(R.string.notification_dismiss_time)) },
+            text = {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    dismissTimeOptions.forEach { (time, label) ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    onDismissTimeSelected(time)
+                                    showDialog = false
+                                },
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            RadioButton(
+                                selected = currentDismissTime == time,
+                                onClick = {
+                                    onDismissTimeSelected(time)
+                                    showDialog = false
+                                }
+                            )
+                            Text(text = label)
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = { showDialog = false }
+                ) {
+                    Text(stringResource(R.string.close))
+                }
+            }
+        )
     }
 }

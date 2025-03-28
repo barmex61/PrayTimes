@@ -33,6 +33,7 @@ class AlarmScheduler @Inject constructor(
             putExtra("VIBRATION",settings.vibrationEnabled)
             putExtra("SOUND_URI",prayerAlarm.soundUri)
             putExtra("IS_SILENT",muteAtFridayPrayer)
+            putExtra("NOTIFICATION_DISMISS_TIME",settings.notificationDismissTime)
         }
         val requestCode = ("prayer " + prayerAlarm.alarmType).hashCode()
         val pendingIntent = PendingIntent.getBroadcast(
@@ -85,7 +86,7 @@ class AlarmScheduler @Inject constructor(
 
     fun updatePrayAlarm(alarm: PrayerAlarm){
         if(alarm.isEnabled){
-            if(alarm.alarmTime > System.currentTimeMillis()){
+            if (System.currentTimeMillis() < alarm.alarmTime){
                 schedulePrayAlarm(alarm)
             }
         }else{

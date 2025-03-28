@@ -156,6 +156,8 @@
 
     <string name="vibration_description">Vibration for notifications</string>
     <string name="mute_friday_description">Mute at friday prayer time</string>
+    <string name="notification_dismiss_time">Notification Dismiss Time</string>
+    <string name="notification_dismiss_time_description">Set how long notifications stay before automatically disappearing</string>
     <string name="quran_audio_error_timeout">Connection timed out. Please try again.</string>
     <string name="quran_audio_error_network">Please check your internet connection and try again.</string>
     <string name="quran_audio_error_state">An error occurred while playing the audio file.</string>

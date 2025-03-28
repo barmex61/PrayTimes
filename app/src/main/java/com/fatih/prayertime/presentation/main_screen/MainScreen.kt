@@ -105,6 +105,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.exyte.animatednavbar.utils.noRippleClickable
 import com.fatih.prayertime.R
@@ -119,6 +120,8 @@ import com.fatih.prayertime.util.extensions.toAddress
 import com.fatih.prayertime.util.model.enums.PrayTimesString
 import com.fatih.prayertime.util.composables.ErrorView
 import com.fatih.prayertime.util.composables.LoadingView
+import com.fatih.prayertime.util.config.NavigationConfig.screens
+import com.fatih.prayertime.util.extensions.navigateToScreen
 import com.fatih.prayertime.util.extensions.toPrayTimeInfoList
 import com.fatih.prayertime.util.extensions.toTimeList
 import com.fatih.prayertime.util.model.event.MainScreenEvent
@@ -132,7 +135,7 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 @Composable
-fun MainScreen( modifier: Modifier, mainScreenViewModel: MainScreenViewModel = hiltViewModel()) {
+fun MainScreen( modifier: Modifier,navController: NavController, mainScreenViewModel: MainScreenViewModel = hiltViewModel()) {
     var showAlarmDialog by remember { mutableStateOf(false) }
     val scrollState = rememberScrollState()
     var isVisible by remember { mutableStateOf(false) }
@@ -154,6 +157,15 @@ fun MainScreen( modifier: Modifier, mainScreenViewModel: MainScreenViewModel = h
             }
         )
     }
+    AnimatedVisibility(
+        visible = showAlarmDialog,
+        enter = fadeIn() + slideInVertically(),
+        exit = fadeOut() + slideOutVertically()
+    ) {
+        GlobalAlarmsDialog(mainScreenViewModel){
+            showAlarmDialog = false
+        }
+    }
 
     Column(modifier = modifier.verticalScroll(scrollState, enabled = true) ){
         AddressBar(haptic,mainScreenViewModel)
@@ -169,20 +181,15 @@ fun MainScreen( modifier: Modifier, mainScreenViewModel: MainScreenViewModel = h
         PrayNotificationCompose(mainScreenViewModel,haptic){
             showAlarmDialog = true
         }
-        DailyPrayCompose(haptic,mainScreenViewModel)
+        DailyPrayCompose(haptic,mainScreenViewModel ){ categoryId ->
+            val route = screens[4].route.replace("{categoryId}","$categoryId")
+            navController.navigateToScreen(route)
+        }
         Spacer(
             modifier = Modifier.height(25.dp)
         )
     }
-    AnimatedVisibility(
-        visible = showAlarmDialog,
-        enter = fadeIn() + slideInVertically(),
-        exit = fadeOut() + slideOutVertically()
-    ) {
-        GlobalAlarmsDialog(mainScreenViewModel){
-            showAlarmDialog = false
-        }
-    }
+
     TitleView(stringResource(R.string.main_view))
 }
 
@@ -262,7 +269,7 @@ fun GlobalAlarmsDialog(mainScreenViewModel: MainScreenViewModel, onDismiss: () -
 
 
 @Composable
-fun DailyPrayCompose(haptic: HapticFeedback,mainScreenViewModel: MainScreenViewModel) {
+fun DailyPrayCompose(haptic: HapticFeedback,mainScreenViewModel: MainScreenViewModel,onDuaCategoryClick : (Int) -> Unit) {
     val duaCategoryList = mainScreenViewModel.duaCategoryList
     AnimatedVisibility(
         visible = duaCategoryList != null && duaCategoryList.isNotEmpty(),
@@ -311,7 +318,7 @@ fun DailyPrayCompose(haptic: HapticFeedback,mainScreenViewModel: MainScreenViewM
                     modifier = Modifier.height(220.dp)
                 )  {
                     items(duaCategoryList!!) { item ->
-                        DuaCategoryCardCompose(item)
+                        DuaCategoryCardCompose(item,onDuaCategoryClick)
                     }
                 }
             }
@@ -1174,11 +1181,13 @@ fun FancyDuaDialog(
 }
 
 @Composable
-fun DuaCategoryCardCompose(duaCategoryData: DuaCategoryData){
+fun DuaCategoryCardCompose(duaCategoryData: DuaCategoryData,onDuaCategoryClick: (Int) -> Unit){
     Card (
         modifier = Modifier
             .padding(10.dp),
-        onClick = {},
+        onClick = {
+            onDuaCategoryClick(duaCategoryData.id)
+        },
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
         elevation = CardDefaults.cardElevation(10.dp),
         shape = RoundedCornerShape(10.dp)

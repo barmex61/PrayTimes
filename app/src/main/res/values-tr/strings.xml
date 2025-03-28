@@ -160,6 +160,8 @@
     <string name="quran_audio_error_generic">Beklenmeyen bir hata oluştu. Lütfen tekrar deneyin.</string>
     <string name="vibration_description">Bildirimler için titreşimi aç-kapat</string>
     <string name="mute_friday_description">Cuma vakitlerinde sessize al</string>
+    <string name="notification_dismiss_time">Bildirim Kapatma Süresi</string>
+    <string name="notification_dismiss_time_description">Bildirimlerin otomatik kapanma süresini ayarlayın</string>
     
     <!-- MainScreen Strings -->
     <string name="notification_permission_denied">Bildirim izni reddedildi. Ayarlardan bildirim izinlerini açın</string>

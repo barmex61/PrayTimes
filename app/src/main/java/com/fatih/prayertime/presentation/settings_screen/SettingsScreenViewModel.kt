@@ -65,6 +65,11 @@ class SettingsScreenViewModel @Inject constructor(
         saveSettingsUseCase(updatedSettings)
     }
 
+    fun updateNotificationDismissTime(dismissTime: Long) = viewModelScope.launch {
+        val updatedSettings = _settingsState.value.copy(notificationDismissTime = dismissTime)
+        saveSettingsUseCase(updatedSettings)
+    }
+
     fun updatePrayerCalculationMethod(method: Int) = viewModelScope.launch {
         val updatedSettings = _settingsState.value.copy(prayerCalculationMethod = method)
         saveSettingsUseCase(updatedSettings)

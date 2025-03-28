@@ -8,6 +8,7 @@ data class Settings(
     val vibrationEnabled: Boolean = true,
     val prayerAlarms: List<PrayerAlarm> = mutableListOf(),
     val silenceWhenCuma : Boolean = true,
+    val notificationDismissTime: Long = 15000,
     
     val prayerCalculationMethod: Int? = null,
     val prayerTimeTuneValues: Map<String, Int> = mapOf(

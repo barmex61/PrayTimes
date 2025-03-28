@@ -9,6 +9,7 @@ import android.content.Intent
 import android.media.AudioAttributes
 import android.media.RingtoneManager
 import android.net.Uri
+import android.os.Handler
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.net.toUri
@@ -16,7 +17,9 @@ import com.fatih.prayertime.R
 import com.fatih.prayertime.presentation.main_activity.MainActivity
 import com.fatih.prayertime.util.model.enums.AlarmType
 import com.fatih.prayertime.util.utils.AlarmUtils.getContentTitleForPrayType
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class AlarmReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
@@ -28,10 +31,11 @@ class AlarmReceiver : BroadcastReceiver() {
                 val prayAlarmType = intent.getStringExtra("PRAY_TYPE") ?: "Bilinmeyen Alarm"
                 val enableVibration = intent.getBooleanExtra("VIBRATION", true)
                 val isSilent = intent.getBooleanExtra("IS_SILENT", false)
+                val notificationDismissTime = intent.getLongExtra("NOTIFICATION_DISMISS_TIME", 10000L)
                 val alarmSoundUri =
                     if(isSilent) RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
                     else intent.getStringExtra("SOUND_URI")?.toUri() ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
-                showNotificationForPray(context, prayAlarmType, enableVibration, alarmSoundUri)
+                showNotificationForPray(context, prayAlarmType, enableVibration, alarmSoundUri, notificationDismissTime)
             }
             AlarmType.STATISTICS.name ->{
                 Log.d("AlarmReceiver","İstatistik alarmı tetiklendi")
@@ -43,7 +47,11 @@ class AlarmReceiver : BroadcastReceiver() {
         }
     }
 
-    private fun showNotificationForPray(context: Context, prayType: String, enableVibration : Boolean, alarmSoundUri : Uri) {
+    private fun scheduleAlarmStop(notificationManager: NotificationManager,context: Context, prayType: String) {
+
+    }
+
+    private fun showNotificationForPray(context: Context, prayType: String, enableVibration : Boolean, alarmSoundUri : Uri, notificationDismissTime: Long) {
         val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         deleteNotificationChannel(context,PRAY_CHANNEL_ID)
         val channel = NotificationChannel(
@@ -74,7 +82,15 @@ class AlarmReceiver : BroadcastReceiver() {
             .setAutoCancel(true)
             .setContentIntent(pendingIntent)
             .setVibrate(vibrationPattern)
-        notificationManager.notify(prayType.hashCode(),builder.build())
+            .setSound(null)
+            
+        val notificationId = prayType.hashCode()
+        notificationManager.notify(notificationId, builder.build())
+        
+        Handler(context.mainLooper).postDelayed({
+            val notificationManager = context.applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.cancel(notificationId)
+            }, notificationDismissTime)
     }
 
     private fun showNotificationForStatistics(context: Context, prayType: String, alarmDate : String){
@@ -122,6 +138,7 @@ class AlarmReceiver : BroadcastReceiver() {
 
 
         notificationManager.notify(notificationId,builder.build())
+
     }
 
     companion object {
