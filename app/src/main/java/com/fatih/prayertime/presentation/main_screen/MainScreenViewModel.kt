@@ -81,6 +81,8 @@ class MainScreenViewModel @Inject constructor(
         private const val TAG = "MainScreenViewModel"
     }
 
+    // ===== STATE VARIABLES =====
+    
     val isNotificationPermissionGranted = permissionsAndPreferences.isNotificationPermissionGranted
 
     private val _isLocationTracking : MutableStateFlow<Boolean> = MutableStateFlow(false)
@@ -97,6 +99,25 @@ class MainScreenViewModel @Inject constructor(
     private var currentMethodId: Int = 13 // Varsayılan metod ID'si
     private var currentTuneValues: Map<String, Int> = emptyMap()
 
+    private val _formattedDate : MutableStateFlow<String> = MutableStateFlow("")
+    val formattedDate : StateFlow<String> = _formattedDate
+
+    private val _formattedTime : MutableStateFlow<String> = MutableStateFlow("")
+    val formattedTime : StateFlow<String> = _formattedTime
+
+    private val _prayerAlarmList : MutableStateFlow<List<PrayerAlarm>?> = MutableStateFlow(null)
+    val prayerAlarmList : StateFlow<List<PrayerAlarm>?> = _prayerAlarmList
+
+    private val _duaCategoryList = getDuaUseCase.invoke()?.data
+    val duaCategoryList = _duaCategoryList
+
+    private val _mainScreenEvent = MutableSharedFlow<MainScreenEvent>()
+
+    private val _selectedDuaState = MutableStateFlow(SelectedDuaState())
+    val selectedDuaState = _selectedDuaState.asStateFlow()
+
+    // ===== LOCATION FUNCTIONS =====
+    
     fun trackLocation() = viewModelScope.launch(Dispatchers.IO) {
         _isLocationTracking.value = true
         getLocationAndAddressUseCase()
@@ -118,6 +139,13 @@ class MainScreenViewModel @Inject constructor(
             }
     }
 
+    private fun removeCallbacks(){
+        _isLocationTracking.value = false
+        removeLocationCallbackUseCase()
+    }
+
+    // ===== PRAYER TIMES FUNCTIONS =====
+    
     private suspend fun fetchPrayTimes(address: Address){
         val prayTimesDb = fetchPrayTimesByDatabase(address)
         if (prayTimesDb != null){
@@ -178,6 +206,51 @@ class MainScreenViewModel @Inject constructor(
         else null
     }
 
+    private fun refreshPrayTimesForSettings(address: Address) = viewModelScope.launch {
+        _prayerUiState.update { it.copy(isLoading = true) }
+        
+        val prayTimesApi = fetchPrayTimesByApi(address)
+        
+        if (prayTimesApi != null) {
+            mainScreenStateManager.updatePrayTimes(prayTimesApi)
+            _prayerUiState.update { it.copy(prayTimes = prayTimesApi, isLoading = false, error = null) }
+            updateAllGlobalAlarm(false)
+        } else {
+            _prayerUiState.update { it.copy(isLoading = false, error = "Namaz vakitleri güncellenemedi") }
+        }
+    }
+
+    private fun getCalculationMethodName(methodId: Int): String {
+        return when (methodId) {
+            0 -> "Shia Ithna-Ashari"
+            1 -> "University of Islamic Sciences, Karachi"
+            2 -> "Islamic Society of North America"
+            3 -> "Muslim World League"
+            4 -> "Umm Al-Qura University, Makkah"
+            5 -> "Egyptian General Authority of Survey"
+            7 -> "Institute of Geophysics, University of Tehran"
+            8 -> "Gulf Region"
+            9 -> "Kuwait"
+            10 -> "Qatar"
+            11 -> "Majlis Ugama Islam Singapura"
+            12 -> "Union Organization Islamic de France"
+            13 -> "Diyanet İşleri Başkanlığı"
+            14 -> "Algeria"
+            15 -> "Türkiye Takvimi"
+            16 -> "Russia"
+            17 -> "Moonsighting Committee Worldwide (Moonsighting.com)"
+            18 -> "Dubai"
+            19 -> "United Arab Emirates"
+            20 -> "Jakim, Malaysia"
+            21 -> "Tunisia"
+            22 -> "Afghanistan"
+            23 -> "Bosnia and Herzegovina"
+            else -> "Bilinmeyen Metod"
+        }
+    }
+
+    // ===== WEATHER FUNCTIONS =====
+    
     private fun fetchWeatherByCoordinates(latitude: Double, longitude: Double) {
         viewModelScope.launch {
             _weatherUiState.value = _weatherUiState.value.copy(isWeatherLoading = true)
@@ -241,26 +314,17 @@ class MainScreenViewModel @Inject constructor(
         )
     }
 
-    //Date
-
-    private val _formattedDate : MutableStateFlow<String> = MutableStateFlow("")
-    val formattedDate : StateFlow<String> = _formattedDate
-
+    // ===== DATE & TIME FUNCTIONS =====
+    
     fun updateFormattedDate() = viewModelScope.launch(Dispatchers.Default){
         _formattedDate.emit(formattedUseCase.formatOfPatternDDMMYYYY(LocalDate.now()))
     }
-
-    private val _formattedTime : MutableStateFlow<String> = MutableStateFlow("")
-    val formattedTime : StateFlow<String> = _formattedTime
 
     fun updateFormattedTime() = viewModelScope.launch(Dispatchers.Default){
         _formattedTime.emit(formattedUseCase.formatHHMMSS(LocalDateTime.now()))
     }
 
-   // Alarm--
-
-    private val _prayerAlarmList : MutableStateFlow<List<PrayerAlarm>?> = MutableStateFlow(null)
-    val prayerAlarmList : StateFlow<List<PrayerAlarm>?> = _prayerAlarmList
+    // ===== ALARM FUNCTIONS =====
 
     fun updateGlobalAlarm(
         alarmType : String,
@@ -289,7 +353,6 @@ class MainScreenViewModel @Inject constructor(
         }
     }
 
-
     fun getAlarmTime(index: Int) : Pair<Long,String>  {
         val currentPrayTimes = prayerUiState.value.prayTimes
         currentPrayTimes?:return Pair(0L,"00:00:00")
@@ -311,19 +374,12 @@ class MainScreenViewModel @Inject constructor(
         }
     }
 
-
     fun checkNotificationPermission(){
         permissionsAndPreferences.checkNotificationPermission()
     }
 
-    private val _duaCategoryList = getDuaUseCase.invoke()?.data
-    val duaCategoryList = _duaCategoryList
-
-    private val _mainScreenEvent = MutableSharedFlow<MainScreenEvent>()
-
-    private val _selectedDuaState = MutableStateFlow(SelectedDuaState())
-    val selectedDuaState = _selectedDuaState.asStateFlow()
-
+    // ===== DUA FUNCTIONS =====
+    
     fun onEvent(event : MainScreenEvent)=viewModelScope.launch{
         _mainScreenEvent.emit(event)
     }
@@ -346,60 +402,17 @@ class MainScreenViewModel @Inject constructor(
         _selectedDuaState.value = _selectedDuaState.value.copy(isVisible = false)
     }
 
-    private fun removeCallbacks(){
-        _isLocationTracking.value = false
-        removeLocationCallbackUseCase()
-    }
+    // ===== SETTINGS OBSERVER =====
 
+    // ===== LIFECYCLE METHODS =====
+    
     override fun onCleared() {
         removeCallbacks()
         super.onCleared()
     }
 
-
-    private fun getCalculationMethodName(methodId: Int): String {
-        return when (methodId) {
-            0 -> "Shia Ithna-Ashari"
-            1 -> "University of Islamic Sciences, Karachi"
-            2 -> "Islamic Society of North America"
-            3 -> "Muslim World League"
-            4 -> "Umm Al-Qura University, Makkah"
-            5 -> "Egyptian General Authority of Survey"
-            7 -> "Institute of Geophysics, University of Tehran"
-            8 -> "Gulf Region"
-            9 -> "Kuwait"
-            10 -> "Qatar"
-            11 -> "Majlis Ugama Islam Singapura"
-            12 -> "Union Organization Islamic de France"
-            13 -> "Diyanet İşleri Başkanlığı"
-            14 -> "Algeria"
-            15 -> "Türkiye Takvimi"
-            16 -> "Russia"
-            17 -> "Moonsighting Committee Worldwide (Moonsighting.com)"
-            18 -> "Dubai"
-            19 -> "United Arab Emirates"
-            20 -> "Jakim, Malaysia"
-            21 -> "Tunisia"
-            22 -> "Afghanistan"
-            23 -> "Bosnia and Herzegovina"
-            else -> "Bilinmeyen Metod"
-        }
-    }
-
-    private fun refreshPrayTimesForSettings(address: Address) = viewModelScope.launch {
-        _prayerUiState.update { it.copy(isLoading = true) }
-        
-        val prayTimesApi = fetchPrayTimesByApi(address)
-        
-        if (prayTimesApi != null) {
-            mainScreenStateManager.updatePrayTimes(prayTimesApi)
-            _prayerUiState.update { it.copy(prayTimes = prayTimesApi, isLoading = false, error = null) }
-            updateAllGlobalAlarm(false)
-        } else {
-            _prayerUiState.update { it.copy(isLoading = false, error = "Namaz vakitleri güncellenemedi") }
-        }
-    }
-
+    // ===== INITIALIZATION =====
+    
     init {
         updateFormattedDate()
         updateFormattedTime()
