@@ -257,12 +257,11 @@ fun CompassGyroscopeContent(
             )
         }
 
-        Spacer(modifier = Modifier.height(-yOffset  ))
+        Spacer(modifier = Modifier.height(-yOffset))
 
         Surface(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 16.dp),
+                .fillMaxWidth(),
             shape = MaterialTheme.shapes.medium,
             color = MaterialTheme.colorScheme.secondaryContainer
         ) {

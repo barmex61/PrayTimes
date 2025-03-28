@@ -10,7 +10,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:id="@+id/dayTextView"
-            android:text="Tuesday"
+            android:text=""
             android:textColor="@android:color/white"
             android:textSize="10sp"
             android:textAlignment="center"
@@ -23,7 +23,7 @@
             android:textSize="30sp"
             android:textColor="@android:color/white"
             android:textAlignment="center"
-            android:text="08:44" />
+            android:text="" />
 
         <TextView
             android:id="@+id/dateTextView"
@@ -32,7 +32,7 @@
             android:textSize="10sp"
             android:textAlignment="center"
             android:textColor="@android:color/white"
-            android:text="April 07, 2020" />
+            android:text="" />
 
         <TextView
             android:id="@+id/remainingTimeTextView"
@@ -43,5 +43,5 @@
             android:paddingStart="5dp"
             android:paddingEnd="5dp"
             android:textColor="@android:color/white"
-            android:text="Sonraki vakte kalan süre 15 dakika" />
+            android:text="@string/next_prayer_remaining_time" />
     </LinearLayout>

@@ -184,4 +184,80 @@
     <string name="weather_data_not_available">Weather information is not available.</string>
     <string name="wind_speed_unit">km/h</string>
     <string name="weather_icon">Weather icon</string>
+    
+    <!-- Notification Strings -->
+    <string name="unknown_alarm">Unknown Alarm</string>
+    <string name="pray_notification_channel_name">Pray Notifications</string>
+    <string name="pray_notification_channel_description">Prayer Time Alerts</string>
+    <string name="statistics_notification_channel_name">Statistics Notification</string>
+    
+    <!-- Time Duration Strings -->
+    <string name="duration_5_seconds">5 seconds</string>
+    <string name="duration_10_seconds">10 seconds</string>
+    <string name="duration_15_seconds">15 seconds</string>
+    <string name="duration_30_seconds">30 seconds</string>
+    <string name="duration_1_minute">1 minute</string>
+    <string name="duration_format_seconds">%1$d seconds</string>
+    
+    <!-- Prayer Calculation Method Strings -->
+    <string name="calculation_method_jafari">Jafari / Shia Ithna-Ashari</string>
+    <string name="calculation_method_karachi">University of Islamic Sciences, Karachi</string>
+    <string name="calculation_method_isna">Islamic Society of North America (ISNA)</string>
+    <string name="calculation_method_mwl">Muslim World League (MWL)</string>
+    <string name="calculation_method_makkah">Umm Al-Qura University, Makkah</string>
+    <string name="calculation_method_egypt">Egyptian General Authority of Survey</string>
+    <string name="calculation_method_tehran">Institute of Geophysics, University of Tehran</string>
+    <string name="calculation_method_gulf">Gulf Region</string>
+    <string name="calculation_method_kuwait">Kuwait</string>
+    <string name="calculation_method_qatar">Qatar</string>
+    <string name="calculation_method_singapore">Majlis Ugama Islam Singapura, Singapore</string>
+    <string name="calculation_method_france">Union Organization islamic de France</string>
+    <string name="calculation_method_turkey">Diyanet İşleri Başkanlığı, Turkey</string>
+    <string name="calculation_method_russia">Spiritual Administration of Muslims of Russia</string>
+    <string name="calculation_method_moonsighting">Moonsighting Committee Worldwide</string>
+    <string name="calculation_method_dubai">Dubai (experimental)</string>
+    <string name="calculation_method_malaysia">Jabatan Kemajuan Islam Malaysia (JAKIM)</string>
+    <string name="calculation_method_tunisia">Tunisia</string>
+    <string name="calculation_method_algeria">Algeria</string>
+    <string name="calculation_method_indonesia">KEMENAG - Kementerian Agama Republik Indonesia</string>
+    <string name="calculation_method_morocco">Morocco</string>
+    <string name="calculation_method_portugal">Comunidade Islamica de Lisboa</string>
+    <string name="calculation_method_jordan">Ministry of Awqaf, Islamic Affairs and Holy Places, Jordan</string>
+    
+    <!-- Widget Strings -->
+    <string name="next_prayer_remaining_time">Time to next prayer: %1$d minutes</string>
+    
+    <!-- Common UI Strings -->
+    <string name="cancel">Cancel</string>
+    <string name="save">Save</string>
+    <string name="select_date">Select Date</string>
+    <string name="minute_abbreviation">min</string>
+    <string name="plus_sign">+</string>
+    <string name="minus_sign">-</string>
+    <string name="dot_symbol">•</string>
+    
+    <!-- Statistics Screen Strings -->
+    <string name="statistics_title">Statistics</string>
+    <string name="success_rate">Success Rate</string>
+    <string name="success_rate_description">Completed prayers percentage</string>
+    <string name="longest_streak">%1$d days</string>
+    <string name="show_hide_details">Show/Hide Details</string>
+    <string name="performance_excellent">Excellent! You have great statistics! 🌟</string>
+    <string name="performance_very_good">You\'re doing very well! Keep it up! 💪</string>
+    <string name="performance_good">You\'re doing well, but you can do better! 🌱</string>
+    <string name="performance_needs_improvement">Every new day is a new beginning! 🌅</string>
+    
+    <!-- Quran Screen Strings -->
+    <string name="transliteration">Transliteration</string>
+    <string name="downloading_progress">Downloading... %1$d%%</string>
+    <string name="cancel_download">Cancel Download</string>
+    <string name="statistics_alarms_reset">Statistics alarms have been reset</string>
+    <string name="reset_alarms">Reset alarms</string>
+    
+    <!-- Prayer Time Parameters -->
+    <string name="prayer_time_fajr">fajr</string>
+    <string name="prayer_time_dhuhr">dhuhr</string>
+    <string name="prayer_time_asr">asr</string>
+    <string name="prayer_time_maghrib">maghrib</string>
+    <string name="prayer_time_isha">isha</string>
 </resources>

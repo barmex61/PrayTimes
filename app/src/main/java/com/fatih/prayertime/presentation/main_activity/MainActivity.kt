@@ -5,6 +5,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -39,12 +40,15 @@ import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -100,7 +104,6 @@ import com.fatih.prayertime.presentation.quran_screen.QuranScreen
 import com.fatih.prayertime.presentation.settings_screen.PrayerCalculationMethodDialog
 import com.fatih.prayertime.presentation.settings_screen.PrayerTimeTuneDialog
 import com.fatih.prayertime.presentation.settings_screen.SettingsScreen
-import com.fatih.prayertime.presentation.settings_screen.getCalculationMethodName
 import com.fatih.prayertime.presentation.statistics_screen.StatisticsScreen
 import com.fatih.prayertime.presentation.ui.theme.PrayerTimeTheme
 import com.fatih.prayertime.presentation.util_screen.UtilitiesScreen
@@ -413,29 +416,24 @@ fun ScheduleAlarm(scheduleDailyAlarmUpdateUseCase: ScheduleDailyAlarmUpdateUseCa
     scheduleDailyAlarmUpdateUseCase.executePrayAlarmWorker(context)
     scheduleDailyAlarmUpdateUseCase.executeStatisticsAlarmWorker(context)
     
-    /*
-    // DEBUG: Burada alarmları sıfırlamak için bir buton ekleyebilirsiniz
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.BottomEnd) {
         Button(
             onClick = {
-                // Alarm sıfırlama fonksiyonunu buraya ekleyebilirsiniz
-                // clearStatisticSharedPrefUseCase.executeWithWorkReset(context)
-                Toast.makeText(context, "İstatistik alarmları sıfırlandı", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, context.getString(R.string.statistics_alarms_reset), Toast.LENGTH_SHORT).show()
             },
             modifier = Modifier
                 .padding(16.dp)
                 .size(56.dp),
-            shape = CircleShape,
+            shape = RoundedCornerShape(28.dp),
             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary)
         ) {
             Icon(
                 imageVector = Icons.Default.Refresh,
-                contentDescription = "Alarmları Sıfırla",
+                contentDescription = stringResource(R.string.reset_alarms),
                 tint = MaterialTheme.colorScheme.onTertiary
             )
         }
     }
-    */
 }
 
 @Preview(showBackground = true)

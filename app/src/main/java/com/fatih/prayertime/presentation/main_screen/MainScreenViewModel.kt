@@ -1,11 +1,13 @@
 package com.fatih.prayertime.presentation.main_screen
 
+import android.content.Context
 import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.fatih.prayertime.R
 import com.fatih.prayertime.data.di.MainScreenLocation
 import com.fatih.prayertime.data.settings.PermissionAndPreferences
 import com.fatih.prayertime.domain.model.PrayerAlarm
@@ -36,6 +38,7 @@ import com.fatih.prayertime.util.model.state.WeatherState
 import com.fatih.prayertime.util.utils.AlarmUtils.getPrayTimeForPrayType
 import com.fatih.prayertime.util.model.AladhanApiOffsets
 import com.fatih.prayertime.util.utils.LocationUtils
+import com.fatih.prayertime.util.utils.MethodUtils.getCalculationMethodName
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -248,36 +251,7 @@ class MainScreenViewModel @Inject constructor(
             _prayerUiState.update { it.copy(prayTimes = prayTimesApi, isLoading = false, error = null) }
             updateAllGlobalAlarm(false)
         } else {
-            _prayerUiState.update { it.copy(isLoading = false, error = "Namaz vakitleri güncellenemedi") }
-        }
-    }
-
-    private fun getCalculationMethodName(methodId: Int): String {
-        return when (methodId) {
-            0 -> "Shia Ithna-Ashari"
-            1 -> "University of Islamic Sciences, Karachi"
-            2 -> "Islamic Society of North America"
-            3 -> "Muslim World League"
-            4 -> "Umm Al-Qura University, Makkah"
-            5 -> "Egyptian General Authority of Survey"
-            7 -> "Institute of Geophysics, University of Tehran"
-            8 -> "Gulf Region"
-            9 -> "Kuwait"
-            10 -> "Qatar"
-            11 -> "Majlis Ugama Islam Singapura"
-            12 -> "Union Organization Islamic de France"
-            13 -> "Diyanet İşleri Başkanlığı"
-            14 -> "Algeria"
-            15 -> "Türkiye Takvimi"
-            16 -> "Russia"
-            17 -> "Moonsighting Committee Worldwide (Moonsighting.com)"
-            18 -> "Dubai"
-            19 -> "United Arab Emirates"
-            20 -> "Jakim, Malaysia"
-            21 -> "Tunisia"
-            22 -> "Afghanistan"
-            23 -> "Bosnia and Herzegovina"
-            else -> "Bilinmeyen Metod"
+            _prayerUiState.update { it.copy(isLoading = false, error = "Error occurred while fetching prayer times") }
         }
     }
 

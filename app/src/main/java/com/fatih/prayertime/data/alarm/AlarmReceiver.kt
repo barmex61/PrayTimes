@@ -28,7 +28,7 @@ class AlarmReceiver : BroadcastReceiver() {
 
         when(alarmType){
             AlarmType.PRAY.name ->{
-                val prayAlarmType = intent.getStringExtra("PRAY_TYPE") ?: "Bilinmeyen Alarm"
+                val prayAlarmType = intent.getStringExtra("PRAY_TYPE") ?: context.getString(R.string.unknown_alarm)
                 val enableVibration = intent.getBooleanExtra("VIBRATION", true)
                 val isSilent = intent.getBooleanExtra("IS_SILENT", false)
                 val notificationDismissTime = intent.getLongExtra("NOTIFICATION_DISMISS_TIME", 10000L)
@@ -39,7 +39,7 @@ class AlarmReceiver : BroadcastReceiver() {
             }
             AlarmType.STATISTICS.name ->{
                 Log.d("AlarmReceiver","İstatistik alarmı tetiklendi")
-                val statsAlarmType = intent.getStringExtra("PRAY_TYPE") ?: "Bilinmeyen Alarm"
+                val statsAlarmType = intent.getStringExtra("PRAY_TYPE") ?: context.getString(R.string.unknown_alarm)
                 val statAlarmDate = intent.getStringExtra("ALARM_DATE")?:""
                 Log.d("AlarmReceiver", "Namaz tipi: $statsAlarmType, Tarih: $statAlarmDate")
                 showNotificationForStatistics(context,statsAlarmType,statAlarmDate)
@@ -56,10 +56,10 @@ class AlarmReceiver : BroadcastReceiver() {
         deleteNotificationChannel(context,PRAY_CHANNEL_ID)
         val channel = NotificationChannel(
             PRAY_CHANNEL_ID,
-            "Pray Notifications",
+            context.getString(R.string.pray_notification_channel_name),
             NotificationManager.IMPORTANCE_HIGH
         ).apply {
-            description = "Namaz Vakti Alarmları"
+            description = context.getString(R.string.pray_notification_channel_description)
             setSound(alarmSoundUri, AudioAttributes.Builder()
                 .setUsage(AudioAttributes.USAGE_ALARM)
                 .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
@@ -87,18 +87,17 @@ class AlarmReceiver : BroadcastReceiver() {
         val notificationId = prayType.hashCode()
         notificationManager.notify(notificationId, builder.build())
         
-        Handler(context.mainLooper).postDelayed({
-            val notificationManager = context.applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        Handler(context.applicationContext.mainLooper).postDelayed({
             notificationManager.cancel(notificationId)
-            }, notificationDismissTime)
+        }, notificationDismissTime)
     }
 
     private fun showNotificationForStatistics(context: Context, prayType: String, alarmDate : String){
         val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        deleteNotificationChannel(context,STATISTICS_CHANNEL_ID)
+        deleteNotificationChannel(context, STATISTICS_CHANNEL_ID)
         val channel = NotificationChannel(
             STATISTICS_CHANNEL_ID,
-            "Statistics Notification",
+            context.getString(R.string.statistics_notification_channel_name),
             NotificationManager.IMPORTANCE_HIGH
         )
         notificationManager.createNotificationChannel(channel)
@@ -138,6 +137,7 @@ class AlarmReceiver : BroadcastReceiver() {
 
 
         notificationManager.notify(notificationId,builder.build())
+        
 
     }
 

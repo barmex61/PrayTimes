@@ -1,5 +1,6 @@
 package com.fatih.prayertime.presentation.statistics_screen
 
+import android.graphics.Paint
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.animateIntAsState
@@ -63,8 +64,6 @@ fun StatisticsScreen(
     var showDatePicker by remember { mutableStateOf(false) }
     var selectedDateRangeString by rememberSaveable { mutableStateOf(options[0]) }
     val scrollState = rememberScrollState()
-    val longestStreak by viewModel.longestSeries.collectAsState()
-    val completedPercentageList = viewModel.completePercentageMap.collectAsState()
     LaunchedEffect(selectedDateRangeString) {
         val selectedDateRange = when(selectedDateRangeString){
             options[0] -> LocalDate.now().minusWeeks(1)..LocalDate.now()
@@ -86,15 +85,14 @@ fun StatisticsScreen(
         )
 
         SuccessCard(
-            statisticsState = statisticsState,
-            longestStreak = longestStreak // Bu değer viewModel'dan gelmeli
+            statisticsState = statisticsState
         )
 
         StatisticsSummaryRow(statisticsState = statisticsState)
         Spacer(modifier = Modifier.height(8.dp))
         StatisticsChart(statistics = statisticsState.statistics)
         StatisticsDetailsCard(statisticsState = statisticsState)
-        DetailedPrayerStatistics(completedPercentageList.value)
+        DetailedPrayerStatistics(statisticsState.completePercentageMap)
         Spacer(modifier = Modifier.height(8.dp))
     }
 
@@ -111,7 +109,7 @@ fun StatisticsScreen(
         )
     }
 
-    TitleView("İstatistikler")
+    TitleView(stringResource(R.string.statistics_title))
 }
 
 @Composable
@@ -139,7 +137,7 @@ fun DateRangeCard(selectedDateRange: String, onDateRangeClick: () -> Unit) {
             FilledTonalIconButton(onClick = onDateRangeClick) {
                 Icon(
                     imageVector = Icons.Default.DateRange,
-                    contentDescription = "Tarih Seç"
+                    contentDescription = stringResource(R.string.select_date)
                 )
             }
         }
@@ -273,7 +271,7 @@ fun DateRangePickerDialog(
         confirmButton = {},
         dismissButton = {
             TextButton(onClick = onDismissRequest) {
-                Text("İptal")
+                Text(stringResource(R.string.cancel))
             }
         }
     )
@@ -346,7 +344,7 @@ fun StatisticsChart(
                                 i.toString(),
                                 padding - 45f,
                                 y + 12f,
-                                android.graphics.Paint().apply {
+                                Paint().apply {
                                     color = onPrimaryContainer.toArgb()
                                     textSize = 40f
                                 }
@@ -380,7 +378,7 @@ fun StatisticsChart(
                                 completedPrayerList[index].toString(),
                                 x + columnWidth / 2 - 12f,
                                 height - padding - completedHeight - 16f,
-                                android.graphics.Paint().apply {
+                                Paint().apply {
                                     color = primaryColor.toArgb()
                                     textSize = 36f
                                     isFakeBoldText = true
@@ -391,7 +389,7 @@ fun StatisticsChart(
                                 missedPrayerList[index].toString(),
                                 x + columnWidth * 1.5f - 12f,
                                 height - padding - notCompletedHeight - 16f,
-                                android.graphics.Paint().apply {
+                                Paint().apply {
                                     color = onError.toArgb()
                                     textSize = 36f
                                     isFakeBoldText = true
@@ -403,7 +401,7 @@ fun StatisticsChart(
                                 dateText,
                                 x + columnWidth - 54f,
                                 height - padding + 45f,
-                                android.graphics.Paint().apply {
+                                Paint().apply {
                                     color = onPrimaryContainer.toArgb()
                                     textSize = 40f
                                     isFakeBoldText = true
@@ -533,7 +531,7 @@ fun StatisticsCard(
 }
 
 @Composable
-fun SuccessCard(statisticsState: StatisticsState, longestStreak: Int) {
+fun SuccessCard(statisticsState: StatisticsState) {
     val totalPrayer = remember (statisticsState){ statisticsState.totalPrayers }
     val completedPrayer = remember(statisticsState) { statisticsState.completedPrayers }
     val totalPercentage = animateFloatAsState(
@@ -563,49 +561,50 @@ fun SuccessCard(statisticsState: StatisticsState, longestStreak: Int) {
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Text(
-                text = "Başarı Durumu",
+                text = stringResource(R.string.success_rate),
                 style = MaterialTheme.typography.titleLarge,
                 color = MaterialTheme.colorScheme.onPrimaryContainer
             )
             
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = String.format(Locale.getDefault(), "%.1f", totalPercentage.value) + "%",
-                        style = MaterialTheme.typography.headlineMedium,
-                        color = MaterialTheme.colorScheme.primary,
-                    )
-                    Text(
-                        text = "Tamamlama",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                }
+            Box(modifier = Modifier.size(200.dp)) {
+                CircularProgressIndicator(
+                    progress = {
+                        if (totalPrayer != 0) {
+                            totalPercentage.value / 100f
+                        } else {
+                            0f
+                        }
+                    },
+                    modifier = Modifier.fillMaxSize()
+                )
                 
                 Column(
+                    modifier = Modifier.align(Alignment.Center),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "$longestStreak gün",
+                        text = "${totalPercentage.value.toInt()}%",
                         style = MaterialTheme.typography.headlineMedium,
                         color = MaterialTheme.colorScheme.primary
                     )
                     Text(
-                        text = "En Uzun Seri",
+                        text = stringResource(R.string.success_rate_description),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                 }
             }
             
-            // Motivasyon Mesajı
+            if (statisticsState.longestStreak > 0) {
+                Text(
+                    text = stringResource(R.string.longest_streak, statisticsState.longestStreak),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+            
             Text(
-                text = getMotivationMessage(totalPercentage.value.toInt()),
+                text = getMotivationalMessage(totalPercentage.value.toInt()),
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onPrimaryContainer,
                 textAlign = TextAlign.Center,
@@ -614,6 +613,7 @@ fun SuccessCard(statisticsState: StatisticsState, longestStreak: Int) {
         }
     }
 }
+
 @Composable
 fun DetailedPrayerStatistics(completedPercentageMap : Map<String, Float>) {
     var expandedState by remember { mutableStateOf(false) }
@@ -648,7 +648,7 @@ fun DetailedPrayerStatistics(completedPercentageMap : Map<String, Float>) {
                 )
                 Icon(
                     imageVector = if (expandedState) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                    contentDescription = "Detayları Göster/Gizle",
+                    contentDescription = stringResource(R.string.show_hide_details),
                     tint = MaterialTheme.colorScheme.onPrimaryContainer
                 )
             }
@@ -709,11 +709,12 @@ fun DetailedPrayerRow(prayerName: String, percentage: Float) {
     }
 }
 
-private fun getMotivationMessage(percentage: Int): String {
+@Composable
+private fun getMotivationalMessage(percentage: Int): String {
     return when {
-        percentage >= 90 -> "Mükemmel! Harika bir istatistik yakaladınız! 🌟"
-        percentage >= 70 -> "Çok iyi gidiyorsunuz! Böyle devam edin! 💪"
-        percentage >= 50 -> "İyi gidiyorsunuz, daha da iyisini yapabilirsiniz! 🌱"
-        else -> "Her yeni gün yeni bir başlangıç! 🌅"
+        percentage >= 90 -> stringResource(R.string.performance_excellent)
+        percentage >= 70 -> stringResource(R.string.performance_very_good)
+        percentage >= 50 -> stringResource(R.string.performance_good)
+        else -> stringResource(R.string.performance_needs_improvement)
     }
 }

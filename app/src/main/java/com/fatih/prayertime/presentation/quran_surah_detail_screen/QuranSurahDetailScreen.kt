@@ -295,7 +295,7 @@ fun AyahCard(ayah: Ayah, state: QuranDetailScreenState, quranSettingsState: Qura
             Spacer(modifier = Modifier.height(12.dp))
             
             Text(
-                text = "Okunuş",
+                text = stringResource(R.string.transliteration),
                 style = MaterialTheme.typography.labelSmall,
                 color = ayahColor.value.copy(alpha = 0.7f),
                 modifier = Modifier.padding(bottom = 4.dp)
@@ -315,7 +315,7 @@ fun AyahCard(ayah: Ayah, state: QuranDetailScreenState, quranSettingsState: Qura
             Spacer(modifier = Modifier.height(12.dp))
             
             Text(
-                text = "Meal",
+                text = stringResource(R.string.quran_translation),
                 style = MaterialTheme.typography.labelSmall,
                 color = ayahColor.value.copy(alpha = 0.7f),
                 modifier = Modifier.padding(bottom = 4.dp)
@@ -733,7 +733,7 @@ fun QuranSettingsBottomSheet(
                                 enabled = state.fontSize > 0.8f
                             ) {
                                 Text(
-                                    text = "-",
+                                    text = stringResource(R.string.minus_sign),
                                     fontSize = 20.sp,
                                     color = if (state.fontSize > 0.8f)
                                         MaterialTheme.colorScheme.onSurface
@@ -755,7 +755,7 @@ fun QuranSettingsBottomSheet(
                                 enabled = state.fontSize < 1.5f
                             ) {
                                 Text(
-                                    text = "+",
+                                    text = stringResource(R.string.plus_sign),
                                     fontSize = 20.sp,
                                     color = if (state.fontSize < 1.5f)
                                         MaterialTheme.colorScheme.onSurface 
@@ -1071,7 +1071,7 @@ fun AudioLoadingDialog(
             )
 
             Text(
-                text = "İndiriliyor... %$progress",
+                text = stringResource(R.string.downloading_progress, progress),
                 style = MaterialTheme.typography.titleSmall,
                 color = MaterialTheme.colorScheme.onSurface
             )
@@ -1090,7 +1090,7 @@ fun AudioLoadingDialog(
                 onClick = onCancel,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("İndirmeyi İptal Et")
+                Text(stringResource(R.string.cancel_download))
             }
         }
     }

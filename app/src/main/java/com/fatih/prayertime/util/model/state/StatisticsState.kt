@@ -8,5 +8,7 @@ data class StatisticsState(
     val totalPrayers: Int = 0,
     val completedPrayers: Int = 0,
     val missedPrayers: Int = 0,
+    val longestStreak: Int = 0,
+    val completePercentageMap: Map<String, Float> = emptyMap(),
     val statistics: List<PrayerStatisticsEntity> = emptyList()
 )

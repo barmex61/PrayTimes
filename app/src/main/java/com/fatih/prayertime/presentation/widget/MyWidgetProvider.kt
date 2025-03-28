@@ -88,7 +88,7 @@ class MyWidgetProvider() : AppWidgetProvider() {
                 setTextViewText(R.id.dayTextView,formattedDayString)
                 setTextViewText(R.id.timeTextView, formattedTimeString)
                 setTextViewText(R.id.dateTextView, formattedDateString)
-                setTextViewText(R.id.remainingTimeTextView, "Sonraki vakte kalan süre $timeDiffAtMinute dakika")
+                setTextViewText(R.id.remainingTimeTextView, context.getString(R.string.next_prayer_remaining_time, timeDiffAtMinute))
             }
             val options = appWidgetManager.getAppWidgetOptions(appWidgetId)
             val minHeight = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT)

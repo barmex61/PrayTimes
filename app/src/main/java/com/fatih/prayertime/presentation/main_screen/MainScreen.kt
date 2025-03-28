@@ -128,11 +128,11 @@ import com.fatih.prayertime.util.model.event.MainScreenEvent
 import kotlinx.coroutines.delay
 import org.threeten.bp.LocalDate
 import org.threeten.bp.LocalDateTime
-import java.util.Locale
 
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
+import com.fatih.prayertime.presentation.util.getLocalizedString
 
 @Composable
 fun MainScreen( modifier: Modifier,navController: NavController, mainScreenViewModel: MainScreenViewModel = hiltViewModel()) {
@@ -1092,15 +1092,20 @@ fun FancyDuaDialog(
             ) {
                 Icon(
                     imageVector = Icons.Filled.Favorite,
-                    contentDescription = "Dua",
+                    contentDescription = stringResource(R.string.prayer),
                     modifier = Modifier
                         .size(60.dp)
                         .padding(bottom = 16.dp),
                     tint = Color.White.copy(alpha = 0.9f)
                 )
 
+                val localizedTitle = getLocalizedString(
+                    englishText = duaDetail.title,
+                    turkishText = duaDetail.titleTr
+                )
+
                 Text(
-                    text = duaDetail.title,
+                    text = localizedTitle,
                     style = MaterialTheme.typography.titleLarge,
                     color = Color.White,
                     fontWeight = FontWeight.Bold,
@@ -1125,12 +1130,6 @@ fun FancyDuaDialog(
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
 
-                val currentLocale = Locale.getDefault()
-                val translationText = if (currentLocale.language == "tr") {
-                    duaDetail.translationTr
-                } else {
-                    duaDetail.translation
-                }
 
                 Text(
                     text = duaDetail.latin,
@@ -1141,7 +1140,7 @@ fun FancyDuaDialog(
                 )
 
                 Text(
-                    text = translationText,
+                    text = getLocalizedString(duaDetail.translation,duaDetail.translationTr),
                     style = MaterialTheme.typography.bodyLarge,
                     color = Color.White,
                     textAlign = TextAlign.Center,

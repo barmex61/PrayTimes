@@ -29,6 +29,7 @@ class StatisticsViewModel @Inject constructor(
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
+    @SuppressLint("DefaultLocale")
     val statisticsState: StateFlow<StatisticsState> = dateRange.flatMapLatest {
         getStatisticsUseCase(
             formattedUseCase.formatLocalDateToLong(it.start),
@@ -49,15 +50,45 @@ class StatisticsViewModel @Inject constructor(
                 totalPrayers = 0,
                 completedPrayers = 0,
                 missedPrayers = 0,
+                longestStreak = 0,
+                completePercentageMap = emptyMap(),
                 statistics = emptyList()
             )
         } else {
+            var maxStreak = 0
+            var currentStreak = 0
+
+            stats.groupBy { it.date }
+                .forEach { (_, prayers) ->
+                    if (prayers.all { it.isCompleted }) {
+                        currentStreak++
+                        if (currentStreak > maxStreak) {
+                            maxStreak = currentStreak
+                        }
+                    } else {
+                        currentStreak = 0
+                    }
+                }
+                
+            val percentageMap = mutableMapOf<String, Float>()
+            stats.groupBy {
+                it.prayerType
+            }.forEach {
+                percentageMap[it.key] = String.format(
+                    Locale.US,
+                    "%.1f", 
+                    (it.value.count { it.isCompleted }.toFloat() / it.value.size * 100)
+                ).toFloat()
+            }
+
             StatisticsState(
                 startDate = stats.first().date,
                 endDate = stats.last().date,
-                totalPrayers = stats.size ,
+                totalPrayers = stats.size,
                 completedPrayers = stats.count { it.isCompleted },
                 missedPrayers = stats.count { !it.isCompleted },
+                longestStreak = maxStreak,
+                completePercentageMap = percentageMap,
                 statistics = stats
             )
         }
@@ -66,46 +97,5 @@ class StatisticsViewModel @Inject constructor(
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = StatisticsState()
     )
-
-    @OptIn(ExperimentalCoroutinesApi::class)
-    val longestSeries = statisticsState.mapLatest { statState ->
-        var maxStreak = 0
-        var currentStreak = 0
-
-        statState.statistics.groupBy { it.date }
-            .forEach { (_, prayers) ->
-                if (prayers.all { it.isCompleted }) {
-                    currentStreak++
-                    if (currentStreak > maxStreak) {
-                        maxStreak = currentStreak
-                    }
-                } else {
-                    currentStreak = 0
-                }
-            }
-        println("maxStreak $maxStreak")
-        maxStreak
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = 0
-    )
-
-    @OptIn(ExperimentalCoroutinesApi::class)
-    @SuppressLint("DefaultLocale")
-    val completePercentageMap: StateFlow<Map<String, Float>> = statisticsState.mapLatest { statState ->
-        val map = mutableMapOf<String, Float>()
-        statState.statistics.groupBy {
-            it.prayerType
-        }.forEach {
-            map[it.key] = String.format(Locale.US,"%.1f", (it.value.count { it.isCompleted }.toFloat() / it.value.size * 100)).toFloat()
-        }
-        map
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = mutableMapOf()
-    )
-
 }
 

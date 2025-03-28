@@ -8,17 +8,25 @@ data class Settings(
     val vibrationEnabled: Boolean = true,
     val prayerAlarms: List<PrayerAlarm> = mutableListOf(),
     val silenceWhenCuma : Boolean = true,
-    val notificationDismissTime: Long = 15000,
+    val notificationDismissTime: Long = 10000, // 10 saniye
     
     val prayerCalculationMethod: Int? = null,
     val prayerTimeTuneValues: Map<String, Int> = mapOf(
-        "fajr" to 0,
-        "dhuhr" to 0,
-        "asr" to 0,
-        "maghrib" to 0,
-        "isha" to 0
+        PRAYER_TIME_FAJR to 0,
+        PRAYER_TIME_DHUHR to 0,
+        PRAYER_TIME_ASR to 0,
+        PRAYER_TIME_MAGHRIB to 0,
+        PRAYER_TIME_ISHA to 0
     ) 
-)
+) {
+    companion object {
+        const val PRAYER_TIME_FAJR = "fajr"
+        const val PRAYER_TIME_DHUHR = "dhuhr"
+        const val PRAYER_TIME_ASR = "asr"
+        const val PRAYER_TIME_MAGHRIB = "maghrib"
+        const val PRAYER_TIME_ISHA = "isha"
+    }
+}
 
 enum class ThemeOption { LIGHT, DARK, SYSTEM_DEFAULT }
 
