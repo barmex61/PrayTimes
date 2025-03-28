@@ -46,6 +46,7 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -72,6 +73,7 @@ class MainScreenViewModel @Inject constructor(
     private val insertStatisticSharedPrefUseCase: InsertStatisticSharedPrefUseCase,
     private val getWeatherUseCase: GetWeatherUseCase,
     private val getSettingsUseCase: GetSettingsUseCase,
+    private val saveSettingsUseCase: com.fatih.prayertime.domain.use_case.settings_use_cases.SaveSettingsUseCase,
     val permissionsAndPreferences: PermissionAndPreferences,
     private val mainScreenStateManager: MainScreenStateManager,
     getDuaUseCase: GetDuaUseCase
@@ -96,7 +98,7 @@ class MainScreenViewModel @Inject constructor(
     private val _weatherUiState = MutableStateFlow<WeatherState>(WeatherState())
     val weatherUiState = _weatherUiState.asStateFlow()
 
-    private var currentMethodId: Int = 13 // Varsayılan metod ID'si
+    private var currentMethodId: Int? = null
     private var currentTuneValues: Map<String, Int> = emptyMap()
 
     private val _formattedDate : MutableStateFlow<String> = MutableStateFlow("")
@@ -172,19 +174,27 @@ class MainScreenViewModel @Inject constructor(
         
         val settings = getSettingsUseCase.invoke().first()
         
-        val defaultOffsets = AladhanApiOffsets.getDefaultOffsets(settings.prayerCalculationMethod)
+        val methodToUse = settings.prayerCalculationMethod
         val customOffsets = settings.prayerTimeTuneValues
-        val combinedOffsets = defaultOffsets.toMutableMap()
+
+        val defaultOffsets = if (methodToUse != null) {
+            AladhanApiOffsets.getDefaultOffsets(methodToUse)
+        } else {
+            mapOf<String, Int>()
+        }
         
+        val combinedOffsets = defaultOffsets.toMutableMap()
         customOffsets.forEach { (key, value) ->
             if (combinedOffsets.containsKey(key)) {
                 combinedOffsets[key] = combinedOffsets[key]!! + value
+            } else {
+                combinedOffsets[key] = value
             }
         }
         
         val tuneString = AladhanApiOffsets.formatTuneString(combinedOffsets)
         
-        Log.d(TAG, "Hesaplama Metodu: ${settings.prayerCalculationMethod} - ${getCalculationMethodName(settings.prayerCalculationMethod)}")
+        Log.d(TAG, "Hesaplama Metodu: ${methodToUse ?: "Otomatik"} - ${if (methodToUse != null) getCalculationMethodName(methodToUse) else "API tarafından belirlenecek"}")
         Log.d(TAG, "Varsayılan offset değerleri: $defaultOffsets")
         Log.d(TAG, "Kullanıcı offset değerleri: $customOffsets")
         Log.d(TAG, "Birleştirilmiş offset değerleri: $combinedOffsets")
@@ -194,16 +204,38 @@ class MainScreenViewModel @Inject constructor(
             year = year,
             month = month, 
             address = address,
-            method = settings.prayerCalculationMethod,
+            method = methodToUse,
             tuneString = tuneString,
             school = 0
         )
         
-        return if (apiResponse.status == Status.SUCCESS){
-            insertPrayTimeIntoDbUseCase.insertPrayTimeList(apiResponse.data!!)
-            apiResponse.data.firstOrNull{it.date == _formattedDate.value}
+        if (apiResponse.status == Status.SUCCESS) {
+            val prayTimesList = apiResponse.data!!
+            
+            if (methodToUse == null && prayTimesList.isNotEmpty()) {
+                val apiMethod = prayTimesList.firstOrNull()?.method
+                
+                if (apiMethod != null) {
+                    Log.d(TAG, "API konumunuza uygun hesaplama metodunu belirledi: $apiMethod - ${getCalculationMethodName(apiMethod)}")
+                    
+                    val updatedSettings = settings.copy(prayerCalculationMethod = apiMethod)
+                    viewModelScope.launch {
+                        try {
+                            saveSettingsUseCase(updatedSettings)
+                            Log.d(TAG, "Hesaplama metodu başarıyla güncellendi: $apiMethod")
+                            
+                            currentMethodId = apiMethod
+                        } catch (e: Exception) {
+                            Log.e(TAG, "Hesaplama metodu güncellenirken hata: ${e.message}")
+                        }
+                    }
+                }
+            }
+            
+            insertPrayTimeIntoDbUseCase.insertPrayTimeList(prayTimesList)
+            return prayTimesList.firstOrNull{it.date == _formattedDate.value}
         }
-        else null
+        return null
     }
 
     private fun refreshPrayTimesForSettings(address: Address) = viewModelScope.launch {
@@ -250,14 +282,12 @@ class MainScreenViewModel @Inject constructor(
     }
 
     // ===== WEATHER FUNCTIONS =====
-    
     private fun fetchWeatherByCoordinates(latitude: Double, longitude: Double) {
         viewModelScope.launch {
             _weatherUiState.value = _weatherUiState.value.copy(isWeatherLoading = true)
             getWeatherUseCase.getByCoordinates(latitude, longitude).collect { result ->
                 when(result.status) {
                     Status.SUCCESS -> {
-
                         mainScreenStateManager.updateWeather(result.data)
                         _weatherUiState.value = _weatherUiState.value.copy(
                             weather = result.data,
@@ -282,6 +312,12 @@ class MainScreenViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    fun retryWeather() = viewModelScope.launch {
+        val latitude = mainScreenStateManager.addressState.value?.latitude ?: return@launch
+        val longitude = mainScreenStateManager.addressState.value?.longitude?:return@launch
+        fetchWeatherByCoordinates(latitude ,longitude)
     }
 
     private fun updateWeatherIfNeeded(address: Address) {
@@ -426,12 +462,6 @@ class MainScreenViewModel @Inject constructor(
             }
 
             launch {
-                val initialSettings = getSettingsUseCase.invoke().first()
-                currentMethodId = initialSettings.prayerCalculationMethod
-                currentTuneValues = initialSettings.prayerTimeTuneValues
-            }
-
-            launch {
                 mainScreenStateManager.prayTimesState
                     .filterNotNull()
                     .collect { prayTimes ->
@@ -473,8 +503,6 @@ class MainScreenViewModel @Inject constructor(
                     .distinctUntilChanged()
                     .collectLatest { address ->
                         fetchPrayTimes(address)
-                        println("district ${address.district}")
-                        println(address)
                         updateWeatherIfNeeded(address)
                     }
             }
@@ -497,32 +525,36 @@ class MainScreenViewModel @Inject constructor(
                         val isStatisticsAlarmInitialized = getStatisticSharedPrefUseCase()
                         if (!isStatisticsAlarmInitialized) {
                             try {
+                                Log.d("StatisticsAlarm", "İstatistik alarmı başlatılıyor...")
                                 updateStatisticsAlarmUseCase.updateStatisticsAlarms(prayTimes)
                                 insertStatisticSharedPrefUseCase()
+                                Log.d("StatisticsAlarm", "İstatistik alarmı başarıyla kuruldu")
                             } catch (e: Exception) {
+                                Log.e("StatisticsAlarm", "Statistics alarm kurulumunda hata: ${e.message}", e)
                                 println("Statistics alarm kurulumunda hata: ${e.message}")
                             }
                         } else {
+                            Log.d("StatisticsAlarm", "İstatistik alarmı daha önce kurulmuş, tekrar kurulmayacak")
                             println("Statistics alarm zaten kurulmuş")
                         }
                     }
             }
             launch {
                 getSettingsUseCase.invoke()
-                    .distinctUntilChanged { old, new ->
-                        val methodUnchanged = old.prayerCalculationMethod == new.prayerCalculationMethod
-                        val tuneValuesUnchanged = old.prayerTimeTuneValues == new.prayerTimeTuneValues
-                        methodUnchanged && tuneValuesUnchanged
+                    .map { settings->
+                        settings.prayerCalculationMethod to settings.prayerTimeTuneValues
                     }
-                    .collect { settings ->
-                        val methodChanged = currentMethodId != settings.prayerCalculationMethod
-                        val tuneValuesChanged = currentTuneValues != settings.prayerTimeTuneValues
+                    .filter { (prayerMethod, _) -> prayerMethod != null }
+                    .distinctUntilChanged()
+                    .collect { (prayerCalculationMethod, prayerTimeTuneValues)->
+                        val methodChanged = currentMethodId != prayerCalculationMethod
+                        val tuneValuesChanged = currentTuneValues != prayerTimeTuneValues
 
                         if (methodChanged || tuneValuesChanged) {
-                            currentMethodId = settings.prayerCalculationMethod
-                            currentTuneValues = settings.prayerTimeTuneValues
+                            currentMethodId = prayerCalculationMethod
+                            currentTuneValues = prayerTimeTuneValues
 
-                            Log.d(TAG, "Ayarlar değişti. Yeni hesaplama metodu: $currentMethodId, yeni offset değerleri: $currentTuneValues")
+                            Log.d(TAG, "Ayarlar değişti. Yeni hesaplama metodu: ${currentMethodId ?: "Otomatik"}, yeni offset değerleri: $currentTuneValues")
 
                             mainScreenStateManager.addressState.value?.let { address ->
                                 refreshPrayTimesForSettings(address)

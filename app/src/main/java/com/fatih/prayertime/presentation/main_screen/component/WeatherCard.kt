@@ -31,6 +31,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.fatih.prayertime.R
 import com.fatih.prayertime.presentation.main_screen.MainScreenViewModel
+import com.fatih.prayertime.util.composables.ErrorView
 
 @Composable
 fun WeatherCard(
@@ -64,17 +65,8 @@ fun WeatherCard(
             }
             error != null -> {
 
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = error,
-                        color = MaterialTheme.colorScheme.error,
-                        textAlign = TextAlign.Center
-                    )
+                ErrorView(error) {
+                    mainScreenViewModel.retryWeather()
                 }
             }
             weather != null -> {

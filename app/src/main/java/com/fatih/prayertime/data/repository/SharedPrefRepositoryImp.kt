@@ -16,4 +16,8 @@ class SharedPrefRepositoryImp @Inject constructor(
     override fun insertStatisticKey() {
         sharedPreferencesManager.insertStatisticKey()
     }
+
+    override fun clearStatisticKey() {
+        sharedPreferencesManager.clearStatisticKey()
+    }
 }

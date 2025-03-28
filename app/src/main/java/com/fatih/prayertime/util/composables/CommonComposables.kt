@@ -183,7 +183,6 @@ fun ErrorView(message: String, onRetry: () -> Unit) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier
-                        .padding(16.dp)
                         .background(color = Color.Transparent)
                 ) {
                     Icon(
@@ -196,7 +195,7 @@ fun ErrorView(message: String, onRetry: () -> Unit) {
                                 rotationZ = rotate
                             }
                     )
-                    Spacer(modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.size(8.dp))
                     Text(
                         text = stringResource(R.string.click_to_refresh),
                         color = MaterialTheme.colorScheme.primary,
@@ -214,7 +213,7 @@ fun ErrorView(message: String, onRetry: () -> Unit) {
                     color = Color.Red,
                     style = MaterialTheme.typography.bodyMedium
                 )
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(8.dp))
             }
         }
     }

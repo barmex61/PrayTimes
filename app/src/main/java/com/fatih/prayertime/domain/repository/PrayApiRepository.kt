@@ -10,7 +10,7 @@ interface PrayApiRepository {
         month: Int, 
         latitude: Double, 
         longitude: Double,
-        method: Int = 2,
+        method: Int? = null,
         adjustments: String? = null,
         tuneString: String? = null,
         school: Int = 0,

@@ -23,4 +23,5 @@ data class PrayTimes(
     val district: String?,
     val street: String?,
     val fullAddress: String?,
+    val method: Int? = null, // API tarafından kullanılan hesaplama metodu
 )

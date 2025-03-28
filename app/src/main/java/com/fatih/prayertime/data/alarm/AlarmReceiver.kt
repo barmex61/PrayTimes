@@ -34,9 +34,10 @@ class AlarmReceiver : BroadcastReceiver() {
                 showNotificationForPray(context, prayAlarmType, enableVibration, alarmSoundUri)
             }
             AlarmType.STATISTICS.name ->{
-                Log.d("AlarmReceiver","ss")
+                Log.d("AlarmReceiver","İstatistik alarmı tetiklendi")
                 val statsAlarmType = intent.getStringExtra("PRAY_TYPE") ?: "Bilinmeyen Alarm"
                 val statAlarmDate = intent.getStringExtra("ALARM_DATE")?:""
+                Log.d("AlarmReceiver", "Namaz tipi: $statsAlarmType, Tarih: $statAlarmDate")
                 showNotificationForStatistics(context,statsAlarmType,statAlarmDate)
             }
         }

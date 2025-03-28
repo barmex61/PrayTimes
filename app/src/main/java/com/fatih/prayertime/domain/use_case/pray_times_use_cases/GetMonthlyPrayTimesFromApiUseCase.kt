@@ -13,7 +13,7 @@ class GetMonthlyPrayTimesFromApiUseCase @Inject constructor(private val reposito
         year: Int, 
         month: Int, 
         address: Address,
-        method: Int = 13,
+        method: Int? = null,
         adjustments: String? = null,
         tuneString: String? = null,
         school: Int = 0,

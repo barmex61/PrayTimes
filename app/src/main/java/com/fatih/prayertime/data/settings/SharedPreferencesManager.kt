@@ -20,5 +20,7 @@ class SharedPreferencesManager @Inject constructor(
 
     fun getStatisticKey() = sharedPreferences.getBoolean(STATISTICS_KEY,false)
     fun insertStatisticKey() = sharedPreferences.edit { putBoolean(STATISTICS_KEY, true) }
+    
+    fun clearStatisticKey() = sharedPreferences.edit { remove(STATISTICS_KEY) }
 
 }

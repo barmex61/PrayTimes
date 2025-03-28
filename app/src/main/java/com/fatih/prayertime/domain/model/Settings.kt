@@ -9,7 +9,7 @@ data class Settings(
     val prayerAlarms: List<PrayerAlarm> = mutableListOf(),
     val silenceWhenCuma : Boolean = true,
     
-    val prayerCalculationMethod: Int = 13,
+    val prayerCalculationMethod: Int? = null,
     val prayerTimeTuneValues: Map<String, Int> = mapOf(
         "fajr" to 0,
         "dhuhr" to 0,

@@ -21,8 +21,8 @@ class PrayApiRepositoryImp @Inject constructor(private val prayApi : PrayApi) : 
         month: Int, 
         latitude: Double, 
         longitude: Double,
-        method: Int,
-        adjustments: String?,
+        method: Int? ,
+        adjustments: String? ,
         tuneString: String?,
         school: Int,
         midnightMode: Int

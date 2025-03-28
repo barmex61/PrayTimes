@@ -9,11 +9,17 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.fatih.prayertime.data.alarm.PrayAlarmWorker
 import com.fatih.prayertime.data.alarm.StatisticsAlarmWorker
+import com.fatih.prayertime.domain.use_case.formatted_use_cases.FormattedUseCase
+import java.text.SimpleDateFormat
 import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
-class ScheduleDailyAlarmUpdateUseCase @Inject constructor() {
+class ScheduleDailyAlarmUpdateUseCase @Inject constructor(
+    private val formattedUseCase: FormattedUseCase
+) {
 
     fun executePrayAlarmWorker(context: Context) {
 
@@ -21,7 +27,6 @@ class ScheduleDailyAlarmUpdateUseCase @Inject constructor() {
 
         workManager.getWorkInfosForUniqueWorkLiveData("PrayAlarmWorker").observeForever { workInfos ->
             if (workInfos.isEmpty() || workInfos.any { it.state.isFinished }) {
-                // Eğer hiç yoksa veya tamamlanmışsa yeni iş ekle
                 val workRequest = PeriodicWorkRequestBuilder<PrayAlarmWorker>(15, TimeUnit.MINUTES)
                     .addTag("PrayAlarmWorker")
                     .build()
@@ -46,16 +51,23 @@ class ScheduleDailyAlarmUpdateUseCase @Inject constructor() {
                 val currentTime = System.currentTimeMillis()
                 val calendar = Calendar.getInstance().apply {
                     timeInMillis = currentTime
+                    add(Calendar.DAY_OF_MONTH, 1)
                     set(Calendar.HOUR_OF_DAY, 0)
                     set(Calendar.MINUTE, 0)
                     set(Calendar.SECOND, 0)
                     set(Calendar.MILLISECOND, 0)
-                    if (timeInMillis <= currentTime) {
-                        add(Calendar.DAY_OF_MONTH, 1)
-                    }
                 }
-                val initialDelay = calendar.timeInMillis - currentTime + 1_800_000
+                
+                val randomMinutes = (0..30).random()
+                calendar.add(Calendar.MINUTE, randomMinutes)
+                
+                val nextScheduleTime = calendar.timeInMillis
+                val initialDelay = nextScheduleTime - currentTime
 
+                
+                Log.d("Schedule", "İstatistik işçisi başlatılıyor - Bir sonraki çalışma: ${formattedUseCase.formatLongToLocalDateTime(nextScheduleTime)}")
+                Log.d("Schedule", "İlk çalışma için gecikme: $initialDelay ms (${initialDelay / (1000 * 60)} dakika)")
+                
                 val workRequest = PeriodicWorkRequestBuilder<StatisticsAlarmWorker>(24, TimeUnit.HOURS)
                     .setInitialDelay(initialDelay, TimeUnit.MILLISECONDS)
                     .addTag("StatisticsAlarmWorker")
@@ -68,7 +80,8 @@ class ScheduleDailyAlarmUpdateUseCase @Inject constructor() {
                 )
                  Log.d("Schedule", "Statistics worker created new work with initial delay: $initialDelay ms")
             } else {
-                Log.d("Schedule", "Already there is a job: ${workInfos.map { it.state }}")
+                Log.d("Schedule", "Zaten aktif bir istatistik işçisi var: ${workInfos.map { it.state }}")
+                Log.d("Schedule", "Bir sonraki çalışma zamanı: ${workInfos.map { it.nextScheduleTimeMillis}}")
             }
         }
     }

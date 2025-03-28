@@ -15,7 +15,7 @@ interface PrayApi {
      @Path("date") date : String,
      @Query("latitude") latitude : Double,
      @Query("longitude") longitude : Double,
-     @Query("method") method: Int = 2, // Hesaplama metodu, varsayılan olarak 2 (ISNA)
+     @Query("method") method: Int? = null, // Null olursa API konuma göre otomatik belirleyecek
      @Query("adjustments") adjustments: String? = null, // Örnek: "0,1,1,1,1" - Fajr,Dhuhr,Asr,Maghrib,Isha için offset değerleri
      @Query("tune") tuneString: String? = null, // Dakika bazlı hassas ayarlar
      @Query("school") school: Int = 0, // Asr vakti için mezhep (0: Hanefi, 1: Şafi)
@@ -29,7 +29,7 @@ interface PrayApi {
         @Path("month") month : Int,
         @Query("latitude") latitude : Double,
         @Query("longitude") longitude : Double,
-        @Query("method") method: Int = 2, // Hesaplama metodu, varsayılan olarak 2 (ISNA)
+        @Query("method") method: Int? = null, // Null olursa API konuma göre otomatik belirleyecek
         @Query("adjustments") adjustments: String? = null, // Örnek: "0,1,1,1,1" - Fajr,Dhuhr,Asr,Maghrib,Isha için offset değerleri
         @Query("tune") tuneString: String? = null, // Dakika bazlı hassas ayarlar
         @Query("school") school: Int = 0, // Asr vakti için mezhep (0: Hanefi, 1: Şafi)

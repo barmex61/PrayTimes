@@ -95,12 +95,15 @@ class AlarmScheduler @Inject constructor(
 
     fun updateStatisticsAlarmForPrayTime(prayTimes: PrayTimes){
         val prayTimePair = prayTimes.toPrayTimePair(30)
+        Log.d("AlarmScheduler", "İstatistik alarmları güncelleniyor - Tarih: ${prayTimes.date}")
         prayTimePair.forEach { (prayType,prayTime) ->
+            Log.d("AlarmScheduler", "İstatistik alarmı kuruldu - Namaz: $prayType, Zaman: ${formattedUseCase.formatLongToLocalDateTime(prayTime)}")
             scheduleStatisticsAlarm(prayTime,prayTimes.date,prayType)
         }
     }
 
     fun updateStatisticsAlarmForPrayType(prayTime: Long,alarmDate: String,alarmType: String){
+        Log.d("AlarmScheduler", "Tek istatistik alarmı güncelleniyor - Namaz: $alarmType, Zaman: ${formattedUseCase.formatLongToLocalDateTime(prayTime)}")
         scheduleStatisticsAlarm(alarmTime = prayTime, alarmDate = alarmDate, alarmType = alarmType)
     }
 

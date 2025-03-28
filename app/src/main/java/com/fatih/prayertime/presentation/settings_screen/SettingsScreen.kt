@@ -122,7 +122,7 @@ fun SettingsScreen(modifier: Modifier, settingsScreenViewModel: SettingsScreenVi
                 icon = ImageVector.vectorResource(R.drawable.morning)
             ) {
                 PrayerTimeCalculationSection(
-                    selectedMethod = uiSettings.prayerCalculationMethod,
+                    selectedMethod = uiSettings.prayerCalculationMethod?:1,
                     onMethodChange = { settingsScreenViewModel.updatePrayerCalculationMethod(it) },
                     onTuneValuesChange = { settingsScreenViewModel.updatePrayerTimeTuneValues(it) },
                     tuneValues = uiSettings.prayerTimeTuneValues,

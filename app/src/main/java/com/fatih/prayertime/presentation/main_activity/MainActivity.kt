@@ -86,6 +86,7 @@ import com.fatih.prayertime.presentation.settings_screen.SettingsScreen
 import com.fatih.prayertime.presentation.statistics_screen.StatisticsScreen
 import com.fatih.prayertime.presentation.ui.theme.PrayerTimeTheme
 import com.fatih.prayertime.presentation.util_screen.UtilitiesScreen
+import com.fatih.prayertime.util.composables.ErrorView
 import com.fatih.prayertime.util.config.NavigationConfig.screens
 import com.fatih.prayertime.util.model.enums.PrayTimesString
 import com.google.accompanist.navigation.animation.AnimatedNavHost
@@ -389,11 +390,35 @@ fun ComponentActivity.UpdateSystemBars(isDarkMode: Boolean) {
 @Composable
 fun ScheduleAlarm(scheduleDailyAlarmUpdateUseCase: ScheduleDailyAlarmUpdateUseCase) {
     val context = LocalContext.current
+    
+    // WorkManager'ı başlat
     scheduleDailyAlarmUpdateUseCase.executePrayAlarmWorker(context)
     scheduleDailyAlarmUpdateUseCase.executeStatisticsAlarmWorker(context)
+    
+    /*
+    // DEBUG: Burada alarmları sıfırlamak için bir buton ekleyebilirsiniz
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.BottomEnd) {
+        Button(
+            onClick = {
+                // Alarm sıfırlama fonksiyonunu buraya ekleyebilirsiniz
+                // clearStatisticSharedPrefUseCase.executeWithWorkReset(context)
+                Toast.makeText(context, "İstatistik alarmları sıfırlandı", Toast.LENGTH_SHORT).show()
+            },
+            modifier = Modifier
+                .padding(16.dp)
+                .size(56.dp),
+            shape = CircleShape,
+            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Refresh,
+                contentDescription = "Alarmları Sıfırla",
+                tint = MaterialTheme.colorScheme.onTertiary
+            )
+        }
+    }
+    */
 }
-
-
 
 @Preview(showBackground = true)
 @Composable

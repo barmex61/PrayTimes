@@ -29,10 +29,10 @@ fun MonthlyPrayTimesResponseDTO.toPrayTimes(address: Address): List<PrayTimes> {
 }
 
 fun PrayDataDTO.toPrayData(address: Address): PrayData = PrayData(
-    prayTimes = this.timings.toPrayTimes(this.date.gregorian.date, address)
+    prayTimes = this.timings.toPrayTimes(this.date.gregorian.date, address, this.meta.method.id)
 )
 
-fun PrayTimesDTO.toPrayTimes(date: String, address: Address): PrayTimes = PrayTimes(
+fun PrayTimesDTO.toPrayTimes(date: String, address: Address, methodId: Int? = null): PrayTimes = PrayTimes(
     morning = this.Fajr.substring(0, 5),
     noon = this.Dhuhr.substring(0, 5),
     afternoon = this.Asr.substring(0, 5),
@@ -47,6 +47,7 @@ fun PrayTimesDTO.toPrayTimes(date: String, address: Address): PrayTimes = PrayTi
     district = address.district,
     street = address.street,
     fullAddress = address.fullAddress,
+    method = methodId
 )
 
 fun PrayTimes.toPrayTimeInfoList(): List<PrayTimesInfo> = listOf(
@@ -72,13 +73,24 @@ fun PrayTimes.toTimeList() : List<String> = listOf(
     this.night
 )
 
-fun PrayTimes.toPrayTimePair(offsetMinutes : Long? = null) : List<Pair<String, Long>> = listOf(
-    PrayTimesString.Morning.name to formattedUseCase.formatHHMMtoLong(this.morning,formattedUseCase.formatDDMMYYYYDateToLocalDate(this.date)) + if (offsetMinutes != null)  offsetMinutes * 1000L * 60L else 0L,
-    PrayTimesString.Noon.name to formattedUseCase.formatHHMMtoLong(this.noon,formattedUseCase.formatDDMMYYYYDateToLocalDate(this.date))+ if (offsetMinutes != null)  offsetMinutes * 1000L * 60L else 0L,
-    PrayTimesString.Afternoon.name to formattedUseCase.formatHHMMtoLong(this.afternoon,formattedUseCase.formatDDMMYYYYDateToLocalDate(this.date))+ if (offsetMinutes != null)  offsetMinutes * 1000L * 60L else 0L,
-    PrayTimesString.Evening.name to formattedUseCase.formatHHMMtoLong(this.evening,formattedUseCase.formatDDMMYYYYDateToLocalDate(this.date))+ if (offsetMinutes != null)  offsetMinutes * 1000L * 60L else 0L,
-    PrayTimesString.Night.name to formattedUseCase.formatHHMMtoLong(this.night,formattedUseCase.formatDDMMYYYYDateToLocalDate(this.date))+ if (offsetMinutes != null)  offsetMinutes * 1000L * 60L else 0L
-)
+fun PrayTimes.toPrayTimePair(offsetMinutes : Long? = null) : List<Pair<String, Long>> {
+    val offsetMs = if (offsetMinutes != null) offsetMinutes * 1000L * 60L else 0L
+    val result = listOf(
+        PrayTimesString.Morning.name to formattedUseCase.formatHHMMtoLong(this.morning, formattedUseCase.formatDDMMYYYYDateToLocalDate(this.date)) + offsetMs,
+        PrayTimesString.Noon.name to formattedUseCase.formatHHMMtoLong(this.noon, formattedUseCase.formatDDMMYYYYDateToLocalDate(this.date)) + offsetMs,
+        PrayTimesString.Afternoon.name to formattedUseCase.formatHHMMtoLong(this.afternoon, formattedUseCase.formatDDMMYYYYDateToLocalDate(this.date)) + offsetMs,
+        PrayTimesString.Evening.name to formattedUseCase.formatHHMMtoLong(this.evening, formattedUseCase.formatDDMMYYYYDateToLocalDate(this.date)) + offsetMs,
+        PrayTimesString.Night.name to formattedUseCase.formatHHMMtoLong(this.night, formattedUseCase.formatDDMMYYYYDateToLocalDate(this.date)) + offsetMs
+    )
+    
+    // Her namaz vakti için detaylı log çıktısı
+    result.forEach { (prayerType, time) ->
+        val formattedTime = formattedUseCase.formatLongToLocalDateTime(time)
+        println("İstatistik alarmı: $prayerType için $formattedTime zamanında ayarlandı (Ofset: ${offsetMinutes ?: 0} dakika)")
+    }
+    
+    return result
+}
 
 fun PrayTimes.toAddress(): Address = Address(
     latitude = this.latitude,
