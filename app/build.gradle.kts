@@ -111,6 +111,7 @@ dependencies {
     implementation (libs.threetenabp)
 
     implementation("io.coil-kt:coil-compose:2.3.0")
+    implementation("com.airbnb.android:lottie-compose:6.3.0")
 
 
     //Widget-Glance

@@ -21,7 +21,10 @@ import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.LaunchedEffect
-import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 
 import androidx.compose.ui.unit.dp
 
@@ -49,6 +52,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -108,10 +112,13 @@ import com.fatih.prayertime.presentation.statistics_screen.StatisticsScreen
 import com.fatih.prayertime.presentation.ui.theme.PrayerTimeTheme
 import com.fatih.prayertime.presentation.util_screen.UtilitiesScreen
 import com.fatih.prayertime.util.composables.ErrorView
+import com.fatih.prayertime.util.composables.LottieAnimationOnce
+import com.fatih.prayertime.util.composables.LottieAnimationOnceRaw
 import com.fatih.prayertime.util.config.NavigationConfig.screens
 import com.fatih.prayertime.util.model.enums.PrayTimesString
 import com.google.accompanist.navigation.animation.AnimatedNavHost
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.delay
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -130,11 +137,6 @@ class MainActivity : ComponentActivity() {
 
     @SuppressLint("RestrictedApi")
     override fun onCreate(savedInstanceState: Bundle?) {
-        val splashScreen = installSplashScreen()
-        
-        var isAppReady = false
-        splashScreen.setKeepOnScreenCondition { !isAppReady }
-        
         super.onCreate(savedInstanceState)
 
         setContent {
@@ -146,14 +148,21 @@ class MainActivity : ComponentActivity() {
                 ThemeOption.SYSTEM_DEFAULT -> isSystemInDarkTheme()
             }
             UpdateSystemBars(darkTheme)
-            PrayerTimeTheme(darkTheme = darkTheme) {
-                MainScreenContent(::showBatteryOptimizationDialog,mainActivityViewModel)
-            }
-            ScheduleAlarm(scheduleDailyAlarmUpdateUseCase)
             
-            isAppReady = true
+            var showSplash by remember { mutableStateOf(true) }
+            
+            PrayerTimeTheme(darkTheme = darkTheme) {
+                if (showSplash) {
+                    SplashScreen { showSplash = false }
+                } else {
+                    MainScreenContent(::showBatteryOptimizationDialog, mainActivityViewModel)
+                }
+            }
+            
+            ScheduleAlarm(scheduleDailyAlarmUpdateUseCase)
         }
     }
+    
     private fun showBatteryOptimizationDialog() {
         AlertDialog.Builder(this)
             .setTitle("MIUI Battery Optimization")
@@ -164,6 +173,27 @@ class MainActivity : ComponentActivity() {
             }
             .setNegativeButton("Cancel", null)
             .show()
+    }
+}
+
+@Composable
+fun SplashScreen(onSplashFinished: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background),
+        contentAlignment = Alignment.Center
+    ) {
+        LottieAnimationOnce(
+            lottieFile = "splash_screen_islam.lottie",
+            modifier = Modifier.fillMaxSize(),
+            onFinish = onSplashFinished
+        )
+        
+        LaunchedEffect(Unit) {
+            delay(3000)
+            onSplashFinished()
+        }
     }
 }
 
@@ -412,10 +442,10 @@ fun ComponentActivity.UpdateSystemBars(isDarkMode: Boolean) {
 fun ScheduleAlarm(scheduleDailyAlarmUpdateUseCase: ScheduleDailyAlarmUpdateUseCase) {
     val context = LocalContext.current
     
-    // WorkManager'ı başlat
     scheduleDailyAlarmUpdateUseCase.executePrayAlarmWorker(context)
     scheduleDailyAlarmUpdateUseCase.executeStatisticsAlarmWorker(context)
-    
+
+    /* DEBUGGG
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.BottomEnd) {
         Button(
             onClick = {
@@ -433,7 +463,7 @@ fun ScheduleAlarm(scheduleDailyAlarmUpdateUseCase: ScheduleDailyAlarmUpdateUseCa
                 tint = MaterialTheme.colorScheme.onTertiary
             )
         }
-    }
+    }  */
 }
 
 @Preview(showBackground = true)

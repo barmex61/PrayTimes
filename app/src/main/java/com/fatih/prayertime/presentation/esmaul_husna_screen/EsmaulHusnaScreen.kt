@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.fatih.prayertime.R
 import com.fatih.prayertime.domain.model.EsmaulHusna
+import com.fatih.prayertime.presentation.util.getLocalizedString
 import com.fatih.prayertime.util.composables.ErrorView
 import com.fatih.prayertime.util.composables.LoadingView
 import com.fatih.prayertime.util.composables.TitleView
@@ -112,7 +113,8 @@ fun EsmaulHusnaCard(esmaulHusna: EsmaulHusna) {
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 textAlign = TextAlign.Center,
-                text = if(!expanded) esmaulHusna.shortDescription else esmaulHusna.longDescription,
+                text = if(!expanded) getLocalizedString(esmaulHusna.shortDescriptionEn,esmaulHusna.shortDescription)
+                else getLocalizedString(esmaulHusna.longDescriptionEn,esmaulHusna.longDescription),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onPrimaryContainer,
                 modifier = Modifier.fillMaxWidth()

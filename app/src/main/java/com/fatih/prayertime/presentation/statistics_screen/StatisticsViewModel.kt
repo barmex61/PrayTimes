@@ -50,26 +50,11 @@ class StatisticsViewModel @Inject constructor(
                 totalPrayers = 0,
                 completedPrayers = 0,
                 missedPrayers = 0,
-                longestStreak = 0,
                 completePercentageMap = emptyMap(),
                 statistics = emptyList()
             )
         } else {
-            var maxStreak = 0
-            var currentStreak = 0
 
-            stats.groupBy { it.date }
-                .forEach { (_, prayers) ->
-                    if (prayers.all { it.isCompleted }) {
-                        currentStreak++
-                        if (currentStreak > maxStreak) {
-                            maxStreak = currentStreak
-                        }
-                    } else {
-                        currentStreak = 0
-                    }
-                }
-                
             val percentageMap = mutableMapOf<String, Float>()
             stats.groupBy {
                 it.prayerType
@@ -87,7 +72,6 @@ class StatisticsViewModel @Inject constructor(
                 totalPrayers = stats.size,
                 completedPrayers = stats.count { it.isCompleted },
                 missedPrayers = stats.count { !it.isCompleted },
-                longestStreak = maxStreak,
                 completePercentageMap = percentageMap,
                 statistics = stats
             )

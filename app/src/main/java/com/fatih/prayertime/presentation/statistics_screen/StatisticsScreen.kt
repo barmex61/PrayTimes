@@ -84,10 +84,7 @@ fun StatisticsScreen(
             onDateRangeClick = { showDatePicker = true }
         )
 
-        SuccessCard(
-            statisticsState = statisticsState
-        )
-
+        SuccessCard(statisticsState = statisticsState)
         StatisticsSummaryRow(statisticsState = statisticsState)
         Spacer(modifier = Modifier.height(8.dp))
         StatisticsChart(statistics = statisticsState.statistics)
@@ -566,7 +563,7 @@ fun SuccessCard(statisticsState: StatisticsState) {
                 color = MaterialTheme.colorScheme.onPrimaryContainer
             )
             
-            Box(modifier = Modifier.size(200.dp)) {
+            Box(modifier = Modifier.size(150.dp)) {
                 CircularProgressIndicator(
                     progress = {
                         if (totalPrayer != 0) {
@@ -589,18 +586,12 @@ fun SuccessCard(statisticsState: StatisticsState) {
                     )
                     Text(
                         text = stringResource(R.string.success_rate_description),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                        textAlign = TextAlign.Center
                     )
                 }
-            }
-            
-            if (statisticsState.longestStreak > 0) {
-                Text(
-                    text = stringResource(R.string.longest_streak, statisticsState.longestStreak),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.primary
-                )
             }
             
             Text(

@@ -598,8 +598,7 @@ fun PrayerCalculationMethodDialog(
     selectedMethod: Int,
     onMethodSelect: (Int) -> Unit,
 ) {
-    val methods = remember {
-        listOf(
+    val methods = listOf(
             Pair(0, stringResource(R.string.calculation_method_jafari)),
             Pair(1, stringResource(R.string.calculation_method_karachi)),
             Pair(2, stringResource(R.string.calculation_method_isna)),
@@ -624,7 +623,7 @@ fun PrayerCalculationMethodDialog(
             Pair(22, stringResource(R.string.calculation_method_portugal)),
             Pair(23, stringResource(R.string.calculation_method_jordan))
         )
-    }
+
 
     LazyColumn(
         modifier = Modifier

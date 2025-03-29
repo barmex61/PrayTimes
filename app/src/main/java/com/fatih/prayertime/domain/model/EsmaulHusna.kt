@@ -4,5 +4,7 @@ data class EsmaulHusna(
     val arabicName: String,
     val name: String,
     val shortDescription: String,
-    val longDescription: String
+    val shortDescriptionEn: String,
+    val longDescription: String,
+    val longDescriptionEn: String
 )
