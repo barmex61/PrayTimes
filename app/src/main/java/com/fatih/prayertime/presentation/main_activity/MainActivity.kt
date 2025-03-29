@@ -27,11 +27,18 @@ import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBarItem
@@ -57,6 +64,7 @@ import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.fatih.prayertime.R
 import com.fatih.prayertime.domain.model.ThemeOption
 import com.fatih.prayertime.domain.use_case.alarm_use_cases.ScheduleDailyAlarmUpdateUseCase
 import com.fatih.prayertime.domain.use_case.formatted_use_cases.FormattedUseCase
@@ -111,8 +119,6 @@ class MainActivity : ComponentActivity() {
                 ThemeOption.SYSTEM_DEFAULT -> isSystemInDarkTheme()
             }
             UpdateSystemBars(darkTheme)
-            
-
             PrayerTimeTheme(darkTheme = darkTheme) {
                 MainActivityContent(::showBatteryOptimizationDialog, mainActivityViewModel)
             }
@@ -394,7 +400,27 @@ fun ScheduleAlarm(scheduleDailyAlarmUpdateUseCase: ScheduleDailyAlarmUpdateUseCa
 @Composable
 fun GreetingPreview() {
     PrayerTimeTheme(darkTheme = false) {
-
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+        ) {
+            Card(
+                modifier = Modifier
+                    .padding(12.dp)
+                    .fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+                elevation = CardDefaults.cardElevation(10.dp),
+                shape = RoundedCornerShape(10.dp)
+            ) {
+                Text(
+                    modifier = Modifier.padding(12.dp),
+                    text = stringResource(R.string.settings),
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            }
+        }
     }
 
 }

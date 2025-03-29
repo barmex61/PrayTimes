@@ -31,6 +31,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -61,6 +63,7 @@ import com.fatih.prayertime.R
 import com.fatih.prayertime.data.gyroscope.GyroscopeSensor
 import com.fatih.prayertime.util.composables.FullScreenLottieAnimation
 import com.fatih.prayertime.util.composables.LockScreenOrientation
+import com.fatih.prayertime.util.composables.LottieAnimationSized
 import com.fatih.prayertime.util.composables.TitleView
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -69,15 +72,14 @@ import kotlinx.coroutines.withContext
 @Composable
 fun CompassScreen(modifier: Modifier, compassScreenViewModel: CompassScreenViewModel = hiltViewModel()) {
 
-    FullScreenLottieAnimation(
+    LottieAnimationSized(
         lottieFile = "compass_screen_anim.lottie",
         autoPlay = true,
         loop = true,
-        enterAnimDuration = 300,
-        exitAnimDuration = 300,
-        lottieAnimDuration = 1000,
-        speed = 2f,
-        offset = 0.65f
+        width = 250,
+        height = 250,
+        speed = 2.5f,
+
     ) {
         val context = LocalContext.current
         val gyroscopeSensor = remember { GyroscopeSensor(context) }
@@ -132,12 +134,13 @@ fun CompassContent(
         label = "",
     )
 
-    Surface(
+    Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(bottom = 16.dp),
-        shape = MaterialTheme.shapes.large,
-        color = MaterialTheme.colorScheme.primaryContainer
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+        elevation = CardDefaults.cardElevation(10.dp),
+        shape = RoundedCornerShape(10.dp)
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -195,12 +198,13 @@ fun CompassContent(
         }
     }
 
-    Surface(
+    Card (
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 16.dp),
-        shape = MaterialTheme.shapes.large,
-        color = MaterialTheme.colorScheme.primaryContainer
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+        elevation = CardDefaults.cardElevation(10.dp),
+        shape = RoundedCornerShape(10.dp)
     ) {
         CompassGyroscopeContent(
             gyroscopeSensor = gyroscopeSensor,

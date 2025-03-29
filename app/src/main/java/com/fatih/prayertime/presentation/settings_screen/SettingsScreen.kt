@@ -52,6 +52,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CardElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -62,7 +63,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
@@ -86,13 +86,8 @@ import com.fatih.prayertime.util.utils.MethodUtils.getCalculationMethodNameCompo
 fun SettingsScreen(modifier: Modifier, settingsScreenViewModel: SettingsScreenViewModel = hiltViewModel()) {
     FullScreenLottieAnimation(
         lottieFile = "settings_anim.lottie",
-        autoPlay = true,
-        loop = true,
-        enterAnimDuration = 500,
-        exitAnimDuration = 500,
         lottieAnimDuration = 1000,
-        speed = 1.5f,
-        offset = 0.25f
+        speed = 1.5f
     ) {
         val showSelectedGlobalAlarmOffsetSelectionDialog = remember { mutableStateOf(false) }
         val selectedPrayerAlarm = remember { mutableStateOf<PrayerAlarm?>(null) }
@@ -103,15 +98,18 @@ fun SettingsScreen(modifier: Modifier, settingsScreenViewModel: SettingsScreenVi
             modifier = modifier
                 .verticalScroll(scrollState)
                 .fillMaxSize()
-                .background(Color.Transparent)
+                .background(MaterialTheme.colorScheme.background)
         ) {
-            Box(
+            Card (
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(16.dp))
-                    .padding(24.dp)
+                    .padding(4.dp)
+                    .fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+                elevation = CardDefaults.cardElevation(10.dp),
+                shape = RoundedCornerShape(10.dp)
             ) {
                 Text(
+                    modifier = Modifier.padding(12.dp),
                     text = stringResource(R.string.settings),
                     style = MaterialTheme.typography.headlineMedium,
                     color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -221,12 +219,12 @@ private fun SettingsSection(
     icon: ImageVector,
     content: @Composable () -> Unit
 ) {
-    Surface(
+    Card (
         modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp)),
-        color = MaterialTheme.colorScheme.primaryContainer,
-        tonalElevation = 1.dp
+            .fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+        elevation = CardDefaults.cardElevation(10.dp),
+        shape = RoundedCornerShape(10.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(
@@ -613,30 +611,30 @@ fun PrayerCalculationMethodDialog(
     onMethodSelect: (Int) -> Unit,
 ) {
     val methods = listOf(
-            Pair(0, stringResource(R.string.calculation_method_jafari)),
-            Pair(1, stringResource(R.string.calculation_method_karachi)),
-            Pair(2, stringResource(R.string.calculation_method_isna)),
-            Pair(3, stringResource(R.string.calculation_method_mwl)),
-            Pair(4, stringResource(R.string.calculation_method_makkah)),
-            Pair(5, stringResource(R.string.calculation_method_egypt)),
-            Pair(7, stringResource(R.string.calculation_method_tehran)),
-            Pair(8, stringResource(R.string.calculation_method_gulf)),
-            Pair(9, stringResource(R.string.calculation_method_kuwait)),
-            Pair(10, stringResource(R.string.calculation_method_qatar)),
-            Pair(11, stringResource(R.string.calculation_method_singapore)),
-            Pair(12, stringResource(R.string.calculation_method_france)),
-            Pair(13, stringResource(R.string.calculation_method_turkey)),
-            Pair(14, stringResource(R.string.calculation_method_russia)),
-            Pair(15, stringResource(R.string.calculation_method_moonsighting)),
-            Pair(16, stringResource(R.string.calculation_method_dubai)),
-            Pair(17, stringResource(R.string.calculation_method_malaysia)),
-            Pair(18, stringResource(R.string.calculation_method_tunisia)),
-            Pair(19, stringResource(R.string.calculation_method_algeria)),
-            Pair(20, stringResource(R.string.calculation_method_indonesia)),
-            Pair(21, stringResource(R.string.calculation_method_morocco)),
-            Pair(22, stringResource(R.string.calculation_method_portugal)),
-            Pair(23, stringResource(R.string.calculation_method_jordan))
-        )
+        Pair(0, stringResource(R.string.calculation_method_jafari)),
+        Pair(1, stringResource(R.string.calculation_method_karachi)),
+        Pair(2, stringResource(R.string.calculation_method_isna)),
+        Pair(3, stringResource(R.string.calculation_method_mwl)),
+        Pair(4, stringResource(R.string.calculation_method_makkah)),
+        Pair(5, stringResource(R.string.calculation_method_egypt)),
+        Pair(7, stringResource(R.string.calculation_method_tehran)),
+        Pair(8, stringResource(R.string.calculation_method_gulf)),
+        Pair(9, stringResource(R.string.calculation_method_kuwait)),
+        Pair(10, stringResource(R.string.calculation_method_qatar)),
+        Pair(11, stringResource(R.string.calculation_method_singapore)),
+        Pair(12, stringResource(R.string.calculation_method_france)),
+        Pair(13, stringResource(R.string.calculation_method_turkey)),
+        Pair(14, stringResource(R.string.calculation_method_russia)),
+        Pair(15, stringResource(R.string.calculation_method_moonsighting)),
+        Pair(16, stringResource(R.string.calculation_method_dubai)),
+        Pair(17, stringResource(R.string.calculation_method_malaysia)),
+        Pair(18, stringResource(R.string.calculation_method_tunisia)),
+        Pair(19, stringResource(R.string.calculation_method_algeria)),
+        Pair(20, stringResource(R.string.calculation_method_indonesia)),
+        Pair(21, stringResource(R.string.calculation_method_morocco)),
+        Pair(22, stringResource(R.string.calculation_method_portugal)),
+        Pair(23, stringResource(R.string.calculation_method_jordan))
+    )
 
 
     LazyColumn(
@@ -674,14 +672,14 @@ fun PrayerTimeTuneDialog(
     val tuneMap = remember {
         mutableStateOf(currentTuneValues.toMap())
     }
-    
+
     val prayerTimeKeys = listOf(
-            Pair("fajr", stringResource(R.string.morning)),
-            Pair("dhuhr", stringResource(R.string.noon) ),
-            Pair("asr", stringResource(R.string.afternoon)),
-            Pair("maghrib", stringResource(R.string.evening)),
-            Pair("isha", stringResource(R.string.night))
-        )
+        Pair("fajr", stringResource(R.string.morning)),
+        Pair("dhuhr", stringResource(R.string.noon) ),
+        Pair("asr", stringResource(R.string.afternoon)),
+        Pair("maghrib", stringResource(R.string.evening)),
+        Pair("isha", stringResource(R.string.night))
+    )
 
     Column(
         modifier = Modifier
@@ -753,7 +751,7 @@ fun PrayerTimeTuneItem(
 ) {
     var textValue by remember { mutableStateOf(value.toString()) }
     val focusManager = LocalFocusManager.current
-    
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -765,7 +763,7 @@ fun PrayerTimeTuneItem(
             text = prayerName,
             style = MaterialTheme.typography.bodyLarge
         )
-        
+
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -788,10 +786,10 @@ fun PrayerTimeTuneItem(
                     color = MaterialTheme.colorScheme.onPrimaryContainer
                 )
             }
-            
+
             BasicTextField(
                 value = textValue,
-                onValueChange = { 
+                onValueChange = {
                     if (it.isEmpty() || it == "-" || it.toIntOrNull() != null) {
                         textValue = it
                         it.toIntOrNull()?.let { intValue -> onValueChange(intValue) }
@@ -817,7 +815,7 @@ fun PrayerTimeTuneItem(
                     color = MaterialTheme.colorScheme.onPrimaryContainer
                 )
             )
-            
+
             Box(
                 modifier = Modifier
                     .size(32.dp)
@@ -836,7 +834,7 @@ fun PrayerTimeTuneItem(
                     color = MaterialTheme.colorScheme.onPrimaryContainer
                 )
             }
-            
+
             Text(
                 text = stringResource(R.string.minute_abbreviation),
                 style = MaterialTheme.typography.bodyMedium,
@@ -860,9 +858,9 @@ fun NotificationDismissTimeSelector(
         30000L to stringResource(R.string.duration_30_seconds),
         60000L to stringResource(R.string.duration_1_minute)
     )
-    
+
     var showDialog by remember { mutableStateOf(false) }
-    
+
     Surface(
         modifier = Modifier
             .fillMaxWidth()
@@ -884,7 +882,7 @@ fun NotificationDismissTimeSelector(
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
-                    text = dismissTimeOptions[currentDismissTime] 
+                    text = dismissTimeOptions[currentDismissTime]
                         ?: stringResource(R.string.duration_format_seconds, (currentDismissTime/1000).toInt()),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -897,9 +895,10 @@ fun NotificationDismissTimeSelector(
             )
         }
     }
-    
+
     if (showDialog) {
         AlertDialog(
+            containerColor = MaterialTheme.colorScheme.primaryContainer,
             onDismissRequest = { showDialog = false },
             title = { Text(stringResource(R.string.notification_dismiss_time)) },
             text = {

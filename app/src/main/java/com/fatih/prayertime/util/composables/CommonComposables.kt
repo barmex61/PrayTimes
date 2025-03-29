@@ -120,7 +120,7 @@ fun LoadingView() {
             height = 150,
             autoPlay = true,
             loop = true
-        )
+        ){}
     }
 }
 

@@ -17,7 +17,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
@@ -38,6 +37,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
@@ -197,7 +197,7 @@ fun FullScreenLottieAnimation(
 ) {
 
     Box(
-        modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.primaryContainer),
+        modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
         contentAlignment = Alignment.Center
     ) {
         var showLottieAnim by remember { mutableStateOf<Boolean?>(null) }
@@ -301,17 +301,36 @@ fun LottieAnimationSized(
     height: Int,
     autoPlay: Boolean = true,
     loop: Boolean = true,
-    speed: Float = 1f
+    speed: Float = 1f,
+    content : @Composable () -> Unit
 ) {
-    LottieAnimationView(
-        lottieFile = lottieFile,
-        modifier = Modifier
-            .width(width.dp)
-            .height(height.dp),
-        autoPlay = autoPlay,
-        loop = loop,
-        speed = speed
-    )
+    var showLottieAnim by remember { mutableStateOf(true) }
+
+    Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.primaryContainer), contentAlignment = Alignment.Center){
+        content()
+        AnimatedVisibility(
+            visible = showLottieAnim ,
+            enter = fadeIn(tween(500)) + scaleIn(tween(500)),
+            exit = fadeOut(tween(500)) + scaleOut(tween(500))
+        ){
+            LottieAnimationView(
+                lottieFile = lottieFile,
+                modifier = Modifier
+                    .width(width.dp)
+                    .height(height.dp)
+                    .align(Alignment.Center),
+                autoPlay = autoPlay,
+                loop = loop,
+                speed = speed
+            )
+        }
+
+    }
+    LaunchedEffect(Unit) {
+        delay(3000)
+        showLottieAnim = false
+    }
+
 }
 
 /**
