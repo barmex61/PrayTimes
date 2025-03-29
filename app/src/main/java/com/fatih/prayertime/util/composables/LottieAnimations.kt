@@ -27,6 +27,26 @@ import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
 import androidx.annotation.RawRes
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.foundation.background
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import com.airbnb.lottie.LottieCompositionFactory
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import androidx.lifecycle.compose.LocalLifecycleOwner
 
 /**
  * Lottie dosyasını göstermek için temel composable.
@@ -44,19 +64,35 @@ fun LottieAnimationView(
     modifier: Modifier = Modifier,
     autoPlay: Boolean = true,
     loop: Boolean = true,
-    contentScale: ContentScale = ContentScale.Fit
+    contentScale: ContentScale = ContentScale.Fit,
+    speed : Float = 1f,
+    offset : Float = 0f
 ) {
-    val composition by rememberLottieComposition(LottieCompositionSpec.Asset(lottieFile))
+    val composition by rememberLottieComposition(
+        LottieCompositionSpec.Asset(lottieFile),
+        cacheKey = lottieFile
+    )
+    
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+    val context = LocalContext.current
+    
+    DisposableEffect(lifecycleOwner) {
+
+        onDispose {
+            LottieCompositionFactory.clearCache(context)
+        }
+    }
 
     val progress by animateLottieCompositionAsState(
         composition = composition,
         isPlaying = autoPlay,
         iterations = if (loop) LottieConstants.IterateForever else 1,
+        speed = speed
     )
 
     LottieAnimation(
         composition = composition,
-        progress = { progress },
+        progress = { progress + offset },
         modifier = modifier,
         contentScale = contentScale
     )
@@ -113,7 +149,10 @@ fun LottieAnimationOnce(
     modifier: Modifier = Modifier,
     onFinish: () -> Unit = {}
 ) {
-    val composition by rememberLottieComposition(LottieCompositionSpec.Asset(lottieFile))
+    val composition by rememberLottieComposition(
+        LottieCompositionSpec.Asset(lottieFile),
+        cacheKey = lottieFile
+    )
     var isFinished by remember { mutableFloatStateOf(0f) }
 
     val progress by animateLottieCompositionAsState(
@@ -134,6 +173,7 @@ fun LottieAnimationOnce(
         progress = { progress },
         modifier = modifier
     )
+
 }
 
 /**
@@ -147,20 +187,54 @@ fun LottieAnimationOnce(
 fun FullScreenLottieAnimation(
     lottieFile: String,
     autoPlay: Boolean = true,
-    loop: Boolean = true
+    loop: Boolean = true,
+    enterAnimDuration : Int = 800,
+    exitAnimDuration : Int = 800,
+    lottieAnimDuration : Long = 1500,
+    speed: Float = 1f,
+    offset: Float = 0f,
+    content : @Composable () -> Unit
 ) {
+
     Box(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.primaryContainer),
         contentAlignment = Alignment.Center
     ) {
-        LottieAnimationView(
-            lottieFile = lottieFile,
-            modifier = Modifier.fillMaxSize(0.8f),
-            autoPlay = autoPlay,
-            loop = loop
-        )
+        var showLottieAnim by remember { mutableStateOf<Boolean?>(null) }
+        AnimatedVisibility(
+            visible = showLottieAnim == false,
+            enter = fadeIn(tween(enterAnimDuration)) + scaleIn(tween(enterAnimDuration)),
+            exit = fadeOut(tween(exitAnimDuration)) + scaleOut(tween(exitAnimDuration))
+        ){
+            content()
+        }
+        AnimatedVisibility(
+            visible = showLottieAnim == true,
+            enter = fadeIn(tween(enterAnimDuration)) + scaleIn(tween(enterAnimDuration)),
+            exit = fadeOut(tween(exitAnimDuration)) + scaleOut(tween(exitAnimDuration))
+        ) {
+
+
+            LottieAnimationView(
+                lottieFile = lottieFile,
+                autoPlay = autoPlay,
+                loop = loop,
+                speed = speed,
+                offset = offset
+
+            )
+        }
+        
+        LaunchedEffect(Unit) {
+            showLottieAnim = true
+            delay(lottieAnimDuration)
+            showLottieAnim = false
+
+        }
     }
+
 }
+
 
 /**
  * İkon boyutunda Lottie animasyonu için composable.
@@ -226,7 +300,8 @@ fun LottieAnimationSized(
     width: Int,
     height: Int,
     autoPlay: Boolean = true,
-    loop: Boolean = true
+    loop: Boolean = true,
+    speed: Float = 1f
 ) {
     LottieAnimationView(
         lottieFile = lottieFile,
@@ -234,7 +309,8 @@ fun LottieAnimationSized(
             .width(width.dp)
             .height(height.dp),
         autoPlay = autoPlay,
-        loop = loop
+        loop = loop,
+        speed = speed
     )
 }
 
@@ -252,7 +328,10 @@ fun LottieAnimationOnceRaw(
     modifier: Modifier = Modifier,
     onFinish: () -> Unit = {}
 ) {
-    val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(resId))
+    val composition by rememberLottieComposition(
+        LottieCompositionSpec.RawRes(resId),
+        cacheKey = resId.toString()
+    )
     var isFinished by remember { mutableFloatStateOf(0f) }
 
     val progress by animateLottieCompositionAsState(
@@ -273,4 +352,6 @@ fun LottieAnimationOnceRaw(
         progress = { progress },
         modifier = modifier
     )
+    
+
 }

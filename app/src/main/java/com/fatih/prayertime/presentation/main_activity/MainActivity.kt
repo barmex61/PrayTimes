@@ -5,7 +5,6 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -13,67 +12,39 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.EnterTransition
-import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 
 import androidx.compose.ui.unit.dp
 
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxScope
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemColors
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Snackbar
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
@@ -86,7 +57,6 @@ import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.fatih.prayertime.R
 import com.fatih.prayertime.domain.model.ThemeOption
 import com.fatih.prayertime.domain.use_case.alarm_use_cases.ScheduleDailyAlarmUpdateUseCase
 import com.fatih.prayertime.domain.use_case.formatted_use_cases.FormattedUseCase
@@ -95,7 +65,6 @@ import com.fatih.prayertime.presentation.compass_screen.CompassScreen
 import com.fatih.prayertime.presentation.dua_screens.dua_categories_screen.DuaCategoriesScreen
 import com.fatih.prayertime.presentation.dua_screens.dua_category_detail_screen.DuaCategoryDetailScreen
 import com.fatih.prayertime.presentation.dua_screens.dua_detail_screen.DuaDetailScreen
-import com.fatih.prayertime.presentation.dua_screens.dua_categories_screen.DuaCategoriesViewModel
 import com.fatih.prayertime.presentation.main_screen.MainScreen
 import com.fatih.prayertime.presentation.esmaul_husna_screen.EsmaulHusnaScreen
 import com.fatih.prayertime.presentation.favorites_screen.FavoritesScreen
@@ -105,20 +74,14 @@ import com.fatih.prayertime.presentation.hadith_screens.HadithSectionDetailScree
 import com.fatih.prayertime.presentation.hadith_screens.HadithViewModel
 import com.fatih.prayertime.presentation.quran_surah_detail_screen.QuranDetailScreen
 import com.fatih.prayertime.presentation.quran_screen.QuranScreen
-import com.fatih.prayertime.presentation.settings_screen.PrayerCalculationMethodDialog
-import com.fatih.prayertime.presentation.settings_screen.PrayerTimeTuneDialog
 import com.fatih.prayertime.presentation.settings_screen.SettingsScreen
 import com.fatih.prayertime.presentation.statistics_screen.StatisticsScreen
 import com.fatih.prayertime.presentation.ui.theme.PrayerTimeTheme
 import com.fatih.prayertime.presentation.util_screen.UtilitiesScreen
-import com.fatih.prayertime.util.composables.ErrorView
-import com.fatih.prayertime.util.composables.LottieAnimationOnce
-import com.fatih.prayertime.util.composables.LottieAnimationOnceRaw
 import com.fatih.prayertime.util.config.NavigationConfig.screens
 import com.fatih.prayertime.util.model.enums.PrayTimesString
 import com.google.accompanist.navigation.animation.AnimatedNavHost
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.delay
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -149,16 +112,10 @@ class MainActivity : ComponentActivity() {
             }
             UpdateSystemBars(darkTheme)
             
-            var showSplash by remember { mutableStateOf(true) }
-            
+
             PrayerTimeTheme(darkTheme = darkTheme) {
-                if (showSplash) {
-                    SplashScreen { showSplash = false }
-                } else {
-                    MainScreenContent(::showBatteryOptimizationDialog, mainActivityViewModel)
-                }
+                MainActivityContent(::showBatteryOptimizationDialog, mainActivityViewModel)
             }
-            
             ScheduleAlarm(scheduleDailyAlarmUpdateUseCase)
         }
     }
@@ -176,29 +133,9 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-@Composable
-fun SplashScreen(onSplashFinished: () -> Unit) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background),
-        contentAlignment = Alignment.Center
-    ) {
-        LottieAnimationOnce(
-            lottieFile = "splash_screen_islam.lottie",
-            modifier = Modifier.fillMaxSize(),
-            onFinish = onSplashFinished
-        )
-        
-        LaunchedEffect(Unit) {
-            delay(3000)
-            onSplashFinished()
-        }
-    }
-}
 
 @Composable
-fun MainScreenContent(showBatteryOptimizationDialog: () -> Unit,mainActivityViewModel: MainActivityViewModel) {
+fun MainActivityContent(showBatteryOptimizationDialog: () -> Unit, mainActivityViewModel: MainActivityViewModel) {
     val navController = rememberNavController()
     val context = LocalContext.current
 
@@ -348,16 +285,16 @@ fun NavHostLayout(navController: NavHostController, innerPadding: PaddingValues)
             composable(
                 route = item.route,
                 enterTransition = {
-                    getEnterTransition(index)
+                    fadeIn(tween(500)) + scaleIn(tween(500))
                 },
                 exitTransition = {
-                    getExitTransition(index)
+                    fadeOut(tween(500)) + scaleOut(tween(500))
                 },
                 popEnterTransition = {
-                    getEnterTransition(index)
+                    fadeIn(tween(500)) + scaleIn(tween(500))
                 },
                 popExitTransition = {
-                    getExitTransition(index)
+                    fadeOut(tween(500)) + scaleOut(tween(500))
                 }
             ) { backStackEntry ->
 
@@ -404,20 +341,7 @@ fun NavHostLayout(navController: NavHostController, innerPadding: PaddingValues)
     }
 }
 
-private fun getEnterTransition(index : Int) : EnterTransition{
-   return if (index <= 2){
-        slideInVertically(animationSpec = tween(1000)){height -> -height} + fadeIn(animationSpec = tween(700))
-    }else{
-        slideInHorizontally( animationSpec = tween(1000)){width -> width} + fadeIn(animationSpec = tween(700))
-    }
-}
-private fun getExitTransition(index: Int) : ExitTransition{
-    return if (index <= 2){
-        slideOutVertically(animationSpec = tween(1000)){height -> height} + fadeOut(animationSpec = tween(700))
-    }else{
-        slideOutHorizontally( animationSpec = tween(1000)){width -> -width} + fadeOut(animationSpec = tween(700))
-    }
-}
+
 
 @Composable
 fun ComponentActivity.UpdateSystemBars(isDarkMode: Boolean) {

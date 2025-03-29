@@ -50,7 +50,7 @@
         <activity
             android:name=".presentation.main_activity.MainActivity"
             android:exported="true"
-            android:theme="@style/Theme.PrayerTime.SplashScreen"
+            android:theme="@style/Theme.PrayerTime"
             tools:ignore="LockedOrientationActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

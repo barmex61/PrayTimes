@@ -62,6 +62,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
@@ -74,6 +75,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.fatih.prayertime.R
 import com.fatih.prayertime.domain.model.PrayerAlarm
 import com.fatih.prayertime.domain.model.ThemeOption
+import com.fatih.prayertime.util.composables.FullScreenLottieAnimation
 import com.fatih.prayertime.util.model.enums.PrayTimesString
 import com.fatih.prayertime.util.composables.TitleView
 import com.fatih.prayertime.util.utils.MethodUtils.getCalculationMethodName
@@ -82,123 +84,135 @@ import com.fatih.prayertime.util.utils.MethodUtils.getCalculationMethodNameCompo
 
 @Composable
 fun SettingsScreen(modifier: Modifier, settingsScreenViewModel: SettingsScreenViewModel = hiltViewModel()) {
-    val showSelectedGlobalAlarmOffsetSelectionDialog = remember { mutableStateOf(false) }
-    val selectedPrayerAlarm = remember { mutableStateOf<PrayerAlarm?>(null) }
-    val uiSettings by settingsScreenViewModel.settingsState.collectAsState()
-    val scrollState = rememberScrollState()
-
-    Column(
-        modifier = modifier
-            .verticalScroll(scrollState)
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+    FullScreenLottieAnimation(
+        lottieFile = "settings_anim.lottie",
+        autoPlay = true,
+        loop = true,
+        enterAnimDuration = 500,
+        exitAnimDuration = 500,
+        lottieAnimDuration = 1000,
+        speed = 1.5f,
+        offset = 0.25f
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(16.dp))
-                .padding(24.dp)
-        ) {
-            Text(
-                text = stringResource(R.string.settings),
-                style = MaterialTheme.typography.headlineMedium,
-                color = MaterialTheme.colorScheme.onPrimaryContainer
-            )
-        }
+        val showSelectedGlobalAlarmOffsetSelectionDialog = remember { mutableStateOf(false) }
+        val selectedPrayerAlarm = remember { mutableStateOf<PrayerAlarm?>(null) }
+        val uiSettings by settingsScreenViewModel.settingsState.collectAsState()
+        val scrollState = rememberScrollState()
 
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(4.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            modifier = modifier
+                .verticalScroll(scrollState)
+                .fillMaxSize()
+                .background(Color.Transparent)
         ) {
-            SettingsSection(
-                title = stringResource(R.string.appearance),
-                icon = ImageVector.vectorResource(R.drawable.palette)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(16.dp))
+                    .padding(24.dp)
             ) {
-                AppearanceSettingsSection(uiSettings.selectedTheme) { settingsScreenViewModel.updateTheme(it) }
-            }
-
-            SettingsSection(
-                title = stringResource(R.string.prayer_time_calculation),
-                icon = ImageVector.vectorResource(R.drawable.morning)
-            ) {
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-
-                    PrayerTimeMethodSection(
-                        selectedMethod = uiSettings.prayerCalculationMethod?:1,
-                        onMethodChange = { settingsScreenViewModel.updatePrayerCalculationMethod(it) },)
-
-                    PrayerTimeTuneSection(
-                        onTuneValuesChange = { settingsScreenViewModel.updatePrayerTimeTuneValues(it) },
-                        tuneValues = uiSettings.prayerTimeTuneValues,
-                    )
-                }
-
-            }
-
-            SettingsSection(
-                title = stringResource(R.string.notification),
-                icon = Icons.Default.Notifications
-            ) {
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    SettingsSwitchItem(
-                        title = stringResource(R.string.vibration),
-                        subtitle = stringResource(R.string.vibration_description),
-                        isChecked = uiSettings.vibrationEnabled,
-                        onCheckedChange = { settingsScreenViewModel.toggleVibration() }
-                    )
-
-                    NotificationDismissTimeSelector(
-                        currentDismissTime = uiSettings.notificationDismissTime,
-                        onDismissTimeSelected = { settingsScreenViewModel.updateNotificationDismissTime(it) }
-                    )
-                }
-
-            }
-
-            SettingsSection(
-                title = stringResource(R.string.alarms),
-                icon = ImageVector.vectorResource(R.drawable.alarm_icon)
-            ) {
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    uiSettings.prayerAlarms.forEach { alarm ->
-                        AlarmSettingItem(
-                            alarm = alarm,
-                            onToggle = settingsScreenViewModel::togglePrayerNotification,
-                            onMinuteToggle = { selectedAlarm ->
-                                showSelectedGlobalAlarmOffsetSelectionDialog.value = true
-                                selectedPrayerAlarm.value = selectedAlarm
-                            }
-                        )
-                    }
-                }
-            }
-
-            SettingsSection(
-                title = stringResource(R.string.others),
-                icon = Icons.Default.MoreVert
-            ) {
-                SettingsSwitchItem(
-                    title = stringResource(R.string.mute_friday),
-                    subtitle = stringResource(R.string.mute_friday_description),
-                    isChecked = uiSettings.silenceWhenCuma,
-                    onCheckedChange = { settingsScreenViewModel.toggleCuma() }
+                Text(
+                    text = stringResource(R.string.settings),
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
                 )
             }
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(4.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                SettingsSection(
+                    title = stringResource(R.string.appearance),
+                    icon = ImageVector.vectorResource(R.drawable.palette)
+                ) {
+                    AppearanceSettingsSection(uiSettings.selectedTheme) { settingsScreenViewModel.updateTheme(it) }
+                }
+
+                SettingsSection(
+                    title = stringResource(R.string.prayer_time_calculation),
+                    icon = ImageVector.vectorResource(R.drawable.morning)
+                ) {
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+
+                        PrayerTimeMethodSection(
+                            selectedMethod = uiSettings.prayerCalculationMethod?:1,
+                            onMethodChange = { settingsScreenViewModel.updatePrayerCalculationMethod(it) },)
+
+                        PrayerTimeTuneSection(
+                            onTuneValuesChange = { settingsScreenViewModel.updatePrayerTimeTuneValues(it) },
+                            tuneValues = uiSettings.prayerTimeTuneValues,
+                        )
+                    }
+
+                }
+
+                SettingsSection(
+                    title = stringResource(R.string.notification),
+                    icon = Icons.Default.Notifications
+                ) {
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        SettingsSwitchItem(
+                            title = stringResource(R.string.vibration),
+                            subtitle = stringResource(R.string.vibration_description),
+                            isChecked = uiSettings.vibrationEnabled,
+                            onCheckedChange = { settingsScreenViewModel.toggleVibration() }
+                        )
+
+                        NotificationDismissTimeSelector(
+                            currentDismissTime = uiSettings.notificationDismissTime,
+                            onDismissTimeSelected = { settingsScreenViewModel.updateNotificationDismissTime(it) }
+                        )
+                    }
+
+                }
+
+                SettingsSection(
+                    title = stringResource(R.string.alarms),
+                    icon = ImageVector.vectorResource(R.drawable.alarm_icon)
+                ) {
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        uiSettings.prayerAlarms.forEach { alarm ->
+                            AlarmSettingItem(
+                                alarm = alarm,
+                                onToggle = settingsScreenViewModel::togglePrayerNotification,
+                                onMinuteToggle = { selectedAlarm ->
+                                    showSelectedGlobalAlarmOffsetSelectionDialog.value = true
+                                    selectedPrayerAlarm.value = selectedAlarm
+                                }
+                            )
+                        }
+                    }
+                }
+
+                SettingsSection(
+                    title = stringResource(R.string.others),
+                    icon = Icons.Default.MoreVert
+                ) {
+                    SettingsSwitchItem(
+                        title = stringResource(R.string.mute_friday),
+                        subtitle = stringResource(R.string.mute_friday_description),
+                        isChecked = uiSettings.silenceWhenCuma,
+                        onCheckedChange = { settingsScreenViewModel.toggleCuma() }
+                    )
+                }
+            }
         }
+
+        AnimatedVisibility(
+            visible = showSelectedGlobalAlarmOffsetSelectionDialog.value,
+            enter = fadeIn(tween(700)) + expandIn(tween(700), expandFrom = Alignment.Center),
+            exit = fadeOut(tween(700)) + shrinkOut(tween(700), shrinkTowards = Alignment.Center)
+        ) {
+            selectedPrayerAlarm.value?.let {
+                OffsetMinuteSelectionHeader(it) { showSelectedGlobalAlarmOffsetSelectionDialog.value = false }
+            }
+        }
+        TitleView("Settings")
     }
 
-    AnimatedVisibility(
-        visible = showSelectedGlobalAlarmOffsetSelectionDialog.value,
-        enter = fadeIn(tween(700)) + expandIn(tween(700), expandFrom = Alignment.Center),
-        exit = fadeOut(tween(700)) + shrinkOut(tween(700), shrinkTowards = Alignment.Center)
-    ) {
-        selectedPrayerAlarm.value?.let {
-            OffsetMinuteSelectionHeader(it) { showSelectedGlobalAlarmOffsetSelectionDialog.value = false }
-        }
-    }
-    TitleView("Settings")
 }
 
 @Composable

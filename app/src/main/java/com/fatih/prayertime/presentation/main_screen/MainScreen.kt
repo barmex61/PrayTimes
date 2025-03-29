@@ -133,64 +133,73 @@ import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
 import com.fatih.prayertime.presentation.util.getLocalizedString
+import com.fatih.prayertime.util.composables.FullScreenLottieAnimation
 
 @Composable
 fun MainScreen( modifier: Modifier,navController: NavController, mainScreenViewModel: MainScreenViewModel = hiltViewModel()) {
-    var showAlarmDialog by remember { mutableStateOf(false) }
-    val scrollState = rememberScrollState()
-    var isVisible by remember { mutableStateOf(false) }
-    val haptic = LocalHapticFeedback.current
-    val selectedDuaState by mainScreenViewModel.selectedDuaState.collectAsStateWithLifecycle()
-
-    LaunchedEffect(Unit){
-        isVisible = true
-    }
-    AnimatedVisibility(
-        visible = selectedDuaState.isVisible && selectedDuaState.dua != null,
-        enter = fadeIn(tween(1000)) + slideInVertically(),
-        exit = fadeOut(tween(1000)) + slideOutVertically()
+    FullScreenLottieAnimation(
+        lottieFile = "splash_screen_anim.lottie",
+        autoPlay = true,
+        loop = true,
+        speed = 1.75f,
+        lottieAnimDuration = 1000
     ) {
-        FancyDuaDialog(
-            duaDetail = selectedDuaState.dua!!,
-            onDismiss = {
-                mainScreenViewModel.onEvent(MainScreenEvent.HideDuaDialog)
+        var showAlarmDialog by remember { mutableStateOf(false) }
+        val scrollState = rememberScrollState()
+        var isVisible by remember { mutableStateOf(false) }
+        val haptic = LocalHapticFeedback.current
+        val selectedDuaState by mainScreenViewModel.selectedDuaState.collectAsStateWithLifecycle()
+
+        LaunchedEffect(Unit){
+            isVisible = true
+        }
+        AnimatedVisibility(
+            visible = selectedDuaState.isVisible && selectedDuaState.dua != null,
+            enter = fadeIn(tween(1000)) + slideInVertically(),
+            exit = fadeOut(tween(1000)) + slideOutVertically()
+        ) {
+            FancyDuaDialog(
+                duaDetail = selectedDuaState.dua!!,
+                onDismiss = {
+                    mainScreenViewModel.onEvent(MainScreenEvent.HideDuaDialog)
+                }
+            )
+        }
+        AnimatedVisibility(
+            visible = showAlarmDialog,
+            enter = fadeIn() + slideInVertically(),
+            exit = fadeOut() + slideOutVertically()
+        ) {
+            GlobalAlarmsDialog(mainScreenViewModel){
+                showAlarmDialog = false
             }
-        )
+        }
+
+        Column(modifier = modifier.verticalScroll(scrollState, enabled = true) ){
+            AddressBar(haptic,mainScreenViewModel)
+
+            PrayerBar(haptic){
+                mainScreenViewModel.onEvent(MainScreenEvent.ShowDuaDialog)
+            }
+
+            WeatherCard(
+                mainScreenViewModel
+            )
+            PrayScheduleCompose(haptic)
+            PrayNotificationCompose(mainScreenViewModel,haptic){
+                showAlarmDialog = true
+            }
+            DailyPrayCompose(haptic,mainScreenViewModel ){ categoryId ->
+                val route = screens[4].route.replace("{categoryId}","$categoryId")
+                navController.navigateToScreen(route)
+            }
+            Spacer(
+                modifier = Modifier.height(25.dp)
+            )
+        }
+
+        TitleView(stringResource(R.string.main_view))
     }
-    AnimatedVisibility(
-        visible = showAlarmDialog,
-        enter = fadeIn() + slideInVertically(),
-        exit = fadeOut() + slideOutVertically()
-    ) {
-        GlobalAlarmsDialog(mainScreenViewModel){
-            showAlarmDialog = false
-        }
-    }
-
-    Column(modifier = modifier.verticalScroll(scrollState, enabled = true) ){
-        AddressBar(haptic,mainScreenViewModel)
-
-        PrayerBar(haptic){
-            mainScreenViewModel.onEvent(MainScreenEvent.ShowDuaDialog)
-        }
-
-        WeatherCard(
-            mainScreenViewModel
-        )
-        PrayScheduleCompose(haptic)
-        PrayNotificationCompose(mainScreenViewModel,haptic){
-            showAlarmDialog = true
-        }
-        DailyPrayCompose(haptic,mainScreenViewModel ){ categoryId ->
-            val route = screens[4].route.replace("{categoryId}","$categoryId")
-            navController.navigateToScreen(route)
-        }
-        Spacer(
-            modifier = Modifier.height(25.dp)
-        )
-    }
-
-    TitleView(stringResource(R.string.main_view))
 }
 
 @Composable

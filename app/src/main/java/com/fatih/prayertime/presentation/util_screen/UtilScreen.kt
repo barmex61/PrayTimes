@@ -44,6 +44,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.fatih.prayertime.domain.model.ScreenData
+import com.fatih.prayertime.util.composables.FullScreenLottieAnimation
 import com.fatih.prayertime.util.config.NavigationConfig.screens
 import com.fatih.prayertime.util.extensions.navigateToScreen
 import com.fatih.prayertime.util.composables.TitleView
@@ -51,18 +52,29 @@ import com.fatih.prayertime.util.model.enums.PrayTimesString
 import kotlin.math.absoluteValue
 @Composable
 fun UtilitiesScreen(modifier: Modifier, navController: NavController) {
-    val utilityScreens = remember {
-        screens.takeLast(7) + screens[1]
+    FullScreenLottieAnimation(
+        lottieFile = "dua_moon_anim.lottie",
+        autoPlay = true,
+        loop = true,
+        exitAnimDuration = 500,
+        enterAnimDuration = 500,
+        lottieAnimDuration = 1000,
+        speed = 1.5f
+    ) {
+        val utilityScreens = remember {
+            screens.takeLast(7) + screens[1]
+        }
+
+        LazyColumn(
+            modifier = modifier.fillMaxSize()
+        ) {
+            items(utilityScreens.chunked(2)) { rowItems ->
+                UtilitiesRow(rowItems, navController)
+            }
+        }
+        TitleView("Utilities")
     }
 
-    LazyColumn(
-        modifier = modifier.fillMaxSize()
-    ) {
-        items(utilityScreens.chunked(2)) { rowItems ->
-            UtilitiesRow(rowItems, navController)
-        }
-    }
-    TitleView("Utilities")
 }
 
 @Composable

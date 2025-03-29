@@ -59,6 +59,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.rememberAsyncImagePainter
 import com.fatih.prayertime.R
 import com.fatih.prayertime.data.gyroscope.GyroscopeSensor
+import com.fatih.prayertime.util.composables.FullScreenLottieAnimation
 import com.fatih.prayertime.util.composables.LockScreenOrientation
 import com.fatih.prayertime.util.composables.TitleView
 import kotlinx.coroutines.Dispatchers
@@ -67,29 +68,43 @@ import kotlinx.coroutines.withContext
 
 @Composable
 fun CompassScreen(modifier: Modifier, compassScreenViewModel: CompassScreenViewModel = hiltViewModel()) {
-    val context = LocalContext.current
-    val gyroscopeSensor = remember { GyroscopeSensor(context) }
-    val qiblaDirection by compassScreenViewModel.qiblaDirection.collectAsState()
-    val scrollBehavior = rememberScrollState()
-    LockScreenOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT)
-    DisposableEffect(Unit) {
-        onDispose {
-            gyroscopeSensor.unregister()
+
+    FullScreenLottieAnimation(
+        lottieFile = "compass_screen_anim.lottie",
+        autoPlay = true,
+        loop = true,
+        enterAnimDuration = 300,
+        exitAnimDuration = 300,
+        lottieAnimDuration = 1000,
+        speed = 2f,
+        offset = 0.65f
+    ) {
+        val context = LocalContext.current
+        val gyroscopeSensor = remember { GyroscopeSensor(context) }
+        val qiblaDirection by compassScreenViewModel.qiblaDirection.collectAsState()
+        val scrollBehavior = rememberScrollState()
+        LockScreenOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT)
+        DisposableEffect(Unit) {
+            onDispose {
+                gyroscopeSensor.unregister()
+            }
+        }
+
+
+        Column(
+            modifier = modifier
+                .verticalScroll(scrollBehavior),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            CompassContent(
+                gyroscopeSensor = gyroscopeSensor,
+                qiblaDirection = qiblaDirection.toFloat(),
+                modifier = modifier
+            )
         }
     }
-    
 
-    Column(
-        modifier = modifier
-            .verticalScroll(scrollBehavior),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        CompassContent(
-            gyroscopeSensor = gyroscopeSensor,
-            qiblaDirection = qiblaDirection.toFloat(),
-            modifier = modifier
-        )
-    }
+
     TitleView("Qibla Finder")
 }
 

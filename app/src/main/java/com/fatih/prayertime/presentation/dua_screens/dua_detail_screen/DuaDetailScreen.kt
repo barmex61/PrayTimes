@@ -39,6 +39,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.fatih.prayertime.R
 import com.fatih.prayertime.data.remote.dto.duadto.DuaCategoryDetail
 import com.fatih.prayertime.presentation.dua_screens.dua_categories_screen.DuaCategoriesViewModel
+import com.fatih.prayertime.presentation.util.getLocalizedString
 import kotlin.random.Random
 import com.fatih.prayertime.util.extensions.capitalizeFirstLetter
 import com.fatih.prayertime.util.composables.LoadingView
@@ -152,7 +153,7 @@ fun DuaDetailCard(duaDetail: DuaCategoryDetail) {
             )
             Spacer(modifier = Modifier.height(22.dp))
             Text(
-                text = duaDetail.translation,
+                text = getLocalizedString(duaDetail.translation,duaDetail.translationTr),
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onPrimaryContainer
             )

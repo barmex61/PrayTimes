@@ -112,44 +112,15 @@ fun LockScreenOrientation(orientation: Int) {
 
 @Composable
 fun LoadingView() {
-    val infiniteTransition = rememberInfiniteTransition()
-    val circleColor = MaterialTheme.colorScheme.primary
-    val angle by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 240f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(2500, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart
-        )
-    )
 
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Canvas(
-            modifier = Modifier
-                .size(100.dp)
-                .graphicsLayer {
-                    rotationZ = angle
-                }
-        ) {
-            val radius = size.minDimension / 3
-            val dotRadius = size.minDimension / 20
-            val centerX = size.width / 2
-            val centerY = size.height / 2
-
-            for (i in 0 until 3) {
-                val angleOffset = angle + (i * 120)
-                val radian = angleOffset * (PI / 180)
-                val waveOffset = sin(radian * 3) * radius / 2
-                val x = centerX + (radius + waveOffset) * cos(radian).toFloat()
-                val y = centerY + (radius + waveOffset) * sin(radian).toFloat()
-
-                drawCircle(
-                    color = circleColor,
-                    radius = dotRadius,
-                    center = androidx.compose.ui.geometry.Offset(x.toFloat(), y.toFloat())
-                )
-            }
-        }
+        LottieAnimationSized(
+            lottieFile = "loading.lottie",
+            width = 150,
+            height = 150,
+            autoPlay = true,
+            loop = true
+        )
     }
 }
 
