@@ -17,8 +17,8 @@ data class Settings(
         PRAYER_TIME_ASR to 0,
         PRAYER_TIME_MAGHRIB to 0,
         PRAYER_TIME_ISHA to 0
-    ) ,
-    val alarmSoundUri : String? = null
+    ),
+    val alarmSoundUri: String = "android.resource://com.fatih.prayertime/raw/notification_2"
 ) {
     companion object {
         const val PRAYER_TIME_FAJR = "fajr"

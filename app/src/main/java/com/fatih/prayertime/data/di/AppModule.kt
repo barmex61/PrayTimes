@@ -75,15 +75,41 @@ import javax.inject.Qualifier
 import javax.inject.Singleton
 import com.fatih.prayertime.data.remote.WeatherApi
 import com.fatih.prayertime.data.repository.SharedPrefRepositoryImp
+import com.fatih.prayertime.data.repository.SoundRepositoryImpl
 import com.fatih.prayertime.data.repository.WeatherRepositoryImpl
 import com.fatih.prayertime.data.settings.SharedPreferencesManager
 import com.fatih.prayertime.domain.repository.SharedPrefRepository
+import com.fatih.prayertime.domain.repository.SoundRepository
 import com.fatih.prayertime.domain.repository.WeatherRepository
+import com.fatih.prayertime.domain.use_case.SoundUseCases
+import com.fatih.prayertime.domain.use_case.sound.GetSoundsUseCase
+import com.fatih.prayertime.domain.use_case.sound.PlaySoundUseCase
+import com.fatih.prayertime.domain.use_case.sound.StopSoundUseCase
 import com.fatih.prayertime.presentation.main_screen.MainScreenStateManager
 
 @InstallIn(SingletonComponent::class)
 @Module
 object Module {
+
+    @Provides
+    @Singleton
+    fun provideSoundRepository(
+        @ApplicationContext context: Context
+    ): SoundRepository {
+        return SoundRepositoryImpl(context)
+    }
+
+    @Provides
+    @Singleton
+    fun provideSoundUseCases(
+        soundRepository: SoundRepository
+    ): SoundUseCases {
+        return SoundUseCases(
+            getSoundsUseCase = GetSoundsUseCase(soundRepository),
+            playSoundUseCase = PlaySoundUseCase(soundRepository),
+            stopSoundUseCase = StopSoundUseCase(soundRepository)
+        )
+    }
 
     @Provides
     @Singleton

@@ -31,7 +31,7 @@ class AlarmScheduler @Inject constructor(
             putExtra("ALARM_TYPE",AlarmType.PRAY.name)
             putExtra("PRAY_TYPE", prayerAlarm.alarmType)
             putExtra("VIBRATION",settings.vibrationEnabled)
-            putExtra("SOUND_URI",prayerAlarm.soundUri)
+            putExtra("SOUND_URI",settings.alarmSoundUri)
             putExtra("IS_SILENT",muteAtFridayPrayer)
             putExtra("NOTIFICATION_DISMISS_TIME",settings.notificationDismissTime)
         }

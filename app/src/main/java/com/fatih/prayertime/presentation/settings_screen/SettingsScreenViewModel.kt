@@ -6,6 +6,8 @@ import com.fatih.prayertime.domain.model.PrayerAlarm
 import com.fatih.prayertime.domain.model.PrayTimes
 import com.fatih.prayertime.domain.model.Settings
 import com.fatih.prayertime.domain.model.ThemeOption
+import com.fatih.prayertime.domain.model.PlaybackState
+import com.fatih.prayertime.domain.model.Sound
 import com.fatih.prayertime.domain.use_case.alarm_use_cases.GetAllGlobalAlarmsUseCase
 import com.fatih.prayertime.domain.use_case.alarm_use_cases.UpdateGlobalAlarmUseCase
 import com.fatih.prayertime.domain.use_case.formatted_use_cases.FormattedUseCase
@@ -14,9 +16,11 @@ import com.fatih.prayertime.domain.use_case.pray_times_use_cases.GetDailyPrayTim
 import com.fatih.prayertime.domain.use_case.settings_use_cases.GetSettingsUseCase
 import com.fatih.prayertime.domain.use_case.settings_use_cases.SaveSettingsUseCase
 import com.fatih.prayertime.util.utils.AlarmUtils.getPrayTimeForPrayType
+import com.fatih.prayertime.domain.use_case.SoundUseCases
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -32,7 +36,8 @@ class SettingsScreenViewModel @Inject constructor(
     private val getLastKnowAddressFromDatabaseUseCase: GetLastKnowAddressFromDatabaseUseCase,
     private val saveSettingsUseCase: SaveSettingsUseCase,
     private val getSettingsUseCase: GetSettingsUseCase,
-    private val getAllGlobalAlarmsUseCase: GetAllGlobalAlarmsUseCase
+    private val getAllGlobalAlarmsUseCase: GetAllGlobalAlarmsUseCase,
+    private val soundUseCases: SoundUseCases
 ) : ViewModel() {
 
     private var dailyPrayTimes : PrayTimes? = null
@@ -84,10 +89,37 @@ class SettingsScreenViewModel @Inject constructor(
         updateGlobalAlarmUseCase(prayerAlarm)
     }
 
-    fun updateAlarmSound(soundUri: String) {
+    fun updateAlarmSound(soundUri: String) = viewModelScope.launch(Dispatchers.IO){
+        val updatedSettings = _settingsState.value.copy(alarmSoundUri = soundUri)
+        saveSettingsUseCase.invoke(updatedSettings)
+
+    }
+
+    private val _sounds = MutableStateFlow<List<Sound>>(emptyList())
+    val sounds: StateFlow<List<Sound>> = _sounds.asStateFlow()
+    
+    private val _playbackState = MutableStateFlow<PlaybackState>(PlaybackState.Initial)
+    val playbackState: StateFlow<PlaybackState> = _playbackState.asStateFlow()
+
+    fun loadSounds() {
         viewModelScope.launch {
-            dataStoreManager.updateAlarmSound(soundUri)
-            updateSettingsState()
+            val currentAlarmSound = settingsState.value.alarmSoundUri
+            _sounds.value = soundUseCases.getSoundsUseCase(currentAlarmSound)
+        }
+    }
+    
+    fun playSound(uri: String) {
+        viewModelScope.launch {
+            soundUseCases.playSoundUseCase(uri).collect { state ->
+                _playbackState.value = state
+            }
+        }
+    }
+    
+    fun stopSound() {
+        viewModelScope.launch {
+            soundUseCases.stopSoundUseCase()
+            _playbackState.value = PlaybackState.Stopped
         }
     }
 
@@ -98,6 +130,7 @@ class SettingsScreenViewModel @Inject constructor(
                 .collect{ settings ->
                     println(settings.prayerCalculationMethod)
                     println(settings.prayerTimeTuneValues)
+                    println(settings.alarmSoundUri)
                     _settingsState.value = settings
                 }
         }
@@ -107,6 +140,7 @@ class SettingsScreenViewModel @Inject constructor(
                 saveSettingsUseCase(updatedSettings)
             }
         }
+        loadSounds()
     }
 
 

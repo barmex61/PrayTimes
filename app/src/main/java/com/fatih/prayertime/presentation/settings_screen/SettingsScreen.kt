@@ -3,7 +3,6 @@ package com.fatih.prayertime.presentation.settings_screen
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandIn
 import androidx.compose.animation.fadeIn
@@ -44,7 +43,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
@@ -52,8 +50,8 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.CardElevation
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
@@ -65,6 +63,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.input.ImeAction
@@ -75,13 +74,24 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.fatih.prayertime.R
 import com.fatih.prayertime.domain.model.PrayerAlarm
 import com.fatih.prayertime.domain.model.ThemeOption
-import com.fatih.prayertime.util.composables.FullScreenLottieAnimation
 import com.fatih.prayertime.util.composables.LottieAnimationSized
 import com.fatih.prayertime.util.model.enums.PrayTimesString
 import com.fatih.prayertime.util.composables.TitleView
-import com.fatih.prayertime.util.utils.MethodUtils.getCalculationMethodName
 import com.fatih.prayertime.util.utils.MethodUtils.getCalculationMethodNameComposable
-
+import android.content.Intent
+import android.media.MediaPlayer
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.runtime.DisposableEffect
+import androidx.core.net.toUri
+import androidx.compose.material3.IconButton
+import com.fatih.prayertime.domain.model.PlaybackState
+import com.fatih.prayertime.domain.model.Sound
+import android.widget.Toast
 
 @Composable
 fun SettingsScreen(modifier: Modifier, settingsScreenViewModel: SettingsScreenViewModel = hiltViewModel()) {
@@ -94,75 +104,81 @@ fun SettingsScreen(modifier: Modifier, settingsScreenViewModel: SettingsScreenVi
         enterAnimDuration = 500,
         exitAnimDuration = 500,
     ) {
-        val showSelectedGlobalAlarmOffsetSelectionDialog = remember { mutableStateOf(false) }
-        val selectedPrayerAlarm = remember { mutableStateOf<PrayerAlarm?>(null) }
-        val uiSettings by settingsScreenViewModel.settingsState.collectAsState()
-        val scrollState = rememberScrollState()
+    val showSelectedGlobalAlarmOffsetSelectionDialog = remember { mutableStateOf(false) }
+    val selectedPrayerAlarm = remember { mutableStateOf<PrayerAlarm?>(null) }
+    val uiSettings by settingsScreenViewModel.settingsState.collectAsState()
+    val scrollState = rememberScrollState()
+        val context = LocalContext.current
 
-        Column(
-            modifier = modifier
-                .verticalScroll(scrollState)
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
-        ) {
+    Column(
+        modifier = modifier
+            .verticalScroll(scrollState)
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+    ) {
             Card (
-                modifier = Modifier
+            modifier = Modifier
                     .padding(4.dp)
                     .fillMaxWidth(),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
                 elevation = CardDefaults.cardElevation(10.dp),
                 shape = RoundedCornerShape(10.dp)
-            ) {
-                Text(
+        ) {
+            Text(
                     modifier = Modifier.padding(12.dp),
-                    text = stringResource(R.string.settings),
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                )
+                text = stringResource(R.string.settings),
+                style = MaterialTheme.typography.headlineMedium,
+                color = MaterialTheme.colorScheme.onPrimaryContainer
+            )
+        }
+
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(4.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            SettingsSection(
+                title = stringResource(R.string.appearance),
+                icon = ImageVector.vectorResource(R.drawable.palette)
+            ) {
+                AppearanceSettingsSection(uiSettings.selectedTheme) { settingsScreenViewModel.updateTheme(it) }
             }
 
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(4.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                SettingsSection(
-                    title = stringResource(R.string.appearance),
-                    icon = ImageVector.vectorResource(R.drawable.palette)
-                ) {
-                    AppearanceSettingsSection(uiSettings.selectedTheme) { settingsScreenViewModel.updateTheme(it) }
-                }
-
-                SettingsSection(
-                    title = stringResource(R.string.prayer_time_calculation),
+            SettingsSection(
+                title = stringResource(R.string.prayer_time_calculation),
                     icon = ImageVector.vectorResource(R.drawable.settings_icon)
                 ) {
                     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
 
                         PrayerTimeMethodSection(
-                            selectedMethod = uiSettings.prayerCalculationMethod?:1,
-                            onMethodChange = { settingsScreenViewModel.updatePrayerCalculationMethod(it) },)
+                            selectedMethod = uiSettings.prayerCalculationMethod ?: 1,
+                            onMethodChange = {
+                                settingsScreenViewModel.updatePrayerCalculationMethod(
+                                    it
+                                )
+                            },
+                        )
 
                         PrayerTimeTuneSection(
-                            onTuneValuesChange = { settingsScreenViewModel.updatePrayerTimeTuneValues(it) },
-                            tuneValues = uiSettings.prayerTimeTuneValues,
-                        )
+                    onTuneValuesChange = { settingsScreenViewModel.updatePrayerTimeTuneValues(it) },
+                    tuneValues = uiSettings.prayerTimeTuneValues,
+                )
                     }
 
-                }
+            }
 
-                SettingsSection(
-                    title = stringResource(R.string.notification),
-                    icon = Icons.Default.Notifications
-                ) {
+            SettingsSection(
+                title = stringResource(R.string.notification),
+                icon = Icons.Default.Notifications
+            ) {
                     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        SettingsSwitchItem(
-                            title = stringResource(R.string.vibration),
-                            subtitle = stringResource(R.string.vibration_description),
-                            isChecked = uiSettings.vibrationEnabled,
-                            onCheckedChange = { settingsScreenViewModel.toggleVibration() }
-                        )
+                SettingsSwitchItem(
+                    title = stringResource(R.string.vibration),
+                    subtitle = stringResource(R.string.vibration_description),
+                    isChecked = uiSettings.vibrationEnabled,
+                    onCheckedChange = { settingsScreenViewModel.toggleVibration() }
+                )
 
                         NotificationDismissTimeSelector(
                             currentDismissTime = uiSettings.notificationDismissTime,
@@ -170,47 +186,54 @@ fun SettingsScreen(modifier: Modifier, settingsScreenViewModel: SettingsScreenVi
                         )
                     }
 
-                }
+            }
 
-                SettingsSection(
-                    title = stringResource(R.string.alarms),
-                    icon = ImageVector.vectorResource(R.drawable.alarm_icon)
-                ) {
-                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        uiSettings.prayerAlarms.forEach { alarm ->
-                            AlarmSettingItem(
-                                alarm = alarm,
-                                onToggle = settingsScreenViewModel::togglePrayerNotification,
-                                onMinuteToggle = { selectedAlarm ->
-                                    showSelectedGlobalAlarmOffsetSelectionDialog.value = true
-                                    selectedPrayerAlarm.value = selectedAlarm
-                                }
-                            )
-                        }
+            SettingsSection(
+                title = stringResource(R.string.alarms),
+                icon = ImageVector.vectorResource(R.drawable.alarm_icon)
+            ) {
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        AlarmSoundSelector(
+                            currentSoundUri = uiSettings.alarmSoundUri,
+                            onSoundSelected = { settingsScreenViewModel.updateAlarmSound(it) },
+                            viewModel = settingsScreenViewModel,
+                            modifier = Modifier
+                        )
+                        
+                    uiSettings.prayerAlarms.forEach { alarm ->
+                        AlarmSettingItem(
+                            alarm = alarm,
+                            onToggle = settingsScreenViewModel::togglePrayerNotification,
+                            onMinuteToggle = { selectedAlarm ->
+                                showSelectedGlobalAlarmOffsetSelectionDialog.value = true
+                                selectedPrayerAlarm.value = selectedAlarm
+                            }
+                        )
                     }
                 }
+            }
 
-                SettingsSection(
-                    title = stringResource(R.string.others),
-                    icon = Icons.Default.MoreVert
-                ) {
-                    SettingsSwitchItem(
-                        title = stringResource(R.string.mute_friday),
-                        subtitle = stringResource(R.string.mute_friday_description),
-                        isChecked = uiSettings.silenceWhenCuma,
-                        onCheckedChange = { settingsScreenViewModel.toggleCuma() }
-                    )
-                }
+            SettingsSection(
+                title = stringResource(R.string.others),
+                icon = Icons.Default.MoreVert
+            ) {
+                SettingsSwitchItem(
+                    title = stringResource(R.string.mute_friday),
+                    subtitle = stringResource(R.string.mute_friday_description),
+                    isChecked = uiSettings.silenceWhenCuma,
+                    onCheckedChange = { settingsScreenViewModel.toggleCuma() }
+                )
             }
         }
+    }
 
-        AnimatedVisibility(
-            visible = showSelectedGlobalAlarmOffsetSelectionDialog.value,
-            enter = fadeIn(tween(700)) + expandIn(tween(700), expandFrom = Alignment.Center),
-            exit = fadeOut(tween(700)) + shrinkOut(tween(700), shrinkTowards = Alignment.Center)
-        ) {
-            selectedPrayerAlarm.value?.let {
-                OffsetMinuteSelectionHeader(it) { showSelectedGlobalAlarmOffsetSelectionDialog.value = false }
+    AnimatedVisibility(
+        visible = showSelectedGlobalAlarmOffsetSelectionDialog.value,
+        enter = fadeIn(tween(700)) + expandIn(tween(700), expandFrom = Alignment.Center),
+        exit = fadeOut(tween(700)) + shrinkOut(tween(700), shrinkTowards = Alignment.Center)
+    ) {
+        selectedPrayerAlarm.value?.let {
+            OffsetMinuteSelectionHeader(it) { showSelectedGlobalAlarmOffsetSelectionDialog.value = false }
             }
         }
     }
@@ -221,7 +244,7 @@ fun SettingsScreen(modifier: Modifier, settingsScreenViewModel: SettingsScreenVi
 private fun SettingsSection(
     title: String,
     icon: ImageVector,
-    content: @Composable () -> Unit
+    content: @Composable () -> Unit,
 ) {
     Card (
         modifier = Modifier
@@ -258,7 +281,7 @@ private fun SettingsSwitchItem(
     title: String,
     subtitle: String? = null,
     isChecked: Boolean,
-    onCheckedChange: () -> Unit
+    onCheckedChange: () -> Unit,
 ) {
     Surface(
         modifier = Modifier
@@ -300,7 +323,7 @@ private fun SettingsSwitchItem(
 private fun AlarmSettingItem(
     alarm: PrayerAlarm,
     onToggle: (PrayerAlarm) -> Unit,
-    onMinuteToggle: (PrayerAlarm) -> Unit
+    onMinuteToggle: (PrayerAlarm) -> Unit,
 ) {
     val alphaValue = if (alarm.isEnabled) 1f else 0.5f
     Surface(
@@ -674,77 +697,77 @@ fun PrayerCalculationMethodDialog(
 fun PrayerTimeTuneDialog(
     currentTuneValues: Map<String, Int>,
     onTuneValuesChange: (Map<String, Int>) -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
 ) {
     val tuneMap = remember {
         mutableStateOf(currentTuneValues.toMap())
     }
-
+    
     val prayerTimeKeys = listOf(
-        Pair("fajr", stringResource(R.string.morning)),
-        Pair("dhuhr", stringResource(R.string.noon) ),
-        Pair("asr", stringResource(R.string.afternoon)),
-        Pair("maghrib", stringResource(R.string.evening)),
-        Pair("isha", stringResource(R.string.night))
-    )
+            Pair("fajr", stringResource(R.string.morning)),
+            Pair("dhuhr", stringResource(R.string.noon) ),
+            Pair("asr", stringResource(R.string.afternoon)),
+            Pair("maghrib", stringResource(R.string.evening)),
+            Pair("isha", stringResource(R.string.night))
+        )
 
-    Column(
-        modifier = Modifier
-            .padding(16.dp)
+        Column(
+            modifier = Modifier
+                .padding(16.dp)
             .animateContentSize()
 
-    ) {
-        Text(
-            text = stringResource(R.string.prayer_time_adjustments),
-            style = MaterialTheme.typography.titleLarge,
-            modifier = Modifier.padding(bottom = 8.dp)
-        )
-
-        Text(
-            text = stringResource(R.string.prayer_time_adjustments_tune_description),
-            style = MaterialTheme.typography.bodyMedium,
-            modifier = Modifier.padding(bottom = 16.dp)
-        )
-
+        ) {
+            Text(
+                text = stringResource(R.string.prayer_time_adjustments),
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+            
+            Text(
+                text = stringResource(R.string.prayer_time_adjustments_tune_description),
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
+            
 
         prayerTimeKeys.forEach { (key, name) ->
-            PrayerTimeTuneItem(
-                prayerName = name,
-                value = tuneMap.value.getOrDefault(key, 0),
-                onValueChange = {
-                    val updatedMap = tuneMap.value.toMutableMap()
-                    updatedMap[key] = it
-                    tuneMap.value = updatedMap
-                }
-            )
-        }
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
-        ) {
-            Button(
-                onClick = { onDismiss() },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            ) {
-                Text(text = stringResource(R.string.close))
+                    PrayerTimeTuneItem(
+                        prayerName = name,
+                        value = tuneMap.value.getOrDefault(key, 0),
+                        onValueChange = { 
+                            val updatedMap = tuneMap.value.toMutableMap()
+                            updatedMap[key] = it
+                            tuneMap.value = updatedMap
+                        }
+                    )
             }
-
-            Button(
-                onClick = {
-                    val finalMap = currentTuneValues.toMutableMap()
-                    tuneMap.value.forEach { (key, value) ->
-                        finalMap[key] = value
-                    }
-                    onTuneValuesChange(finalMap)
-                }
+            
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
             ) {
-                Text(text = stringResource(R.string.apply))
+                Button(
+                    onClick = { onDismiss() },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                ) {
+                    Text(text = stringResource(R.string.close))
+                }
+                
+                Button(
+                    onClick = { 
+                        val finalMap = currentTuneValues.toMutableMap()
+                        tuneMap.value.forEach { (key, value) ->
+                            finalMap[key] = value
+                        }
+                        onTuneValuesChange(finalMap) 
+                    }
+                ) {
+                    Text(text = stringResource(R.string.apply))
             }
         }
     }
@@ -754,11 +777,11 @@ fun PrayerTimeTuneDialog(
 fun PrayerTimeTuneItem(
     prayerName: String,
     value: Int,
-    onValueChange: (Int) -> Unit
+    onValueChange: (Int) -> Unit,
 ) {
     var textValue by remember { mutableStateOf(value.toString()) }
     val focusManager = LocalFocusManager.current
-
+    
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -770,7 +793,7 @@ fun PrayerTimeTuneItem(
             text = prayerName,
             style = MaterialTheme.typography.bodyLarge
         )
-
+        
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -793,10 +816,10 @@ fun PrayerTimeTuneItem(
                     color = MaterialTheme.colorScheme.onPrimaryContainer
                 )
             }
-
+            
             BasicTextField(
                 value = textValue,
-                onValueChange = {
+                onValueChange = { 
                     if (it.isEmpty() || it == "-" || it.toIntOrNull() != null) {
                         textValue = it
                         it.toIntOrNull()?.let { intValue -> onValueChange(intValue) }
@@ -822,7 +845,7 @@ fun PrayerTimeTuneItem(
                     color = MaterialTheme.colorScheme.onPrimaryContainer
                 )
             )
-
+            
             Box(
                 modifier = Modifier
                     .size(32.dp)
@@ -841,7 +864,7 @@ fun PrayerTimeTuneItem(
                     color = MaterialTheme.colorScheme.onPrimaryContainer
                 )
             }
-
+            
             Text(
                 text = stringResource(R.string.minute_abbreviation),
                 style = MaterialTheme.typography.bodyMedium,
@@ -856,7 +879,7 @@ fun PrayerTimeTuneItem(
 @Composable
 fun NotificationDismissTimeSelector(
     currentDismissTime: Long,
-    onDismissTimeSelected: (Long) -> Unit
+    onDismissTimeSelected: (Long) -> Unit,
 ) {
     val dismissTimeOptions = mapOf(
         5000L to stringResource(R.string.duration_5_seconds),
@@ -945,3 +968,129 @@ fun NotificationDismissTimeSelector(
         )
     }
 }
+
+@Composable
+fun AlarmSoundSelector(
+    currentSoundUri: String?,
+    onSoundSelected: (String) -> Unit,
+    viewModel: SettingsScreenViewModel,
+    modifier: Modifier = Modifier,
+) {
+    var showSoundOptions by remember { mutableStateOf(false) }
+    
+    val sounds by viewModel.sounds.collectAsState()
+
+    LaunchedEffect(currentSoundUri) {
+        viewModel.loadSounds()
+    }
+    
+    DisposableEffect(Unit) {
+        onDispose {
+            viewModel.stopSound()
+        }
+    }
+
+    Surface(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp)),
+        color = MaterialTheme.colorScheme.secondaryContainer
+    ) {
+        Column(modifier = Modifier.animateContentSize()) {
+            Row(
+                modifier = Modifier
+                    .padding(16.dp)
+                    .fillMaxWidth()
+                    .clickable { showSoundOptions = !showSoundOptions },
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = stringResource(R.string.alarm_sound_title),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = getSoundNameFromUri(currentSoundUri),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                val soundDialogArrow = if (showSoundOptions)
+                    ImageVector.vectorResource(R.drawable.arrow_down)
+                else
+                    ImageVector.vectorResource(R.drawable.arrow_right)
+
+                AnimatedContent(
+                    targetState = soundDialogArrow,
+                    label = "Sound Arrow Animation"
+                ) { targetArrow ->
+                    Icon(
+                        modifier = Modifier
+                            .size(24.dp)
+                            .padding(start = 8.dp),
+                        imageVector = targetArrow,
+                        contentDescription = stringResource(R.string.arrow_icon),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            AnimatedVisibility(
+                visible = showSoundOptions,
+                enter = fadeIn(tween(400)) + slideInVertically(),
+                exit = fadeOut(tween(400)) + slideOutVertically()
+            ) {
+                Column(
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .animateContentSize()
+                ) {
+                    Text(
+                        text = stringResource(R.string.alarm_sound_description),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+
+                    sounds.forEach { sound ->
+                        val isSelected = sound.isSelected
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(
+                                selected = isSelected,
+                                onClick = {
+                                    onSoundSelected(sound.uri)
+                                    viewModel.playSound(sound.uri)
+                                }
+                            )
+
+                            Text(
+                                text = sound.displayName,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier.padding(start = 8.dp)
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+private fun getSoundNameFromUri(uri: String?): String {
+    if (uri == null) return "Varsayılan"
+    
+    val fileName = when {
+        uri.contains("/raw/") -> uri.substringAfterLast("/raw/")
+        else -> uri.substringAfterLast("/")
+    }
+    
+    return fileName
+}
+

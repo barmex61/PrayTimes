@@ -97,12 +97,14 @@
     <string name="today">Bugün</string>
     <string name="close">Kapat</string>
     <string name="listen">Dinle</string>
+    <string name="power_saving_dialog_title">MIUI Pil Optimizasyonu</string>
     <string name="juz_number">%d. Cüz</string>
+    <string name="dont_ask_again">Dont ask again</string>
     <string name="alarm_offset_format">%d dak. önce</string>
+    <string name="power_saving_dialog">Bildirimlerin Xiaomi model telefonlarda düzgün çalışabilmesi için arka plan kısıtlamalarını iptal etmeniz gerekmektedir. Ayarlardan arka plan pil tasarrufunu devre dışı bırakın.</string>
     <string name="alarm_icon">Alarm simgesi</string>
     <string name="location_icon">Konum simgesi</string>
     <string name="check_icon">Onay simgesi</string>
-    <string name="arrow_icon">Ok simgesi</string>
     <string name="notification_icon">Bildirim simgesi</string>
     <string name="main_view">Ana Görünüm</string>
     <!-- Quran Detail Screen Strings -->
@@ -259,4 +261,20 @@
     <string name="prayer_time_asr">asr</string>
     <string name="prayer_time_maghrib">maghrib</string>
     <string name="prayer_time_isha">isha</string>
+    <string name="alarm_sound_title">Alarm Sesi</string>
+    <string name="alarm_sound_description">Namaz vakitleri için alarm sesini seçin</string>
+    <string name="default_alarm">Varsayılan</string>
+    <string name="adhan_sound">Ezan Sesi</string>
+    <string name="nature_sound">Doğa Sesi</string>
+    <string name="select_custom_sound">Kendi Sesinizi Seçin</string>
+    <string name="selected_sound">Seçili Ses: %1$s</string>
+    <string name="play_sound">Sesi Çal</string>
+    <string name="stop_sound">Sesi Durdur</string>
+    <string name="select_sound">Ses Seç</string>
+    <string name="sound_option_notification_1">Bildirim Sesi 1</string>
+    <string name="sound_option_notification_2">Bildirim Sesi 2</string>
+    <string name="sound_option_sound_1">Ses 1</string>
+    <string name="sound_option_sound_2">Ses 2</string>
+    <string name="sound_option_sound_3">Ses 3</string>
+    <string name="arrow_icon">Ok İkonu</string>
 </resources>

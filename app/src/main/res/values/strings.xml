@@ -100,7 +100,6 @@
     <string name="alarm_icon">Alarm icon</string>
     <string name="location_icon">Location icon</string>
     <string name="check_icon">Check icon</string>
-    <string name="arrow_icon">Arrow icon</string>
     <string name="notification_icon">Notification icon</string>
     <string name="main_view">Main View</string>
     <!-- Quran Detail Screen Strings -->
@@ -121,6 +120,7 @@
     <string name="quran_transliteration">Transliteration</string>
     <string name="quran_reciter">Reciter</string>
     <string name="quran_settings_title">Quran Settings</string>
+    <string name="power_saving_dialog_title">MIUI Battery Optimization</string>
     <string name="quran_previous">Previous</string>
     <string name="quran_next">Next</string>
     <string name="quran_play">Play</string>
@@ -146,6 +146,8 @@
     <string name="quran_cache_audio_disadvantage">Disadvantages:</string>
     <string name="quran_cache_audio_disadvantage_1">Uses storage space on your device (approximately 1-2 MB per surah)</string>
     <string name="quran_cache_audio_save">Save</string>
+    <string name="power_saving_dialog">In order for notifications to work properly on Xiaomi model phones, you need to cancel the background restrictions. Disable background battery saving from settings. </string>
+    <string name="dont_ask_again">Dont ask again</string>
     <string name="quran_cache_audio_save_alternative">Don\'t Save</string>
     <string name="quran_font_size">Font Size</string>
     <string name="quran_font_size_description">Adjust text size</string>
@@ -260,4 +262,20 @@
     <string name="prayer_time_asr">asr</string>
     <string name="prayer_time_maghrib">maghrib</string>
     <string name="prayer_time_isha">isha</string>
+    <string name="alarm_sound_title">Alarm Sesi</string>
+    <string name="alarm_sound_description">Namaz vakitleri için alarm sesini seçin</string>
+    <string name="default_alarm">Varsayılan</string>
+    <string name="adhan_sound">Ezan Sesi</string>
+    <string name="nature_sound">Doğa Sesi</string>
+    <string name="select_custom_sound">Kendi Sesinizi Seçin</string>
+    <string name="selected_sound">Seçili Ses: %1$s</string>
+    <string name="play_sound">Sesi Çal</string>
+    <string name="stop_sound">Sesi Durdur</string>
+    <string name="select_sound">Ses Seç</string>
+    <string name="sound_option_notification_1">Bildirim Sesi 1</string>
+    <string name="sound_option_notification_2">Bildirim Sesi 2</string>
+    <string name="sound_option_sound_1">Ses 1</string>
+    <string name="sound_option_sound_2">Ses 2</string>
+    <string name="sound_option_sound_3">Ses 3</string>
+    <string name="arrow_icon">Ok İkonu</string>
 </resources>

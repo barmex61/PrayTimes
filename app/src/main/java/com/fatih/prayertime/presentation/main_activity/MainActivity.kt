@@ -50,6 +50,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -114,6 +116,9 @@ class MainActivity : ComponentActivity() {
         setContent {
             val mainActivityViewModel : MainActivityViewModel = hiltViewModel()
             val settings by mainActivityViewModel.settingsState.collectAsState()
+            var dontAskAgain by rememberSaveable { mutableStateOf(false) }
+            val powerSaveState = mainActivityViewModel.permissionAndPreferences.powerSavingState.collectAsStateWithLifecycle()
+
             val darkTheme = when(settings.selectedTheme){
                 ThemeOption.DARK -> true
                 ThemeOption.LIGHT -> false
@@ -128,33 +133,41 @@ class MainActivity : ComponentActivity() {
                 lottieAnimDuration = 1000
             ) {
                 PrayerTimeTheme(darkTheme = darkTheme) {
-                    MainActivityContent(::showBatteryOptimizationDialog, mainActivityViewModel)
+                    MainActivityContent(mainActivityViewModel){
+                        mainActivityViewModel.permissionAndPreferences.checkPowerSavingMode()
+                        if (!dontAskAgain && powerSaveState.value == true){
+                            ShowBatteryOptimizationDialog()
+                        }
+                    }
                 }
             }
 
             ScheduleAlarm(scheduleDailyAlarmUpdateUseCase)
         }
     }
-    
-    private fun showBatteryOptimizationDialog() {
+
+    @Composable
+    private fun ShowBatteryOptimizationDialog() {
+        val dialogMessage = stringResource(R.string.power_saving_dialog)
+        val settingsStr = stringResource(R.string.settings)
+        val title = stringResource(R.string.power_saving_dialog_title)
         AlertDialog.Builder(this)
-            .setTitle("MIUI Battery Optimization")
-            .setMessage("In order for notifications to work properly on Xiaomi model phones, you need to cancel the background restrictions. Disable background battery saving from settings. ")
-            .setPositiveButton("Settings") { _, _ ->
+            .setTitle(title)
+            .setMessage(dialogMessage)
+            .setPositiveButton(settingsStr) { _, _ ->
                 val intent = Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
                 startActivity(intent)
             }
-            .setNegativeButton("Cancel", null)
+            .setNegativeButton(stringResource(R.string.cancel), null)
             .show()
     }
 }
 
 
 @Composable
-fun MainActivityContent(showBatteryOptimizationDialog: () -> Unit, mainActivityViewModel: MainActivityViewModel) {
+fun MainActivityContent( mainActivityViewModel: MainActivityViewModel, powerSavingDialog : @Composable () -> Unit) {
     val navController = rememberNavController()
     val context = LocalContext.current
-
 
     val powerSavingState by mainActivityViewModel.permissionAndPreferences.powerSavingState.collectAsStateWithLifecycle()
     val isLocationPermissionGranted by mainActivityViewModel.permissionAndPreferences.isLocationPermissionGranted.collectAsStateWithLifecycle()
@@ -227,7 +240,7 @@ fun MainActivityContent(showBatteryOptimizationDialog: () -> Unit, mainActivityV
 
         ) {
             if (powerSavingState == true) {
-                showBatteryOptimizationDialog()
+                powerSavingDialog()
             }
 
             NavHostLayout(navController, innerPadding)
