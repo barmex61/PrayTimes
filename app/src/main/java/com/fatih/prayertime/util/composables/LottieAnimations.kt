@@ -33,6 +33,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -297,37 +298,42 @@ fun LottieAnimationBanner(
 @Composable
 fun LottieAnimationSized(
     lottieFile: String,
-    width: Int,
-    height: Int,
     autoPlay: Boolean = true,
     loop: Boolean = true,
+    enterAnimDuration : Int = 800,
+    exitAnimDuration : Int = 800,
+    lottieAnimDuration : Long = 1500,
     speed: Float = 1f,
+    offset: Float = 0f,
+    width : Int,
+    height: Int,
     content : @Composable () -> Unit
 ) {
-    var showLottieAnim by remember { mutableStateOf(true) }
+    var showLottieAnim by remember { mutableStateOf(false) }
 
-    Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.primaryContainer), contentAlignment = Alignment.Center){
+    Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background), contentAlignment = Alignment.Center){
         content()
         AnimatedVisibility(
+            modifier = Modifier.width(width.dp).height(height.dp),
             visible = showLottieAnim ,
-            enter = fadeIn(tween(500)) + scaleIn(tween(500)),
-            exit = fadeOut(tween(500)) + scaleOut(tween(500))
+            enter = fadeIn(tween(enterAnimDuration)) + scaleIn(tween(enterAnimDuration)),
+            exit = fadeOut(tween(exitAnimDuration)) + scaleOut(tween(exitAnimDuration))
         ){
             LottieAnimationView(
                 lottieFile = lottieFile,
-                modifier = Modifier
-                    .width(width.dp)
-                    .height(height.dp)
+                modifier = Modifier.fillMaxSize()
                     .align(Alignment.Center),
                 autoPlay = autoPlay,
                 loop = loop,
-                speed = speed
+                speed = speed,
+                offset = offset
             )
         }
 
     }
     LaunchedEffect(Unit) {
-        delay(3000)
+        showLottieAnim = true
+        delay(lottieAnimDuration)
         showLottieAnim = false
     }
 

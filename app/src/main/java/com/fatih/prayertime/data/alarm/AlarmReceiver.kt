@@ -24,7 +24,6 @@ class AlarmReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
         val alarmType = intent.getStringExtra("ALARM_TYPE")
-        Log.d("AlarmReceiver","ss")
 
         when(alarmType){
             AlarmType.PRAY.name ->{
@@ -47,9 +46,6 @@ class AlarmReceiver : BroadcastReceiver() {
         }
     }
 
-    private fun scheduleAlarmStop(notificationManager: NotificationManager,context: Context, prayType: String) {
-
-    }
 
     private fun showNotificationForPray(context: Context, prayType: String, enableVibration : Boolean, alarmSoundUri : Uri, notificationDismissTime: Long) {
         val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -134,7 +130,6 @@ class AlarmReceiver : BroadcastReceiver() {
             .addAction(R.drawable.check_circle, context.getString(R.string.yes), yesPendingIntent)
             .addAction(R.drawable.cross_icon, context.getString(R.string.no), noPendingIntent)
             .setDeleteIntent(noPendingIntent)
-
 
         notificationManager.notify(notificationId,builder.build())
         

@@ -86,6 +86,7 @@ import com.fatih.prayertime.presentation.settings_screen.SettingsScreen
 import com.fatih.prayertime.presentation.statistics_screen.StatisticsScreen
 import com.fatih.prayertime.presentation.ui.theme.PrayerTimeTheme
 import com.fatih.prayertime.presentation.util_screen.UtilitiesScreen
+import com.fatih.prayertime.util.composables.FullScreenLottieAnimation
 import com.fatih.prayertime.util.config.NavigationConfig.screens
 import com.fatih.prayertime.util.model.enums.PrayTimesString
 import com.google.accompanist.navigation.animation.AnimatedNavHost
@@ -119,9 +120,18 @@ class MainActivity : ComponentActivity() {
                 ThemeOption.SYSTEM_DEFAULT -> isSystemInDarkTheme()
             }
             UpdateSystemBars(darkTheme)
-            PrayerTimeTheme(darkTheme = darkTheme) {
-                MainActivityContent(::showBatteryOptimizationDialog, mainActivityViewModel)
+            FullScreenLottieAnimation(
+                lottieFile = "splash_screen_anim.lottie",
+                autoPlay = true,
+                loop = true,
+                speed = 1.75f,
+                lottieAnimDuration = 1000
+            ) {
+                PrayerTimeTheme(darkTheme = darkTheme) {
+                    MainActivityContent(::showBatteryOptimizationDialog, mainActivityViewModel)
+                }
             }
+
             ScheduleAlarm(scheduleDailyAlarmUpdateUseCase)
         }
     }

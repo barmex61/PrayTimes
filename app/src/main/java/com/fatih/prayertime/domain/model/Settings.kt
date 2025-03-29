@@ -8,7 +8,7 @@ data class Settings(
     val vibrationEnabled: Boolean = true,
     val prayerAlarms: List<PrayerAlarm> = mutableListOf(),
     val silenceWhenCuma : Boolean = true,
-    val notificationDismissTime: Long = 10000, // 10 saniye
+    val notificationDismissTime: Long = 30000,
     
     val prayerCalculationMethod: Int? = null,
     val prayerTimeTuneValues: Map<String, Int> = mapOf(
@@ -17,7 +17,8 @@ data class Settings(
         PRAYER_TIME_ASR to 0,
         PRAYER_TIME_MAGHRIB to 0,
         PRAYER_TIME_ISHA to 0
-    ) 
+    ) ,
+    val alarmSoundUri : String? = null
 ) {
     companion object {
         const val PRAYER_TIME_FAJR = "fajr"

@@ -2,6 +2,7 @@ package com.fatih.prayertime.domain.use_case.alarm_use_cases
 
 import android.content.Context
 import android.util.Log
+import androidx.work.DirectExecutor
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequest
@@ -14,6 +15,7 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
+import java.util.concurrent.Executor
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
@@ -27,7 +29,7 @@ class ScheduleDailyAlarmUpdateUseCase @Inject constructor(
 
         workManager.getWorkInfosForUniqueWorkLiveData("PrayAlarmWorker").observeForever { workInfos ->
             if (workInfos.isEmpty() || workInfos.any { it.state.isFinished }) {
-                val workRequest = PeriodicWorkRequestBuilder<PrayAlarmWorker>(15, TimeUnit.MINUTES)
+                val workRequest = PeriodicWorkRequestBuilder<PrayAlarmWorker>(1, TimeUnit.HOURS)
                     .addTag("PrayAlarmWorker")
                     .build()
 
@@ -58,7 +60,7 @@ class ScheduleDailyAlarmUpdateUseCase @Inject constructor(
                     set(Calendar.MILLISECOND, 0)
                 }
                 
-                val randomMinutes = (0..30).random()
+                val randomMinutes = (5..30).random()
                 calendar.add(Calendar.MINUTE, randomMinutes)
                 
                 val nextScheduleTime = calendar.timeInMillis

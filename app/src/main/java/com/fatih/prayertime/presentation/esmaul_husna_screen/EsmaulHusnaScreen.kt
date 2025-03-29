@@ -22,7 +22,6 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -35,11 +34,9 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.fatih.prayertime.R
 import com.fatih.prayertime.domain.model.EsmaulHusna
-import com.fatih.prayertime.presentation.util.getLocalizedString
-import com.fatih.prayertime.util.composables.ErrorView
+import com.fatih.prayertime.util.utils.getLocalizedString
 import com.fatih.prayertime.util.composables.LoadingView
 import com.fatih.prayertime.util.composables.TitleView
-import com.fatih.prayertime.util.model.state.Status
 import kotlin.random.Random
 
 @Composable

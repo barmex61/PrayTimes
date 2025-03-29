@@ -38,8 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.fatih.prayertime.R
 import com.fatih.prayertime.data.remote.dto.duadto.DuaCategoryDetail
-import com.fatih.prayertime.presentation.dua_screens.dua_categories_screen.DuaCategoriesViewModel
-import com.fatih.prayertime.presentation.util.getLocalizedString
+import com.fatih.prayertime.util.utils.getLocalizedString
 import kotlin.random.Random
 import com.fatih.prayertime.util.extensions.capitalizeFirstLetter
 import com.fatih.prayertime.util.composables.LoadingView

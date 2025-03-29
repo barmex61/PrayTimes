@@ -1,8 +1,7 @@
-package com.fatih.prayertime.presentation.util
+package com.fatih.prayertime.util.utils
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalConfiguration
-import java.util.Locale
 
 
 @Composable

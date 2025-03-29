@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Prayer Times Pro: Quran, Qibla, Adhan</string>
+    <string name="app_name">Muslim Prayer Times: Adhan, Qibla Compass &amp; Quran</string>
     <string name="location_text">Location</string>
     <string name="prayer_bar_text">Start your day with these prayers</string>
     <string name="remaining_time_text">Remaining time to next prayer</string>

@@ -29,6 +29,7 @@ import com.fatih.prayertime.domain.use_case.settings_use_cases.GetStatisticShare
 import com.fatih.prayertime.domain.use_case.settings_use_cases.InsertStatisticSharedPrefUseCase
 import com.fatih.prayertime.domain.use_case.weather_use_cases.GetWeatherUseCase
 import com.fatih.prayertime.domain.use_case.settings_use_cases.GetSettingsUseCase
+import com.fatih.prayertime.domain.use_case.settings_use_cases.SaveSettingsUseCase
 import com.fatih.prayertime.util.model.event.MainScreenEvent
 import com.fatih.prayertime.util.model.state.NetworkState
 import com.fatih.prayertime.util.model.state.PrayerState
@@ -76,7 +77,7 @@ class MainScreenViewModel @Inject constructor(
     private val insertStatisticSharedPrefUseCase: InsertStatisticSharedPrefUseCase,
     private val getWeatherUseCase: GetWeatherUseCase,
     private val getSettingsUseCase: GetSettingsUseCase,
-    private val saveSettingsUseCase: com.fatih.prayertime.domain.use_case.settings_use_cases.SaveSettingsUseCase,
+    private val saveSettingsUseCase: SaveSettingsUseCase,
     val permissionsAndPreferences: PermissionAndPreferences,
     private val mainScreenStateManager: MainScreenStateManager,
     getDuaUseCase: GetDuaUseCase
@@ -516,6 +517,7 @@ class MainScreenViewModel @Inject constructor(
             launch {
                 getSettingsUseCase.invoke()
                     .map { settings->
+                        Log.d(TAG, "Ayarlar değişti. Yeni ayarlar: $settings")
                         settings.prayerCalculationMethod to settings.prayerTimeTuneValues
                     }
                     .filter { (prayerMethod, _) -> prayerMethod != null }

@@ -1,6 +1,7 @@
 package com.fatih.prayertime.data.alarm
 
 import android.content.Context
+import android.util.Log
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
@@ -33,9 +34,11 @@ class StatisticsAlarmWorker @AssistedInject constructor(
 
     private suspend fun updateStatisticsAlarm(lastKnownAddress: Address){
         val localDateNow = LocalDate.now()
+        Log.d("StatisticsAlarmWorker", "Statistics for local date: $localDateNow")
         val localDateString = formattedUseCase.formatOfPatternDDMMYYYY(localDateNow)
+        Log.d("StatisticsAlarmWorker", "Statistics for local date string: $localDateString")
         val prayTimes = getDailyPrayTimesWithAddressAndDateUseCase(lastKnownAddress,localDateString)?:return
+        Log.d("StatisticsAlarmWorker", "Statistics pray times $prayTimes")
         updateStatisticsAlarmUseCase.updateStatisticsAlarms(prayTimes)
-        println("statistic worker alarm")
     }
 }

@@ -132,16 +132,19 @@ import org.threeten.bp.LocalDateTime
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
-import com.fatih.prayertime.presentation.util.getLocalizedString
+import com.fatih.prayertime.util.utils.getLocalizedString
 import com.fatih.prayertime.util.composables.FullScreenLottieAnimation
+import com.fatih.prayertime.util.composables.LottieAnimationSized
 
 @Composable
 fun MainScreen( modifier: Modifier,navController: NavController, mainScreenViewModel: MainScreenViewModel = hiltViewModel()) {
-    FullScreenLottieAnimation(
+    LottieAnimationSized (
         lottieFile = "splash_screen_anim.lottie",
         autoPlay = true,
         loop = true,
         speed = 1.75f,
+        width = 200,
+        height = 200,
         lottieAnimDuration = 1000
     ) {
         var showAlarmDialog by remember { mutableStateOf(false) }
@@ -198,8 +201,9 @@ fun MainScreen( modifier: Modifier,navController: NavController, mainScreenViewM
             )
         }
 
-        TitleView(stringResource(R.string.main_view))
     }
+    TitleView(stringResource(R.string.main_view))
+
 }
 
 @Composable
@@ -573,7 +577,7 @@ fun AlarmComposable(prayerAlarm: PrayerAlarm) {
     }
 
     Text(
-        text = prayerAlarm.alarmType,
+        text = stringResource(PrayTimesString.valueOf(prayerAlarm.alarmType).stringResId),
         style = MaterialTheme.typography.titleSmall,
         maxLines = 1,
         softWrap = false,
@@ -1201,18 +1205,19 @@ fun DuaCategoryCardCompose(duaCategoryData: DuaCategoryData,onDuaCategoryClick: 
         shape = RoundedCornerShape(10.dp)
     ) {
         Column(
-            modifier = Modifier.padding(top = 10.dp, bottom = 10.dp)
+            modifier = Modifier.padding(top = 10.dp, bottom = 10.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Icon(
-                modifier = Modifier.padding(start = 7.dp),
-                imageVector = Icons.Outlined.Face,
+                modifier = Modifier.padding(start = 7.dp).size(24.dp),
+                painter = rememberAsyncImagePainter(R.drawable.pray),
                 contentDescription = stringResource(R.string.face_icon),
             )
             Text(
                 modifier = Modifier
                     .padding(vertical = 7.dp, horizontal = 7.dp)
                     .basicMarquee(iterations = Int.MAX_VALUE),
-                text = duaCategoryData.name,
+                text = getLocalizedString(duaCategoryData.name,duaCategoryData.nameTr),
                 style = MaterialTheme.typography.bodySmall,
                 maxLines = 1,
                 softWrap = false,

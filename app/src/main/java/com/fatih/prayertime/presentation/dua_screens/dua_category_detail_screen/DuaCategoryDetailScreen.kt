@@ -26,8 +26,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 
 import com.fatih.prayertime.data.remote.dto.duadto.DuaCategoryDetail
-import com.fatih.prayertime.presentation.dua_screens.dua_categories_screen.DuaCategoriesViewModel
-import com.fatih.prayertime.presentation.util.getLocalizedString
+import com.fatih.prayertime.util.utils.getLocalizedString
 import com.fatih.prayertime.util.composables.ErrorView
 import com.fatih.prayertime.util.config.NavigationConfig.screens
 import com.fatih.prayertime.util.config.ThemeConfig.colors

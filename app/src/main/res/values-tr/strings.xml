@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Namaz Vakitleri Pro: Ezan, Kıble, Kuran</string>
+    <string name="app_name">Namaz Vakitleri Uygulaması: Ezan, Kıble &amp; Kuran</string>
     <string name="location_text">Konum</string>
     <string name="prayer_bar_text">Gününüze bu dualarla başlayın</string>
     <string name="remaining_time_text">Sonraki namaza kalan süre</string>

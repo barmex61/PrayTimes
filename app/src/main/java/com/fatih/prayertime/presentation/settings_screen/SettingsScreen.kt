@@ -76,6 +76,7 @@ import com.fatih.prayertime.R
 import com.fatih.prayertime.domain.model.PrayerAlarm
 import com.fatih.prayertime.domain.model.ThemeOption
 import com.fatih.prayertime.util.composables.FullScreenLottieAnimation
+import com.fatih.prayertime.util.composables.LottieAnimationSized
 import com.fatih.prayertime.util.model.enums.PrayTimesString
 import com.fatih.prayertime.util.composables.TitleView
 import com.fatih.prayertime.util.utils.MethodUtils.getCalculationMethodName
@@ -84,10 +85,14 @@ import com.fatih.prayertime.util.utils.MethodUtils.getCalculationMethodNameCompo
 
 @Composable
 fun SettingsScreen(modifier: Modifier, settingsScreenViewModel: SettingsScreenViewModel = hiltViewModel()) {
-    FullScreenLottieAnimation(
+    LottieAnimationSized(
         lottieFile = "settings_anim.lottie",
         lottieAnimDuration = 1000,
-        speed = 1.5f
+        speed = 1.5f,
+        width = 250,
+        height = 250,
+        enterAnimDuration = 500,
+        exitAnimDuration = 500,
     ) {
         val showSelectedGlobalAlarmOffsetSelectionDialog = remember { mutableStateOf(false) }
         val selectedPrayerAlarm = remember { mutableStateOf<PrayerAlarm?>(null) }
@@ -131,7 +136,7 @@ fun SettingsScreen(modifier: Modifier, settingsScreenViewModel: SettingsScreenVi
 
                 SettingsSection(
                     title = stringResource(R.string.prayer_time_calculation),
-                    icon = ImageVector.vectorResource(R.drawable.morning)
+                    icon = ImageVector.vectorResource(R.drawable.settings_icon)
                 ) {
                     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
 
@@ -208,9 +213,8 @@ fun SettingsScreen(modifier: Modifier, settingsScreenViewModel: SettingsScreenVi
                 OffsetMinuteSelectionHeader(it) { showSelectedGlobalAlarmOffsetSelectionDialog.value = false }
             }
         }
-        TitleView("Settings")
     }
-
+    TitleView("Settings")
 }
 
 @Composable
@@ -307,7 +311,7 @@ private fun AlarmSettingItem(
     ) {
         Row(
             modifier = Modifier
-                .padding(16.dp)
+                .padding(horizontal = 16.dp, vertical = 8.dp)
                 .fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
@@ -551,7 +555,7 @@ fun PrayerTimeTuneSection(tuneValues: Map<String, Int>,onTuneValuesChange: (Map<
             .clip(RoundedCornerShape(12.dp)),
         color = MaterialTheme.colorScheme.secondaryContainer
     )  {
-        Column {
+        Column (modifier = Modifier.animateContentSize()){
             Row(
                 modifier = Modifier
                     .padding(16.dp)
@@ -562,7 +566,9 @@ fun PrayerTimeTuneSection(tuneValues: Map<String, Int>,onTuneValuesChange: (Map<
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Column {
+                Column(
+                    modifier = Modifier.weight(1f)
+                ) {
                     Text(
                         text = stringResource(R.string.prayer_time_adjustments),
                         style = MaterialTheme.typography.bodyLarge,
@@ -576,12 +582,13 @@ fun PrayerTimeTuneSection(tuneValues: Map<String, Int>,onTuneValuesChange: (Map<
                 }
                 val tuneDialogArrow = if (showTuneDialog)  ImageVector.vectorResource(R.drawable.arrow_down) else ImageVector.vectorResource(R.drawable.arrow_right)
                 AnimatedContent(
-                    targetState = tuneDialogArrow
-                ) {
+                    targetState = tuneDialogArrow,
+                    label = "Arrow Animation"
+                ) { targetArrow ->
                     Icon(
-                        modifier = Modifier.animateContentSize(),
-                        imageVector = it,
-                        contentDescription = null,
+                        modifier = Modifier,
+                        imageVector = targetArrow,
+                        contentDescription = stringResource(R.string.arrow_icon),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }

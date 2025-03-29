@@ -40,6 +40,7 @@ class PrayApiRepositoryImp @Inject constructor(private val prayApi : PrayApi) : 
                     school,
                     midnightMode
                 )
+                Log.d("PrayApiRepository","${response.raw()}")
                 if (response.isSuccessful) {
                     response.body()?.let {
                         Log.d("PrayApiRepository", "Response body: $it")

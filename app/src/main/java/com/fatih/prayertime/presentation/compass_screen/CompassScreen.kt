@@ -76,10 +76,13 @@ fun CompassScreen(modifier: Modifier, compassScreenViewModel: CompassScreenViewM
         lottieFile = "compass_screen_anim.lottie",
         autoPlay = true,
         loop = true,
-        width = 250,
-        height = 250,
-        speed = 2.5f,
-
+        width = 200,
+        height = 200,
+        speed = 2f,
+        offset = 0.10f,
+        lottieAnimDuration = 2000,
+        enterAnimDuration = 300,
+        exitAnimDuration = 300
     ) {
         val context = LocalContext.current
         val gyroscopeSensor = remember { GyroscopeSensor(context) }

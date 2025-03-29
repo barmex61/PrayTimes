@@ -84,11 +84,20 @@ class SettingsScreenViewModel @Inject constructor(
         updateGlobalAlarmUseCase(prayerAlarm)
     }
 
+    fun updateAlarmSound(soundUri: String) {
+        viewModelScope.launch {
+            dataStoreManager.updateAlarmSound(soundUri)
+            updateSettingsState()
+        }
+    }
+
     init {
 
         viewModelScope.launch(Dispatchers.IO) {
-            getSettingsUseCase.invoke().distinctUntilChanged()
-                .collectLatest{ settings ->
+            getSettingsUseCase.invoke()
+                .collect{ settings ->
+                    println(settings.prayerCalculationMethod)
+                    println(settings.prayerTimeTuneValues)
                     _settingsState.value = settings
                 }
         }
