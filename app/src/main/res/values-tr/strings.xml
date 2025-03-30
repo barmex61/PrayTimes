@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Namaz Vakitleri Uygulaması: Ezan, Kıble &amp; Kuran</string>
+    <string name="app_name">Namaz Vakti Pro</string>
     <string name="location_text">Konum</string>
     <string name="prayer_bar_text">Gününüze bu dualarla başlayın</string>
     <string name="remaining_time_text">Sonraki namaza kalan süre</string>
@@ -190,7 +190,8 @@
     <string name="unknown_alarm">Bilinmeyen Alarm</string>
     <string name="pray_notification_channel_name">Namaz Bildirimleri</string>
     <string name="pray_notification_channel_description">Namaz Vakti Alarmları</string>
-    <string name="statistics_notification_channel_name">İstatistik Bildirimi</string>
+    <string name="statistics_notification_channel_name">İstatistik Bildirimleri</string>
+    <string name="statistics_notification_channel_description">Namaz Kılma Takibi</string>
     
     <!-- Time Duration Strings -->
     <string name="duration_5_seconds">5 saniye</string>
@@ -273,8 +274,8 @@
     <string name="select_sound">Ses Seç</string>
     <string name="sound_option_notification_1">Bildirim Sesi 1</string>
     <string name="sound_option_notification_2">Bildirim Sesi 2</string>
-    <string name="sound_option_sound_1">Ses 1</string>
-    <string name="sound_option_sound_2">Ses 2</string>
-    <string name="sound_option_sound_3">Ses 3</string>
-    <string name="arrow_icon">Ok İkonu</string>
+    <string name="sound_option_sound_1">Alarm Sesi 1</string>
+    <string name="sound_option_sound_2">Alarm Sesi 2</string>
+    <string name="sound_option_sound_3">Alarm Sesi 3</string>
+    <string name="arrow_icon">Aç/kapat oku</string>
 </resources>

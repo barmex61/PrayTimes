@@ -31,7 +31,7 @@ interface PrayDao {
     suspend fun getLastInsertedPrayTime() : PrayTimes?
 
     @Query("SELECT latitude, longitude FROM PrayTimes ORDER BY createdAt DESC LIMIT 1")
-    fun getCurrentLocationPair() : Flow<LocationPair>
+    fun getCurrentLocationPair() : Flow<LocationPair?>
 
     @Query("DELETE FROM PrayTimes WHERE dateLong < :dateLong")
     suspend fun deletePrayTimesBeforeTheDate(dateLong: Long)

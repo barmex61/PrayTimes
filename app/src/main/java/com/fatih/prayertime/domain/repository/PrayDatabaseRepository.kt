@@ -19,7 +19,7 @@ interface PrayDatabaseRepository {
         date: String
     ) : PrayTimes?
 
-    fun getCurrentLocationPair() : Flow<LocationPair>
+    fun getCurrentLocationPair() : Flow<LocationPair?>
 
     suspend fun deletePrayTimesBeforeDate(dateLong : Long)
 

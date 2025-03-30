@@ -310,9 +310,8 @@ fun LottieAnimationSized(
     content : @Composable () -> Unit
 ) {
     var showLottieAnim by remember { mutableStateOf(false) }
-
-    Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background), contentAlignment = Alignment.Center){
-        content()
+    content()
+    Box(modifier = Modifier.fillMaxSize().background(Color.Transparent), contentAlignment = Alignment.Center){
         AnimatedVisibility(
             modifier = Modifier.width(width.dp).height(height.dp),
             visible = showLottieAnim ,

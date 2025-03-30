@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Muslim Prayer Times: Adhan, Qibla Compass &amp; Quran</string>
+    <string name="app_name">Prayer Times Pro</string>
     <string name="location_text">Location</string>
     <string name="prayer_bar_text">Start your day with these prayers</string>
     <string name="remaining_time_text">Remaining time to next prayer</string>
@@ -189,9 +189,10 @@
     
     <!-- Notification Strings -->
     <string name="unknown_alarm">Unknown Alarm</string>
-    <string name="pray_notification_channel_name">Pray Notifications</string>
+    <string name="pray_notification_channel_name">Prayer Notifications</string>
     <string name="pray_notification_channel_description">Prayer Time Alerts</string>
-    <string name="statistics_notification_channel_name">Statistics Notification</string>
+    <string name="statistics_notification_channel_name">Statistics Notifications</string>
+    <string name="statistics_notification_channel_description">Prayer Completion Tracking</string>
     
     <!-- Time Duration Strings -->
     <string name="duration_5_seconds">5 seconds</string>
@@ -262,20 +263,20 @@
     <string name="prayer_time_asr">asr</string>
     <string name="prayer_time_maghrib">maghrib</string>
     <string name="prayer_time_isha">isha</string>
-    <string name="alarm_sound_title">Alarm Sesi</string>
-    <string name="alarm_sound_description">Namaz vakitleri için alarm sesini seçin</string>
-    <string name="default_alarm">Varsayılan</string>
-    <string name="adhan_sound">Ezan Sesi</string>
-    <string name="nature_sound">Doğa Sesi</string>
-    <string name="select_custom_sound">Kendi Sesinizi Seçin</string>
-    <string name="selected_sound">Seçili Ses: %1$s</string>
-    <string name="play_sound">Sesi Çal</string>
-    <string name="stop_sound">Sesi Durdur</string>
-    <string name="select_sound">Ses Seç</string>
-    <string name="sound_option_notification_1">Bildirim Sesi 1</string>
-    <string name="sound_option_notification_2">Bildirim Sesi 2</string>
-    <string name="sound_option_sound_1">Ses 1</string>
-    <string name="sound_option_sound_2">Ses 2</string>
-    <string name="sound_option_sound_3">Ses 3</string>
-    <string name="arrow_icon">Ok İkonu</string>
+    <string name="alarm_sound_title">Alarm Sound</string>
+    <string name="alarm_sound_description">Choose a sound for prayer time alerts</string>
+    <string name="default_alarm">Default</string>
+    <string name="adhan_sound">Adhan Sound</string>
+    <string name="nature_sound">Nature Sound</string>
+    <string name="select_custom_sound">Select Your Own Sound</string>
+    <string name="selected_sound">Selected Sound: %1$s</string>
+    <string name="play_sound">Play Sound</string>
+    <string name="stop_sound">Stop Sound</string>
+    <string name="select_sound">Select Sound</string>
+    <string name="sound_option_notification_1">Notification Sound 1</string>
+    <string name="sound_option_notification_2">Notification Sound 2</string>
+    <string name="sound_option_sound_1">Alarm Sound 1</string>
+    <string name="sound_option_sound_2">Alarm Sound 2</string>
+    <string name="sound_option_sound_3">Alarm Sound 3</string>
+    <string name="arrow_icon">Expand/collapse arrow</string>
 </resources>

@@ -183,7 +183,7 @@ fun SettingsScreen(modifier: Modifier, settingsScreenViewModel: SettingsScreenVi
                         NotificationDismissTimeSelector(
                             currentDismissTime = uiSettings.notificationDismissTime,
                             onDismissTimeSelected = { settingsScreenViewModel.updateNotificationDismissTime(it) }
-                        )
+                )
                     }
 
             }

@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -22,7 +23,7 @@ class CompassScreenViewModel @Inject constructor(
     getCurrentLocationUseCase: GetCurrentLocationUseCase
 ) : ViewModel() {
 
-    val qiblaDirection = getCurrentLocationUseCase.invoke().map { location ->
+    val qiblaDirection = getCurrentLocationUseCase.invoke().filterNotNull().map { location ->
         calculateQiblaDirectionUseCase(location.latitude, location.longitude)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), 0.0)
 
