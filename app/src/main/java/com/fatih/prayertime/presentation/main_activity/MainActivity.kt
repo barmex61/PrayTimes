@@ -3,8 +3,12 @@ package com.fatih.prayertime.presentation.main_activity
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.provider.Settings
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -67,6 +71,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.fatih.prayertime.R
+import com.fatih.prayertime.data.alarm.LocationUpdateForegroundService
 import com.fatih.prayertime.domain.model.ThemeOption
 import com.fatih.prayertime.domain.use_case.alarm_use_cases.ScheduleDailyAlarmUpdateUseCase
 import com.fatih.prayertime.domain.use_case.formatted_use_cases.FormattedUseCase

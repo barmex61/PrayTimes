@@ -29,6 +29,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
@@ -75,7 +76,9 @@ class LocationUpdateForegroundService : Service() {
     
     @Inject
     lateinit var deletePrayTimesBeforeDateUseCase: DeletePrayTimesBeforeDateUseCase
-    
+
+    private val notificationManager by lazy { getSystemService(NOTIFICATION_SERVICE) as NotificationManager }
+
     override fun onBind(intent: Intent?): IBinder? = null
     
     override fun onCreate() {
@@ -85,24 +88,39 @@ class LocationUpdateForegroundService : Service() {
     
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val notificationTitle = getString(R.string.app_name)
-        val notificationText = getString(R.string.pray_notification_channel_description)
+        val notificationText = "Namaz vakitleri konumunuza göre güncelleniyor... Konum izni kullanılıyor."
         
         val notification = NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle(notificationTitle)
             .setContentText(notificationText)
             .setSmallIcon(R.drawable.baseline_notifications_24)
-            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setPriority(NotificationCompat.PRIORITY_MAX)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(notificationText))
+            .setOngoing(true)
             .build()
         
-        startForeground(NOTIFICATION_ID, notification)
+        Log.d(TAG, "Starting foreground service with notification")
+
+        // Video çekimi için demo modu kontrolü
+        val isDemoMode = intent?.getBooleanExtra("DEMO_MODE", false) ?: false
         
         serviceScope.launch {
             try {
-                updatePrayerTimes()
+                delay(10000)
+                startForeground(NOTIFICATION_ID, notification)
+                // Demo modunda ise servisi hemen kapatma, 5 saniye bekle (video için)
+                if (isDemoMode) {
+                    withContext(Dispatchers.IO) {
+                        Log.d(TAG, "Demo mode active, waiting 10 seconds before stopping service...")
+                        delay(15000) // 10 saniye bekle
+                        updatePrayerTimes()
+                    }
+                }
             } catch (e: Exception) {
                 Log.e(TAG, "Error updating prayer times", e)
             } finally {
-                stopSelf() 
+                notificationManager.cancel(1)
+                stopSelf() // İşlem tamamlandığında servisi kapatın
             }
         }
         
@@ -207,15 +225,22 @@ class LocationUpdateForegroundService : Service() {
     }
     
     private fun createNotificationChannel() {
-        val channel = NotificationChannel(
-            CHANNEL_ID,
-            getString(R.string.pray_notification_channel_name),
-            NotificationManager.IMPORTANCE_LOW
-        ).apply {
-            description = getString(R.string.pray_notification_channel_description)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                CHANNEL_ID,
+                getString(R.string.pray_notification_channel_name),
+                NotificationManager.IMPORTANCE_HIGH
+            ).apply {
+                description = getString(R.string.pray_notification_channel_description)
+                enableLights(true)
+                enableVibration(true)
+                setShowBadge(true)
+                lockscreenVisibility = NotificationCompat.VISIBILITY_PUBLIC
+            }
+            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.createNotificationChannel(channel)
+            Log.d(TAG, "Notification channel created with importance: ${channel.importance}")
         }
-        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        notificationManager.createNotificationChannel(channel)
     }
     
     override fun onDestroy() {
