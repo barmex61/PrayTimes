@@ -190,7 +190,7 @@
     <!-- Notification Strings -->
     <string name="unknown_alarm">Unknown Alarm</string>
     <string name="pray_notification_channel_name">Prayer Notifications</string>
-    <string name="pray_notification_channel_description">Prayer Time Alerts</string>
+    <string name="pray_notification_channel_description">Updating prayer times...</string>
     <string name="statistics_notification_channel_name">Statistics Notifications</string>
     <string name="statistics_notification_channel_description">Prayer Completion Tracking</string>
     

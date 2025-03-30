@@ -189,7 +189,7 @@
     <!-- Notification Strings -->
     <string name="unknown_alarm">Bilinmeyen Alarm</string>
     <string name="pray_notification_channel_name">Namaz Bildirimleri</string>
-    <string name="pray_notification_channel_description">Namaz Vakti Alarmları</string>
+    <string name="pray_notification_channel_description">Namaz vakti bilgisi güncelleniyor...</string>
     <string name="statistics_notification_channel_name">İstatistik Bildirimleri</string>
     <string name="statistics_notification_channel_description">Namaz Kılma Takibi</string>
     
