@@ -5,7 +5,6 @@ import com.fatih.prayertime.data.remote.dto.hadithdto.Edition
 import com.fatih.prayertime.data.remote.dto.hadithdto.HadithEdition
 import com.fatih.prayertime.data.remote.dto.islamicdaysdto.IslamicDaysDataDTO
 import com.fatih.prayertime.data.remote.dto.praytimesdto.MonthlyPrayTimesResponseDTO
-import com.fatih.prayertime.data.remote.dto.praytimesdto.PrayDataDTO
 import com.fatih.prayertime.data.remote.dto.praytimesdto.PrayTimesDTO
 import com.fatih.prayertime.data.remote.dto.qurandto.QuranApiData
 import com.fatih.prayertime.domain.model.Address
@@ -49,7 +48,9 @@ fun PrayTimesDTO.toPrayTimes(date: String, address: Address, methodId: Int? = nu
 )
 
 fun PrayTimes.toPrayTimeInfoList(): List<PrayTimesInfo> = listOf(
+    PrayTimesInfo(R.drawable.imsak, PrayTimesString.Imsak.stringResId, this.imsak),
     PrayTimesInfo(R.drawable.morning, PrayTimesString.Morning.stringResId, this.morning),
+    PrayTimesInfo(R.drawable.surnise, PrayTimesString.Sunrise.stringResId, this.sunrise),
     PrayTimesInfo(R.drawable.noon, PrayTimesString.Noon.stringResId, this.noon),
     PrayTimesInfo(R.drawable.afternoon, PrayTimesString.Afternoon.stringResId, this.afternoon),
     PrayTimesInfo(R.drawable.evening, PrayTimesString.Evening.stringResId, this.evening),

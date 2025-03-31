@@ -98,8 +98,6 @@ import com.fatih.prayertime.util.composables.FullScreenLottieAnimation
 import com.fatih.prayertime.util.config.NavigationConfig.screens
 import com.fatih.prayertime.util.model.enums.PrayTimesString
 import com.google.accompanist.navigation.animation.AnimatedNavHost
-import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -175,7 +173,6 @@ class MainActivity : ComponentActivity() {
 }
 
 
-@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun MainActivityContent( mainActivityViewModel: MainActivityViewModel, powerSavingDialog : @Composable () -> Unit) {
     val navController = rememberNavController()
@@ -186,15 +183,42 @@ fun MainActivityContent( mainActivityViewModel: MainActivityViewModel, powerSavi
     val isNotificationPermissionGranted by mainActivityViewModel.permissionAndPreferences.isNotificationPermissionGranted.collectAsStateWithLifecycle()
     val isAlarmPermissionGranted by mainActivityViewModel.permissionAndPreferences.isAlarmPermissionGranted.collectAsStateWithLifecycle()
 
-    val multiplePermissionsState = rememberMultiplePermissionsState(
+    val permissionLauncher =
+        rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
+            mainActivityViewModel.permissionAndPreferences.onPermissionResult(permissions)
+        }
 
-        permissions = listOf(
-            Manifest.permission.ACCESS_FINE_LOCATION,
-            Manifest.permission.ACCESS_COARSE_LOCATION,
-            Manifest.permission.POST_NOTIFICATIONS,
-            Manifest.permission.SCHEDULE_EXACT_ALARM
-        )
-    )
+    val resultLauncher =
+        rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+            println("activity result")
+            mainActivityViewModel.permissionAndPreferences.checkLocationPermission()
+            mainActivityViewModel.permissionAndPreferences.checkPowerSavingMode()
+            mainActivityViewModel.permissionAndPreferences.checkNotificationPermission()
+            mainActivityViewModel.permissionAndPreferences.checkAlarmPermission()
+        }
+
+    LaunchedEffect(key1 = Unit) {
+        mainActivityViewModel.permissionAndPreferences.checkLocationPermission()
+        mainActivityViewModel.permissionAndPreferences.checkPowerSavingMode()
+        mainActivityViewModel.permissionAndPreferences.checkNotificationPermission()
+        mainActivityViewModel.permissionAndPreferences.checkAlarmPermission()
+
+        if (!isLocationPermissionGranted || !isNotificationPermissionGranted || !isAlarmPermissionGranted) {
+            val permissionList = mutableListOf<String>()
+
+            permissionList.addAll(mainActivityViewModel.permissionAndPreferences.locationPermissions)
+
+            mainActivityViewModel.permissionAndPreferences.notificationPermission?.let {
+                permissionList.add(it)
+            }
+
+            mainActivityViewModel.permissionAndPreferences.alarmPermission?.let {
+                permissionList.add(it)
+            }
+
+            permissionLauncher.launch(permissionList.toTypedArray())
+        }
+    }
 
     Scaffold(
         snackbarHost = {

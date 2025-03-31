@@ -15,8 +15,8 @@ android {
         applicationId = "com.fatih.prayertime"
         minSdk = 26
         targetSdk = 35
-        versionCode = 2
-        versionName = "1.0"
+        versionCode = 3
+        versionName = "1.3"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         
@@ -146,7 +146,6 @@ dependencies {
     implementation (libs.androidx.glance.appwidget)
     implementation (libs.google.accompanist.navigation.animation)
 
-    implementation(libs.google.accompanist.permissions)
 
 
     implementation(kotlin("reflect"))

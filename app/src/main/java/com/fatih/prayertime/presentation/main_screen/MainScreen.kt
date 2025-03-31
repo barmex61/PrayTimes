@@ -17,6 +17,7 @@ import androidx.compose.animation.animateColor
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.EaseInOutQuad
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
@@ -35,24 +36,30 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.animateScrollBy
+import androidx.compose.foundation.gestures.stopScroll
+import androidx.compose.foundation.interaction.InteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.grid.GridCells.Fixed
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -79,8 +86,11 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -96,6 +106,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
@@ -137,6 +148,8 @@ import kotlin.math.cos
 import kotlin.math.sin
 import com.fatih.prayertime.util.utils.getLocalizedString
 import com.fatih.prayertime.util.composables.LottieAnimationSized
+import com.fatih.prayertime.util.extensions.PrayTimesInfo
+import kotlinx.coroutines.launch
 
 @Composable
 fun MainScreen( modifier: Modifier,navController: NavController, mainScreenViewModel: MainScreenViewModel = hiltViewModel()) {
@@ -445,29 +458,31 @@ fun PrayNotificationCompose(
 
             }
             Spacer(modifier = Modifier.height(5.dp))
+            var offset by remember { mutableFloatStateOf(0f) }
             Card(
                 modifier = Modifier
                     .padding(horizontal = 10.dp)
                     .fillMaxWidth(1f)
                     .graphicsLayer {
                         rotationX = rotateX.value
+                    }
+                    .onGloballyPositioned {
+                        offset = it.size.width.toFloat()
                     },
                 onClick = {},
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
                 elevation = CardDefaults.cardElevation(5.dp),
                 shape = RoundedCornerShape(10.dp)
             ) {
-                val prayerAlarmList by mainScreenViewModel.prayerAlarmList.collectAsState()
-                LazyRow {
-                    prayerAlarmList?.let { prayerAlarms->
-                        itemsIndexed(prayerAlarms) {index, prayerAlarm->
-                            PrayerAlarmCard(prayerAlarm){
-                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                updatePrayAlarmsOrCheckPermission(isNotificationPermissionGranted,prayerAlarm,index,mainScreenViewModel,permissionLauncher)
-                            }
+                val prayerAlarmList by mainScreenViewModel.prayerAlarmList.collectAsStateWithLifecycle()
+                prayerAlarmList?.let {
+                    AnimatedLazyRow(offset,it){ index,prayerAlarm ->
+                        PrayerAlarmCard(prayerAlarm){
+                            updatePrayAlarmsOrCheckPermission(isNotificationPermissionGranted,prayerAlarm,index,mainScreenViewModel,permissionLauncher)
                         }
                     }
                 }
+
             }
 
             Spacer(modifier = Modifier.height(10.dp))
@@ -507,6 +522,28 @@ fun PrayNotificationCompose(
                     fontWeight = FontWeight.W500
                 )
             }
+        }
+    }
+}
+
+@Composable
+fun <T> AnimatedLazyRow(offset : Float, dataList : List<T>, itemContent : @Composable (Int,T) -> Unit){
+    val listState = rememberLazyListState()
+    var direction by remember { mutableIntStateOf(1) }
+
+    LaunchedEffect(key1 = listState.canScrollForward,key2 = listState.canScrollBackward, key3 = listState) {
+
+        if (direction == 1 && !listState.canScrollForward || direction == -1 && !listState.canScrollBackward){
+            direction = -1 * direction
+        }
+        delay(1500)
+        listState.stopScroll()
+        listState.animateScrollBy(offset * direction,animationSpec = tween(15000, easing = LinearEasing))
+    }
+
+    LazyRow(state = listState, modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically) {
+        itemsIndexed(dataList) { index, prayerAlarm->
+            itemContent(index,prayerAlarm)
         }
     }
 }
@@ -612,10 +649,10 @@ fun PrayerAlarmCard(prayerAlarm: PrayerAlarm,onCardClick : () -> Unit) {
 
     Column (
         modifier = Modifier
-            .size(70.dp)
+            .widthIn(70.dp,120.dp)
+            .heightIn(70.dp,150.dp)
             .padding(vertical = 10.dp)
-            .clip(RoundedCornerShape(10.dp))
-            .clickable{onCardClick()},
+            .clickable { onCardClick() },
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         AnimatedContent(
@@ -678,76 +715,78 @@ fun AnimatedTimer(formattedTime : String,previousTime : String){
 
 @Composable
 fun PrayTimesRowHeader(dailyPrayTime : PrayTimes?) {
+    var offset by remember { mutableFloatStateOf(0f) }
     Card(
         modifier = Modifier
             .padding(start = 10.dp, end = 10.dp, bottom = 10.dp)
+            .onGloballyPositioned{
+                offset = it.size.width.toFloat()
+            }
+            .fillMaxWidth()
         ,
         onClick = {},
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
         elevation = CardDefaults.cardElevation(10.dp),
         shape = RoundedCornerShape(10.dp)
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth(1f)
-                .padding(top = 10.dp)
-        ) {
-            if (dailyPrayTime != null){
-                val localDateTimeNow = LocalDateTime.now()
-                val index = when{
-                    localDateTimeNow.isBefore(dailyPrayTime.localDateTime(dailyPrayTime.morning)) -> 4
-                    localDateTimeNow.isBefore(dailyPrayTime.localDateTime(dailyPrayTime.noon)) -> 0
-                    localDateTimeNow.isBefore(dailyPrayTime.localDateTime(dailyPrayTime.afternoon)) -> 1
-                    localDateTimeNow.isBefore(dailyPrayTime.localDateTime(dailyPrayTime.evening)) -> 2
-                    localDateTimeNow.isBefore(dailyPrayTime.localDateTime(dailyPrayTime.night)) -> 3
-                    else -> 4
+        dailyPrayTime?.let { prayTime ->
+            val prayTimeInfoList = remember(key1 = dailyPrayTime) {
+                derivedStateOf {
+                    prayTime.toPrayTimeInfoList()
                 }
-                PrayTimesRow(dailyPrayTime, index)
-
+            }
+            AnimatedLazyRow(offset,prayTimeInfoList.value) {index,prayTimesInfo ->
+                val localDateTimeNow = LocalDateTime.now()
+                val currentIndex = when{
+                    localDateTimeNow.isBefore(dailyPrayTime.localDateTime(dailyPrayTime.morning)) -> 6
+                    localDateTimeNow.isBefore(dailyPrayTime.localDateTime(dailyPrayTime.noon)) -> 1
+                    localDateTimeNow.isBefore(dailyPrayTime.localDateTime(dailyPrayTime.afternoon)) -> 3
+                    localDateTimeNow.isBefore(dailyPrayTime.localDateTime(dailyPrayTime.evening)) -> 4
+                    localDateTimeNow.isBefore(dailyPrayTime.localDateTime(dailyPrayTime.night)) -> 5
+                    else -> 6
+                }
+                val color = if (currentIndex == index) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onPrimaryContainer
+                PrayTimeDisplay(prayTimesInfo,color)
             }
         }
+
     }
 }
 
 @Composable
-fun RowScope.PrayTimesRow(prayTime: PrayTimes,index: Int) {
-    val prayTimeInfoList = prayTime.toPrayTimeInfoList()
-    prayTimeInfoList.forEachIndexed { currentIndex ,prayTimeInfo->
+fun PrayTimeDisplay(prayTimeInfo : PrayTimesInfo, color : Color) {
 
-        val color = if (currentIndex == index) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSecondaryContainer
-        Column(
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.weight(1f)
-        ) {
-            Text(
-                text = stringResource(prayTimeInfo.stringRes),
-                style = MaterialTheme.typography.bodySmall,
-                maxLines = 1,
-                softWrap = false,
-                textAlign = TextAlign.Center,
-                fontWeight = FontWeight.W600,
-                color = color
-            )
-            Icon(
-                modifier = Modifier
-                    .padding(top = 5.dp)
-                    .size(35.dp),
-                painter = rememberAsyncImagePainter(prayTimeInfo.drawable),
-                contentDescription = stringResource(prayTimeInfo.stringRes),
-                tint = color
-            )
-            Text(
-                modifier = Modifier.padding(top = 5.dp, bottom = 8.dp),
-                text = prayTimeInfo.time,
-                style = MaterialTheme.typography.bodyMedium,
-                maxLines = 1,
-                softWrap = false,
-                textAlign = TextAlign.Center,
-                fontWeight = FontWeight.W500,
-                color = color
-            )
-        }
+    Column(
+        modifier = Modifier
+            .widthIn(70.dp,120.dp)
+            .heightIn(100.dp,150.dp) ,
+        verticalArrangement = Arrangement.SpaceEvenly,
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Text(
+            text = stringResource(prayTimeInfo.stringRes),
+            style = MaterialTheme.typography.bodySmall,
+            maxLines = 1,
+            softWrap = false,
+            textAlign = TextAlign.Center,
+            fontWeight = FontWeight.W600,
+            color = color,
+        )
+        Icon(
+            modifier = Modifier .size(35.dp),
+            painter = rememberAsyncImagePainter(prayTimeInfo.drawable),
+            contentDescription = stringResource(prayTimeInfo.stringRes),
+            tint = color
+        )
+        Text(
+            text = prayTimeInfo.time,
+            style = MaterialTheme.typography.bodyMedium,
+            maxLines = 1,
+            softWrap = false,
+            textAlign = TextAlign.Center,
+            fontWeight = FontWeight.W500,
+            color = color
+        )
     }
 }
 
@@ -1227,6 +1266,64 @@ private fun updatePrayAlarmsOrCheckPermission(isNotificationPermissionGranted : 
     } else {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
+    }
+}
+
+@Composable
+fun InfiniteScrollLazyRow(
+    modifier: Modifier = Modifier,
+    items: List<Any>,
+    itemContent: @Composable (item: Any) -> Unit
+) {
+    val lazyListState = rememberLazyListState()
+    val coroutineScope = rememberCoroutineScope()
+    val isAtEnd = remember {
+        derivedStateOf {
+            lazyListState.layoutInfo.visibleItemsInfo.lastOrNull()?.index == items.size - 1
+        }
+    }
+
+    LaunchedEffect(isAtEnd.value) {
+        if (isAtEnd.value) {
+            delay(1000) // Son itemde 1 saniye bekle
+            coroutineScope.launch {
+                lazyListState.animateScrollToItem(0) // İlk iteme animasyonlu scroll
+            }
+        }
+    }
+
+    LazyRow(
+        state = lazyListState,
+        modifier = modifier
+    ) {
+        items(items.size) { index ->
+            itemContent(items[index])
+        }
+    }
+}
+
+// Örnek Kullanım:
+@Composable
+fun ExampleUsage() {
+    val items = listOf("Item 1", "Item 2", "Item 3", "Item 4", "Item 5")
+    
+    InfiniteScrollLazyRow(
+        items = items,
+        modifier = Modifier.fillMaxWidth()
+    ) { item ->
+        Card(
+            modifier = Modifier
+                .padding(8.dp)
+                .width(200.dp)
+                .height(100.dp)
+        ) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(text = item.toString())
+            }
         }
     }
 }
