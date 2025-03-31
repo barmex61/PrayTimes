@@ -3,7 +3,9 @@
     <string name="location_text">Location</string>
     <string name="prayer_bar_text">Start your day with these prayers</string>
     <string name="remaining_time_text">Remaining time to next prayer</string>
+    <string name="imsak">Imsak</string>
     <string name="morning">Morning</string>
+    <string name="sunrise">Sunrise</string>
     <string name="noon">Noon</string>
     <string name="afternoon">Afternoon</string>
     <string name="evening">Evening</string>
@@ -12,6 +14,7 @@
     <string name="pray_together">Prayer Together</string>
     <string name="daily_prayer">Daily Prayer</string>
     <string name="see_all">See All</string>
+    <string name="alarm_not_set">Alarm is not set yet</string>
     <string name="home">Home</string>
     <string name="qibla">Qibla</string>
     <string name="settings">Settings</string>
@@ -279,4 +282,5 @@
     <string name="sound_option_sound_2">Alarm Sound 2</string>
     <string name="sound_option_sound_3">Alarm Sound 3</string>
     <string name="arrow_icon">Expand/collapse arrow</string>
+    <string name="update_location_service">Prayer times are updated according to your location... Location permission is used.</string>
 </resources>

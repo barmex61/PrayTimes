@@ -4,7 +4,7 @@ import android.app.Application
 import android.content.Context
 import android.location.Geocoder
 import androidx.room.Room
-import com.fatih.prayertime.data.local.dao.GlobalAlarmDao
+import com.fatih.prayertime.data.local.dao.PrayerAlarmDao
 import com.fatih.prayertime.data.local.dao.PrayDao
 import com.fatih.prayertime.data.network.NetworkConnectivityManager
 import com.fatih.prayertime.data.remote.PrayApi
@@ -21,7 +21,6 @@ import com.fatih.prayertime.domain.repository.PrayDatabaseRepository
 import com.fatih.prayertime.data.alarm.AlarmScheduler
 import com.fatih.prayertime.data.audio.AudioStateManager
 import com.fatih.prayertime.data.audio.QuranAudioManager
-import com.fatih.prayertime.data.audio.QuranAudioService
 import com.fatih.prayertime.data.local.dao.FavoritesDao
 import com.fatih.prayertime.data.local.dao.PrayerStatisticsDao
 import com.fatih.prayertime.data.local.database.AppDatabase
@@ -69,7 +68,6 @@ import dagger.hilt.components.SingletonComponent
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import retrofit2.create
 import java.util.Locale
 import javax.inject.Qualifier
 import javax.inject.Singleton
@@ -163,7 +161,7 @@ object Module {
 
     @Provides
     @Singleton
-    fun provideAlarmDatabaseRepo(globalAlarmDao: GlobalAlarmDao,alarmScheduler: AlarmScheduler) : AlarmDatabaseRepository = AlarmDatabaseRepositoryImp(globalAlarmDao,alarmScheduler)
+    fun provideAlarmDatabaseRepo(prayerAlarmDao: PrayerAlarmDao, alarmScheduler: AlarmScheduler) : AlarmDatabaseRepository = AlarmDatabaseRepositoryImp(prayerAlarmDao,alarmScheduler)
 
     @Provides
     @Singleton

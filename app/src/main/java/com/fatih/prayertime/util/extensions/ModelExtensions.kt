@@ -10,7 +10,6 @@ import com.fatih.prayertime.data.remote.dto.praytimesdto.PrayTimesDTO
 import com.fatih.prayertime.data.remote.dto.qurandto.QuranApiData
 import com.fatih.prayertime.domain.model.Address
 import com.fatih.prayertime.domain.model.IslamicDaysData
-import com.fatih.prayertime.domain.model.PrayData
 import com.fatih.prayertime.domain.model.PrayTimes
 import com.fatih.prayertime.domain.use_case.formatted_use_cases.FormattedUseCase
 import com.fatih.prayertime.util.model.enums.PlaybackMode
@@ -24,16 +23,15 @@ private val formattedUseCase = FormattedUseCase()
 
 fun MonthlyPrayTimesResponseDTO.toPrayTimes(address: Address): List<PrayTimes> {
     return this.data.map {
-        it.toPrayData(address).prayTimes
+        it.timings.toPrayTimes(it.date.gregorian.date, address, it.meta.method.id)
     }
 }
 
-fun PrayDataDTO.toPrayData(address: Address): PrayData = PrayData(
-    prayTimes = this.timings.toPrayTimes(this.date.gregorian.date, address, this.meta.method.id)
-)
 
 fun PrayTimesDTO.toPrayTimes(date: String, address: Address, methodId: Int? = null): PrayTimes = PrayTimes(
     morning = this.Fajr.substring(0, 5),
+    sunrise = this.Sunrise.substring(0,5),
+    imsak = this.Imsak.substring(0,5),
     noon = this.Dhuhr.substring(0, 5),
     afternoon = this.Asr.substring(0, 5),
     evening = this.Maghrib.substring(0, 5),
@@ -83,7 +81,6 @@ fun PrayTimes.toPrayTimePair(offsetMinutes : Long? = null) : List<Pair<String, L
         PrayTimesString.Night.name to formattedUseCase.formatHHMMtoLong(this.night, formattedUseCase.formatDDMMYYYYDateToLocalDate(this.date)) + offsetMs
     )
     
-    // Her namaz vakti için detaylı log çıktısı
     result.forEach { (prayerType, time) ->
         val formattedTime = formattedUseCase.formatLongToLocalDateTime(time)
         println("İstatistik alarmı: $prayerType için $formattedTime zamanında ayarlandı (Ofset: ${offsetMinutes ?: 0} dakika)")

@@ -9,18 +9,18 @@ import javax.inject.Inject
 
 class GetAllGlobalAlarmsUseCase @Inject constructor(
     private val alarmDatabaseRepository: AlarmDatabaseRepository,
-    private val insertGlobalAlarmUseCase: InsertGlobalAlarmUseCase
+    private val insertGlobalAlarmUseCase: InsertGlobalAlarmUseCase,
 ){
     suspend operator fun invoke() : Flow<List<PrayerAlarm>>  {
-        val globalAlarms = alarmDatabaseRepository.getAllGlobalAlarms()
-        if (globalAlarms.first().isEmpty()) {
+        val prayerAlarm = alarmDatabaseRepository.getAllPrayerAlarms()
+        if (prayerAlarm.first().isEmpty()) {
             val initialAlarms = PrayTimesString.entries.filterIndexed { index, _ ->
-                index <= 4
+                index <= 6
             }.map {
                 PrayerAlarm(
                     alarmType = it.name,
                     alarmTime = 0L,
-                    alarmTimeString = "16-01-2025 00:00",
+                    alarmTimeString = "Alarm off",
                     isEnabled = false,
                     alarmOffset = 0
                 )
@@ -29,6 +29,6 @@ class GetAllGlobalAlarmsUseCase @Inject constructor(
                 insertGlobalAlarmUseCase(alarm)
             }
         }
-        return alarmDatabaseRepository.getAllGlobalAlarms()
+        return alarmDatabaseRepository.getAllPrayerAlarms()
     }
 }

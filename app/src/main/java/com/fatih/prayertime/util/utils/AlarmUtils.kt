@@ -15,7 +15,9 @@ object AlarmUtils {
         formattedUseCase: FormattedUseCase
     ): String {
         val alarmTimeWithoutOffset = when (alarmType) {
+            PrayTimesString.Imsak.name -> dailyPrayTimes.imsak
             PrayTimesString.Morning.name -> dailyPrayTimes.morning
+            PrayTimesString.Sunrise.name -> dailyPrayTimes.sunrise
             PrayTimesString.Noon.name -> dailyPrayTimes.noon
             PrayTimesString.Afternoon.name -> dailyPrayTimes.afternoon
             PrayTimesString.Evening.name -> dailyPrayTimes.evening

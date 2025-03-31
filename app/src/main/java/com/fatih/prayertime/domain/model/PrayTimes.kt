@@ -11,7 +11,8 @@ data class PrayTimes(
     val dateLong : Long,
     val createdAt: Long = System.currentTimeMillis(),
     val morning : String,
-    // val sunrise :  String,
+    val imsak : String,
+    val sunrise :  String,
     val noon : String,
     val afternoon :  String,
     val evening :  String,
@@ -23,5 +24,5 @@ data class PrayTimes(
     val district: String?,
     val street: String?,
     val fullAddress: String?,
-    val method: Int? = null, // API tarafından kullanılan hesaplama metodu
+    val method: Int? = null,
 )

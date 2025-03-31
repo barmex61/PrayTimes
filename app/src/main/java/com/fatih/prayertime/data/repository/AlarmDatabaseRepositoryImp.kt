@@ -1,6 +1,6 @@
 package com.fatih.prayertime.data.repository
 
-import com.fatih.prayertime.data.local.dao.GlobalAlarmDao
+import com.fatih.prayertime.data.local.dao.PrayerAlarmDao
 import com.fatih.prayertime.domain.model.PrayerAlarm
 import com.fatih.prayertime.domain.repository.AlarmDatabaseRepository
 import com.fatih.prayertime.data.alarm.AlarmScheduler
@@ -9,25 +9,25 @@ import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
 class AlarmDatabaseRepositoryImp @Inject constructor(
-    private val globalAlarmDao: GlobalAlarmDao,
+    private val prayerAlarmDao: PrayerAlarmDao,
     private val alarmScheduler: AlarmScheduler
 ): AlarmDatabaseRepository {
 
-    override suspend fun insertGlobalAlarm(prayerAlarm: PrayerAlarm) {
-        globalAlarmDao.insertGlobalAlarm(prayerAlarm)
+    override suspend fun insertPrayerAlarm(prayerAlarm: PrayerAlarm) {
+        prayerAlarmDao.insertGlobalAlarm(prayerAlarm)
     }
 
-    override suspend fun updateGlobalAlarm(prayerAlarm: PrayerAlarm) {
-        globalAlarmDao.updateGlobalAlarm(prayerAlarm)
+    override suspend fun updatePrayerAlarm(prayerAlarm: PrayerAlarm) {
+        prayerAlarmDao.updateGlobalAlarm(prayerAlarm)
         alarmScheduler.updatePrayAlarm(prayerAlarm)
     }
 
-    override suspend fun getGlobalAlarmByType(alarmType: String): PrayerAlarm? {
-        return globalAlarmDao.getGlobalAlarmByType(alarmType)
+    override suspend fun getPrayerAlarmByType(alarmType: String): PrayerAlarm? {
+        return prayerAlarmDao.getGlobalAlarmByType(alarmType)
     }
 
-    override fun getAllGlobalAlarms(): Flow<List<PrayerAlarm>> {
-        return globalAlarmDao.getAllGlobalAlarms()
+    override fun getAllPrayerAlarms(): Flow<List<PrayerAlarm>> {
+        return prayerAlarmDao.getAllGlobalAlarms()
     }
 
     override fun updateStatisticsAlarmForPrayTime(prayTimes: PrayTimes) {

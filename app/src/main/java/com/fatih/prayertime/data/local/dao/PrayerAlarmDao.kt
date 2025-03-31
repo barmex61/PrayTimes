@@ -9,7 +9,7 @@ import com.fatih.prayertime.domain.model.PrayerAlarm
 import kotlinx.coroutines.flow.Flow
 
 @Dao
-interface GlobalAlarmDao {
+interface PrayerAlarmDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertGlobalAlarm(prayerAlarm: PrayerAlarm)
 

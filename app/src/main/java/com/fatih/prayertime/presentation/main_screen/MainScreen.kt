@@ -8,6 +8,7 @@ import android.os.Build
 import android.provider.Settings
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
@@ -46,16 +47,18 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.grid.GridCells.Fixed
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.outlined.Face
 import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.Notifications
@@ -133,7 +136,6 @@ import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
 import com.fatih.prayertime.util.utils.getLocalizedString
-import com.fatih.prayertime.util.composables.FullScreenLottieAnimation
 import com.fatih.prayertime.util.composables.LottieAnimationSized
 
 @Composable
@@ -455,50 +457,13 @@ fun PrayNotificationCompose(
                 elevation = CardDefaults.cardElevation(5.dp),
                 shape = RoundedCornerShape(10.dp)
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(1f),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-
-                    val globalAlarmList by mainScreenViewModel.prayerAlarmList.collectAsState()
-                    if (globalAlarmList != null) {
-                        globalAlarmList!!.forEachIndexed { index, globalAlarm ->
-                            Column (
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .size(70.dp)
-                                    .padding(vertical = 10.dp)
-                                    .clip(RoundedCornerShape(10.dp))
-                                    .clickable {
-                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                        if (isNotificationPermissionGranted) {
-                                            if (globalAlarm.isEnabled) {
-                                                mainScreenViewModel.updateGlobalAlarm(
-                                                    globalAlarm.alarmType,
-                                                    0L,
-                                                    "16-01-2025 00:00",
-                                                    false,
-                                                    0L
-                                                )
-                                                return@clickable
-                                            } else {
-                                                mainScreenViewModel.updateGlobalAlarm(
-                                                    globalAlarm.alarmType,
-                                                    mainScreenViewModel.getAlarmTime(index).first,
-                                                    mainScreenViewModel.getAlarmTime(index).second,
-                                                    true,
-                                                    0L
-                                                )
-                                            }
-                                        } else {
-                                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                                                permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                                            }
-                                        }
-                                    },
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                AlarmComposable(globalAlarm)
+                val prayerAlarmList by mainScreenViewModel.prayerAlarmList.collectAsState()
+                LazyRow {
+                    prayerAlarmList?.let { prayerAlarms->
+                        itemsIndexed(prayerAlarms) {index, prayerAlarm->
+                            PrayerAlarmCard(prayerAlarm){
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                updatePrayAlarmsOrCheckPermission(isNotificationPermissionGranted,prayerAlarm,index,mainScreenViewModel,permissionLauncher)
                             }
                         }
                     }
@@ -544,46 +509,6 @@ fun PrayNotificationCompose(
             }
         }
     }
-}
-
-@OptIn(ExperimentalAnimationApi::class)
-@Composable
-fun AlarmComposable(prayerAlarm: PrayerAlarm) {
-
-    val iconColor = animateColorAsState(
-        targetValue = if (prayerAlarm.isEnabled) MaterialTheme.colorScheme.primary else Color.Red,
-        animationSpec = tween(1000), label = ""
-    )
-    val isChecked = rememberSaveable(prayerAlarm.isEnabled) { prayerAlarm.isEnabled }
-    val iconDrawable = if (isChecked) ImageVector.vectorResource(R.drawable.check_circle) else ImageVector.vectorResource(R.drawable.cross_icon)
-
-    AnimatedContent(
-        targetState = iconDrawable,
-        transitionSpec ={
-            scaleIn(tween(1000)) + fadeIn(tween(500)) togetherWith
-                    scaleOut(tween(1000))+ fadeOut(tween(500))
-        },
-        label = ""
-
-    ) {
-        Icon(
-            modifier = Modifier
-                .padding(top = 3.dp)
-               ,
-            tint = iconColor.value,
-            imageVector = it,
-            contentDescription = stringResource(R.string.check_icon),
-        )
-    }
-
-    Text(
-        text = stringResource(PrayTimesString.valueOf(prayerAlarm.alarmType).stringResId),
-        style = MaterialTheme.typography.titleSmall,
-        maxLines = 1,
-        softWrap = false,
-        textAlign = TextAlign.Center,
-        fontWeight = FontWeight.W600
-    )
 }
 
 @SuppressLint("NewApi")
@@ -672,6 +597,54 @@ fun TimerRow(mainScreenViewModel: MainScreenViewModel, dailyPrayTime: PrayTimes?
                     .size(100.dp), formattedTime,it
             )
         }
+    }
+}
+
+@Composable
+fun PrayerAlarmCard(prayerAlarm: PrayerAlarm,onCardClick : () -> Unit) {
+
+    val iconColor = animateColorAsState(
+        targetValue = if (prayerAlarm.isEnabled) MaterialTheme.colorScheme.primary else Color.Red,
+        animationSpec = tween(1000), label = ""
+    )
+    val isChecked = rememberSaveable(prayerAlarm.isEnabled) { prayerAlarm.isEnabled }
+    val iconDrawable = if (isChecked) ImageVector.vectorResource(R.drawable.check_circle) else ImageVector.vectorResource(R.drawable.cross_icon)
+
+    Column (
+        modifier = Modifier
+            .size(70.dp)
+            .padding(vertical = 10.dp)
+            .clip(RoundedCornerShape(10.dp))
+            .clickable{onCardClick()},
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        AnimatedContent(
+            targetState = iconDrawable,
+            transitionSpec ={
+                scaleIn(tween(1000)) + fadeIn(tween(500)) togetherWith
+                        scaleOut(tween(1000))+ fadeOut(tween(500))
+            },
+            label = ""
+
+        ) {
+            Icon(
+                modifier = Modifier
+                    .padding(top = 3.dp)
+                ,
+                tint = iconColor.value,
+                imageVector = it,
+                contentDescription = stringResource(R.string.check_icon),
+            )
+        }
+
+        Text(
+            text = stringResource(PrayTimesString.valueOf(prayerAlarm.alarmType).stringResId),
+            style = MaterialTheme.typography.titleSmall,
+            maxLines = 1,
+            softWrap = false,
+            textAlign = TextAlign.Center,
+            fontWeight = FontWeight.W600
+        )
     }
 }
 
@@ -783,7 +756,7 @@ fun RowScope.PrayTimesRow(prayTime: PrayTimes,index: Int) {
 fun AddressBar(haptic: HapticFeedback,mainScreenViewModel: MainScreenViewModel) {
     val prayerState by mainScreenViewModel.prayerUiState.collectAsStateWithLifecycle()
     val locationText = stringResource(R.string.location_text)
-    val currentAddress by remember(prayerState) {
+    val currentAddress by remember(prayerState.prayTimes) {
         derivedStateOf { prayerState.prayTimes?.toAddress() }
     }
     println(prayerState.prayTimes?.fullAddress)
@@ -1209,7 +1182,9 @@ fun DuaCategoryCardCompose(duaCategoryData: DuaCategoryData,onDuaCategoryClick: 
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Icon(
-                modifier = Modifier.padding(start = 7.dp).size(24.dp),
+                modifier = Modifier
+                    .padding(start = 7.dp)
+                    .size(24.dp),
                 painter = rememberAsyncImagePainter(R.drawable.pray),
                 contentDescription = stringResource(R.string.face_icon),
             )
@@ -1227,4 +1202,31 @@ fun DuaCategoryCardCompose(duaCategoryData: DuaCategoryData,onDuaCategoryClick: 
         }
     }
 
+}
+
+private fun updatePrayAlarmsOrCheckPermission(isNotificationPermissionGranted : Boolean,prayerAlarm : PrayerAlarm,index: Int, mainScreenViewModel: MainScreenViewModel,permissionLauncher: ActivityResultLauncher<String>){
+    if (isNotificationPermissionGranted) {
+        if (prayerAlarm.isEnabled) {
+            mainScreenViewModel.updateGlobalAlarm(
+                prayerAlarm.alarmType,
+                0L,
+                "16-01-2025 00:00",
+                false,
+                0L
+            )
+            return
+        } else {
+            mainScreenViewModel.updateGlobalAlarm(
+                prayerAlarm.alarmType,
+                mainScreenViewModel.getAlarmTime(index).first,
+                mainScreenViewModel.getAlarmTime(index).second,
+                true,
+                0L
+            )
+        }
+    } else {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
+    }
 }

@@ -118,6 +118,9 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+       /* val serviceIntent = Intent(this, LocationUpdateForegroundService::class.java)
+        startForegroundService(serviceIntent)*/
+
         setContent {
             val mainActivityViewModel : MainActivityViewModel = hiltViewModel()
             val settings by mainActivityViewModel.settingsState.collectAsState()
@@ -186,6 +189,7 @@ fun MainActivityContent( mainActivityViewModel: MainActivityViewModel, powerSavi
 
     val resultLauncher =
         rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+            println("activity result")
             mainActivityViewModel.permissionAndPreferences.checkLocationPermission()
             mainActivityViewModel.permissionAndPreferences.checkPowerSavingMode()
             mainActivityViewModel.permissionAndPreferences.checkNotificationPermission()

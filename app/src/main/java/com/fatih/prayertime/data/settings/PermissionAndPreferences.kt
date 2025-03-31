@@ -90,10 +90,19 @@ class PermissionAndPreferences @Inject constructor(
     }
 
     fun onPermissionResult(permissionResult : Map<String,Boolean>){
-        val result = permissionResult.values.all { it }
-        _isLocationPermissionGranted.value = result
-        _isNotificationPermissionGranted.value = result
-        _isAlarmPermissionGranted.value = result
+        permissionResult.forEach {
+            when (it.key) {
+                locationPermissions.first(), locationPermissions.last() -> {
+                    _isLocationPermissionGranted.value = it.value
+                }
+                notificationPermission -> {
+                    _isNotificationPermissionGranted.value = it.value
+                }
+                alarmPermission -> {
+                    _isAlarmPermissionGranted.value = it.value
+                }
+            }
+        }
     }
 
 

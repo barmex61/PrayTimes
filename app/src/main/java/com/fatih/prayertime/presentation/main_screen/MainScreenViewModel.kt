@@ -456,7 +456,10 @@ class MainScreenViewModel @Inject constructor(
                 permissionsAndPreferences.networkState.combine(permissionsAndPreferences.isLocationPermissionGranted){networkState,locationPermission->
                     networkState to locationPermission
                 }.distinctUntilChanged().collect { (networkState,locationPermission)->
+                    println(networkState)
+                    println(locationPermission)
                     if (!isLocationTracking.value && locationPermission && networkState == NetworkState.Connected){
+                        println("tracklocation")
                         trackLocation()
                     }
                     if (locationPermission && prayerUiState.value.prayTimes == null){
@@ -466,8 +469,8 @@ class MainScreenViewModel @Inject constructor(
             }
             
             launch {
-                getAllGlobalAlarmsUseCase().collect { globalAlarmList ->
-                    _prayerAlarmList.emit(globalAlarmList)
+                getAllGlobalAlarmsUseCase().collect { prayerAlarm ->
+                    _prayerAlarmList.emit(prayerAlarm)
                 }
             }
 

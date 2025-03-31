@@ -3,7 +3,9 @@ package com.fatih.prayertime.util.model.enums
 import com.fatih.prayertime.R
 
 enum class PrayTimesString(val stringResId: Int) {
+    Imsak(R.string.imsak),
     Morning(R.string.morning),
+    Sunrise(R.string.sunrise),
     Noon(R.string.noon),
     Afternoon(R.string.afternoon),
     Evening(R.string.evening),

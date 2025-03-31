@@ -8,6 +8,7 @@ import android.content.Intent
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
+import androidx.compose.ui.res.stringResource
 import androidx.core.app.NotificationCompat
 import com.fatih.prayertime.R
 import com.fatih.prayertime.domain.model.Address
@@ -88,7 +89,7 @@ class LocationUpdateForegroundService : Service() {
     
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val notificationTitle = getString(R.string.app_name)
-        val notificationText = "Namaz vakitleri konumunuza göre güncelleniyor... Konum izni kullanılıyor."
+        val notificationText =  getString(R.string.update_location_service)
         
         val notification = NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle(notificationTitle)
@@ -101,26 +102,23 @@ class LocationUpdateForegroundService : Service() {
         
         Log.d(TAG, "Starting foreground service with notification")
 
-        // Video çekimi için demo modu kontrolü
-        val isDemoMode = intent?.getBooleanExtra("DEMO_MODE", false) ?: false
-        
         serviceScope.launch {
             try {
-                delay(10000)
                 startForeground(NOTIFICATION_ID, notification)
-                // Demo modunda ise servisi hemen kapatma, 5 saniye bekle (video için)
-                if (isDemoMode) {
-                    withContext(Dispatchers.IO) {
-                        Log.d(TAG, "Demo mode active, waiting 10 seconds before stopping service...")
-                        delay(15000) // 10 saniye bekle
-                        updatePrayerTimes()
-                    }
+                notificationManager.notify(NOTIFICATION_ID,notification)
+                //DEBUG PURPOSE
+                delay(20000)
+                //--DEBUG PURPOSE
+                withContext(Dispatchers.IO) {
+                    Log.d(TAG, "Demo mode active, waiting 10 seconds before stopping service...")
+                    updatePrayerTimes()
                 }
+
             } catch (e: Exception) {
                 Log.e(TAG, "Error updating prayer times", e)
             } finally {
-                notificationManager.cancel(1)
-                stopSelf() // İşlem tamamlandığında servisi kapatın
+                notificationManager.cancel(NOTIFICATION_ID)
+                stopSelf()
             }
         }
         
