@@ -86,7 +86,6 @@ dependencies {
     implementation(libs.androidx.glance.appwidget)
     implementation(libs.androidx.leanback)
     // Splash Screen API
-    implementation("androidx.core:core-splashscreen:1.0.1")
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -138,14 +137,17 @@ dependencies {
     // Three-Ten
     implementation (libs.threetenabp)
 
-    implementation("io.coil-kt:coil-compose:2.3.0")
-    implementation("com.airbnb.android:lottie-compose:6.3.0")
+    implementation(libs.coil.compose)
+    implementation(libs.lottie.compose)
 
 
     //Widget-Glance
     implementation (libs.google.accompanist.swiperefresh)
     implementation (libs.androidx.glance.appwidget)
     implementation (libs.google.accompanist.navigation.animation)
+
+    implementation(libs.google.accompanist.permissions)
+
 
     implementation(kotlin("reflect"))
 
